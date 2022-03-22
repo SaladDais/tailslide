@@ -11,5 +11,6 @@ default {
 
       PRI_GLOW = 2;  // $[E10006]
       PRIM_GLOW = 2;  // $[E10025]
+      ZERO_VECTOR.x = 0.0; // $[E10025] $[E10008]
    }
 }

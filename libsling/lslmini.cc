@@ -407,6 +407,13 @@ void LLScriptIdentifier::resolve_symbol(LLSymbolType symbol_type) {
       return;
     }
 
+    // ZERO_VECTOR.x is not valid, because it's really `<0,0,0>.x` which is not allowed!
+    if (symbol->get_sub_type() == SYM_BUILTIN) {
+      ERROR(HERE, E_INVALID_MEMBER, name, member);
+      type = TYPE(LST_ERROR);
+      return;
+    }
+
     // Make sure it's a vector or quaternion. TODO: is there a better way to do this?
     switch (symbol->get_type()->get_itype()) {
       case LST_QUATERNION:
@@ -451,6 +458,8 @@ public:
         if (id->get_symbol()) {
           if (id->get_symbol()->get_sub_type() == SYM_BUILTIN) {
             ERROR(IN(node), E_BUILTIN_LVALUE, id->get_symbol()->get_name());
+            // make sure we don't muck with the assignment count on a builtin symbol!
+            return true;
           }
           id->get_symbol()->add_assignment();
         }

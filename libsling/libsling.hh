@@ -14,6 +14,7 @@ public:
       assert(&_allocation_manager == gAllocationManager);
       gAllocationManager = nullptr;
       gScript = nullptr;
+      gFatalError = false;
       Logger::get()->reset();
     };
 

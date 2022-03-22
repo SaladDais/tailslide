@@ -44,5 +44,5 @@ void ScopedSlingParser::parse(FILE *yyin) {
   yylex_destroy(scanner);
 
   script = gScript;
-  ast_sane = gFatalError;
+  ast_sane = !gFatalError;
 }
