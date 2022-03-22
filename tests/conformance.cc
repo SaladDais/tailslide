@@ -4,6 +4,7 @@
 #include "pretty_print.hh"
 #include "testutils.hh"
 
+using namespace Sling;
 
 TEST_SUITE_BEGIN("Lint");
 

@@ -10,6 +10,8 @@
 #include "lslmini.hh"
 #include "lslmini.tab.hh"
 
+using namespace Sling;
+
 #ifdef WIN32
 #include <io.h>
 #define isatty _isatty
@@ -21,7 +23,9 @@
 #define YY_USER_ACTION  yylloc->last_column += yyleng;
 #define YY_USER_INIT    LLOC_RESET()
 
-char *parse_string(char *input);
+namespace Sling {
+    char *parse_string(char *input);
+}
 
 %}
 
@@ -89,7 +93,7 @@ FS			(f|F)
 {N}*"."{N}+({E})?{FS}?	{ yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
 {N}+"."{N}*({E})?{FS}?	{ yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
 
-L?\"(\\.|[^\\"])*\"	{ yylval->sval = parse_string(yytext); return(STRING_CONSTANT); }
+L?\"(\\.|[^\\"])*\"	{ yylval->sval = Sling::parse_string(yytext); return(STRING_CONSTANT); }
 
 "++"				{ return(INC_OP); }
 "--"				{ return(DEC_OP); }
@@ -135,6 +139,4 @@ L?\"(\\.|[^\\"])*\"	{ yylval->sval = parse_string(yytext); return(STRING_CONSTAN
 .					{ LLOC_STEP(); /* ignore bad characters */ }
 
 %%
-
-
 

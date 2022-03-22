@@ -2,6 +2,8 @@
 
 #include "allocator.hh"
 
+namespace Sling {
+
 char *parse_string(char *input) {
   char *str = gAllocationManager->alloc((strlen(input) * 2) + 1);
   char *yp = input + 1;
@@ -50,4 +52,5 @@ char *parse_string(char *input) {
 #undef _APPEND_CHAR
   str[end] = '\0';
   return str;
+}
 }

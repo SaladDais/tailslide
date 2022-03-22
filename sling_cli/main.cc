@@ -6,6 +6,8 @@
 #include "libsling.hh"
 #include "pretty_print.hh"
 
+using namespace Sling;
+
 void version() {
   fprintf(stderr, "SLing CLI tool");
   fprintf(stderr, " built on " __DATE__ "\n");

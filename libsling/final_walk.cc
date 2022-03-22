@@ -1,5 +1,7 @@
 #include "lslmini.hh"
 
+namespace Sling {
+
 void LLASTNode::final_pre_walk() {
   LLASTNode *node;
   final_pre_checks();
@@ -141,5 +143,7 @@ void LLScriptEventHandler::final_pre_checks() {
   } else {
     ERROR(HERE, E_INVALID_EVENT, id->get_name());
   }
+
+}
 
 }

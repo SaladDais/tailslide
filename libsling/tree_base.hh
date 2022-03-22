@@ -6,6 +6,8 @@
 #include <cassert>
 #include "logger.hh"
 
+namespace Sling {
+
 template<typename T, typename TNullType>
 class ATreeBase : public LLTrackableObject {
 protected:
@@ -170,5 +172,7 @@ private:
     T *next;
     T *prev;
 };
+
+}
 
 #endif //LSLINT_TREE_BASE_H

@@ -4,6 +4,8 @@
 #include "lslmini.hh"
 
 
+namespace Sling {
+
 class ScopedTabSetter {
 public:
   ScopedTabSetter(PrettyPrintVisitor *visitor, int tabs): visitor(visitor), old_tabs(visitor->tabs) {
@@ -523,8 +525,7 @@ bool PrettyPrintVisitor::visit(LLScriptSimpleAssignable *node) {
 }
 
 void PrettyPrintVisitor::do_tabs() {
-  for(int i=0; i<tabs; ++i)
-  {
+  for(int i=0; i<tabs; ++i) {
     stream << "    ";
   }
 }
@@ -532,8 +533,7 @@ void PrettyPrintVisitor::do_tabs() {
 std::string PrettyPrintVisitor::escape_str(const char *data) {
   std::string new_str;
   size_t datasize = strlen(data);
-  for(int i=0; i<datasize; ++i)
-  {
+  for(int i=0; i<datasize; ++i) {
     char c = data[i];
     if (c == '\\')
       new_str += "\\\\";
@@ -545,4 +545,5 @@ std::string PrettyPrintVisitor::escape_str(const char *data) {
       new_str += c;
   }
   return new_str;
+}
 }

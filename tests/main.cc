@@ -20,6 +20,7 @@
 
 #include <cassert>
 
+using namespace Sling;
 
 struct BoostLikeReporter : doctest::IReporter
 {

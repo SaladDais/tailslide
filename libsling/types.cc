@@ -5,7 +5,7 @@
 #define  LST_NONE       -2
 #define  LST_BOOLEAN    LST_INTEGER     // for clarity
 
-
+namespace Sling {
 // TODO: use structs or something here
 
 const static int coercion_table[][2] = {
@@ -351,4 +351,5 @@ const char *operation_str(int operation) {
 
 bool is_cast_legal(LST_TYPE from, LST_TYPE to) {
   return legal_cast_table[from][to] == 1;
+}
 }

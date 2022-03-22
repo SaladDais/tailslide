@@ -3,11 +3,15 @@
     #include "logger.hh"
     #include <stdio.h>
     #include <string.h>
+
     //int yylex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param);
     extern int yylex (YYSTYPE * yylval_param,YYLTYPE * yylloc_param , void *yyscanner);
 
-    thread_local LLScriptScript *gScript;
-    thread_local bool gFatalError;
+%}
+%{
+    using namespace Sling;
+    thread_local LLScriptScript *Sling::gScript;
+    thread_local bool Sling::gFatalError;
     int yyerror( YYLTYPE*, void *, const char * );
     #define MAKEID(type,id,pos) gAllocationManager->new_tracked<LLScriptIdentifier>(TYPE(type), (id), &(pos))
     // slightly higher so we can still have assert comments that check for stack depth
@@ -41,27 +45,50 @@
 %parse-param { void *scanner }
 %lex-param { void *scanner }
 
+%code requires {
+    namespace Sling {
+        typedef int   S32;
+        typedef float F32;
+        class LLScriptType;
+        class LLScriptConstant;
+        class LLScriptIdentifier;
+        class LLScriptSimpleAssignable;
+        class LLScriptGlobalVariable;
+        class LLScriptEvent;
+        class LLScriptEventHandler;
+        class LLScriptExpression;
+        class LLScriptStatement;
+        class LLScriptGlobalFunction;
+        class LLScriptFunctionDec;
+        class LLScriptEventDec;
+        class LLScriptForExpressionList;
+        class LLScriptState;
+        class LLScriptGlobalStorage;
+        class LLScriptScript;
+    }
+}
+
 %union
 {
-	S32								ival;
-	F32								fval;
+	Sling::S32								ival;
+	Sling::F32								fval;
 	char							*sval;
-	class LLScriptType				*type;
-	class LLScriptConstant			*constant;
-	class LLScriptIdentifier		*identifier;
-	class LLScriptSimpleAssignable	*assignable;
-	class LLScriptGlobalVariable	*global;
-	class LLScriptEvent				*event;
-	class LLScriptEventHandler		*handler;
-	class LLScriptExpression		*expression;
-	class LLScriptStatement			*statement;
-	class LLScriptGlobalFunction	*global_funcs;
-	class LLScriptFunctionDec		*global_decl;
-	class LLScriptEventDec		*global_event_decl;
-    class LLScriptForExpressionList *for_expr;
-	class LLScriptState				*state;
-	class LLScriptGlobalStorage		*global_store;
-	class LLScriptScript			*script;
+	class Sling::LLScriptType				*type;
+	class Sling::LLScriptConstant			*constant;
+	class Sling::LLScriptIdentifier		*identifier;
+	class Sling::LLScriptSimpleAssignable	*assignable;
+	class Sling::LLScriptGlobalVariable	*global;
+	class Sling::LLScriptEvent				*event;
+	class Sling::LLScriptEventHandler		*handler;
+	class Sling::LLScriptExpression		*expression;
+	class Sling::LLScriptStatement			*statement;
+	class Sling::LLScriptGlobalFunction	*global_funcs;
+	class Sling::LLScriptFunctionDec		*global_decl;
+	class Sling::LLScriptEventDec		*global_event_decl;
+    class Sling::LLScriptForExpressionList *for_expr;
+	class Sling::LLScriptState				*state;
+	class Sling::LLScriptGlobalStorage		*global_store;
+	class Sling::LLScriptScript			*script;
 };
 
 
@@ -1023,4 +1050,3 @@ int yyerror( YYLTYPE *lloc, void *scanner, const char *message ) {
     gFatalError = true;
     return 0;
 }
-

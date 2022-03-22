@@ -3,6 +3,8 @@
 
 #define RET_IF_ZERO(_x) if(!(_x)) return NULL
 
+namespace Sling {
+
 //////////////////////////////////////////////
 // Integer Constants
 LLScriptConstant *LLScriptIntegerConstant::operation(int operation, LLScriptConstant *other_const, YYLTYPE *lloc) {
@@ -422,3 +424,4 @@ LLScriptConstant *LLScriptQuaternionConstant::operation(int operation, LLScriptC
   }
 }
 
+}

@@ -5,6 +5,8 @@
 #include "logger.hh"
 #include "strings.hh"
 
+namespace Sling {
+
 extern char *builtins_txt[];
 
 static ScriptAllocationManager gStaticAllocator {};
@@ -234,4 +236,6 @@ LLScriptSymbol *LLScriptScript::lookup_symbol(const char *name, LLSymbolType sym
   if (sym != nullptr)
     return sym;
   return LLASTNode::lookup_symbol(name, sym_type, start_node);
+}
+
 }

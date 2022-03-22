@@ -3,6 +3,8 @@
 #include <algorithm>
 #include "logger.hh"
 
+namespace Sling {
+
 thread_local Logger Logger::instance = Logger();
 
 #define LOG_BUF_LEFT (1024 - (bp - buf))
@@ -308,3 +310,5 @@ const char *Logger::warning_messages[] = {
         "Condition is always false.",
         "Empty loop body.",
 };
+
+}

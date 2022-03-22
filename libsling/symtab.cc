@@ -6,6 +6,8 @@
 #include "lslmini.hh"
 #include "symtab.hh"
 
+namespace Sling {
+
 void LLScriptSymbolTable::define(LLScriptSymbol *symbol) {
   symbols.insert(SensitiveSymbolMap::value_type(symbol->get_name(), symbol));
   DEBUG(
@@ -108,4 +110,5 @@ void LLScriptSymbolTable::unregister_subtable(LLScriptSymbolTable *table) {
   auto found = std::find(desc_tables.begin(), desc_tables.end(), table);
   if (found != desc_tables.end())
     desc_tables.erase(found);
+}
 }

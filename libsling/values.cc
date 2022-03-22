@@ -2,6 +2,7 @@
 
 #include "lslmini.hh"
 
+namespace Sling {
 void LLASTNode::propogate_values() {
   LLASTNode *node = get_children();
   if (node != nullptr) {
@@ -502,4 +503,5 @@ LLScriptConstant *LLScriptFloatConstant::cast(LST_TYPE to_type) {
     default:
       return nullptr;
   }
+}
 }

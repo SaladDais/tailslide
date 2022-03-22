@@ -9,6 +9,8 @@
 #include "logger.hh"
 #include "allocator.hh"
 
+namespace Sling {
+
 // Base node types
 enum LLNodeType {
 
@@ -34,7 +36,7 @@ enum LLNodeType {
 // Node Sub-types
 enum LLNodeSubType {
 
-  NODE_NO_SUB_TYPE, 
+  NODE_NO_SUB_TYPE,
 
   NODE_INTEGER_CONSTANT,
   NODE_FLOAT_CONSTANT,
@@ -170,7 +172,7 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
     virtual const char  *get_node_name() { return "node";    };
     virtual LLNodeType  get_node_type() { return NODE_NODE; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_NO_SUB_TYPE; }
-    
+
     /// constants ///
     virtual class LLScriptConstant  *get_constant_value()    { return constant_value; };
     virtual bool node_allows_folding() { return false; };
@@ -190,11 +192,13 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
   protected:
     bool                        declaration_allowed;
     bool                        unparentable = false;
-};   
+};
 
 class LLASTNullNode : public LLASTNode {
   virtual const char *get_node_name() { return "null"; };
   virtual LLNodeType get_node_type() { return NODE_NULL; };
 };
+
+}
 
 #endif /* not AST_HH */

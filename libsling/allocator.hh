@@ -6,6 +6,8 @@
 #include <cstring>
 #include <cstdlib>
 
+namespace Sling {
+
 class LLTrackableObject {
 public:
   virtual ~LLTrackableObject() = default;
@@ -46,5 +48,7 @@ private:
 };
 
 extern thread_local ScriptAllocationManager *gAllocationManager;
+
+}
 
 #endif

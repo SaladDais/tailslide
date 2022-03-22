@@ -1,5 +1,7 @@
 #include "testutils.hh"
 
+using namespace Sling;
+
 ParserRef runConformance(const char* name, bool allow_syntax_errors)
 {
   std::string path = __FILE__;

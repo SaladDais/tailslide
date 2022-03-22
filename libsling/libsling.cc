@@ -10,6 +10,8 @@ int yylex_destroy(void *);
 
 int yyparse(void *);
 
+namespace Sling {
+
 ScopedSlingParser::ScopedSlingParser(): script(nullptr), ast_sane(true) {
   if (gAllocationManager != nullptr)
     throw "Already have a live allocation manager!";
@@ -45,4 +47,6 @@ void ScopedSlingParser::parse(FILE *yyin) {
 
   script = gScript;
   ast_sane = !gFatalError;
+}
+
 }

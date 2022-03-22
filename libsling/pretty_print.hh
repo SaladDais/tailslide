@@ -4,6 +4,8 @@
 #include <sstream>
 #include "lslmini.hh"
 
+namespace Sling {
+
 class PrettyPrintOpts {
 public:
     bool minify_whitespace;
@@ -66,5 +68,7 @@ public:
 protected:
     const PrettyPrintOpts &opts;
 };
+
+}
 
 #endif //LSLINT_PRETTY_PRINT_HH

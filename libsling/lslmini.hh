@@ -9,6 +9,13 @@
 #include <functional>
 #include <sstream>
 
+#include "lslmini.tab.hh"
+#include "symtab.hh"
+#include "ast.hh"
+#include "types.hh"
+
+namespace Sling {
+
 typedef int   S32;
 typedef float F32;
 
@@ -18,11 +25,6 @@ typedef float F32;
 
 extern thread_local class LLScriptScript *gScript;
 extern thread_local bool gFatalError;
-
-#include "lslmini.tab.hh"
-#include "symtab.hh"
-#include "ast.hh"
-#include "types.hh"
 
 class LLVector: public LLTrackableObject {
   public:
@@ -854,5 +856,7 @@ public:
     int walklevel = 0;
     std::stringstream stream {};
 };
+
+}
 
 #endif /* not _LSLMINI_HH */

@@ -18,7 +18,7 @@
   assertNoLintErrors(name);     \
 }
 
-using ParserRef = std::unique_ptr<ScopedSlingParser>;
+using ParserRef = std::unique_ptr<Sling::ScopedSlingParser>;
 
 ParserRef runConformance(const char* name, bool allow_syntax_errors=false);
 
@@ -26,15 +26,15 @@ void assertNoLintErrors(const std::string& name);
 
 void checkPrettyPrintOutput(
         const char* name,
-        const OptimizationContext &ctx,
-        const PrettyPrintOpts &pretty_opts,
-        void (*massager)(LLScriptScript* script) = nullptr
+        const Sling::OptimizationContext &ctx,
+        const Sling::PrettyPrintOpts &pretty_opts,
+        void (*massager)(Sling::LLScriptScript* script) = nullptr
 );
 
 void checkTreeDumpOutput(
     const char* name,
-    const OptimizationContext &ctx,
-    void (*massager)(LLScriptScript* script) = nullptr
+    const Sling::OptimizationContext &ctx,
+    void (*massager)(Sling::LLScriptScript* script) = nullptr
 );
 
 #endif

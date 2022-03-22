@@ -5,6 +5,7 @@
 
 #define TYPE(t) LLScriptType::get(t)    // convenience
 
+namespace Sling {
 enum LST_TYPE {
   LST_ERROR         = 0,   // special value so processing can continue without throwing bogus errors
   LST_NULL          = 1,
@@ -55,5 +56,6 @@ class LLScriptType : public LLASTNode {
 bool operation_mutates(int operation);
 const char* operation_str(int operation);
 bool is_cast_legal(LST_TYPE from, LST_TYPE to);
+}
 
 #endif /* not _TYPES_HH */

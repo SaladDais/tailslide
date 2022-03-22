@@ -21,6 +21,8 @@ typedef struct YYLTYPE {
 #define YYLTYPE_IS_TRIVIAL 1
 #endif
 
+namespace Sling {
+
 enum LogLevel {
   LOG_ERROR,            // errors
   LOG_WARN,             // warnings
@@ -71,8 +73,8 @@ enum ErrorCode {
     E_LIST_IN_LIST,
     E_ILLEGAL_CAST,
     E_LAST,
-    
-    
+
+
 
 
     // warnings
@@ -115,7 +117,7 @@ enum ErrorCode {
 #ifdef __GNUC__
 #define DEBUG(args...) do {} while(0)
 #else /* not __GNUC__ */
-#define DEBUG(...)
+#define DEBUG(...) do {} while(0)
 #endif /* not __GNUC__ */
 #endif /* not DEBUG_LEVEL */
 #endif /* not WIN32 */
@@ -183,7 +185,7 @@ class LogMessage: public LLTrackableObject {
 
   private:
     LogLevel            type;
-    
+
     // we need our own copy of loc, because messages logged in the parser will be
     // handing us a copy of a loc structure that is constantly changing, and will
     // be invalid when we go to sort.
@@ -192,5 +194,7 @@ class LogMessage: public LLTrackableObject {
     std::vector<char*>  messages;
     ErrorCode           error;
 };
+
+}
 
 #endif /* not LOGGER_HH */

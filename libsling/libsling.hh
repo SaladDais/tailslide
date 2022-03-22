@@ -5,6 +5,7 @@
 
 #include "lslmini.hh"
 
+namespace Sling {
 
 class ScopedSlingParser {
 public:
@@ -25,5 +26,7 @@ public:
 private:
     ScriptAllocationManager _allocation_manager {};
 };
+
+}
 
 #endif

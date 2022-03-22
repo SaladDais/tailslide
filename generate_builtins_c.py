@@ -25,6 +25,7 @@ def main():
         f.write("""#ifdef _WIN32
 #pragma execution_character_set("utf-8")
 #endif
+namespace Sling {
 const char *builtins_txt[] = {
 """)
         for line in all_code:
@@ -35,7 +36,7 @@ const char *builtins_txt[] = {
             f.write("".join(_escape_cstr_char(x) for x in line))
             f.write('",\n')
 
-        f.write("(char*)nullptr\n};\n")
+        f.write("(char*)nullptr\n};\n}\n")
 
 
 if __name__ == "__main__":

@@ -14,6 +14,8 @@ int yynwarns = 0;                // not defined by flex but named for consistenc
 //int yyerror(const char *fmt, ... );
 //int yywarning(const char *fmt, ...);
 
+namespace Sling {
+
 thread_local YYLTYPE LLASTNode::glloc = {0, 0, 0, 0};
 
 const char *DEPRECATED_FUNCTIONS[][2] = {
@@ -1180,4 +1182,6 @@ bool TreePrintingVisitor::visit(LLASTNode* node) {
   visit_children(node);
   --walklevel;
   return false;
+}
+
 }
