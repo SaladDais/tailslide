@@ -42,7 +42,11 @@ LLScriptConstant *LLScriptIntegerConstant::operation(int operation, LLScriptCons
           break;
         case '/':
           RET_IF_ZERO(ov);
-          nv = value / ov;
+          // Protect against underflows, see SL-31252
+          if (ov == -1)
+            nv = -1 * ov;
+          else
+            nv = value / ov;
           break;
         case '%': {
           RET_IF_ZERO(ov);
