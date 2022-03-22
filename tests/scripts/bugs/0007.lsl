@@ -12,7 +12,7 @@ default
     state_entry()
     {
         mode = llList2Integer(commands, tmode + 1)
-        llOwnerSay("T");    // syntax error from missing ; $[E10019]
+        llOwnerSay("T");    // syntax error from missing ; $[E10020]
         tmode += 3;
     }
 

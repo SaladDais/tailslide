@@ -8,7 +8,7 @@ rotation    r = <9,8,9,1>;
 
 default {
     state_entry() {
-        if ( r == <v.x, v.y, v.z, 1> ) return;      // $[E20012] always false
-        if ( v == <r.x, r.y, r.z> ) return;         // $[E20012]
+        if ( r == <v.x, v.y, v.z, 1> ) return;      // $[E20013] always false
+        if ( v == <r.x, r.y, r.z> ) return;         // $[E20013]
     }
 }

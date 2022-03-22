@@ -13,16 +13,16 @@ default {
 
         ALSO_NOT_CONST = 1;
 
-        if ( CONST )                // condition is always true                     $[E20011]
+        if ( CONST )                // condition is always true                     $[E20012]
             NOT_CONST = 1;          // value assigned to NOT_CONST is never used
 
-        if ( l == EMPTY_LIST )      // condition is always true                     $[E20011]
+        if ( l == EMPTY_LIST )      // condition is always true                     $[E20012]
             NOT_CONST = 2;          // value assigned to NOT_CONST is never used
 
-        if ( m == EMPTY_LIST )      // condition is always false                    $[E20012]
+        if ( m == EMPTY_LIST )      // condition is always false                    $[E20013]
             NOT_CONST = 3;
 
-        if ( m == NOT_EMPTY_LIST )  // condition always true, only comparing lengths $[E20011] $[E20010]
+        if ( m == NOT_EMPTY_LIST )  // condition always true, only comparing lengths $[E20012] $[E20011]
             NOT_CONST = 4;
 
         j = 4;                      // value assigned to j is never used
@@ -36,16 +36,16 @@ default {
         string string_const = "hi";
         rotation quat_const = <1,2,3,4>;
 
-        if ( const_here == 4 )          // always true  $[E20011]
+        if ( const_here == 4 )          // always true  $[E20012]
             llSay( const_here, "hi" );
 
-        if ( const_here != (2 + 2) )    // always false $[E20012]
+        if ( const_here != (2 + 2) )    // always false $[E20013]
             return;
 
-        if ( !(string_const == "hi") )  // always false $[E20012]
+        if ( !(string_const == "hi") )  // always false $[E20013]
             return;
 
-        if ( quat_const == <1,2,3,4> )  // always true  $[E20011]
+        if ( quat_const == <1,2,3,4> )  // always true  $[E20012]
             return;
 
     }

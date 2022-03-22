@@ -1,25 +1,25 @@
-boy(integer girl) {}
+boy(integer girl) {} // $[E20009]
 
 
-state_entry() {
+state_entry() { // $[E10031] $[E20009]
 }
 
 default {
    state_entry() {
-      boy("foo");
+      boy("foo"); // $[E10011]
    }
-   on_rez(integer paramie) {
+   on_rez(integer paramie) { // $[E10033]
    }
-   on_rez(string paramie) {
+   on_rez(string paramie) { // $[E10033] $[E10027]
    }
-   object_rez(float s) {
+   object_rez(float s) { // $[E10027]
    }
-   listen(integer channel) {
+   listen(integer channel) { // $[E10029]
    }
-   changed(integer changed, integer extra) {
+   changed(integer changed, integer extra) { // $[E10028] $[E10031]
    }
-   foo() {
+   foo() { // $[E10006] $[E10030]
    }
-   bar(integer baz) {
+   bar(integer baz) { // $[E10006] $[E10030]
    }
 }

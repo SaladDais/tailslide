@@ -83,7 +83,7 @@ init_colors() {
 // Create/recreate listener
 init_listen() {
     llListenRemove(listen_id);
-    if ( OWNER_ONLY )       // $[E20011]
+    if ( OWNER_ONLY )       // $[E20012]
         listen_id = llListen( CHANNEL, "", llGetOwner(), "" );
     else
         listen_id = llListen( CHANNEL, "", NULL_KEY, "" );
@@ -92,7 +92,7 @@ init_listen() {
 // Send a message to the specified id, based on settings
 say(key id, string str) {
     if ( id == llGetOwner() && USE_OWNER_SAY ) llOwnerSay( str );
-    else if ( USE_IMS ) llInstantMessage( id, str ); // $[E20011]
+    else if ( USE_IMS ) llInstantMessage( id, str ); // $[E20012]
     else llWhisper(0, str);
 }
 

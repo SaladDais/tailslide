@@ -3,8 +3,8 @@
 // Version: v0.1.1
 // Error: Spews 'Parse Error' instead of 'You need at least one event in a state'
 
-default {               // $[E10022]
+default {               // $[E10023]
 } 
 
-state other {           // $[E10022]
+state other {           // $[E10023]
 }

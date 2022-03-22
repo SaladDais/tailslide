@@ -10,10 +10,10 @@ default {
       float  llTargetOmega_spinrate   = 0.0;
       float  llTargetOmega_gain       = 0.0;
 
-      if ( llTargetOmega_axis == ZERO_VECTOR ) // $[E20011] specific case
+      if ( llTargetOmega_axis == ZERO_VECTOR ) // $[E20012] specific case
           return;
 
-      if((llTargetOmega_axis != ZERO_VECTOR) || (llTargetOmega_spinrate != 0.0) || (llTargetOmega_gain != 0.0))//returns E20011 should be $[E20012]
+      if((llTargetOmega_axis != ZERO_VECTOR) || (llTargetOmega_spinrate != 0.0) || (llTargetOmega_gain != 0.0)) // $[E20013]
         llOwnerSay("blah");
 
     }

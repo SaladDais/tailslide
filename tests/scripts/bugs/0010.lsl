@@ -10,12 +10,12 @@ default {
         rotation r;
 
         // these are invalid
-        [v.1,               // $[E10021]: expression constant (no operator)
-         v.6.2.4,           // $[E10021] $[E10021] $[E10021] (parsed as: v .6 .2 .4)
-         v.s,               // $[E10008] invalid member
-         r.a,               // $[E10008] invalid member
-         r.house,           // $[E10008] invalid member
-         v.xample];         // $[E10008] invalid member
+        [v.j, // $[E10008]
+         v.s, // $[E10008]
+         r.a, // $[E10008]
+         r.house, // $[E10008]
+         v.xample]; // $[E10008]
+
 
         // these are valid
         [v.x, v.y, v.z,

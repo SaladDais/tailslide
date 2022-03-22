@@ -1,10 +1,12 @@
 #ifndef _LOGGER_HH
 #define _LOGGER_HH 1
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <vector>
 #include <utility>  // pair
+
+#include "allocator.hh"
 
 // have to do this here because of circular dependencies
 #if ! defined (YYLTYPE) && ! defined (YYLTYPE_IS_DECLARED)
@@ -64,6 +66,10 @@ enum ErrorCode {
     E_TOO_FEW_ARGUMENTS_EVENT,
     E_INVALID_EVENT,
     E_DUPLICATE_DECLARATION_EVENT,
+    E_DECLARATION_INVALID_HERE,
+    E_MULTIPLE_EVENT_HANDLERS,
+    E_LIST_IN_LIST,
+    E_ILLEGAL_CAST,
     E_LAST,
     
     
@@ -84,10 +90,8 @@ enum ErrorCode {
     W_LIST_COMPARE,
     W_CONDITION_ALWAYS_TRUE,
     W_CONDITION_ALWAYS_FALSE,
-    W_MULTIPLE_EVENT_HANDLERS,
+    W_EMPTY_LOOP,
     W_LAST,
-    
-    
 };
 
 #define LOG         Logger::get()->log
@@ -109,7 +113,7 @@ enum ErrorCode {
 #define DEBUG LOG
 #else /* not DEBUG_LEVEL */
 #ifdef __GNUC__
-#define DEBUG(args...)
+#define DEBUG(args...) do {} while(0)
 #else /* not __GNUC__ */
 #define DEBUG(...)
 #endif /* not __GNUC__ */
@@ -127,21 +131,24 @@ class Logger {
     void logv(LogLevel type, YYLTYPE *loc, const char *fmt, va_list args, ErrorCode error=(ErrorCode)0);
     void error( YYLTYPE *loc, ErrorCode error, ... );
     void report();
+    void reset();
+    void finalize();
 
     int     get_errors()    { return errors;    }
-    int     get_warnings()  { return warnings;  }
+    int     get_warnings()  { finalize(); return warnings;  }
     void    set_show_end(bool v) { show_end = v; }
     void    set_show_info(bool v){ show_info = v;}
     void    set_sort(bool v)     { sort = v;     }
     void    set_show_error_codes(bool v) { show_error_codes = v; }
     void    set_check_assertions(bool v) { check_assertions = v; }
+    void    filter_assert_errors();
 
     void    add_assertion( int line, ErrorCode error ) {
-      assertions.push_back( new std::pair<int, ErrorCode>( line, error ) );
+      assertions.emplace_back( std::pair<int, ErrorCode>( line, error ) );
     }
 
   protected:
-    Logger() : errors(0), warnings(0), show_end(false), show_info(false), sort(true), show_error_codes(false), check_assertions(false), last_message(NULL), file(stderr) {};
+    Logger() : errors(0), warnings(0), show_end(false), show_info(false), sort(true), show_error_codes(true), check_assertions(false), last_message(NULL), file(stderr), finalized(false) {};
     int     errors;
     int     warnings;
     bool    show_end;
@@ -149,24 +156,24 @@ class Logger {
     bool    sort;
     bool    show_error_codes;
     bool    check_assertions;
+    bool    finalized;
     class LogMessage *last_message;
 
   private:
-    static Logger *instance;
+    static thread_local Logger instance;
     FILE    *file;
     std::vector<class LogMessage*>    messages;
     std::vector<ErrorCode>            errors_seen;
-    std::vector< std::pair<int, ErrorCode>* >    assertions;
+    std::vector< std::pair<int, ErrorCode>>    assertions;
     static const char* error_messages[];
     static const char* warning_messages[];
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 // Log message entry, for sorting
-class LogMessage {
+class LogMessage: public LLTrackableObject {
   public:
     LogMessage( LogLevel type, YYLTYPE *loc, char *message, ErrorCode error );
-    ~LogMessage();
 
     LogLevel    get_type() { return type; }
     YYLTYPE    *get_loc()  { return &loc;  }

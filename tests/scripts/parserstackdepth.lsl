@@ -37,7 +37,7 @@ default {   // state state_body
         if (i)
         if (i)
         if (i)
-        if ( i )  // syntax error at IF $[E10023]
+        if ( i )
         return;
     }
 }

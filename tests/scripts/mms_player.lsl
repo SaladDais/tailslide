@@ -94,7 +94,7 @@ integer check_control(integer num) {
     
     if ( disable_touch ) return FALSE;
     
-    if ( !OWNER_ONLY ) return TRUE;     // $[E20011]
+    if ( !OWNER_ONLY ) return TRUE;     // $[E20012]
     
     for (i = 0; i < num; i++)
         if ( llDetectedKey(i) == llGetOwner() )
@@ -141,7 +141,7 @@ send_message(integer msg, list data) {
 
 default {
     state_entry() {
-        if (SPIN) llSetTextureAnim( FALSE, ALL_SIDES, 0, 0, 0, 0, 0 );        // $[E20011]
+        if (SPIN) llSetTextureAnim( FALSE, ALL_SIDES, 0, 0, 0, 0, 0 );        // $[E20012]
         clip_playing    = 0;
         clip_preloading = 0;
         num_clips       = llGetListLength(clips);
@@ -320,7 +320,7 @@ state playing {
         llSetTimerEvent( 1 ); 
         send_message(MSG_START, []);
         llResetTime();
-        if ( SPIN ) // $[E20011]
+        if ( SPIN ) // $[E20012]
             llSetTextureAnim( ANIM_ON|ROTATE|LOOP, ALL_SIDES, 0, 0, 0, TWO_PI, SPIN_RATE );
         play_next_clip();        
         preload_next_clip(FALSE);

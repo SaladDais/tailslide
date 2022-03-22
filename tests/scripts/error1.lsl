@@ -1,10 +1,14 @@
-integer number = 2+2;               // non constant                             $[E10020]
+integer number = 2+2;               // non constant                             $[E10021]
 integer number = 3;                 // will only pass because above fails       $[E20009]
 integer number = 4;                 // already declared                         $[E10001]
+vector j = <1,2,"3">;               // $[E20009] $[E10016]
+rotation b = <1,2,3,"4">;           // $[E20009] $[E10016]
+rotation c = <1,2,3,<1,2,3> >;      // $[E20009] $[E10016]
+list foz = [<1,2,3,"4">];           // $[E20009] $[E10016]
 
-string unused()  {                  // warning: declared but never used         $[E20009]
+string unused()  {                  // warning: declared but never used         $[E20009] $[E10019]
     state default;                  // error: can't change state in function    $[E10014]
-    if (1 == 1) {                   // always true                              $[E20011]
+    if (1 == 1) {                   // always true                              $[E20012]
         state default;              // warning: hack that corrupts stack        $[E20004]
         return;                     // error: returning nothing in int function $[E10018]
     }
@@ -17,30 +21,36 @@ string test(integer a, vector v) {  // param a is never used                    
 
 default {
 
-    state_entry(integer param) {    // state_entry does not take params         $[E10019]
+    state_entry(integer param) {    // state_entry does not take params         $[E10028]
         integer number = "hello";   // type mismatch, warning: shadow decl      $[E10015] $[E20001]
-        int q;                      // should point out int->integer typo maybe $[E10019]
-        number = number-2;          // error: parsed as IDENTIFER INTEGER       $[E10021]
-        number = 2-2;               // warning: 2-2 = 2                         $[E20008]
-        [1] == [2];                 // warning: only compares length            $[E20010]
+        int q;                      // should point out int->integer typo maybe $[E10020]
+        [1] == [2];                 // warning: only compares length            $[E20011]
         number = number;            // warning: statement with no effect?
         str = "hi!";                // undeclared                               $[E10006]
         llSay(0, number.x);         // number is not a vector                   $[E10010]
-        LLsay(0, llListToString([])); // typos; suggest llSay, llList2String    $[E10007] $[E10007]
+        LLsay(0, llListToString([])); // typos; suggest llSay, llList2String    $[E10006] $[E10006]
         test(1, "hi");              // arg 2 should be vector not string        $[E10011]
         jump number;                // number is not a label                    $[E10005]
         jump label;                 // warning: when using multiple jumps to
-        jump label;                 //    one label, all but last is ignored    $[E20006]
-        @label;
+        jump label;                 //    one label, all but last is ignored
+        @label;                     //                                          $[E20006]
         return number;              // returning a value in an event            $[E10017]
         state default;              // warning: state current acts like return  $[E20003]
                                     // warning: code is never reached?
+        test();                     // too few arguments                        $[E10013]
+        test(1,<1,2,3>,3);          // too many arguments                       $[E10012]
+        vector z = <1,2,"3">;       // wrong type for member                    $[E10016] $[E20009]
+        rotation q = <0,0,0,"3">;   // wrong type for member                    $[E10016] $[E20009]
+        list boz = [<1,2,3,"4">];   // $[E20009] $[E10016]
+        key k = "foo";
+        llOwnerSay(k + "foo");      // key + str is not valid, even             $[E10002]
+                                    // with implicit promotion between the two.
     }
 
-    touch_start() {                 // requires parameters                      $[E10019]
+    touch_start() {                 // requires parameters                      $[E10029]
     }
 
-    at_target(integer i, vector v, string s) { // third param should be vector  $[E10019]
+    at_target(integer i, vector v, string s) { // third param should be vector  $[E10027]
     }
 
 }

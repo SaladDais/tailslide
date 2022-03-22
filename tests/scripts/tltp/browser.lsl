@@ -93,7 +93,7 @@ string TightListDump(list a, string b)
 
 go(string url)
 {
-    if(debug)  // ALWAYS FALSE: $[E20012]
+    if(debug)  // ALWAYS FALSE: $[E20013]
         llOwnerSay(url);
     list t = TightListParse(url) + current_url;
     integer argc = llGetListLength(t);
@@ -137,7 +137,7 @@ request(list u)
         source = "";
 
         llListenRemove(browsing_handle);
-        do;while(!(browsing_channel = (integer)llFrand(65536.0) | ((integer)llFrand(65536.0) << 16)));
+        do;while(!(browsing_channel = (integer)llFrand(65536.0) | ((integer)llFrand(65536.0) << 16))); // $[E20014]
         browsing_handle = llListen(browsing_channel, "", "", "");
 
         // sending out an URL command to the server pointing back to us
@@ -533,7 +533,7 @@ default
     email(string time, string address, string subj, string message, integer left)
     {
         integer n = 0;
-        if (debug) llOwnerSay("Received email: " + subj + ": " + message);  // always false: $[E20012]
+        if (debug) llOwnerSay("Received email: " + subj + ": " + message);  // always false: $[E20013]
         if (subj == tltp_str)
         {
             n = llSubStringIndex(message, "\n\n");
@@ -582,7 +582,7 @@ default
                         advertised_names += [na];
                         advertised_urls += [llDeleteSubString(msg, 0, 0)];
                     }
-                    else if(debug)  // always false: $[E20012]
+                    else if(debug)  // always false: $[E20013]
                         llOwnerSay("Incomplete broadcasted URL"); 
                 }
             }

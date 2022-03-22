@@ -436,17 +436,17 @@ default
 			add([rot(llGetLocalRot())], 0x100000);
 
 
-		if(llSetText_text != "")    // $[E20012]
+		if(llSetText_text != "")    // $[E20013]
 			add([llSetText_text], 0x800000);
-		if(llSetText_color != <1.0,1.0,1.0> || llSetText_alpha != 1.0)  // $[E20012]
+		if(llSetText_color != <1.0,1.0,1.0> || llSetText_alpha != 1.0)  // $[E20013]
 			add([vec(llSetText_color),flo(llSetText_alpha)], 0x1000000);
 
-		if(llTargetOmega_axis != ZERO_VECTOR || llTargetOmega_spinrate != 0.0 | llTargetOmega_gain != 0.0) // $[E20012]
+		if(llTargetOmega_axis != ZERO_VECTOR || llTargetOmega_spinrate != 0.0 | llTargetOmega_gain != 0.0) // $[E20013]
 			add([vec(llTargetOmega_axis),flo(llTargetOmega_spinrate  ),flo(llTargetOmega_gain)], 0x2000000);
 
 		checkPrim();//0x4000000
 
-		if(llParticleSystem_list != []) // $[E20012]
+		if(llParticleSystem_list != []) // $[E20013]
 			add([TightListDump(lis(llParticleSystem_list),"*")], 0x10000000);
 
         integer t;
@@ -461,7 +461,7 @@ default
 				++cface;
             }
         }
-		if(llSetTextureAnim_mode)   // $[E20012]
+		if(llSetTextureAnim_mode)   // $[E20013]
 		{
 			break();
 			add([llSetTextureAnim_face, llSetTextureAnim_mode, llSetTextureAnim_x_frames, llSetTextureAnim_y_frames,

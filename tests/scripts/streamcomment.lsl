@@ -1,12 +1,12 @@
 /* comment A */
-a() { }
+a() { } // $[E20009]
 /* comment
    A */
-b() { }
+b() { } // $[E20009]
 /*
  *  comment B
  **/
-c() { }
+c() { } // $[E20009]
 default {
    /* comment B */
    state_entry() {

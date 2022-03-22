@@ -3,12 +3,12 @@
 %option reentrant
 %option noyywrap
 %option nounput
+%option always-interactive
 
 %{
 #include <stdlib.h>
 #include "lslmini.hh"
-#include "lslmini.tab.h"
-//#include "llconstants.hh"
+#include "lslmini.tab.hh"
 
 #ifdef WIN32
 #include <io.h>
@@ -26,12 +26,10 @@ char *parse_string(char *input);
 %}
 
 
-D           [0-9]
-BD			[-]?[0-9]
 N			[0-9]
 L			[a-zA-Z_]
 H			[a-fA-F0-9]
-E			[Ee][+-]?{D}+
+E			[Ee][+-]?{N}+
 FS			(f|F)
 
  /* exclusive state to eat comments of any length without overflowing any buffers */
@@ -45,7 +43,7 @@ FS			(f|F)
   LLOC_STEP();
 %}
 "//"                { BEGIN COMMENT; }
-<COMMENT>"$[E"{D}{5}"]" {
+<COMMENT>"$[E"{N}{5}"]" {
     ErrorCode e = (ErrorCode) strtoul( yytext+3, NULL, 10 );
     LOG( LOG_INFO, yylloc, "Adding assertion for E%d.", (int)e );
     Logger::get()->add_assertion( yylloc->first_line, e );
@@ -67,7 +65,7 @@ FS			(f|F)
 "rotation"			{ return(QUATERNION); }
 "list"				{ return(LIST); }
 
-"default"			{ yylval->sval = new char[strlen(yytext) + 1]; strcpy(yylval->sval, yytext); return(STATE_DEFAULT); }
+"default"			{ yylval->sval = gAllocationManager->alloc(strlen(yytext) + 1); strcpy(yylval->sval, yytext); return(STATE_DEFAULT); }
 "state"				{ return(STATE); }
 "event"				{ return(EVENT); }
 "jump"				{ return(JUMP); }
@@ -77,25 +75,19 @@ FS			(f|F)
 "for"				{ return(FOR); }
 "do"				{ return(DO); }
 "while"				{ return(WHILE); }
+"print"				{ return(PRINT); }
 
 "."						{ return(PERIOD); }
 
 
 0[xX]{H}+			{ yylval->ival = strtoul(yytext, NULL, 0);  return(INTEGER_CONSTANT); }
-[-]?{D}+            { yylval->ival = strtoul(yytext, NULL, 10); return(INTEGER_CONSTANT); }
-{BD}+				{
-    yylval->ival = strtoul(yytext, NULL, 10); 
-    ERROR( yylloc, W_BAD_DECIMAL_LEX, yytext, yylval->ival);
-    return(INTEGER_CONSTANT);
-}
-"TRUE"				{ yylval->ival = 1; return(INTEGER_TRUE); }
-"FALSE"				{ yylval->ival = 0; return(INTEGER_FALSE); }
+{N}+                { yylval->ival = strtoul(yytext, NULL, 10); return(INTEGER_CONSTANT); }
 
-{L}({L}|{N})*		{ yylval->sval = new char[strlen(yytext) + 1]; strcpy(yylval->sval, yytext); return(IDENTIFIER); }
+{L}({L}|{N})*		{ yylval->sval = gAllocationManager->alloc(strlen(yytext) + 1); strcpy(yylval->sval, yytext); return(IDENTIFIER); }
 
-[-]?{D}+{E}					{ yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
-[-]?{D}*"."{D}+({E})?{FS}?	{ yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
-[-]?{D}+"."{D}*({E})?{FS}?	{ yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
+{N}+{E}					{ yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
+{N}*"."{N}+({E})?{FS}?	{ yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
+{N}+"."{N}*({E})?{FS}?	{ yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
 
 L?\"(\\.|[^\\"])*\"	{ yylval->sval = parse_string(yytext); return(STRING_CONSTANT); }
 
@@ -144,25 +136,5 @@ L?\"(\\.|[^\\"])*\"	{ yylval->sval = parse_string(yytext); return(STRING_CONSTAN
 
 %%
 
-char *parse_string(char *input) {
-  char *str = new char[strlen(input) + 1 - 2];
-  char *yp  = input + 1;
-  char *sp  = str;
-  while ( *yp ) {
-    if ( *yp == '\\' ) {
-      switch ( *++yp ) { 
-          case 'n':  *sp++ = '\n'; break;
-          case 't':  *sp++ = '\t'; break; // TODO: should this be \t or 4 spaces?
-          case '\\': *sp++ = '\\'; break;
-          case '"':  *sp++ = '"';  break;
-          default:   *sp++ = '\\'; *sp++ = *yp; break;
-      }
-      yp++;
-    } else {
-      *sp++ = *yp++;
-    }
-  }
-  *--sp = 0;
-  return str;
-}
+
 
