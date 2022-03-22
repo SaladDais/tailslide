@@ -31,6 +31,7 @@ SIMPLE_LINT_TEST_CASE("irc-4.lsl")
 // be able to resolve the `foo` bar for the `llOwnerSay()` call.
 SIMPLE_LINT_TEST_CASE("label_shadowing.lsl")
 SIMPLE_LINT_TEST_CASE("libhttpdb.lsl")
+SIMPLE_LINT_TEST_CASE("lsl_conformance.lsl")
 SIMPLE_LINT_TEST_CASE("mms_player.lsl")
 SIMPLE_LINT_TEST_CASE("nested_lists.lsl")
 SIMPLE_LINT_TEST_CASE("parser_abuse.lsl")

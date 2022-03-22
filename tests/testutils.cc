@@ -16,6 +16,7 @@ ParserRef runConformance(const char* name, bool allow_syntax_errors)
   {
     if (!allow_syntax_errors) {
       std::string message = "script " + path + " completely failed to parse!";
+      Logger::get()->report();
       FAIL(message);
     }
   } else {
