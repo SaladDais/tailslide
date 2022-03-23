@@ -88,4 +88,5 @@ language with different scoping / variable shadowing rules.
 
 
 # License
-MIT
+MIT, scripts used for test data (barring those added by me and those in `bugs/`) are
+property of their respective owners
