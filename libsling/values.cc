@@ -1,126 +1,62 @@
 #include <string>
 
 #include "lslmini.hh"
+#include "values.hh"
 
 namespace Sling {
-void LLASTNode::propogate_values() {
-  LLASTNode *node = get_children();
-  if (node != nullptr) {
-    /*
-       while ( node->get_next() )
-       node = node->get_next(); // start with last node
 
-       while ( node )  {
-       node->propogate_values();
-       node = node->get_prev();
-       }
-       */
-    while (node) {
-      node->propogate_values();
-      node = node->get_next();
-    }
-  }
-
-  determine_value();
+bool ConstantDeterminingVisitor::before_descend(LLASTNode *node) {
+  // invalidate any old constant value we had, it might not be valid anymore
+  if (!node->is_static() && node->get_node_type() != NODE_CONSTANT)
+    node->set_constant_value(nullptr);
+  // need special iteration order for script nodes
+  // don't automatically descend!
+  if (node->get_node_type() == NODE_SCRIPT)
+    return false;
+  return true;
 }
 
-void LLScriptListConstant::propogate_values() {
-  LLASTNode *node = get_children();
-  while (node) {
-    node->propogate_values();
-    node = node->get_next();
-  }
-
-  node = get_value();
-  while (node) {
-    node->propogate_values();
-    node = node->get_next();
-  }
-  determine_value();
-}
-
-void LLScriptScript::propogate_values() {
+bool ConstantDeterminingVisitor::visit(LLScriptScript *node) {
   // need to iterate over global vars FIRST since expressions in
   // global functions may make use of them.
-  LLASTNode *node = get_children();
-  while(node != nullptr) {
+  LLASTNode *child = node->get_children();
+  while(child != nullptr) {
     // passed the end of the list of globals
-    if (node->get_node_type() != NODE_GLOBAL_STORAGE)
+    if (child->get_node_type() != NODE_GLOBAL_STORAGE)
       break;
-    if (LLASTNode* child = node->get_child(0)) {
-      if (child->get_node_type() == NODE_GLOBAL_VARIABLE)
-        child->propogate_values();
+    if (LLASTNode* gs_child = child->get_child(0)) {
+      if (gs_child->get_node_type() == NODE_GLOBAL_VARIABLE)
+        gs_child->propogate_values();
     }
-    node = node->get_next();
+    child = child->get_next();
   }
-  // continue calculating values as normal.
-  LLASTNode::propogate_values();
+  // safe to descend into functions and event handlers now
+  visit_children(node);
+  return false;
 }
 
-void LLASTNode::determine_value() {
-  // none
+bool ConstantDeterminingVisitor::visit(LLScriptDeclaration *node) {
+  auto *id = (LLScriptIdentifier *) node->get_child(0);
+  LLASTNode *rvalue = node->get_child(1);
+  if (rvalue == nullptr || rvalue->get_node_type() == NODE_NULL)
+    return false;
+  DEBUG(LOG_DEBUG_SPAM, NULL, "set %s const to %p\n", id->get_name(), rvalue->get_constant_value());
+  id->get_symbol()->set_constant_value(rvalue->get_constant_value());
+  return true;
 }
 
-LLScriptConstant *LLScriptGlobalVariable::get_constant_value() {
-  // It's not really constant if it gets mutated more than once, is it?
-  // note that initialization during declaration doesn't count.
-  auto *id = (LLScriptIdentifier *) get_child(0);
-  if (id->get_symbol()->get_assignments() == 0) {
-    return constant_value;
-  }
-  return nullptr;
-}
+bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
+  int operation = node->get_operation();
+  LLScriptConstant *constant_value = node->get_constant_value();
+  DEBUG(
+    LOG_DEBUG_SPAM,
+    NULL,
+    "expression.determine_value() op=%d cv=%s st=%d\n",
+    operation,
+    constant_value ? constant_value->get_node_name() : NULL,
+    get_node_sub_type()
+  );
 
-LLScriptConstant *LLScriptDeclaration::get_constant_value() {
-  auto *id = (LLScriptIdentifier *) get_child(0);
-  if (id->get_symbol()->get_assignments() == 0) {
-    return constant_value;
-  }
-  return nullptr;
-}
-
-LLScriptConstant *LLScriptExpression::get_constant_value() {
-  // replacing `foo = "bar"` with `"bar"` == no
-  if (!operation_mutates(operation)) {
-    return constant_value;
-  }
-  return nullptr;
-}
-
-
-LLScriptConstant *LLScriptLValueExpression::get_constant_value() {
-  if (is_foldable) {
-    // We have to be careful about folding lists
-    if (this->type == TYPE(LST_LIST)) {
-      LLASTNode *top_foldable = this;
-      LLASTNode *current_node = this;
-
-      // Don't fold this in if it's a list expression at the foldable level
-      while (current_node != nullptr && current_node->node_allows_folding()) {
-        top_foldable = current_node;
-        current_node = current_node->get_parent();
-      }
-      if (top_foldable->get_type() == TYPE(LST_LIST))
-        return nullptr;
-    }
-
-    return constant_value;
-  }
-  return nullptr;
-}
-
-void LLScriptDeclaration::determine_value() {
-  auto *id = (LLScriptIdentifier *) get_child(0);
-  LLASTNode *node = get_child(1);
-  if (node == nullptr || node->get_node_type() == NODE_NULL) return;
-  DEBUG(LOG_DEBUG_SPAM, NULL, "set %s const to %p\n", id->get_name(), node->get_constant_value());
-  id->get_symbol()->set_constant_value(node->get_constant_value());
-}
-
-void LLScriptExpression::determine_value() {
-  DEBUG(LOG_DEBUG_SPAM, NULL, "expression.determine_value() op=%d cv=%s st=%d\n", operation, constant_value
-                                                                                             ? constant_value->get_node_name()
-                                                                                             : NULL, get_node_sub_type());
   // Can't really be avoided in cases where the tree has been modified since
   // the value was calculated, absent some way of finding out which constant values
   // depend on the dirtied expression.
@@ -128,7 +64,7 @@ void LLScriptExpression::determine_value() {
   //   return; // we already have a value
 
   // only check normal and lvalue expressions
-  switch(get_node_sub_type()) {
+  switch(node->get_node_sub_type()) {
     case NODE_NO_SUB_TYPE:
     case NODE_CONSTANT_EXPRESSION:
     case NODE_PARENTHESIS_EXPRESSION:
@@ -137,118 +73,121 @@ void LLScriptExpression::determine_value() {
     case NODE_LVALUE_EXPRESSION:
       break;
     default:
-      return;
+      return true;
   }
 
   if (operation == 0 || operation == '(')
-    constant_value = get_child(0)->get_constant_value();
+    constant_value = node->get_child(0)->get_constant_value();
   else if (operation == '=')
-    constant_value = get_child(1)->get_constant_value();
+    constant_value = node->get_child(1)->get_constant_value();
   else {
-    LLScriptConstant *left = get_child(0)->get_constant_value();
-    LLScriptConstant *right = get_child(1) ? get_child(1)->get_constant_value() : nullptr;
+    LLScriptConstant *left = node->get_child(0)->get_constant_value();
+    LLScriptConstant *right = node->get_child(1) ? node->get_child(1)->get_constant_value() : nullptr;
 
     // we need a constant value from the left, and if we have a right side, it MUST have a constant value too
-    if (left && (get_child(1) == nullptr || right != nullptr))
-      constant_value = left->operation(operation, right, get_lloc());
+    if (left && (node->get_child(1) == nullptr || right != nullptr))
+      constant_value = left->operation(operation, right, node->get_lloc());
     else
       constant_value = nullptr;
   }
+  node->set_constant_value(constant_value);
+  return true;
 }
 
-void LLScriptGlobalVariable::determine_value() {
+bool ConstantDeterminingVisitor::visit(LLScriptGlobalVariable *node) {
   // if it's initialized, set its constant value
-  if (get_child(1)->get_node_type() == NODE_SIMPLE_ASSIGNABLE) {
-    auto *identifier = (LLScriptIdentifier*) get_child(0);
-    identifier->get_symbol()->set_constant_value(get_child(1)->get_child(0)->get_constant_value());
+  auto *identifier = (LLScriptIdentifier*) node->get_child(0);
+  LLASTNode *rvalue = node->get_child(1);
+  if (rvalue->get_node_type() == NODE_SIMPLE_ASSIGNABLE) {
+    identifier->get_symbol()->set_constant_value(rvalue->get_child(0)->get_constant_value());
   }
+  return true;
 }
 
-
-void LLScriptSimpleAssignable::determine_value() {
-  if (get_child(0))
-    constant_value = get_child(0)->get_constant_value();
+bool ConstantDeterminingVisitor::visit(LLScriptSimpleAssignable *node) {
+  // SimpleAssignables take on the value of whatever they contain
+  if (node->get_child(0))
+    node->set_constant_value(node->get_child(0)->get_constant_value());
+  return true;
 }
 
-void LLScriptVectorConstant::determine_value() {
-  if (get_value() != nullptr)
-    return;
-
+bool ConstantDeterminingVisitor::visit(LLScriptVectorConstant *node) {
   float v[3];
   int cv = 0;
 
-  for (LLASTNode *node = get_children(); node; node = node->get_next()) {
+  for (LLASTNode *child = node->get_children(); child; child = child->get_next()) {
     // if we have too many children, make sure we don't overflow cv
     if (cv >= 3)
-      return;
+      return true;
 
     // all children must be constant
-    if (!node->is_constant())
-      return;
+    if (!child->is_constant())
+      return true;
 
     // all children must be float/int constants - get their val or bail if they're wrong
-    switch (node->get_constant_value()->get_type()->get_itype()) {
+    switch (child->get_constant_value()->get_type()->get_itype()) {
       case LST_FLOATINGPOINT:
-        v[cv++] = ((LLScriptFloatConstant *) node->get_constant_value())->get_value();
+        v[cv++] = ((LLScriptFloatConstant *) child->get_constant_value())->get_value();
         break;
       case LST_INTEGER:
-        v[cv++] = (F32)((LLScriptIntegerConstant *) node->get_constant_value())->get_value();
+        v[cv++] = (F32)((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
         break;
       default:
-        return;
+        return true;
     }
 
   }
 
   if (cv < 3)  // not enough children
-    return;
+    return true;
 
-  value = gAllocationManager->new_tracked<LLVector>(v[0], v[1], v[2]);
-
+  node->set_value(gAllocationManager->new_tracked<LLVector>(v[0], v[1], v[2]));
+  return true;
 }
 
-void LLScriptQuaternionConstant::determine_value() {
-  if (get_value() != nullptr)
-    return;
-
+bool ConstantDeterminingVisitor::visit(LLScriptQuaternionConstant *node) {
   float v[4];
   int cv = 0;
 
-  for (LLASTNode *node = get_children(); node; node = node->get_next()) {
+  for (LLASTNode *child = node->get_children(); child; child = child->get_next()) {
     // if we have too many children, make sure we don't overflow cv
     if (cv >= 4)
-      return;
+      return true;
 
     // all children must be constant
-    if (!node->is_constant())
-      return;
+    if (!child->is_constant())
+      return true;
 
     // all children must be float/int constants - get their val or bail if they're wrong
-    switch (node->get_constant_value()->get_type()->get_itype()) {
+    switch (child->get_constant_value()->get_type()->get_itype()) {
       case LST_FLOATINGPOINT:
-        v[cv++] = ((LLScriptFloatConstant *) node->get_constant_value())->get_value();
+        v[cv++] = ((LLScriptFloatConstant *) child->get_constant_value())->get_value();
         break;
       case LST_INTEGER:
-        v[cv++] = (F32)((LLScriptIntegerConstant *) node->get_constant_value())->get_value();
+        v[cv++] = (F32)((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
         break;
       default:
-        return;
+        return true;
     }
 
   }
 
   if (cv < 4) // not enough children;
-    return;
+    return true;
 
-  value = gAllocationManager->new_tracked<LLQuaternion>(v[0], v[1], v[2], v[3]);
-
+  node->set_value(gAllocationManager->new_tracked<LLQuaternion>(v[0], v[1], v[2], v[3]));
+  return true;
 }
 
-
-void LLScriptIdentifier::determine_value() {
+bool ConstantDeterminingVisitor::visit(LLScriptIdentifier *node) {
+  LLScriptSymbol *symbol = node->get_symbol();
+  LLScriptConstant *constant_value = nullptr;
+  const char *member = node->get_member();
   // can't determine value if we don't have a symbol
-  if (symbol == nullptr)
-    return;
+  if (symbol == nullptr) {
+    node->set_constant_value(nullptr);
+    return true;
+  }
 
   DEBUG(LOG_DEBUG_SPAM, NULL, "id %s assigned %d times\n", get_name(), symbol->get_assignments());
   if (symbol->get_assignments() == 0) {
@@ -308,155 +247,208 @@ void LLScriptIdentifier::determine_value() {
       }
     }
   }
+  node->set_constant_value(constant_value);
+  return true;
 }
 
-void LLScriptListExpression::determine_value() {
-  LLASTNode *node = get_children();
+bool ConstantDeterminingVisitor::visit(LLScriptListExpression *node) {
+  LLASTNode *child = node->get_children();
   LLScriptSimpleAssignable *assignable = nullptr;
 
   // if we have children
-  if (node->get_node_type() != NODE_NULL) {
+  if (child->get_node_type() != NODE_NULL) {
     // make sure they are all constant
-    for (node = get_children(); node; node = node->get_next()) {
-      if (!node->is_constant())
-        return;
+    for (child = node->get_children(); child; child = child->get_next()) {
+      if (!child->is_constant())
+        return true;
     }
 
     // create assignables for them
-    for (node = get_children(); node; node = node->get_next()) {
+    for (child = node->get_children(); child; child = child->get_next()) {
       if (assignable == nullptr) {
-        assignable = gAllocationManager->new_tracked<LLScriptSimpleAssignable>(node->get_constant_value());
+        assignable = gAllocationManager->new_tracked<LLScriptSimpleAssignable>(child->get_constant_value());
       } else {
-        assignable->add_next_sibling(gAllocationManager->new_tracked<LLScriptSimpleAssignable>(node->get_constant_value()));
+        assignable->add_next_sibling(gAllocationManager->new_tracked<LLScriptSimpleAssignable>(child->get_constant_value()));
       }
     }
   }
 
   // create constant value
-  constant_value = gAllocationManager->new_tracked<LLScriptListConstant>(assignable);
-
+  node->set_constant_value(gAllocationManager->new_tracked<LLScriptListConstant>(assignable));
+  return true;
 }
 
-void LLScriptVectorExpression::determine_value() {
+bool ConstantDeterminingVisitor::visit(LLScriptVectorExpression *node) {
   float v[3];
   int cv = 0;
 
-  // don't need to figure out a value if we already have one
-  if (constant_value)
-    return;
-
-  for (LLASTNode *node = get_children(); node; node = node->get_next()) {
+  for (LLASTNode *child = node->get_children(); child; child = child->get_next()) {
     // if we have too many children, make sure we don't overflow cv
     if (cv >= 3)
-      return;
+      return true;
 
     // all children must be constant
-    if (!node->is_constant())
-      return;
+    if (!child->is_constant())
+      return true;
 
     // all children must be float/int constants - get their val or bail if they're wrong
-    switch (node->get_constant_value()->get_type()->get_itype()) {
+    switch (child->get_constant_value()->get_type()->get_itype()) {
       case LST_FLOATINGPOINT:
-        v[cv++] = ((LLScriptFloatConstant *) node->get_constant_value())->get_value();
+        v[cv++] = ((LLScriptFloatConstant *) child->get_constant_value())->get_value();
         break;
       case LST_INTEGER:
-        v[cv++] = (F32)((LLScriptIntegerConstant *) node->get_constant_value())->get_value();
+        v[cv++] = (F32)((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
         break;
       default:
-        return;
+        return true;
     }
   }
 
   // make sure we had enough children
   if (cv < 3)
-    return;
+    return true;
 
   // create constant value
-  constant_value = gAllocationManager->new_tracked<LLScriptVectorConstant>(v[0], v[1], v[2]);
-
+  node->set_constant_value(gAllocationManager->new_tracked<LLScriptVectorConstant>(v[0], v[1], v[2]));
+  return true;
 }
 
-void LLScriptQuaternionExpression::determine_value() {
+
+bool ConstantDeterminingVisitor::visit(LLScriptQuaternionExpression *node) {
   float v[4];
   int cv = 0;
 
-  if (constant_value)
-    return;
-
-  for (LLASTNode *node = get_children(); node; node = node->get_next()) {
+  for (LLASTNode *child = node->get_children(); child; child = child->get_next()) {
     // if we have too many children, make sure we don't overflow cv
     if (cv >= 4)
-      return;
+      return true;
 
     // all children must be constant
-    if (!node->is_constant())
-      return;
+    if (!child->is_constant())
+      return true;
 
     // all children must be float/int constants - get their val or bail if they're wrong
-    switch (node->get_constant_value()->get_type()->get_itype()) {
+    switch (child->get_constant_value()->get_type()->get_itype()) {
       case LST_FLOATINGPOINT:
-        v[cv++] = ((LLScriptFloatConstant *) node->get_constant_value())->get_value();
+        v[cv++] = ((LLScriptFloatConstant *) child->get_constant_value())->get_value();
         break;
       case LST_INTEGER:
-        v[cv++] = (F32)((LLScriptIntegerConstant *) node->get_constant_value())->get_value();
+        v[cv++] = (F32)((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
         break;
       default:
-        return;
+        return true;
     }
   }
 
+  // make sure we had enough children
   if (cv < 4)
-    return;
+    return true;
 
   // create constant value
-  constant_value = gAllocationManager->new_tracked<LLScriptQuaternionConstant>(v[0], v[1], v[2], v[3]);
-
+  node->set_constant_value(gAllocationManager->new_tracked<LLScriptQuaternionConstant>(v[0], v[1], v[2], v[3]));
+  return true;
 }
 
-
-
-void LLScriptTypecastExpression::determine_value() {
+bool ConstantDeterminingVisitor::visit(LLScriptTypecastExpression *node) {
   // what are we casting to
-  auto *val = get_child(0)->get_constant_value();
+  auto *val = node->get_child(0)->get_constant_value();
+  node->set_constant_value(nullptr);
   if (!val) {
-    constant_value = nullptr;
-    return;
+    return true;
   }
-  constant_value = nullptr;
   auto orig_type = val->get_type()->get_itype();
-  auto to_type = get_type()->get_itype();
+  auto to_type = node->get_type()->get_itype();
 
   if (orig_type == to_type) {
-    constant_value = val;
-    return;
+    // no-op case
+    node->set_constant_value(val);
+    return true;
   }
 
+  LLScriptConstant *constant_value = nullptr;
   switch(orig_type) {
     case LST_KEY:
     case LST_STRING:
       constant_value = ((LLScriptStringConstant *)val)->cast(to_type);
-      return;
+      break;
     case LST_INTEGER:
       constant_value = ((LLScriptIntegerConstant *)val)->cast(to_type);
-      return;
+      break;
     case LST_FLOATINGPOINT:
       constant_value = ((LLScriptFloatConstant *)val)->cast(to_type);
-      return;
+      break;
     case LST_LIST:
       constant_value = ((LLScriptListConstant *)val)->cast(to_type);
-      return;
+      break;
     case LST_VECTOR:
       constant_value = ((LLScriptVectorConstant *)val)->cast(to_type);
-      return;
+      break;
     case LST_QUATERNION:
       constant_value = ((LLScriptQuaternionConstant *)val)->cast(to_type);
-      return;
+      break;
     case LST_MAX:
     case LST_NULL:
     case LST_ERROR:
-      return;
+      break;
   }
+  node->set_constant_value(constant_value);
+  return true;
 }
+
+void LLASTNode::propogate_values() {
+  ConstantDeterminingVisitor visitor;
+  visit(&visitor);
+}
+
+
+LLScriptConstant *LLScriptGlobalVariable::get_constant_value() {
+  // It's not really constant if it gets mutated more than once, is it?
+  // note that initialization during declaration doesn't count.
+  auto *id = (LLScriptIdentifier *) get_child(0);
+  if (id->get_symbol()->get_assignments() == 0) {
+    return constant_value;
+  }
+  return nullptr;
+}
+
+LLScriptConstant *LLScriptDeclaration::get_constant_value() {
+  auto *id = (LLScriptIdentifier *) get_child(0);
+  if (id->get_symbol()->get_assignments() == 0) {
+    return constant_value;
+  }
+  return nullptr;
+}
+
+LLScriptConstant *LLScriptExpression::get_constant_value() {
+  // replacing `foo = "bar"` with `"bar"` == no
+  if (!operation_mutates(operation)) {
+    return constant_value;
+  }
+  return nullptr;
+}
+
+
+LLScriptConstant *LLScriptLValueExpression::get_constant_value() {
+  if (is_foldable) {
+    // We have to be careful about folding lists
+    if (this->type == TYPE(LST_LIST)) {
+      LLASTNode *top_foldable = this;
+      LLASTNode *current_node = this;
+
+      // Don't fold this in if it's a list expression at the foldable level
+      while (current_node != nullptr && current_node->node_allows_folding()) {
+        top_foldable = current_node;
+        current_node = current_node->get_parent();
+      }
+      if (top_foldable->get_type() == TYPE(LST_LIST))
+        return nullptr;
+    }
+
+    return constant_value;
+  }
+  return nullptr;
+}
+
 
 LLScriptConstant* LLScriptStringConstant::cast(LST_TYPE to_type) {
   auto *cv = ((LLScriptStringConstant *)constant_value)->get_value();

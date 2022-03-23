@@ -24,7 +24,7 @@ class LLScriptType : public LLASTNode {
     explicit LLScriptType(LST_TYPE type, bool static_def=false) : LLASTNode(0), itype(type) {
       // Parenting the global LLScriptType instances to a specific script's tree is illegal
       if (static_def)
-        make_unparentable();
+        mark_static();
     };
     static LLScriptType *get( LST_TYPE type ) {
       return &types[type];

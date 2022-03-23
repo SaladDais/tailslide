@@ -67,7 +67,6 @@ class LLScriptScript : public LLASTNode {
 
     void optimize(const OptimizationContext &ctx);
     void recalculate_reference_data();
-    virtual void propogate_values();
 };
 
 class LLScriptGlobalStorage : public LLASTNode {
@@ -88,8 +87,6 @@ class LLScriptIdentifier : public LLASTNode {
 
     const char    *get_name() { return name; }
     const char    *get_member() { return member; }
-
-    void determine_value();
 
     void resolve_symbol(LLSymbolType symbol_type);
     void set_symbol( LLScriptSymbol *_symbol ) { symbol = _symbol; };
@@ -116,7 +113,6 @@ class LLScriptGlobalVariable : public LLASTNode {
     virtual const char *get_node_name() { return "global var"; }
     virtual LLNodeType get_node_type() { return NODE_GLOBAL_VARIABLE; };
     virtual void determine_type();
-    virtual void determine_value();
 
     virtual LLScriptConstant* get_constant_value();
 
@@ -138,14 +134,13 @@ class LLScriptSimpleAssignable : public LLASTNode {
 public:
   LLScriptSimpleAssignable( class LLScriptConstant *constant ) : LLASTNode() {
     assert(constant);
-    if (constant->is_unparentable())
+    if (constant->is_static())
       constant = constant->copy();
     push_child(constant);
   };
   LLScriptSimpleAssignable( class LLScriptIdentifier *id ) : LLASTNode(1, id) {};
   virtual const char *get_node_name() { return "assignable"; }
   virtual void determine_type();
-  virtual void determine_value();
   virtual LLNodeType get_node_type() { return NODE_SIMPLE_ASSIGNABLE; };
 };
 
@@ -165,6 +160,7 @@ class LLScriptIntegerConstant : public LLScriptConstant {
     virtual LLNodeSubType get_node_sub_type() { return NODE_INTEGER_CONSTANT; }
 
     int get_value() { return value; }
+    void set_value(int val) { value = val; }
     virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
     virtual LLScriptConstant* copy() {
       auto* new_const = gAllocationManager->new_tracked<LLScriptIntegerConstant>(value);
@@ -194,6 +190,7 @@ class LLScriptFloatConstant : public LLScriptConstant {
     virtual LLNodeSubType get_node_sub_type() { return NODE_FLOAT_CONSTANT; }
 
     float get_value() { return value; }
+    void set_value(float val) { value = val; }
     virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
     virtual LLScriptConstant* copy() {
       auto* new_const = gAllocationManager->new_tracked<LLScriptFloatConstant>(value);
@@ -223,6 +220,7 @@ class LLScriptStringConstant : public LLScriptConstant {
     virtual LLNodeSubType get_node_sub_type() { return NODE_STRING_CONSTANT; }
 
     char *get_value() { return value; }
+    void set_value(char *val) { value = val; }
     virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
     virtual LLScriptConstant* copy() {
       auto* new_const = gAllocationManager->new_tracked<LLScriptStringConstant>(value);
@@ -261,6 +259,7 @@ class LLScriptListConstant : public LLScriptConstant {
     virtual LLNodeSubType get_node_sub_type() { return NODE_LIST_CONSTANT; }
 
     class LLScriptSimpleAssignable *get_value() { return value; }
+    void set_value(class LLScriptSimpleAssignable *val) { value = val; }
 
     int get_length() {
       LLASTNode *node = (LLASTNode*)value;
@@ -272,7 +271,6 @@ class LLScriptListConstant : public LLScriptConstant {
 
     virtual void propogate_types();
     virtual void determine_type();
-    virtual void propogate_values();
 
     virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
     virtual LLScriptConstant* copy() {
@@ -306,11 +304,11 @@ class LLScriptVectorConstant : public LLScriptConstant {
       return buf;
     }
 
-    virtual void determine_value();
     virtual void determine_type();
     virtual LLNodeSubType get_node_sub_type() { return NODE_VECTOR_CONSTANT; }
 
     LLVector *get_value() { return value; }
+    void set_value(LLVector *val) { value = val; }
 
     virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
     virtual LLScriptConstant* copy() {
@@ -348,10 +346,10 @@ class LLScriptQuaternionConstant : public LLScriptConstant {
     virtual LLNodeSubType get_node_sub_type() { return NODE_QUATERNION_CONSTANT; }
 
     LLQuaternion *get_value() { return value; }
+    void set_value(class LLQuaternion *val) { value = val; }
 
     virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
 
-    virtual void determine_value();
     virtual void determine_type();
 
     virtual LLScriptConstant* copy() {
@@ -530,7 +528,6 @@ class LLScriptDeclaration : public LLScriptStatement {
       : LLScriptStatement(2, identifier, value) { };
     virtual void define_symbols();
     virtual void determine_type();
-    virtual void determine_value();
     virtual const char *get_node_name() { return "declaration"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_DECLARATION; };
 
@@ -548,7 +545,6 @@ public:
     };
 
     virtual void determine_type();
-    virtual void determine_value();
 
     virtual const char *get_node_name() {
       return "base expression";
@@ -567,7 +563,7 @@ public:
     LLScriptConstantExpression( LLScriptConstant* constant )
       : LLScriptExpression() {
       assert(constant);
-      if (constant->is_unparentable())
+      if (constant->is_static())
         constant = constant->copy();
       push_child(constant);
       constant_value = constant;
@@ -630,7 +626,6 @@ class LLScriptTypecastExpression : public LLScriptExpression {
       : LLScriptExpression(1, expression) {type = _type;};
 
     virtual void determine_type();
-    virtual void determine_value();
     virtual const char *get_node_name() { return "typecast expression"; }
     virtual LLNodeSubType get_node_sub_type() { return NODE_TYPECAST_EXPRESSION; };
 };
@@ -665,7 +660,6 @@ class LLScriptVectorExpression : public LLScriptExpression {
       constant_value = gAllocationManager->new_tracked<LLScriptVectorConstant>(0.0f,0.0f,0.0f);
       type = TYPE(LST_VECTOR);
     }
-    virtual void determine_value();
     virtual void determine_type();
     virtual const char *get_node_name() { return "vector expression"; }
     virtual LLNodeSubType get_node_sub_type() { return NODE_VECTOR_EXPRESSION; };
@@ -679,7 +673,6 @@ class LLScriptQuaternionExpression : public LLScriptExpression {
       constant_value = gAllocationManager->new_tracked<LLScriptQuaternionConstant>(0.0f, 0.0f, 0.0f, 0.0f);
       type = TYPE(LST_QUATERNION);
     };
-    virtual void determine_value();
     virtual void determine_type();
     virtual const char *get_node_name() { return "quaternion expression"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_QUATERNION_EXPRESSION; };
@@ -689,7 +682,6 @@ class LLScriptListExpression : public LLScriptExpression {
   public:
     LLScriptListExpression( LLScriptExpression *c ) : LLScriptExpression( 1, c ) { type = TYPE(LST_LIST); };
 
-    virtual void determine_value();
     virtual const char *get_node_name() { return "list expression"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_LIST_EXPRESSION; }
 
@@ -848,6 +840,13 @@ public:
 
     virtual bool visit_specific(LLASTNode *node);
     void visit_children(LLASTNode *node);
+    // only used for depth-first visitors
+    virtual bool before_descend(LLASTNode *node) {return true;}
+    virtual bool is_depth_first() {return false;}
+};
+
+class DepthFirstASTVisitor: public ASTVisitor {
+    virtual bool is_depth_first() {return true;}
 };
 
 class TreePrintingVisitor: public ASTVisitor {

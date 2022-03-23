@@ -112,7 +112,7 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
       // walk tree, (un)registering descendants' symbol tables with
       // the root table
       assert(newparent != this);
-      if (unparentable) {
+      if (static_node) {
         if (!newparent) return;
         assert(0);
       }
@@ -122,8 +122,8 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
         link_symbol_tables();
     }
 
-    void make_unparentable() {unparentable = true;}
-    bool is_unparentable() {return unparentable;}
+    void mark_static() { static_node = true;}
+    bool is_static() {return static_node;}
 
     void link_symbol_tables (bool unlink=false);
 
@@ -141,7 +141,6 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
 
     // propogate const values     TODO: come up with a better name?
     virtual void propogate_values();
-    virtual void determine_value();
 
     // final pre walk checks    TODO: come up with a better name?
     void final_pre_walk();
@@ -175,6 +174,7 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
 
     /// constants ///
     virtual class LLScriptConstant  *get_constant_value()    { return constant_value; };
+    void set_constant_value(class LLScriptConstant *cv) {constant_value = cv;};
     virtual bool node_allows_folding() { return false; };
     bool            is_constant()           { return get_constant_value() != NULL; };
 
@@ -191,7 +191,7 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
 
   protected:
     bool                        declaration_allowed;
-    bool                        unparentable = false;
+    bool                        static_node = false;
 };
 
 class LLASTNullNode : public LLASTNode {

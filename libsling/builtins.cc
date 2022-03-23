@@ -134,7 +134,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
             }
           }
           auto const_built = gStaticAllocator.new_tracked<LLScriptIntegerConstant>(const_val);
-          const_built->make_unparentable();
+          const_built->mark_static();
           sym->set_constant_value(const_built);
         }
           break;
@@ -142,7 +142,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
           float const_val;
           _CONST_SSCANF(1, "%f", &const_val);
           auto const_built = gStaticAllocator.new_tracked<LLScriptFloatConstant>(const_val);
-          const_built->make_unparentable();
+          const_built->mark_static();
           sym->set_constant_value(const_built);
         }
           break;
@@ -150,7 +150,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
           float x, y, z;
           _CONST_SSCANF(3, "<%f, %f, %f>", &x, &y, &z);
           auto const_built = gStaticAllocator.new_tracked<LLScriptVectorConstant>(x, y, z);
-          const_built->make_unparentable();
+          const_built->mark_static();
           sym->set_constant_value(const_built);
         }
           break;
@@ -158,7 +158,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
           float x, y, z, s;
           _CONST_SSCANF(4, "<%f, %f, %f, %f>", &x, &y, &z, &s);
           auto const_built = gStaticAllocator.new_tracked<LLScriptQuaternionConstant>(x, y, z, s);
-          const_built->make_unparentable();
+          const_built->mark_static();
           sym->set_constant_value(const_built);
         }
           break;
@@ -170,7 +170,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
           auto const_built = gStaticAllocator.new_tracked<LLScriptStringConstant>(
               parse_string(value)
           );
-          const_built->make_unparentable();
+          const_built->mark_static();
           sym->set_constant_value(const_built);
         }
           break;

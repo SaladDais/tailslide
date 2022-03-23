@@ -70,6 +70,7 @@ target_sources(libsling PRIVATE
         libsling/symtab.hh
         libsling/tree_base.hh
         libsling/types.hh
+        libsling/values.hh
         libsling/libsling.hh
 
         libsling/allocator.cc
