@@ -23,10 +23,16 @@ jobs:
             compiler: clang++
             extra_compile_flags: "-DSLING_COVERAGE=ON"
             check_coverage: true
+          - os: macos
+            boostrap_command: true
     name: ${{matrix.os}} - ${{matrix.compiler}}
     runs-on: ${{matrix.os}}-latest
     steps:
       - uses: actions/checkout@v1
+      - name: Install Dependencies
+        if: ${{matrix.boostrap_command}}
+        run: |
+          bash bootstrap_${{matrix.os}}.sh
       - name: make test
         run: |
           mkdir build
