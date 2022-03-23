@@ -373,7 +373,6 @@ class LLScriptGlobalFunction : public LLASTNode {
     virtual void define_symbols();
     virtual const char *get_node_name() { return "global func"; }
     virtual LLNodeType get_node_type() { return NODE_GLOBAL_FUNCTION; };
-    virtual void final_pre_checks();
 };
 
 class LLScriptParamList : public LLASTNode {
@@ -417,7 +416,6 @@ class LLScriptEventHandler : public LLASTNode {
     };
     virtual const char *get_node_name() { return "event handler"; }
     virtual LLNodeType get_node_type() { return NODE_EVENT_HANDLER; };
-    virtual void final_pre_checks();
 };
 
 class LLScriptStatement : public LLASTNode {
@@ -480,7 +478,6 @@ class LLScriptIfStatement : public LLScriptStatement {
     LLScriptIfStatement( class LLScriptExpression *expression, class LLScriptStatement *true_branch, class LLScriptStatement *false_branch)
       : LLScriptStatement( 3, expression, true_branch, false_branch ) {};
     virtual void determine_type();
-    virtual void final_pre_checks();
     virtual const char *get_node_name() { return "if"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_IF_STATEMENT; };
 };
