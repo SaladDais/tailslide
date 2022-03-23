@@ -1,16 +1,21 @@
 # Intro
 
-libSLing provides a parser, AST representation, and tree walker for
+libSLing provides an embeddable parser, AST representation, and tree walker for
 Second Life's Linden Scripting Language.
 
 Also provided is a CLI utility to quickly lint or optimize LSL scripts,
 as well as visualize the AST of the supplied script.
 
-## Build
+# Credits
+libSLing is heavily based on the [lslint](https://github.com/pclewis/lslint)
+LSL linter written by pclewis, see the [NOTICE.txt](NOTICE.txt) file for the
+original README and credits.
+
+# Build
 
 ## Linux & OSX
 
-libSLing is only tested on Linux & OS X, and requires `cmake`, `flex` and `bison`.
+`cmake`, `flex` and `bison` must be installed through your system's package manager.
 
 ```bash
 git clone https://github.com/SaladDais/libSLing.git
@@ -20,6 +25,10 @@ cd build
 cmake ..
 make
 ```
+
+# Windows
+
+Not tested, may be compilable in an [MSYS2](https://www.msys2.org/) environment.
 
 # Tech Overview
 
@@ -80,6 +89,3 @@ language with different scoping / variable shadowing rules.
 
 # License
 MIT
-
-# Credits
-libSLing is heavily based on [lslint](https://github.com/pclewis/lslint) by pclewis
