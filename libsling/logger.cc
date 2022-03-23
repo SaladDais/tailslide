@@ -34,7 +34,7 @@ void Logger::log(LogLevel level, YYLTYPE *yylloc, const char *fmt, ...) {
   va_end(args);
 }
 
-void Logger::error(YYLTYPE *yylloc, ErrorCode error, ...) {
+void Logger::error(YYLTYPE *yylloc, int error, ...) {
   // FIXME: magic numbers
   char buf[1024];
   char *bp = buf;
@@ -68,7 +68,7 @@ void Logger::error(YYLTYPE *yylloc, ErrorCode error, ...) {
     seen_before = true;
   } else {
     seen_before = false;
-    errors_seen.push_back(error);
+    errors_seen.push_back((ErrorCode)error);
   }
 
 
@@ -105,7 +105,7 @@ void Logger::error(YYLTYPE *yylloc, ErrorCode error, ...) {
 }
 
 
-void Logger::logv(LogLevel level, YYLTYPE *yylloc, const char *fmt, va_list args, ErrorCode error) {
+void Logger::logv(LogLevel level, YYLTYPE *yylloc, const char *fmt, va_list args, int error) {
   const char *type = nullptr;
   char buf[1024];
   char *bp = buf;
@@ -152,7 +152,7 @@ void Logger::logv(LogLevel level, YYLTYPE *yylloc, const char *fmt, va_list args
   }
   bp += vsnprintf(bp, LOG_BUF_LEFT, fmt, args);
 
-  last_message = gAllocationManager->new_tracked<LogMessage>(level, yylloc, buf, error);
+  last_message = gAllocationManager->new_tracked<LogMessage>(level, yylloc, buf, (ErrorCode)error);
   //  fprintf(stderr, "%p\n", last_message);
   messages.push_back(last_message);
 }

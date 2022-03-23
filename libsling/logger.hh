@@ -130,8 +130,8 @@ class Logger {
     ~Logger();
 
     void log(LogLevel type, YYLTYPE *loc, const char *fmt, ...);
-    void logv(LogLevel type, YYLTYPE *loc, const char *fmt, va_list args, ErrorCode error=(ErrorCode)0);
-    void error( YYLTYPE *loc, ErrorCode error, ... );
+    void logv(LogLevel type, YYLTYPE *loc, const char *fmt, va_list args, int error=0);
+    void error( YYLTYPE *loc, int error, ... );
     void report();
     void reset();
     void finalize();
