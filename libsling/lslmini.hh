@@ -669,7 +669,7 @@ class LLScriptLValueExpression : public LLScriptExpression {
 
     virtual LLScriptConstant* get_constant_value();
     void set_is_foldable(bool foldable) {is_foldable = foldable;};
-    bool get_is_foldable(bool foldable) {return is_foldable;};
+    bool get_is_foldable() {return is_foldable;};
   private:
     bool is_foldable;
 };
