@@ -3,6 +3,10 @@
 
 namespace Sling {
 
+LLASTNullNode::LLASTNullNode(): LLASTNode() {
+  type = TYPE(LST_NULL);
+}
+
 LLASTNullNode *LLASTNode::new_null_node() {
   return gAllocationManager->new_tracked<LLASTNullNode>();
 }

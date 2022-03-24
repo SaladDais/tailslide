@@ -424,4 +424,52 @@ LLScriptConstant *LLScriptQuaternionConstant::operation(int operation, LLScriptC
   }
 }
 
+
+LLScriptConstant* LLScriptStringConstant::cast(LST_TYPE to_type) {
+  auto *cv = ((LLScriptStringConstant *)constant_value)->get_value();
+  switch(to_type) {
+    case LST_INTEGER: {
+      int base = 10;
+      // Need to explicitly determine what the base should be, we only support
+      // base 10 and base16 and we don't want `011` to be treated as octal!
+      // This check is safe because `cv` must be a null terminated string.
+      if (cv[0] == '0' && (cv[1] == 'x' || cv[2] == 'X'))
+        base = 16;
+      return gAllocationManager->new_tracked<LLScriptIntegerConstant>((S32)strtoul(cv, nullptr, base));
+    }
+    case LST_FLOATINGPOINT: {
+      return gAllocationManager->new_tracked<LLScriptFloatConstant>((F32)strtod(cv, nullptr));
+    }
+    default:
+      return nullptr;
+  }
+}
+
+LLScriptConstant* LLScriptIntegerConstant::cast(LST_TYPE to_type) {
+  auto cv = ((LLScriptIntegerConstant *)constant_value)->get_value();
+  switch(to_type) {
+    case LST_STRING: {
+      return gAllocationManager->new_tracked<LLScriptStringConstant>(gAllocationManager->copy_str(
+          std::to_string(cv).c_str()
+      ));
+    }
+    default:
+      return nullptr;
+  }
+}
+
+LLScriptConstant *LLScriptFloatConstant::cast(LST_TYPE to_type) {
+  auto cv = ((LLScriptFloatConstant *)constant_value)->get_value();
+  switch(to_type) {
+    case LST_STRING: {
+      return gAllocationManager->new_tracked<LLScriptStringConstant>(gAllocationManager->copy_str(
+          // to_string correctly handles -inf and friends
+          std::to_string(cv).c_str()
+      ));
+    }
+    default:
+      return nullptr;
+  }
+}
+
 }

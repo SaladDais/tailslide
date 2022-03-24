@@ -4,7 +4,7 @@
 #include "cxxopt.hh"
 
 #include "libsling.hh"
-#include "pretty_print.hh"
+#include "passes/pretty_print.hh"
 
 using namespace Sling;
 

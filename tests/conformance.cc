@@ -1,7 +1,7 @@
 // This file was originally part of the Luau programming language and is licensed under MIT License;
 #include "libsling.hh"
 #include "doctest.hh"
-#include "pretty_print.hh"
+#include "passes/pretty_print.hh"
 #include "testutils.hh"
 
 using namespace Sling;

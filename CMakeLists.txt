@@ -65,27 +65,29 @@ target_sources(libsling PRIVATE
         libsling/ast.hh
         libsling/logger.hh
         libsling/lslmini.hh
-        libsling/pretty_print.hh
         libsling/strings.hh
         libsling/symtab.hh
         libsling/tree_base.hh
         libsling/types.hh
-        libsling/values.hh
+        libsling/passes/pretty_print.hh
+        libsling/passes/type_checking.hh
+        libsling/passes/values.hh
         libsling/libsling.hh
 
         libsling/allocator.cc
         libsling/ast.cc
         libsling/builtins.cc
         libsling/builtins_txt.cc
-        libsling/final_walk.cc
         libsling/logger.cc
         libsling/lslmini.cc
         libsling/operators.cc
-        libsling/pretty_print.cc
         libsling/strings.cc
         libsling/symtab.cc
         libsling/types.cc
-        libsling/values.cc
+        libsling/passes/final_walk.cc
+        libsling/passes/pretty_print.cc
+        libsling/passes/type_checking.cc
+        libsling/passes/values.cc
         libsling/libsling.cc
 )
 

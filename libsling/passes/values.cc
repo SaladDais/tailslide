@@ -20,11 +20,11 @@ bool ConstantDeterminingVisitor::visit(LLScriptScript *node) {
   // need to iterate over global vars FIRST since expressions in
   // global functions may make use of them.
   LLASTNode *child = node->get_children();
-  while(child != nullptr) {
+  while (child != nullptr) {
     // passed the end of the list of globals
     if (child->get_node_type() != NODE_GLOBAL_STORAGE)
       break;
-    if (LLASTNode* gs_child = child->get_child(0)) {
+    if (LLASTNode *gs_child = child->get_child(0)) {
       if (gs_child->get_node_type() == NODE_GLOBAL_VARIABLE)
         gs_child->propogate_values();
     }
@@ -49,12 +49,12 @@ bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
   int operation = node->get_operation();
   LLScriptConstant *constant_value = node->get_constant_value();
   DEBUG(
-    LOG_DEBUG_SPAM,
-    NULL,
-    "expression.determine_value() op=%d cv=%s st=%d\n",
-    operation,
-    constant_value ? constant_value->get_node_name() : NULL,
-    get_node_sub_type()
+      LOG_DEBUG_SPAM,
+      NULL,
+      "expression.determine_value() op=%d cv=%s st=%d\n",
+      operation,
+      constant_value ? constant_value->get_node_name() : NULL,
+      get_node_sub_type()
   );
 
   // Can't really be avoided in cases where the tree has been modified since
@@ -64,7 +64,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
   //   return; // we already have a value
 
   // only check normal and lvalue expressions
-  switch(node->get_node_sub_type()) {
+  switch (node->get_node_sub_type()) {
     case NODE_NO_SUB_TYPE:
     case NODE_CONSTANT_EXPRESSION:
     case NODE_PARENTHESIS_EXPRESSION:
@@ -96,7 +96,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
 
 bool ConstantDeterminingVisitor::visit(LLScriptGlobalVariable *node) {
   // if it's initialized, set its constant value
-  auto *identifier = (LLScriptIdentifier*) node->get_child(0);
+  auto *identifier = (LLScriptIdentifier *) node->get_child(0);
   LLASTNode *rvalue = node->get_child(1);
   if (rvalue->get_node_type() == NODE_SIMPLE_ASSIGNABLE) {
     identifier->get_symbol()->set_constant_value(rvalue->get_child(0)->get_constant_value());
@@ -130,7 +130,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptVectorConstant *node) {
         v[cv++] = ((LLScriptFloatConstant *) child->get_constant_value())->get_value();
         break;
       case LST_INTEGER:
-        v[cv++] = (F32)((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
+        v[cv++] = (F32) ((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
         break;
       default:
         return true;
@@ -164,7 +164,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptQuaternionConstant *node) {
         v[cv++] = ((LLScriptFloatConstant *) child->get_constant_value())->get_value();
         break;
       case LST_INTEGER:
-        v[cv++] = (F32)((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
+        v[cv++] = (F32) ((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
         break;
       default:
         return true;
@@ -268,7 +268,8 @@ bool ConstantDeterminingVisitor::visit(LLScriptListExpression *node) {
       if (assignable == nullptr) {
         assignable = gAllocationManager->new_tracked<LLScriptSimpleAssignable>(child->get_constant_value());
       } else {
-        assignable->add_next_sibling(gAllocationManager->new_tracked<LLScriptSimpleAssignable>(child->get_constant_value()));
+        assignable->add_next_sibling(
+            gAllocationManager->new_tracked<LLScriptSimpleAssignable>(child->get_constant_value()));
       }
     }
   }
@@ -297,7 +298,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptVectorExpression *node) {
         v[cv++] = ((LLScriptFloatConstant *) child->get_constant_value())->get_value();
         break;
       case LST_INTEGER:
-        v[cv++] = (F32)((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
+        v[cv++] = (F32) ((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
         break;
       default:
         return true;
@@ -333,7 +334,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptQuaternionExpression *node) {
         v[cv++] = ((LLScriptFloatConstant *) child->get_constant_value())->get_value();
         break;
       case LST_INTEGER:
-        v[cv++] = (F32)((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
+        v[cv++] = (F32) ((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
         break;
       default:
         return true;
@@ -366,25 +367,25 @@ bool ConstantDeterminingVisitor::visit(LLScriptTypecastExpression *node) {
   }
 
   LLScriptConstant *constant_value = nullptr;
-  switch(orig_type) {
+  switch (orig_type) {
     case LST_KEY:
     case LST_STRING:
-      constant_value = ((LLScriptStringConstant *)val)->cast(to_type);
+      constant_value = ((LLScriptStringConstant *) val)->cast(to_type);
       break;
     case LST_INTEGER:
-      constant_value = ((LLScriptIntegerConstant *)val)->cast(to_type);
+      constant_value = ((LLScriptIntegerConstant *) val)->cast(to_type);
       break;
     case LST_FLOATINGPOINT:
-      constant_value = ((LLScriptFloatConstant *)val)->cast(to_type);
+      constant_value = ((LLScriptFloatConstant *) val)->cast(to_type);
       break;
     case LST_LIST:
-      constant_value = ((LLScriptListConstant *)val)->cast(to_type);
+      constant_value = ((LLScriptListConstant *) val)->cast(to_type);
       break;
     case LST_VECTOR:
-      constant_value = ((LLScriptVectorConstant *)val)->cast(to_type);
+      constant_value = ((LLScriptVectorConstant *) val)->cast(to_type);
       break;
     case LST_QUATERNION:
-      constant_value = ((LLScriptQuaternionConstant *)val)->cast(to_type);
+      constant_value = ((LLScriptQuaternionConstant *) val)->cast(to_type);
       break;
     case LST_MAX:
     case LST_NULL:
@@ -447,53 +448,5 @@ LLScriptConstant *LLScriptLValueExpression::get_constant_value() {
     return constant_value;
   }
   return nullptr;
-}
-
-
-LLScriptConstant* LLScriptStringConstant::cast(LST_TYPE to_type) {
-  auto *cv = ((LLScriptStringConstant *)constant_value)->get_value();
-  switch(to_type) {
-    case LST_INTEGER: {
-      int base = 10;
-      // Need to explicitly determine what the base should be, we only support
-      // base 10 and base16 and we don't want `011` to be treated as octal!
-      // This check is safe because `cv` must be a null terminated string.
-      if (cv[0] == '0' && (cv[1] == 'x' || cv[2] == 'X'))
-        base = 16;
-      return gAllocationManager->new_tracked<LLScriptIntegerConstant>((S32)strtoul(cv, nullptr, base));
-    }
-    case LST_FLOATINGPOINT: {
-      return gAllocationManager->new_tracked<LLScriptFloatConstant>((F32)strtod(cv, nullptr));
-    }
-    default:
-      return nullptr;
-  }
-}
-
-LLScriptConstant* LLScriptIntegerConstant::cast(LST_TYPE to_type) {
-  auto cv = ((LLScriptIntegerConstant *)constant_value)->get_value();
-  switch(to_type) {
-    case LST_STRING: {
-      return gAllocationManager->new_tracked<LLScriptStringConstant>(gAllocationManager->copy_str(
-          std::to_string(cv).c_str()
-      ));
-    }
-    default:
-      return nullptr;
-  }
-}
-
-LLScriptConstant *LLScriptFloatConstant::cast(LST_TYPE to_type) {
-  auto cv = ((LLScriptFloatConstant *)constant_value)->get_value();
-  switch(to_type) {
-    case LST_STRING: {
-      return gAllocationManager->new_tracked<LLScriptStringConstant>(gAllocationManager->copy_str(
-          // to_string correctly handles -inf and friends
-          std::to_string(cv).c_str()
-      ));
-    }
-    default:
-      return nullptr;
-  }
 }
 }

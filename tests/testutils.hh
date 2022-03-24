@@ -3,7 +3,7 @@
 
 #include "libsling.hh"
 #include "doctest.hh"
-#include "pretty_print.hh"
+#include "passes/pretty_print.hh"
 
 #include <vector>
 #include <memory>

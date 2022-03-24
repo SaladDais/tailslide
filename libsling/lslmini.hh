@@ -112,7 +112,6 @@ class LLScriptGlobalVariable : public LLASTNode {
     virtual void define_symbols();
     virtual const char *get_node_name() { return "global var"; }
     virtual LLNodeType get_node_type() { return NODE_GLOBAL_VARIABLE; };
-    virtual void determine_type();
 
     virtual LLScriptConstant* get_constant_value();
 
@@ -140,7 +139,6 @@ public:
   };
   LLScriptSimpleAssignable( class LLScriptIdentifier *id ) : LLASTNode(1, id) {};
   virtual const char *get_node_name() { return "assignable"; }
-  virtual void determine_type();
   virtual LLNodeType get_node_type() { return NODE_SIMPLE_ASSIGNABLE; };
 };
 
@@ -269,9 +267,6 @@ class LLScriptListConstant : public LLScriptConstant {
       return i;
     }
 
-    virtual void propogate_types();
-    virtual void determine_type();
-
     virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
     virtual LLScriptConstant* copy() {
       auto* new_const = gAllocationManager->new_tracked<LLScriptListConstant>(*this);
@@ -304,7 +299,6 @@ class LLScriptVectorConstant : public LLScriptConstant {
       return buf;
     }
 
-    virtual void determine_type();
     virtual LLNodeSubType get_node_sub_type() { return NODE_VECTOR_CONSTANT; }
 
     LLVector *get_value() { return value; }
@@ -349,8 +343,6 @@ class LLScriptQuaternionConstant : public LLScriptConstant {
     void set_value(class LLQuaternion *val) { value = val; }
 
     virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
-
-    virtual void determine_type();
 
     virtual LLScriptConstant* copy() {
       auto* new_const = gAllocationManager->new_tracked<LLScriptQuaternionConstant>(value->x, value->y, value->z, value->s);
@@ -444,7 +436,6 @@ class LLScriptStateStatement : public LLScriptStatement {
   public:
     LLScriptStateStatement( ) : LLScriptStatement(0) {};
     LLScriptStateStatement( class LLScriptIdentifier *identifier ) : LLScriptStatement(1, identifier) {};
-    virtual void determine_type();
     virtual const char *get_node_name() { return "setstate"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_STATE_STATEMENT; };
 };
@@ -452,7 +443,6 @@ class LLScriptStateStatement : public LLScriptStatement {
 class LLScriptJumpStatement : public LLScriptStatement {
   public:
     LLScriptJumpStatement( class LLScriptIdentifier *identifier ) : LLScriptStatement(1, identifier) {};
-    virtual void determine_type();
     virtual const char *get_node_name() { return "jump"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_JUMP_STATEMENT; };
 };
@@ -469,7 +459,6 @@ class LLScriptReturnStatement : public LLScriptStatement {
   public:
     LLScriptReturnStatement( class LLScriptExpression *expression ) : LLScriptStatement(1, expression) {};
     virtual const char *get_node_name() { return "return"; };
-    virtual void determine_type();
     virtual LLNodeSubType get_node_sub_type() { return NODE_RETURN_STATEMENT; };
 };
 
@@ -477,7 +466,6 @@ class LLScriptIfStatement : public LLScriptStatement {
   public:
     LLScriptIfStatement( class LLScriptExpression *expression, class LLScriptStatement *true_branch, class LLScriptStatement *false_branch)
       : LLScriptStatement( 3, expression, true_branch, false_branch ) {};
-    virtual void determine_type();
     virtual const char *get_node_name() { return "if"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_IF_STATEMENT; };
 };
@@ -489,7 +477,6 @@ class LLScriptForStatement : public LLScriptStatement {
       : LLScriptStatement( 4, init, condition, cont, body ) {};
     virtual const char *get_node_name() { return "for"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_FOR_STATEMENT; };
-    virtual void determine_type();
 };
 
 class LLScriptForExpressionList : public LLASTNode {
@@ -506,7 +493,6 @@ class LLScriptDoStatement : public LLScriptStatement {
       : LLScriptStatement(2, body, condition) {};
     virtual const char *get_node_name() { return "do"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_DO_STATEMENT; };
-    virtual void determine_type();
 };
 
 class LLScriptWhileStatement : public LLScriptStatement {
@@ -515,7 +501,6 @@ class LLScriptWhileStatement : public LLScriptStatement {
       : LLScriptStatement(2, condition, body) {};
     virtual const char *get_node_name() { return "while"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_WHILE_STATEMENT; };
-    virtual void determine_type();
 };
 
 
@@ -524,7 +509,6 @@ class LLScriptDeclaration : public LLScriptStatement {
     LLScriptDeclaration(class LLScriptIdentifier *identifier, class LLScriptExpression *value)
       : LLScriptStatement(2, identifier, value) { };
     virtual void define_symbols();
-    virtual void determine_type();
     virtual const char *get_node_name() { return "declaration"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_DECLARATION; };
 
@@ -540,8 +524,6 @@ public:
       add_children(num, ap);
       va_end(ap);
     };
-
-    virtual void determine_type();
 
     virtual const char *get_node_name() {
       return "base expression";
@@ -622,7 +604,6 @@ class LLScriptTypecastExpression : public LLScriptExpression {
     LLScriptTypecastExpression( LLScriptType *_type, LLScriptExpression *expression )
       : LLScriptExpression(1, expression) {type = _type;};
 
-    virtual void determine_type();
     virtual const char *get_node_name() { return "typecast expression"; }
     virtual LLNodeSubType get_node_sub_type() { return NODE_TYPECAST_EXPRESSION; };
 };
@@ -631,7 +612,6 @@ class LLScriptPrintExpression : public LLScriptExpression {
   public:
     LLScriptPrintExpression( LLScriptExpression *expression )
       : LLScriptExpression( 1, expression ) {type = TYPE(LST_NULL); };
-    virtual void determine_type() {};
     virtual const char *get_node_name() { return "print() call"; }
     virtual LLNodeSubType get_node_sub_type() { return NODE_PRINT_EXPRESSION; };
 };
@@ -642,7 +622,6 @@ class LLScriptFunctionExpression : public LLScriptExpression {
       : LLScriptExpression( 1, identifier ) {};
     LLScriptFunctionExpression( LLScriptIdentifier *identifier, LLScriptExpression *arguments )
       : LLScriptExpression( 2, identifier, arguments) {};
-    virtual void determine_type();
     virtual const char *get_node_name() { return "function call"; }
     virtual LLNodeSubType get_node_sub_type() { return NODE_FUNCTION_EXPRESSION; };
 
@@ -657,7 +636,6 @@ class LLScriptVectorExpression : public LLScriptExpression {
       constant_value = gAllocationManager->new_tracked<LLScriptVectorConstant>(0.0f,0.0f,0.0f);
       type = TYPE(LST_VECTOR);
     }
-    virtual void determine_type();
     virtual const char *get_node_name() { return "vector expression"; }
     virtual LLNodeSubType get_node_sub_type() { return NODE_VECTOR_EXPRESSION; };
 };
@@ -670,7 +648,6 @@ class LLScriptQuaternionExpression : public LLScriptExpression {
       constant_value = gAllocationManager->new_tracked<LLScriptQuaternionConstant>(0.0f, 0.0f, 0.0f, 0.0f);
       type = TYPE(LST_QUATERNION);
     };
-    virtual void determine_type();
     virtual const char *get_node_name() { return "quaternion expression"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_QUATERNION_EXPRESSION; };
 };
@@ -681,19 +658,18 @@ class LLScriptListExpression : public LLScriptExpression {
 
     virtual const char *get_node_name() { return "list expression"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_LIST_EXPRESSION; }
-
-    virtual void determine_type();
 };
 
 class LLScriptLValueExpression : public LLScriptExpression {
   public:
     LLScriptLValueExpression( LLScriptIdentifier *identifier )
       : LLScriptExpression(1, identifier), is_foldable(false) {};
-    virtual void determine_type();
     virtual const char *get_node_name() { return "lvalue expression"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_LVALUE_EXPRESSION; };
 
     virtual LLScriptConstant* get_constant_value();
+    void set_is_foldable(bool foldable) {is_foldable = foldable;};
+    bool get_is_foldable(bool foldable) {return is_foldable;};
   private:
     bool is_foldable;
 };

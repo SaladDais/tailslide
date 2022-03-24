@@ -137,7 +137,6 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
 
     // propogate types   TODO: rename to propogate_and_check_type / determine_and_check_type ?
     virtual void propogate_types();
-    virtual void determine_type();
 
     // propogate const values     TODO: come up with a better name?
     virtual void propogate_values();
@@ -194,8 +193,10 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
 };
 
 class LLASTNullNode : public LLASTNode {
-  virtual const char *get_node_name() { return "null"; };
-  virtual LLNodeType get_node_type() { return NODE_NULL; };
+  public:
+    LLASTNullNode();
+    virtual const char *get_node_name() { return "null"; };
+    virtual LLNodeType get_node_type() { return NODE_NULL; };
 };
 
 }
