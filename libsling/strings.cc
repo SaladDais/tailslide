@@ -8,8 +8,14 @@ char *parse_string(char *input) {
   char *str = gAllocationManager->alloc((strlen(input) * 2) + 1);
   char *yp = input + 1;
   char *sp = str;
-#define _APPEND_CHAR(_x) do {*sp++ = (_x); ++end; } while(0)
   int end = 0;
+#define _APPEND_CHAR(_x) do {*sp++ = (_x); ++end; } while(0)
+  // The first `"` after an `L"` string opener is part of the string value itself
+  // due to lscript's broken parser.
+  if (input[0] == 'L' && input[1] == '"') {
+    _APPEND_CHAR('"');
+    ++yp;
+  }
   while (*yp) {
     if (*yp == '\\') {
       switch (*++yp) {
@@ -39,12 +45,7 @@ char *parse_string(char *input) {
       ++yp;
       escaped_null:;
     } else if (*yp == '"') {
-      // The first `"` after an `L"` string opener is part of the string value itself
-      // due to lscript's broken parser.
-      if (yp == input + 1 && input[0] == 'L')
-        _APPEND_CHAR(*yp++);
-      else
-        break;
+      break;
     } else {
       _APPEND_CHAR(*yp++);
     }
