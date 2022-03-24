@@ -4,7 +4,7 @@
 // Error: Error on multiple handlers for the same event
 
 default {
-    state_entry() { } // $[E10033]
+    state_entry() { }
     state_entry() { } // $[E10033]
     state_entry() { } // $[E10033]
     state_entry() { } // $[E10033]

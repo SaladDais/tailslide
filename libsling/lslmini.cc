@@ -127,7 +127,13 @@ void LLASTNode::define_symbol(LLScriptSymbol *symbol, bool check_existing) {
       // Check if already defined, if it exists in the current scope then shadowing is never allowed!
       shadow = symbol_table->lookup(symbol->get_name());
       if (shadow) {
-        ERROR(IN(symbol), E_DUPLICATE_DECLARATION, symbol->get_name(), shadow->get_lloc()->first_line, shadow->get_lloc()->first_column);
+        if (shadow->get_symbol_type() == SYM_EVENT)
+          if (symbol->get_symbol_type() == SYM_EVENT)
+            ERROR(IN(symbol), E_MULTIPLE_EVENT_HANDLERS, symbol->get_name());
+          else
+            ERROR(IN(symbol), E_EVENT_AS_IDENTIFIER, symbol->get_name());
+        else
+          ERROR(IN(symbol), E_DUPLICATE_DECLARATION, symbol->get_name(), shadow->get_lloc()->first_line, shadow->get_lloc()->first_column);
       } else {
         // Check for shadowed declarations
         if (shadow == nullptr && get_parent())
@@ -139,10 +145,13 @@ void LLASTNode::define_symbol(LLScriptSymbol *symbol, bool check_existing) {
         symbol_table->define(symbol);
 
         if (shadow != nullptr) {
+          // events are _expected_ to "shadow" the event prototype declaration from the outer scope.
+          if (shadow->get_symbol_type() == SYM_EVENT && symbol->get_symbol_type() == SYM_EVENT)
+            return;
           if (shadow->get_sub_type() == SYM_BUILTIN) {
             // you're never allowed to shadow event names
             if (shadow->get_symbol_type() == SYM_EVENT)
-              ERROR(IN(symbol), E_DUPLICATE_DECLARATION_EVENT, symbol->get_name());
+              ERROR(IN(symbol), E_EVENT_AS_IDENTIFIER, symbol->get_name());
             else if (shadow->get_symbol_type() != SYM_FUNCTION || symbol->get_symbol_type() == SYM_FUNCTION)
               ERROR(IN(symbol), E_SHADOW_CONSTANT, symbol->get_name());
           } else {
@@ -152,7 +161,6 @@ void LLASTNode::define_symbol(LLScriptSymbol *symbol, bool check_existing) {
               ERROR(IN(symbol), W_SHADOW_DECLARATION, symbol->get_name(), LINECOL(shadow->get_lloc()));
           }
         }
-
       }
     } else {
       symbol_table->define(symbol);
@@ -214,7 +222,7 @@ void LLScriptState::define_symbols() {
   identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
     identifier->get_name(), identifier->get_type(), SYM_STATE, SYM_GLOBAL, identifier->get_lloc()
   ));
-  define_symbol(identifier->get_symbol());
+  get_parent()->define_symbol(identifier->get_symbol());
 }
 
 void LLScriptGlobalFunction::define_symbols() {
@@ -238,6 +246,20 @@ void LLScriptFunctionDec::define_symbols() {
     define_symbol(identifier->get_symbol());
     node = node->get_next();
   }
+}
+
+void LLScriptEventHandler::define_symbols() {
+  auto *id = (LLScriptIdentifier *) get_child(0);
+  // look for a prototype for this event in the builtin namespace
+  auto *sym = get_root()->lookup_symbol(id->get_name(), SYM_EVENT);
+  if (!sym) {
+    ERROR(HERE, E_INVALID_EVENT, id->get_name());
+    return;
+  }
+  id->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
+      id->get_name(), id->get_type(), SYM_EVENT, SYM_BUILTIN, get_lloc(), sym->get_function_decl()
+  ));
+  get_parent()->define_symbol(id->get_symbol());
 }
 
 void LLScriptEventDec::define_symbols() {

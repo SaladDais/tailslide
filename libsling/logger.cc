@@ -279,7 +279,7 @@ const char *Logger::error_messages[] = {
         "Too many parameters for event `%s'.",
         "Too few parameters for event `%s'.",
         "`%s' is not a valid event name.",
-        "`%s' is an event name, and cannot be used as a function name.",
+        "`%s' is an event name, and cannot be used as an identifier.",
         "`%s' may not be declared here, create a new scope with { }.",
         "Multiple handlers for event `%s'",
         "Lists may not contain other lists",

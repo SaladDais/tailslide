@@ -394,7 +394,9 @@ class LLScriptEventDec : public LLScriptParamList {
 class LLScriptState : public LLASTNode {
   public:
     LLScriptState( class LLScriptIdentifier *identifier, class LLScriptEventHandler *state_body )
-      : LLASTNode( 2, identifier, state_body ) {};
+        : LLASTNode( 2, identifier, state_body ) {
+      symbol_table = gAllocationManager->new_tracked<LLScriptSymbolTable>();
+    };
     virtual void define_symbols();
     virtual const char *get_node_name() { return "state"; }
     virtual LLNodeType get_node_type() { return NODE_STATE; };
@@ -408,6 +410,7 @@ class LLScriptEventHandler : public LLASTNode {
     };
     virtual const char *get_node_name() { return "event handler"; }
     virtual LLNodeType get_node_type() { return NODE_EVENT_HANDLER; };
+    virtual void define_symbols();
 };
 
 class LLScriptStatement : public LLASTNode {

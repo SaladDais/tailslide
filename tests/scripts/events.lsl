@@ -8,7 +8,7 @@ default {
    state_entry() {
       boy("foo"); // $[E10011]
    }
-   on_rez(integer paramie) { // $[E10033]
+   on_rez(integer paramie) {
    }
    on_rez(string paramie) { // $[E10033] $[E10027]
    }
@@ -18,8 +18,8 @@ default {
    }
    changed(integer changed, integer extra) { // $[E10028] $[E10031]
    }
-   foo() { // $[E10006] $[E10030]
+   foo() { // $[E10030]
    }
-   bar(integer baz) { // $[E10006] $[E10030]
+   bar(integer baz) { // $[E10030]
    }
 }
