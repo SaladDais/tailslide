@@ -9,7 +9,7 @@
 using namespace Sling;
 
 void version() {
-  fprintf(stderr, "SLing CLI tool");
+  fprintf(stderr, "Sling CLI tool");
   fprintf(stderr, " built on " __DATE__ "\n");
   fprintf(stderr, " based on https://github.com/pclewis/lslint\n");
 }
@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
 
   options.add_options("General")
           ("help", "Show this message")
-          ("version", "Display the banner and current version of SLing");
+          ("version", "Display the banner and current version of Sling");
 
   options.add_options("Obfuscation")
           ("stdobf", "Standard obfuscation method - uses all methods with no negative performance impact")

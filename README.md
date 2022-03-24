@@ -1,13 +1,13 @@
 # Intro
 
-libSLing provides an embeddable parser, AST representation, and tree walker for
+Sling provides an embeddable parser, AST representation, and tree walker for
 Second Life's Linden Scripting Language.
 
 Also provided is a CLI utility to quickly lint or optimize LSL scripts,
 as well as visualize the AST of the supplied script.
 
 # Credits
-libSLing is heavily based on the [lslint](https://github.com/pclewis/lslint)
+Sling is heavily based on the [lslint](https://github.com/pclewis/lslint)
 LSL linter written by pclewis, see the [NOTICE.txt](NOTICE.txt) file for the
 original README and credits.
 
@@ -18,8 +18,8 @@ original README and credits.
 `cmake`, `flex` and `bison` must be installed through your system's package manager.
 
 ```bash
-git clone https://github.com/SaladDais/libSLing.git
-cd libSLing
+git clone https://github.com/SaladDais/sling.git
+cd sling
 mkdir build
 cd build
 cmake ..
@@ -64,7 +64,7 @@ Obviously, there will be some differences, mostly around floating point operatio
 
 ### Constant Folding
 
-The naive approach is taken. libSLing makes multiple walks down the tree checking if an expression is constant, and replaces
+The naive approach is taken. Sling makes multiple walks down the tree checking if an expression is constant, and replaces
 it with its value.
 
 ```
@@ -82,7 +82,7 @@ Any variable or function that is unused after constant folding may be pruned to 
 ### Symbol Mangling
 
 Names of user defined functions, their parameters and globals contribute to bytecode size.
-To reduce bytecode size, libSLing can mangle user-defined symbols into more compact ones like
+To reduce bytecode size, Sling can mangle user-defined symbols into more compact ones like
 `_a`, `_b`, etc. This may also help with disambiguation when converting the AST to another
 language with different scoping / variable shadowing rules.
 
