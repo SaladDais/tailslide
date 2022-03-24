@@ -394,11 +394,6 @@ bool ConstantDeterminingVisitor::visit(LLScriptTypecastExpression *node) {
   return true;
 }
 
-void LLASTNode::propogate_values() {
-  ConstantDeterminingVisitor visitor;
-  visit(&visitor);
-}
-
 
 LLScriptConstant *LLScriptGlobalVariable::get_constant_value() {
   // It's not really constant if it gets mutated more than once, is it?

@@ -6,7 +6,6 @@
 #include "logger.hh"
 #include "ast.hh"
 #include "visitor.hh"
-#include "passes/type_checking.hh"
 #include "passes/tree_simplifier.hh"
 
 
@@ -18,8 +17,6 @@ int yynwarns = 0;                // not defined by flex but named for consistenc
 //int yywarning(const char *fmt, ...);
 
 namespace Sling {
-
-thread_local YYLTYPE LLASTNode::glloc = {0, 0, 0, 0};
 
 const char *DEPRECATED_FUNCTIONS[][2] = {
         {"llSoundPreload",     "llPreloadSound"},
@@ -34,11 +31,6 @@ const char *DEPRECATED_FUNCTIONS[][2] = {
         {nullptr,              nullptr},
 };
 
-// walk tree post-order and propogate types
-void LLASTNode::propogate_types() {
-  TypeCheckVisitor visitor;
-  visit(&visitor);
-}
 
 class SymbolLinkageVisitor: public ASTVisitor {
 public:

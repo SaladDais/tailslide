@@ -1,8 +1,13 @@
 #include "lslmini.hh"
 #include "ast.hh"
 #include "visitor.hh"
+#include "passes/values.hh"
+#include "passes/final_walk.hh"
+#include "passes/type_checking.hh"
 
 namespace Sling {
+
+thread_local YYLTYPE LLASTNode::glloc = {0, 0, 0, 0};
 
 LLASTNullNode::LLASTNullNode(): LLASTNode() {
   type = TYPE(LST_NULL);
@@ -35,5 +40,23 @@ void LLASTNode::visit(ASTVisitor *visitor) {
     visitor->visit_specific(this);
   }
 }
+
+
+void LLASTNode::propogate_values() {
+  ConstantDeterminingVisitor visitor;
+  visit(&visitor);
+}
+
+void LLASTNode::final_pre_walk() {
+  FinalCheckVisitor visitor;
+  visit(&visitor);
+}
+
+// walk tree post-order and propogate types
+void LLASTNode::propogate_types() {
+  TypeCheckVisitor visitor;
+  visit(&visitor);
+}
+
 
 }

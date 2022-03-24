@@ -70,6 +70,7 @@ target_sources(libsling PRIVATE
         libsling/tree_base.hh
         libsling/types.hh
         libsling/visitor.hh
+        libsling/passes/final_walk.hh
         libsling/passes/pretty_print.hh
         libsling/passes/tree_simplifier.hh
         libsling/passes/tree_print.hh
