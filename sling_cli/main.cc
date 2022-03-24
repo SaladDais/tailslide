@@ -5,6 +5,8 @@
 
 #include "libsling.hh"
 #include "passes/pretty_print.hh"
+#include "passes/tree_print.hh"
+#include "passes/tree_simplifier.hh"
 
 using namespace Sling;
 

@@ -2,6 +2,7 @@
 #define SLING_VALUES_HH
 
 #include "lslmini.hh"
+#include "visitor.hh"
 
 namespace Sling {
 class ConstantDeterminingVisitor : public DepthFirstASTVisitor {

@@ -69,19 +69,7 @@ enum LLNodeSubType {
   NODE_CONSTANT_EXPRESSION,
 };
 
-class OptimizationContext {
-public:
-  bool fold_constants = false;
-  bool prune_unused_locals = false;
-  bool prune_unused_globals = false;
-  bool prune_unused_functions = false;
-  bool may_create_new_strs = false;
-  explicit operator bool() const {
-    return fold_constants || prune_unused_functions || prune_unused_locals || prune_unused_globals;
-  }
-};
-
-
+class OptimizationContext;
 class LLASTNullNode;
 class ASTVisitor;
 

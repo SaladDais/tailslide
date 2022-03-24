@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include "lslmini.hh"
+#include "visitor.hh"
 
 namespace Sling {
 

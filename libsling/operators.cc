@@ -1,3 +1,5 @@
+#include <string>
+
 #include "lslmini.hh"
 #include "allocator.hh"
 

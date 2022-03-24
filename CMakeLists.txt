@@ -69,7 +69,10 @@ target_sources(libsling PRIVATE
         libsling/symtab.hh
         libsling/tree_base.hh
         libsling/types.hh
+        libsling/visitor.hh
         libsling/passes/pretty_print.hh
+        libsling/passes/tree_simplifier.hh
+        libsling/passes/tree_print.hh
         libsling/passes/type_checking.hh
         libsling/passes/values.hh
         libsling/libsling.hh
@@ -84,9 +87,12 @@ target_sources(libsling PRIVATE
         libsling/strings.cc
         libsling/symtab.cc
         libsling/types.cc
+        libsling/visitor.cc
         libsling/passes/final_walk.cc
         libsling/passes/pretty_print.cc
         libsling/passes/type_checking.cc
+        libsling/passes/tree_print.cc
+        libsling/passes/tree_simplifier.cc
         libsling/passes/values.cc
         libsling/libsling.cc
 )

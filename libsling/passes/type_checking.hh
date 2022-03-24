@@ -1,6 +1,7 @@
 #pragma once
 
 #include "lslmini.hh"
+#include "visitor.hh"
 
 namespace Sling {
 class TypeCheckVisitor: public DepthFirstASTVisitor {

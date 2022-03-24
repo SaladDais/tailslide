@@ -1,5 +1,6 @@
 #include "lslmini.hh"
 #include "ast.hh"
+#include "visitor.hh"
 
 namespace Sling {
 

@@ -5,7 +5,9 @@
 #include "lslmini.hh"
 #include "logger.hh"
 #include "ast.hh"
+#include "visitor.hh"
 #include "passes/type_checking.hh"
+#include "passes/tree_simplifier.hh"
 
 
 extern FILE *yyin;
@@ -31,6 +33,12 @@ const char *DEPRECATED_FUNCTIONS[][2] = {
         {"llStopPointAt",      nullptr},
         {nullptr,              nullptr},
 };
+
+// walk tree post-order and propogate types
+void LLASTNode::propogate_types() {
+  TypeCheckVisitor visitor;
+  visit(&visitor);
+}
 
 class SymbolLinkageVisitor: public ASTVisitor {
 public:
@@ -261,12 +269,6 @@ void LLScriptLabel::define_symbols() {
   define_symbol(identifier->get_symbol());
 }
 
-// walk tree post-order and propogate types
-void LLASTNode::propogate_types() {
-  TypeCheckVisitor visitor;
-  visit(&visitor);
-}
-
 /// Identifiers should have their type/symbol set by their parent node, because they don't know what
 /// kind of symbol they represent by themselves. For example, this should work:
 //    string test() { return "hi"; }
@@ -379,52 +381,6 @@ void LLScriptIdentifier::resolve_symbol(LLSymbolType symbol_type) {
   }
 }
 
-class NodeReferenceUpdatingVisitor : public ASTVisitor {
-public:
-  virtual bool visit(LLScriptExpression *node) {
-    if (operation_mutates(node->get_operation())) {
-      LLASTNode *child = node->get_child(0);
-      // add assignment
-      if (child->get_node_sub_type() == NODE_LVALUE_EXPRESSION &&
-          child->get_child(0)->get_node_type() == NODE_IDENTIFIER) {
-        auto *id = (LLScriptIdentifier *) child->get_child(0);
-        if (id->get_symbol()) {
-          if (id->get_symbol()->get_sub_type() == SYM_BUILTIN) {
-            ERROR(IN(node), E_BUILTIN_LVALUE, id->get_symbol()->get_name());
-            // make sure we don't muck with the assignment count on a builtin symbol!
-            return true;
-          }
-          id->get_symbol()->add_assignment();
-        }
-      }
-    }
-    return true;
-  };
-
-  virtual bool visit(LLScriptIdentifier *node) {
-    LLASTNode *upper_node = node->get_parent();
-    while (upper_node != nullptr && upper_node->get_node_type() != NODE_GLOBAL_STORAGE) {
-      // HACK: recursive calls don't count as a reference, won't handle mutual recursion!
-      if (upper_node->get_node_type() == NODE_GLOBAL_FUNCTION) {
-        auto *ident = (LLScriptIdentifier *) upper_node->get_child(0);
-        if (ident != node && (ident)->get_symbol() == node->get_symbol())
-          return false;
-      }
-      upper_node = upper_node->get_parent();
-    }
-    if (auto *symbol = node->get_symbol())
-      symbol->add_reference();
-    return false;
-  };
-};
-
-void LLScriptScript::recalculate_reference_data() {
-// get updated mutation / reference counts
-  get_symbol_table()->reset_reference_data();
-  auto visitor = NodeReferenceUpdatingVisitor();
-  visit(&visitor);
-}
-
 LLASTNode *LLASTNode::find_previous_in_scope(std::function<bool(LLASTNode *)> const &checker) {
   LLASTNode *last_node = this;
   for (;;) {
@@ -483,283 +439,61 @@ LLASTNode *LLASTNode::find_desc_in_scope(std::function<bool(LLASTNode *)> const 
   return nullptr;
 }
 
-bool ASTVisitor::visit_specific(LLASTNode *node) {
-  switch(node->get_node_type()) {
-    case NODE_NODE:
-      return visit(node);
-    case NODE_NULL:
-      return visit((LLASTNullNode *)node);
-    case NODE_SCRIPT:
-      return visit((LLScriptScript *)node);
-    case NODE_GLOBAL_STORAGE:
-      return visit((LLScriptGlobalStorage *)node);
-    case NODE_GLOBAL_FUNCTION:
-      return visit((LLScriptGlobalFunction *)node);
-    case NODE_GLOBAL_VARIABLE:
-      return visit((LLScriptGlobalVariable *)node);
-    case NODE_IDENTIFIER:
-      return visit((LLScriptIdentifier *)node);
-    case NODE_SIMPLE_ASSIGNABLE:
-      return visit((LLScriptSimpleAssignable *)node);
-    case NODE_CONSTANT: {
-      switch(node->get_node_sub_type()) {
-        case NODE_INTEGER_CONSTANT:
-          return visit((LLScriptIntegerConstant *)node);
-        case NODE_FLOAT_CONSTANT:
-          return visit((LLScriptFloatConstant *)node);
-        case NODE_STRING_CONSTANT:
-          return visit((LLScriptStringConstant *)node);
-        case NODE_VECTOR_CONSTANT:
-          return visit((LLScriptVectorConstant *)node);
-        case NODE_QUATERNION_CONSTANT:
-          return visit((LLScriptQuaternionConstant *)node);
-        case NODE_LIST_CONSTANT:
-          return visit((LLScriptListConstant *)node);
-        default:
-          return visit((LLScriptConstant *)node);
-      }
-    }
-    case NODE_FUNCTION_DEC:
-      return visit((LLScriptFunctionDec *)node);
-    case NODE_EVENT_DEC:
-      return visit((LLScriptEventDec *)node);
-    case NODE_FOR_EXPRESSION_LIST:
-      return visit((LLScriptForExpressionList *)node);
-    case NODE_STATE:
-      return visit((LLScriptState *)node);
-    case NODE_EVENT_HANDLER:
-      return visit((LLScriptEventHandler *)node);
-    case NODE_STATEMENT:
-      switch(node->get_node_sub_type()) {
-        case NODE_COMPOUND_STATEMENT:
-          return visit((LLScriptCompoundStatement *)node);
-        case NODE_RETURN_STATEMENT:
-          return visit((LLScriptReturnStatement *)node);
-        case NODE_LABEL:
-          return visit((LLScriptLabel *)node);
-        case NODE_JUMP_STATEMENT:
-          return visit((LLScriptJumpStatement *)node);
-        case NODE_IF_STATEMENT:
-          return visit((LLScriptIfStatement *)node);
-        case NODE_FOR_STATEMENT:
-          return visit((LLScriptForStatement *)node);
-        case NODE_DO_STATEMENT:
-          return visit((LLScriptDoStatement *)node);
-        case NODE_WHILE_STATEMENT:
-          return visit((LLScriptWhileStatement *)node);
-        case NODE_DECLARATION:
-          return visit((LLScriptDeclaration *)node);
-        case NODE_STATE_STATEMENT:
-          return visit((LLScriptStateStatement *)node);
-        default:
-          return visit((LLScriptStatement *)node);
-      }
-    case NODE_EXPRESSION:
-      switch(node->get_node_sub_type()) {
-        case NODE_TYPECAST_EXPRESSION:
-          return visit((LLScriptTypecastExpression *)node);
-        case NODE_PRINT_EXPRESSION:
-          return visit((LLScriptPrintExpression *)node);
-        case NODE_FUNCTION_EXPRESSION:
-          return visit((LLScriptFunctionExpression *)node);
-        case NODE_VECTOR_EXPRESSION:
-          return visit((LLScriptVectorExpression *)node);
-        case NODE_QUATERNION_EXPRESSION:
-          return visit((LLScriptQuaternionExpression *)node);
-        case NODE_LIST_EXPRESSION:
-          return visit((LLScriptListExpression *)node);
-        case NODE_LVALUE_EXPRESSION:
-          return visit((LLScriptLValueExpression *)node);
-        case NODE_PARENTHESIS_EXPRESSION:
-          return visit((LLScriptParenthesisExpression *)node);
-        case NODE_BINARY_EXPRESSION:
-          return visit((LLScriptBinaryExpression *)node);
-        case NODE_UNARY_EXPRESSION:
-          return visit((LLScriptUnaryExpression *)node);
-        case NODE_CONSTANT_EXPRESSION:
-          return visit((LLScriptConstantExpression *)node);
-        default:
-          return visit((LLScriptExpression *)node);
-      }
-    case NODE_TYPE:
-      return visit((LLScriptType *)node);
-  }
-  return visit(node);
+void LLASTNode::check_symbols() {
+  LLASTNode *node;
+  if (get_symbol_table() != nullptr)
+    get_symbol_table()->check_symbols();
+
+  for (node = get_children(); node; node = node->get_next())
+    node->check_symbols();
 }
 
-void ASTVisitor::visit_children(LLASTNode *node) {
-  LLASTNode *child = node->get_children();
 
-  while (child != nullptr) {
-    LLASTNode *next = child->get_next();
-    assert(child != next);
-    assert(child != node);
-    child->visit(this);
-    child = next;
-  }
-
-  /* Stupid list constants with their stupid hidden trees */
-  if (node->get_node_sub_type() == NODE_LIST_CONSTANT) {
-    LLASTNode *list_child = ((LLScriptListConstant *) node)->get_value();
-    while (list_child != nullptr) {
-      LLASTNode *next = list_child->get_next();
-      assert(list_child != next);
-      assert(list_child != node);
-      list_child->visit(this);
-      list_child = next;
-    }
-  }
-}
-
-class TreeSimplifyingVisitor: public ASTVisitor {
-public:
-  explicit TreeSimplifyingVisitor(const OptimizationContext &ctx): ctx(ctx) {};
-  OptimizationContext ctx;
-  int folded_total = 0;
-
-  virtual bool visit(LLScriptDeclaration* node) {
-    if (!ctx.prune_unused_locals)
-      return true;
-
-    auto *id = (LLScriptIdentifier *) (node->get_child(0));
-    auto *sym = id->get_symbol();
-    if (!sym || sym->get_references() != 1 || sym->get_assignments() != 0)
-      return true;
-    LLASTNode *rvalue = node->get_child(1);
-    // rvalue can't be reduced to a constant, don't know that we don't need
-    // the side-effects of evaluating the expression.
-    if(rvalue && !rvalue->get_constant_value())
-      return true;
-
-    ++folded_total;
-    LLASTNode *ancestor = node;
-    // walk up and remove it from whatever symbol table it's in
-    while (ancestor != nullptr) {
-      if (ancestor->get_symbol_table() != nullptr) {
-        if (ancestor->get_symbol_table()->remove(sym))
-          break;
+class NodeReferenceUpdatingVisitor : public ASTVisitor {
+  public:
+    virtual bool visit(LLScriptExpression *node) {
+      if (operation_mutates(node->get_operation())) {
+        LLASTNode *child = node->get_child(0);
+        // add assignment
+        if (child->get_node_sub_type() == NODE_LVALUE_EXPRESSION &&
+            child->get_child(0)->get_node_type() == NODE_IDENTIFIER) {
+          auto *id = (LLScriptIdentifier *) child->get_child(0);
+          if (id->get_symbol()) {
+            if (id->get_symbol()->get_sub_type() == SYM_BUILTIN) {
+              ERROR(IN(node), E_BUILTIN_LVALUE, id->get_symbol()->get_name());
+              // make sure we don't muck with the assignment count on a builtin symbol!
+              return true;
+            }
+            id->get_symbol()->add_assignment();
+          }
+        }
       }
-      ancestor = ancestor->get_parent();
-    }
-    assert(node->get_parent() != nullptr);
-    node->get_parent()->remove_child(node);
-    // child is totally gone now, can't recurse.
-    return false;
-  };
+      return true;
+    };
 
-  virtual bool visit(LLScriptGlobalStorage* node) {
-    // GlobalStorages either contain a single var or a single function.
-    LLASTNode *contained = (node->get_child(0)->get_node_type() != NODE_NULL) ? node->get_child(0) : node->get_child(1);
-    // and they both keep their identifier in the first child!
-    auto *id = (LLScriptIdentifier *) (contained->get_child(0));
-    assert(id != nullptr && id->get_node_type() == NODE_IDENTIFIER);
-
-    LLNodeType node_type = contained->get_node_type();
-    auto *sym = id->get_symbol();
-
-    if (((node_type == NODE_GLOBAL_FUNCTION && ctx.prune_unused_functions) ||
-         (node_type == NODE_GLOBAL_VARIABLE && ctx.prune_unused_globals))
-        && sym->get_references() == 1) {
-      ++folded_total;
-      // these reside in the global scope, look for the root symbol table and the entry
-      LLASTNode *script = node->get_root();
-      script->get_symbol_table()->remove(sym);
-      // remove the node itself
-      node->get_parent()->remove_child(node);
+    virtual bool visit(LLScriptIdentifier *node) {
+      LLASTNode *upper_node = node->get_parent();
+      while (upper_node != nullptr && upper_node->get_node_type() != NODE_GLOBAL_STORAGE) {
+        // HACK: recursive calls don't count as a reference, won't handle mutual recursion!
+        if (upper_node->get_node_type() == NODE_GLOBAL_FUNCTION) {
+          auto *ident = (LLScriptIdentifier *) upper_node->get_child(0);
+          if (ident != node && (ident)->get_symbol() == node->get_symbol())
+            return false;
+        }
+        upper_node = upper_node->get_parent();
+      }
+      if (auto *symbol = node->get_symbol())
+        symbol->add_reference();
       return false;
-    }
-    return true;
-  };
-
-  virtual bool visit(LLScriptExpression* node) {
-    if (!ctx.fold_constants)
-      return true;
-
-    LLScriptConstant *cv = node->get_constant_value();
-    if(!cv)
-      return true;
-    auto c_type = node->get_type()->get_itype();
-    // this expression results in a list, don't fold the result in.
-    if (c_type == LST_LIST)
-      return true;
-    // this expression may result in a new entry in the string constant pool,
-    // and we're not allowed to create new ones, don't fold.
-    // TODO: Might be worth checking for cases where we're just splicing together two
-    //  strings that aren't referenced anywhere else.
-    if (!ctx.may_create_new_strs && c_type == LST_STRING)
-      return true;
-
-    // We're going to change its parent / sibling connections,
-    // so we need a copy.
-    auto *new_expr = gAllocationManager->new_tracked<LLScriptConstantExpression>(cv);
-    new_expr->set_lloc(node->get_lloc());
-    LLASTNode::replace_node(node, new_expr);
-    ++folded_total;
-
-    return false;
-  };
-
-  virtual bool visit(LLScriptSimpleAssignable *node) {
-    if (!ctx.fold_constants)
-      return true;
-    LLASTNode *child = node->get_child(0);
-    if (child && child->get_node_type() == NODE_IDENTIFIER) {
-      auto *id = (LLScriptIdentifier *)child;
-      auto *sym = id->get_symbol();
-      // Is this a builtin constant? Don't bother replacing it.
-      // These references are usually "free" given that they're
-      // lexer tokens in SL proper.
-      if (!sym || sym->get_sub_type() == SYM_BUILTIN)
-        return false;
-      if (sym->get_type()->get_itype() == LST_LIST)
-        return false;
-      LLScriptConstant *cv = child->get_constant_value();
-      if (cv) {
-        cv = cv->copy();
-        cv->set_lloc(child->get_lloc());
-        LLASTNode::replace_node(child, cv);
-        ++folded_total;
-      }
-    }
-    return true;
-  }
-
-  virtual bool visit(LLScriptLValueExpression *node) {
-    if (!ctx.fold_constants)
-      return true;
-    LLASTNode *child = node->get_child(0);
-    if (child && child->get_node_type() == NODE_IDENTIFIER) {
-      auto *id = (LLScriptIdentifier *)child;
-      auto *sym = id->get_symbol();
-      // Is this a builtin constant? Don't bother replacing it.
-      // These references are usually "free" given that they're
-      // lexer tokens in SL proper.
-      if (!sym || sym->get_sub_type() == SYM_BUILTIN)
-        return false;
-      // no inlining references to lists, they don't get put in
-      // a constant pool like strings or keys!
-      if (sym->get_type()->get_itype() == LST_LIST)
-        return false;
-      LLScriptConstant *cv = child->get_constant_value();
-      if (cv) {
-        auto *new_expr = gAllocationManager->new_tracked<LLScriptConstantExpression>(cv);
-        new_expr->set_lloc(node->get_lloc());
-        LLASTNode::replace_node(
-          node,
-          new_expr
-        );
-        ++folded_total;
-        return false;
-      }
-    }
-    return true;
-  };
-
-  virtual bool visit(LLScriptConstantExpression *node) {
-    // Don't touch these at all, they can't be simplified any more!
-    return false;
-  };
+    };
 };
+
+void LLScriptScript::recalculate_reference_data() {
+// get updated mutation / reference counts
+  get_symbol_table()->reset_reference_data();
+  auto visitor = NodeReferenceUpdatingVisitor();
+  visit(&visitor);
+}
 
 void LLScriptScript::optimize(const OptimizationContext &ctx) {
   int optimized;
@@ -774,37 +508,6 @@ void LLScriptScript::optimize(const OptimizationContext &ctx) {
     if (optimized)
       recalculate_reference_data();
   } while (optimized);
-}
-
-void LLASTNode::check_symbols() {
-  LLASTNode *node;
-  if (get_symbol_table() != nullptr)
-    get_symbol_table()->check_symbols();
-
-  for (node = get_children(); node; node = node->get_next())
-    node->check_symbols();
-}
-
-bool TreePrintingVisitor::visit(LLASTNode* node) {
-  LLASTNode *child = node->get_children();
-  char buf[256];
-
-  auto lloc = node->get_lloc();
-  auto type = node->get_type();
-  auto constant_value = node->get_constant_value();
-  int i;
-  for (i = 0; i < walklevel; i++) {
-    stream << "  ";
-  }
-  stream << node->get_node_name()
-      << " [" << (type ? type->get_node_name() : "") << "] "
-      << "(cv=" << (constant_value ? constant_value->get_node_name() : "") << ") "
-      << '(' << lloc->first_line << ',' << lloc->first_column << ")\n";
-
-  ++walklevel;
-  visit_children(node);
-  --walklevel;
-  return false;
 }
 
 }
