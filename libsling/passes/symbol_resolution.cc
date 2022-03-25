@@ -4,6 +4,59 @@
 namespace Sling {
 
 
+// all global var definitions are implicitly hoisted above function definitions
+// all functions and states have their declarations implicitly hoisted as well.
+class GlobalDeclHoistingVisitor: public ASTVisitor {
+  public:
+    virtual bool visit(LLScriptGlobalVariable *node) {
+      auto *identifier = (LLScriptIdentifier *) node->get_children();
+      identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
+          identifier->get_name(), identifier->get_type(), SYM_VARIABLE, SYM_GLOBAL, node->get_lloc(), nullptr, node->get_parent()
+      ));
+      node->define_symbol(identifier->get_symbol());
+      return true;
+    };
+
+    virtual bool visit(LLScriptGlobalFunction *node) {
+      auto *identifier = (LLScriptIdentifier *) node->get_child(0);
+
+      // define function in parent scope since functions have their own scope
+      identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
+          identifier->get_name(),
+          identifier->get_type(),
+          SYM_FUNCTION,
+          SYM_GLOBAL,
+          node->get_lloc(),
+          (LLScriptFunctionDec *) node->get_child(1)
+      ));
+      node->get_parent()->define_symbol(identifier->get_symbol());
+      return false;
+    };
+
+    virtual bool visit(LLScriptState *node) {
+      LLASTNode *maybe_id = node->get_children();
+      LLScriptIdentifier *identifier;
+
+      if (maybe_id->get_node_type() == NODE_NULL) // null identifier = default state, nothing to define
+        return false;
+
+      identifier = (LLScriptIdentifier *) maybe_id;
+      identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
+          identifier->get_name(), identifier->get_type(), SYM_STATE, SYM_GLOBAL, identifier->get_lloc()
+      ));
+      node->get_parent()->define_symbol(identifier->get_symbol());
+      return false;
+    };
+};
+
+bool SymbolResolutionVisitor::visit(LLScriptScript *node) {
+  // Walk over just the globals before we descend into function
+  // bodies and do general symbol resolution.
+  GlobalDeclHoistingVisitor visitor;
+  node->visit(&visitor);
+  return true;
+}
+
 bool SymbolResolutionVisitor::visit(LLScriptDeclaration *node) {
   auto *identifier = (LLScriptIdentifier *) node->get_children();
   identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
@@ -14,46 +67,6 @@ bool SymbolResolutionVisitor::visit(LLScriptDeclaration *node) {
   if (!node->get_declaration_allowed()) {
     ERROR(IN(node), E_DECLARATION_INVALID_HERE, identifier->get_symbol()->get_name());
   }
-  return true;
-}
-
-bool SymbolResolutionVisitor::visit(LLScriptGlobalVariable *node) {
-  auto *identifier = (LLScriptIdentifier *) node->get_children();
-  identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
-      identifier->get_name(), identifier->get_type(), SYM_VARIABLE, SYM_GLOBAL, node->get_lloc(), nullptr, node->get_parent()
-  ));
-  node->define_symbol(identifier->get_symbol());
-  return true;
-}
-
-bool SymbolResolutionVisitor::visit(LLScriptState *node) {
-  LLASTNode *maybe_id = node->get_children();
-  LLScriptIdentifier *identifier;
-
-  if (maybe_id->get_node_type() == NODE_NULL) // null identifier = default state, nothing to define
-    return true;
-
-  identifier = (LLScriptIdentifier *) maybe_id;
-  identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
-      identifier->get_name(), identifier->get_type(), SYM_STATE, SYM_GLOBAL, identifier->get_lloc()
-  ));
-  node->get_parent()->define_symbol(identifier->get_symbol());
-  return true;
-}
-
-bool SymbolResolutionVisitor::visit(LLScriptGlobalFunction *node) {
-  auto *identifier = (LLScriptIdentifier *) node->get_child(0);
-
-  // define function in parent scope since functions have their own scope
-  identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
-      identifier->get_name(),
-      identifier->get_type(),
-      SYM_FUNCTION,
-      SYM_GLOBAL,
-      node->get_lloc(),
-      (LLScriptFunctionDec *) node->get_child(1)
-  ));
-  node->get_parent()->define_symbol(identifier->get_symbol());
   return true;
 }
 
@@ -76,6 +89,11 @@ static void register_func_param_symbols(LLASTNode *proto, bool is_event) {
 bool SymbolResolutionVisitor::visit(LLScriptFunctionDec *node) {
   register_func_param_symbols(node, false);
   return true;
+}
+
+bool SymbolResolutionVisitor::visit(LLScriptGlobalVariable *node) {
+  // Symbol resolution for everything inside is already done, don't descend.
+  return false;
 }
 
 bool SymbolResolutionVisitor::visit(LLScriptEventHandler *node) {

@@ -9,8 +9,7 @@ namespace Sling {
 class SymbolResolutionVisitor : public ASTVisitor {
     virtual bool visit(LLScriptDeclaration *node);
     virtual bool visit(LLScriptGlobalVariable *node);
-    virtual bool visit(LLScriptState *node);
-    virtual bool visit(LLScriptGlobalFunction *node);
+    virtual bool visit(LLScriptScript *node);
     virtual bool visit(LLScriptFunctionDec *node);
     virtual bool visit(LLScriptEventHandler *node);
     virtual bool visit(LLScriptEventDec *node);
