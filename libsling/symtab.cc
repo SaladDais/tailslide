@@ -33,7 +33,7 @@ void LLScriptSymbolTable::check_symbols() {
   for (auto &symbol: symbols) {
     LLScriptSymbol *sym = symbol.second;
     if (sym->get_sub_type() != SYM_BUILTIN && sym->get_sub_type() != SYM_EVENT_PARAMETER &&
-        sym->get_references() == 1) {
+        sym->get_references() <= 1) {
       ERROR(IN(sym), W_DECLARED_BUT_NOT_USED, LLScriptSymbol::get_type_name(sym->get_symbol_type()), sym->get_name());
     }
     if (sym->get_symbol_type() == SYM_LABEL) {

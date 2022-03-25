@@ -1,6 +1,6 @@
 // Constant propogation test
 
-string s = "goodbye";
+integer s = 2;
 
 default {
     state_entry() {
@@ -9,7 +9,7 @@ default {
         vector     v = <1,2,3>;
         quaternion r = <3,2,1,0>;
         list       l = [1,2,3];
-        if ( s == "goodbye" ) return;           // $[E20012]
+        if ( s == 2 ) return;                   // $[E20012]
         string     s = "hello";                 // $[E20001]
 
         if ( i == f ) return;                   // $[E20012]

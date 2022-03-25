@@ -6,16 +6,30 @@ namespace Sling {
 
 // all global var definitions are implicitly hoisted above function definitions
 // all functions and states have their declarations implicitly hoisted as well.
-class GlobalDeclHoistingVisitor: public ASTVisitor {
+class GlobalSymbolResolutionVisitor: public ASTVisitor {
   public:
     virtual bool visit(LLScriptGlobalVariable *node) {
+      // descend first so we can resolve any symbol references present in the rvalue
+      // SimpleAssignable before we've defined the identifier from the lvalue.
+      // Necessary so things like `string foo = foo;` will error correctly.
+      visit_children(node);
+
       auto *identifier = (LLScriptIdentifier *) node->get_children();
       identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
           identifier->get_name(), identifier->get_type(), SYM_VARIABLE, SYM_GLOBAL, node->get_lloc(), nullptr, node->get_parent()
       ));
       node->define_symbol(identifier->get_symbol());
-      return true;
+      return false;
     };
+
+    virtual bool visit(LLScriptSimpleAssignable *node) {
+      LLASTNode *s_val = node->get_child(0);
+      if (s_val && s_val->get_node_type() == NODE_IDENTIFIER) {
+        auto *id = (LLScriptIdentifier *) s_val;
+        id->resolve_symbol(SYM_VARIABLE);
+      }
+      return false;
+    }
 
     virtual bool visit(LLScriptGlobalFunction *node) {
       auto *identifier = (LLScriptIdentifier *) node->get_child(0);
@@ -30,6 +44,7 @@ class GlobalDeclHoistingVisitor: public ASTVisitor {
           (LLScriptFunctionDec *) node->get_child(1)
       ));
       node->get_parent()->define_symbol(identifier->get_symbol());
+      // don't descend, we only want the declaration.
       return false;
     };
 
@@ -45,6 +60,7 @@ class GlobalDeclHoistingVisitor: public ASTVisitor {
           identifier->get_name(), identifier->get_type(), SYM_STATE, SYM_GLOBAL, identifier->get_lloc()
       ));
       node->get_parent()->define_symbol(identifier->get_symbol());
+      // don't descend, we only want the declaration
       return false;
     };
 };
@@ -52,13 +68,19 @@ class GlobalDeclHoistingVisitor: public ASTVisitor {
 bool SymbolResolutionVisitor::visit(LLScriptScript *node) {
   // Walk over just the globals before we descend into function
   // bodies and do general symbol resolution.
-  GlobalDeclHoistingVisitor visitor;
+  GlobalSymbolResolutionVisitor visitor;
   node->visit(&visitor);
   return true;
 }
 
 bool SymbolResolutionVisitor::visit(LLScriptDeclaration *node) {
-  auto *identifier = (LLScriptIdentifier *) node->get_children();
+  // visit the rvalue first so we correctly handle things like
+  // `string foo = foo;`
+  LLASTNode *rvalue = node->get_child(1);
+  if (rvalue)
+    rvalue->visit(this);
+
+  auto *identifier = (LLScriptIdentifier *) node->get_child(0);
   identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
       identifier->get_name(), identifier->get_type(), SYM_VARIABLE, SYM_LOCAL, node->get_lloc(), nullptr, node
   ));
@@ -67,7 +89,7 @@ bool SymbolResolutionVisitor::visit(LLScriptDeclaration *node) {
   if (!node->get_declaration_allowed()) {
     ERROR(IN(node), E_DECLARATION_INVALID_HERE, identifier->get_symbol()->get_name());
   }
-  return true;
+  return false;
 }
 
 static void register_func_param_symbols(LLASTNode *proto, bool is_event) {
@@ -124,5 +146,12 @@ bool SymbolResolutionVisitor::visit(LLScriptLabel *node) {
   node->define_symbol(identifier->get_symbol());
   return true;
 }
+
+bool SymbolResolutionVisitor::visit(LLScriptLValueExpression *node) {
+  auto *id = (LLScriptIdentifier *) node->get_child(0);
+  id->resolve_symbol(SYM_VARIABLE);
+  return true;
+}
+
 
 }

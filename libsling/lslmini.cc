@@ -72,42 +72,6 @@ LLScriptSymbol *LLASTNode::lookup_symbol(const char *name, LLSymbolType sym_type
   if (symbol_table)
     sym = symbol_table->lookup(name, sym_type);
 
-  // Make sure the declaration happened *before* our usage of it,
-  // LSL doesn't hoist declarations!
-  if (sym != nullptr && start_node != nullptr && sym->get_symbol_type() == SYM_VARIABLE &&
-      (sym->get_sub_type() == SYM_LOCAL || sym->get_sub_type() == SYM_GLOBAL)) {
-    bool is_local = (sym->get_sub_type() == SYM_LOCAL);
-    LLASTNode *decl_node = sym->get_var_decl();
-    LLASTNode *ref_ancestor = start_node;
-
-    assert(decl_node != nullptr);
-
-    /* handle `integer foo = foo + 1;` */
-    while ((ref_ancestor = ref_ancestor->get_parent()) != nullptr) {
-      if (ref_ancestor == decl_node) {
-        sym = nullptr;
-      }
-    }
-    if (sym != nullptr) {
-      /* handle `llOwnerSay(foo); string foo;` */
-      LLASTNode *found_node = start_node->find_previous_in_scope(
-              [is_local, decl_node, this](LLASTNode *to_check) -> bool {
-                  // `foo(){llOwnerSay(bar);} string bar="baz";` is fine
-                  if (!is_local && to_check->get_node_type() == NODE_GLOBAL_FUNCTION) {
-                    return true;
-                  }
-
-                  // stop searching once we hit the declaration or
-                  // the end of our scope.
-                  return to_check == decl_node || to_check == this;
-              }
-      );
-      if (found_node == nullptr || found_node == this) {
-        sym = nullptr;
-      }
-    }
-  }
-
   // If we have no symbol table, or it wasn't in it, but we have a parent, ask them
   if (sym == nullptr && get_parent())
     sym = get_parent()->lookup_symbol(name, sym_type, start_node != nullptr ? start_node : this);
@@ -195,7 +159,11 @@ void LLScriptIdentifier::resolve_symbol(LLSymbolType symbol_type) {
 
   // If we already have a symbol, we don't need to look it up.
   if (symbol != nullptr) {
-    type = symbol->get_type();
+    // TODO: Pull all this member stuff out into LValueExpression instead
+    //  we need this special-case just for member accesses...
+    //  maybe all the `type` setting belongs in the type checking visitor.
+    if (type == nullptr)
+      type = symbol->get_type();
     return;
   }
 
@@ -228,7 +196,10 @@ void LLScriptIdentifier::resolve_symbol(LLSymbolType symbol_type) {
       );
     } else {
       /* Name suggestion was here */
-      ERROR(HERE, E_UNDECLARED, name);
+      if (type != TYPE(LST_ERROR)) {
+        // don't re-warn about undeclared if we already know we're broken.
+        ERROR(HERE, E_UNDECLARED, name);
+      }
     }
 
     // Set our symbol to null and type to error since we don't know what they should be.

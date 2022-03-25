@@ -14,6 +14,7 @@ class SymbolResolutionVisitor : public ASTVisitor {
     virtual bool visit(LLScriptEventHandler *node);
     virtual bool visit(LLScriptEventDec *node);
     virtual bool visit(LLScriptLabel *node);
+    virtual bool visit(LLScriptLValueExpression *node);
 };
 
 }
