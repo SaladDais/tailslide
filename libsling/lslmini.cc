@@ -7,6 +7,7 @@
 #include "ast.hh"
 #include "visitor.hh"
 #include "passes/tree_simplifier.hh"
+#include "passes/symbol_resolution.hh"
 
 
 extern FILE *yyin;
@@ -176,112 +177,10 @@ void LLASTNode::define_symbol(LLScriptSymbol *symbol, bool check_existing) {
 
 // Define any symbols we have, and ask our children to
 void LLASTNode::collect_symbols() {
-  LLASTNode *child = get_children();
-  define_symbols();
-  while (child) {
-    child->collect_symbols();
-    child = child->get_next();
-  }
+  SymbolResolutionVisitor visitor;
+  this->visit(&visitor);
 }
 
-void LLASTNode::define_symbols() {
-  /* nothing */
-}
-
-void LLScriptDeclaration::define_symbols() {
-  auto *identifier = (LLScriptIdentifier *) get_children();
-  identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
-    identifier->get_name(), identifier->get_type(), SYM_VARIABLE, SYM_LOCAL, get_lloc(), nullptr, this
-  ));
-  define_symbol(identifier->get_symbol());
-
-  if (!declaration_allowed) {
-    ERROR(HERE, E_DECLARATION_INVALID_HERE, identifier->get_symbol()->get_name());
-  }
-}
-
-void LLScriptGlobalVariable::define_symbols() {
-  auto *identifier = (LLScriptIdentifier *) get_children();
-  identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
-    identifier->get_name(), identifier->get_type(), SYM_VARIABLE, SYM_GLOBAL, get_lloc(), nullptr, get_parent()
-  ));
-  define_symbol(identifier->get_symbol());
-}
-
-void LLScriptScript::define_symbols() {
-}
-
-void LLScriptState::define_symbols() {
-  LLASTNode *node = get_children();
-  LLScriptIdentifier *identifier;
-
-  if (node->get_node_type() == NODE_NULL) // null identifier = default state, nothing to define
-    return;
-
-  identifier = (LLScriptIdentifier *) node;
-  identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
-    identifier->get_name(), identifier->get_type(), SYM_STATE, SYM_GLOBAL, identifier->get_lloc()
-  ));
-  get_parent()->define_symbol(identifier->get_symbol());
-}
-
-void LLScriptGlobalFunction::define_symbols() {
-  auto *identifier = (LLScriptIdentifier *) get_child(0);
-
-  // define function in parent scope since functions have their own scope
-  identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
-    identifier->get_name(), identifier->get_type(), SYM_FUNCTION, SYM_GLOBAL, get_lloc(), (LLScriptFunctionDec *) get_child(1)
-  ));
-  get_parent()->define_symbol(identifier->get_symbol());
-}
-
-void LLScriptFunctionDec::define_symbols() {
-  LLScriptIdentifier *identifier;
-  LLASTNode *node = get_children();
-  while (node) {
-    identifier = (LLScriptIdentifier *) node;
-    identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
-      identifier->get_name(), identifier->get_type(), SYM_VARIABLE, SYM_FUNCTION_PARAMETER, node->get_lloc()
-    ));
-    define_symbol(identifier->get_symbol());
-    node = node->get_next();
-  }
-}
-
-void LLScriptEventHandler::define_symbols() {
-  auto *id = (LLScriptIdentifier *) get_child(0);
-  // look for a prototype for this event in the builtin namespace
-  auto *sym = get_root()->lookup_symbol(id->get_name(), SYM_EVENT);
-  if (!sym) {
-    ERROR(HERE, E_INVALID_EVENT, id->get_name());
-    return;
-  }
-  id->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
-      id->get_name(), id->get_type(), SYM_EVENT, SYM_BUILTIN, get_lloc(), sym->get_function_decl()
-  ));
-  get_parent()->define_symbol(id->get_symbol());
-}
-
-void LLScriptEventDec::define_symbols() {
-  LLScriptIdentifier *identifier;
-  LLASTNode *node = get_children();
-  while (node) {
-    identifier = (LLScriptIdentifier *) node;
-    identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
-      identifier->get_name(), identifier->get_type(), SYM_VARIABLE, SYM_EVENT_PARAMETER, node->get_lloc()
-    ));
-    define_symbol(identifier->get_symbol());
-    node = node->get_next();
-  }
-}
-
-void LLScriptLabel::define_symbols() {
-  auto *identifier = (LLScriptIdentifier *) get_children();
-  identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
-    identifier->get_name(), identifier->get_type(), SYM_LABEL, SYM_LOCAL, get_lloc()
-  ));
-  define_symbol(identifier->get_symbol());
-}
 
 /// Identifiers should have their type/symbol set by their parent node, because they don't know what
 /// kind of symbol they represent by themselves. For example, this should work:

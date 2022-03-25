@@ -121,7 +121,6 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
 
     // collect symbols from function/state/variable declarations
     void collect_symbols();
-    virtual void define_symbols();
 
     // propogate types   TODO: rename to propogate_and_check_type / determine_and_check_type ?
     virtual void propogate_types();
@@ -147,6 +146,7 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
     // Set whether this node is allowed to be a declaration,
     // usually due to occurring in a conditional statement without a new scope.
     void set_declaration_allowed(bool allowed) { declaration_allowed = allowed; };
+    bool get_declaration_allowed() { return declaration_allowed; };
 
     // bad hacks for figuring out if something is _really_ in scope
     class LLASTNode* find_previous_in_scope(std::function<bool (class LLASTNode *)> const &checker);

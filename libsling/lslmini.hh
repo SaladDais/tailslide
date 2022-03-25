@@ -59,7 +59,6 @@ class LLScriptScript : public LLASTNode {
       : LLASTNode( 2, globals, states ) {
         symbol_table = gAllocationManager->new_tracked<LLScriptSymbolTable>();
     };
-    virtual void define_symbols();
 
     virtual const char *get_node_name() { return "script"; };
     virtual LLNodeType get_node_type() { return NODE_SCRIPT; };
@@ -109,7 +108,6 @@ class LLScriptGlobalVariable : public LLASTNode {
   public:
     LLScriptGlobalVariable( class LLScriptIdentifier *identifier, class LLScriptSimpleAssignable *value )
       : LLASTNode(2, identifier, value) { DEBUG( LOG_DEBUG_SPAM, NULL, "made a global var\n"); };
-    virtual void define_symbols();
     virtual const char *get_node_name() { return "global var"; }
     virtual LLNodeType get_node_type() { return NODE_GLOBAL_VARIABLE; };
 
@@ -362,7 +360,6 @@ class LLScriptGlobalFunction : public LLASTNode {
       : LLASTNode( 3, identifier, decl, statement ) {
         symbol_table = gAllocationManager->new_tracked<LLScriptSymbolTable>();
     };
-    virtual void define_symbols();
     virtual const char *get_node_name() { return "global func"; }
     virtual LLNodeType get_node_type() { return NODE_GLOBAL_FUNCTION; };
 };
@@ -377,7 +374,6 @@ class LLScriptFunctionDec : public LLScriptParamList {
   public:
     LLScriptFunctionDec() : LLScriptParamList() {};
     LLScriptFunctionDec( class LLScriptIdentifier *identifier ) : LLScriptParamList(identifier) {};
-    virtual void define_symbols();
     virtual const char *get_node_name() { return "function decl"; }
     virtual LLNodeType get_node_type() { return NODE_FUNCTION_DEC; };
 };
@@ -386,7 +382,6 @@ class LLScriptEventDec : public LLScriptParamList {
   public:
     LLScriptEventDec() : LLScriptParamList() {};
     LLScriptEventDec( class LLScriptIdentifier *identifier ) : LLScriptParamList(identifier) {};
-    virtual void define_symbols();
     virtual const char *get_node_name() { return "event decl"; }
     virtual LLNodeType get_node_type() { return NODE_EVENT_DEC; };
 };
@@ -397,7 +392,6 @@ class LLScriptState : public LLASTNode {
         : LLASTNode( 2, identifier, state_body ) {
       symbol_table = gAllocationManager->new_tracked<LLScriptSymbolTable>();
     };
-    virtual void define_symbols();
     virtual const char *get_node_name() { return "state"; }
     virtual LLNodeType get_node_type() { return NODE_STATE; };
 };
@@ -410,7 +404,6 @@ class LLScriptEventHandler : public LLASTNode {
     };
     virtual const char *get_node_name() { return "event handler"; }
     virtual LLNodeType get_node_type() { return NODE_EVENT_HANDLER; };
-    virtual void define_symbols();
 };
 
 class LLScriptStatement : public LLASTNode {
@@ -453,7 +446,6 @@ class LLScriptJumpStatement : public LLScriptStatement {
 class LLScriptLabel : public LLScriptStatement {
   public:
     LLScriptLabel( class LLScriptIdentifier *identifier ) : LLScriptStatement(1, identifier) {};
-    virtual void define_symbols();
     virtual const char *get_node_name() { return "label"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_LABEL; };
 };
@@ -511,7 +503,6 @@ class LLScriptDeclaration : public LLScriptStatement {
   public:
     LLScriptDeclaration(class LLScriptIdentifier *identifier, class LLScriptExpression *value)
       : LLScriptStatement(2, identifier, value) { };
-    virtual void define_symbols();
     virtual const char *get_node_name() { return "declaration"; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_DECLARATION; };
 

@@ -72,6 +72,7 @@ target_sources(libsling PRIVATE
         libsling/visitor.hh
         libsling/passes/determine_reachable.hh
         libsling/passes/pretty_print.hh
+        libsling/passes/symbol_resolution.hh
         libsling/passes/tree_simplifier.hh
         libsling/passes/tree_print.hh
         libsling/passes/type_checking.hh
@@ -91,6 +92,7 @@ target_sources(libsling PRIVATE
         libsling/visitor.cc
         libsling/passes/determine_reachable.cc
         libsling/passes/pretty_print.cc
+        libsling/passes/symbol_resolution.cc
         libsling/passes/type_checking.cc
         libsling/passes/tree_print.cc
         libsling/passes/tree_simplifier.cc
