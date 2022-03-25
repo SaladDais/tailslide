@@ -27,7 +27,7 @@ ParserRef runConformance(const char* name, bool allow_syntax_errors)
     script->propogate_types();
     script->recalculate_reference_data();
     script->propogate_values();
-    script->final_pre_walk();
+    script->determine_reachability();
     script->check_symbols();
   }
 

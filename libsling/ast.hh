@@ -130,7 +130,7 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
     virtual void propogate_values();
 
     // final pre walk checks    TODO: come up with a better name?
-    void final_pre_walk();
+    void determine_reachability();
 
     /// symbol functions        ///
     virtual LLScriptSymbol *lookup_symbol( const char *name, LLSymbolType type = SYM_ANY, LLASTNode *start_node = NULL );

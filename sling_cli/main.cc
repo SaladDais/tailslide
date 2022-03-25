@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
     script->propogate_types();
     script->recalculate_reference_data();
     script->propogate_values();
-    script->final_pre_walk();
+    script->determine_reachability();
 
     if (check_assertions) {
       Logger::get()->filter_assert_errors();

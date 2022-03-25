@@ -5,11 +5,10 @@
 
 namespace Sling {
 
-class FinalCheckVisitor: public ASTVisitor {
+class DetermineReachableVisitor: public ASTVisitor {
   public:
     virtual bool visit(LLScriptGlobalFunction* node);
     virtual bool visit(LLScriptIfStatement *node);
-    virtual bool visit(LLScriptEventHandler *node);
 };
 
 }

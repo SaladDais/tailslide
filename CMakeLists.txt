@@ -70,7 +70,7 @@ target_sources(libsling PRIVATE
         libsling/tree_base.hh
         libsling/types.hh
         libsling/visitor.hh
-        libsling/passes/final_walk.hh
+        libsling/passes/determine_reachable.hh
         libsling/passes/pretty_print.hh
         libsling/passes/tree_simplifier.hh
         libsling/passes/tree_print.hh
@@ -89,7 +89,7 @@ target_sources(libsling PRIVATE
         libsling/symtab.cc
         libsling/types.cc
         libsling/visitor.cc
-        libsling/passes/final_walk.cc
+        libsling/passes/determine_reachable.cc
         libsling/passes/pretty_print.cc
         libsling/passes/type_checking.cc
         libsling/passes/tree_print.cc

@@ -2,7 +2,7 @@
 #include "ast.hh"
 #include "visitor.hh"
 #include "passes/values.hh"
-#include "passes/final_walk.hh"
+#include "passes/determine_reachable.hh"
 #include "passes/type_checking.hh"
 
 namespace Sling {
@@ -47,8 +47,8 @@ void LLASTNode::propogate_values() {
   visit(&visitor);
 }
 
-void LLASTNode::final_pre_walk() {
-  FinalCheckVisitor visitor;
+void LLASTNode::determine_reachability() {
+  DetermineReachableVisitor visitor;
   visit(&visitor);
 }
 

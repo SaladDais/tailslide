@@ -1,4 +1,4 @@
-#include "final_walk.hh"
+#include "determine_reachable.hh"
 
 namespace Sling {
 
@@ -30,7 +30,7 @@ static bool allret(LLASTNode *p) {
   return ret;
 }
 
-bool FinalCheckVisitor::visit(LLScriptGlobalFunction* node) {
+bool DetermineReachableVisitor::visit(LLScriptGlobalFunction* node) {
   auto *id = (LLScriptIdentifier *) node->get_child(0);
   //LLScriptFunctionDec *decl = (LLScriptFunctionDec *) get_child(1);
   auto *statement = (LLScriptStatement *) node->get_child(2);
@@ -45,7 +45,7 @@ bool FinalCheckVisitor::visit(LLScriptGlobalFunction* node) {
   return true;
 };
 
-bool FinalCheckVisitor::visit(LLScriptIfStatement *node) {
+bool DetermineReachableVisitor::visit(LLScriptIfStatement *node) {
   // see if expression is constant
   LLASTNode *cond = node->get_child(0);
   if (cond->get_constant_value() != nullptr) {
@@ -66,49 +66,6 @@ bool FinalCheckVisitor::visit(LLScriptIfStatement *node) {
     auto *expr = (LLScriptExpression *) cond;
     if (expr->get_operation() == '=') {
       ERROR(IN(expr), W_ASSIGNMENT_IN_COMPARISON);
-    }
-  }
-  return true;
-}
-
-bool FinalCheckVisitor::visit(LLScriptEventHandler *node) {
-  LLASTNode *upper_node;
-  int found = 0;
-  auto *id = (LLScriptIdentifier *) node->get_child(0);
-
-  if (id->get_symbol() != nullptr) {
-    // check argument types
-    LLScriptFunctionDec *function_decl;
-    LLScriptIdentifier *declared_param_id;
-    LLScriptIdentifier *passed_param_id;
-    int param_num = 1;
-
-    function_decl = id->get_symbol()->get_function_decl();
-    declared_param_id = (LLScriptIdentifier *) function_decl->get_children();
-    passed_param_id = (LLScriptIdentifier *) node->get_child(1)->get_children();
-
-    while (declared_param_id != nullptr && passed_param_id != nullptr) {
-      if (passed_param_id->get_type() != declared_param_id->get_type()) {
-        ERROR(IN(node), E_ARGUMENT_WRONG_TYPE_EVENT,
-              passed_param_id->get_type()->get_node_name(),
-              param_num,
-              id->get_name(),
-              declared_param_id->get_type()->get_node_name(),
-              declared_param_id->get_name()
-        );
-        return true;
-      }
-      passed_param_id = (LLScriptIdentifier *) passed_param_id->get_next();
-      declared_param_id = (LLScriptIdentifier *) declared_param_id->get_next();
-      ++param_num;
-    }
-
-    if (passed_param_id != nullptr) {
-      // printf("too many, extra is %s\n", passed_param_id->get_name());
-      ERROR(IN(node), E_TOO_MANY_ARGUMENTS_EVENT, id->get_name());
-    } else if (declared_param_id != nullptr) {
-      // printf("too few, extra is %s\n", declared_param_id->get_name());
-      ERROR(IN(node), E_TOO_FEW_ARGUMENTS_EVENT, id->get_name());
     }
   }
   return true;

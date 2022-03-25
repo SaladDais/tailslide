@@ -241,6 +241,56 @@ bool TypeCheckVisitor::visit(LLScriptListExpression *node) {
   return true;
 }
 
+// check argument types and count for function calls
+// and event handler definitions
+static bool validate_func_arg_spec(
+    LLScriptIdentifier *id,
+    LLASTNode *node,
+    LLScriptIdentifier *params
+) {
+  bool is_event_handler = node->get_node_type() == NODE_EVENT_HANDLER;
+
+  LLScriptFunctionDec *function_decl;
+  LLScriptIdentifier *declared_param_id;
+  LLScriptIdentifier *passed_param_id;
+  int param_num = 1;
+
+  function_decl = id->get_symbol()->get_function_decl();
+  declared_param_id = (LLScriptIdentifier *) function_decl->get_children();
+  passed_param_id = params;
+
+  while (declared_param_id != nullptr && passed_param_id != nullptr) {
+    bool param_compatible;
+    if (is_event_handler)
+      param_compatible = passed_param_id->get_type() == declared_param_id->get_type();
+    else
+      param_compatible = passed_param_id->get_type()->can_coerce(declared_param_id->get_type());
+
+    if (!param_compatible) {
+      ERROR(IN(node), is_event_handler ? E_ARGUMENT_WRONG_TYPE_EVENT : E_ARGUMENT_WRONG_TYPE,
+            passed_param_id->get_type()->get_node_name(),
+            param_num,
+            id->get_name(),
+            declared_param_id->get_type()->get_node_name(),
+            declared_param_id->get_name()
+      );
+      return false;
+    }
+    passed_param_id = (LLScriptIdentifier *) passed_param_id->get_next();
+    declared_param_id = (LLScriptIdentifier *) declared_param_id->get_next();
+    ++param_num;
+  }
+
+  if (passed_param_id != nullptr) {
+    ERROR(IN(node), is_event_handler ? E_TOO_MANY_ARGUMENTS_EVENT : E_TOO_MANY_ARGUMENTS, id->get_name());
+    return false;
+  } else if (declared_param_id != nullptr) {
+    ERROR(IN(node), is_event_handler ? E_TOO_FEW_ARGUMENTS_EVENT : E_TOO_FEW_ARGUMENTS, id->get_name());
+    return false;
+  }
+  return true;
+}
+
 bool TypeCheckVisitor::visit(LLScriptFunctionExpression *node) {
   auto *id = (LLScriptIdentifier *) node->get_child(0);
   id->resolve_symbol(SYM_FUNCTION);
@@ -250,38 +300,18 @@ bool TypeCheckVisitor::visit(LLScriptFunctionExpression *node) {
   if (id->get_symbol() == nullptr)
     return true;
 
-  // check argument types
-  LLScriptFunctionDec *function_decl;
-  LLScriptIdentifier *declared_param_id;
-  LLScriptIdentifier *passed_param_id;
-  int param_num = 1;
+  validate_func_arg_spec(id, node, (LLScriptIdentifier *) node->get_child(1));
+  return true;
+}
 
-  function_decl = id->get_symbol()->get_function_decl();
-  declared_param_id = (LLScriptIdentifier *) function_decl->get_children();
-  passed_param_id = (LLScriptIdentifier *) node->get_child(1);
+bool TypeCheckVisitor::visit(LLScriptEventHandler *node) {
+  auto *id = (LLScriptIdentifier *) node->get_child(0);
+  node->set_type(TYPE(LST_NULL));
+  // can't check arg spec if event handler isn't valid
+  if (id->get_symbol() == nullptr)
+    return true;
 
-  while (declared_param_id != nullptr && passed_param_id != nullptr) {
-    if (!passed_param_id->get_type()->can_coerce(
-        declared_param_id->get_type())) {
-      ERROR(IN(node), E_ARGUMENT_WRONG_TYPE,
-            passed_param_id->get_type()->get_node_name(),
-            param_num,
-            id->get_name(),
-            declared_param_id->get_type()->get_node_name(),
-            declared_param_id->get_name()
-      );
-      return true;
-    }
-    passed_param_id = (LLScriptIdentifier *) passed_param_id->get_next();
-    declared_param_id = (LLScriptIdentifier *) declared_param_id->get_next();
-    ++param_num;
-  }
-
-  if (passed_param_id != nullptr) {
-    ERROR(IN(node), E_TOO_MANY_ARGUMENTS, id->get_name());
-  } else if (declared_param_id != nullptr) {
-    ERROR(IN(node), E_TOO_FEW_ARGUMENTS, id->get_name());
-  }
+  validate_func_arg_spec(id, node, (LLScriptIdentifier *) node->get_child(1)->get_children());
   return true;
 }
 
