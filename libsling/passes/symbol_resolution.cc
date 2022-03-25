@@ -57,17 +57,24 @@ bool SymbolResolutionVisitor::visit(LLScriptGlobalFunction *node) {
   return true;
 }
 
-bool SymbolResolutionVisitor::visit(LLScriptFunctionDec *node) {
-  LLScriptIdentifier *identifier;
-  LLASTNode *child = node->get_children();
+static void register_func_param_symbols(LLASTNode *proto, bool is_event) {
+  LLASTNode *child = proto->get_children();
   while (child) {
-    identifier = (LLScriptIdentifier *) child;
+    auto *identifier = (LLScriptIdentifier *) child;
     identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
-        identifier->get_name(), identifier->get_type(), SYM_VARIABLE, SYM_FUNCTION_PARAMETER, child->get_lloc()
+        identifier->get_name(),
+        identifier->get_type(),
+        SYM_VARIABLE,
+        is_event ? SYM_EVENT_PARAMETER : SYM_FUNCTION_PARAMETER,
+        child->get_lloc()
     ));
-    node->define_symbol(identifier->get_symbol());
+    proto->define_symbol(identifier->get_symbol());
     child = child->get_next();
   }
+}
+
+bool SymbolResolutionVisitor::visit(LLScriptFunctionDec *node) {
+  register_func_param_symbols(node, false);
   return true;
 }
 
@@ -87,16 +94,7 @@ bool SymbolResolutionVisitor::visit(LLScriptEventHandler *node) {
 }
 
 bool SymbolResolutionVisitor::visit(LLScriptEventDec *node) {
-  LLScriptIdentifier *identifier;
-  LLASTNode *child = node->get_children();
-  while (child) {
-    identifier = (LLScriptIdentifier *) child;
-    identifier->set_symbol(gAllocationManager->new_tracked<LLScriptSymbol>(
-        identifier->get_name(), identifier->get_type(), SYM_VARIABLE, SYM_EVENT_PARAMETER, child->get_lloc()
-    ));
-    node->define_symbol(identifier->get_symbol());
-    child = child->get_next();
-  }
+  register_func_param_symbols(node, true);
   return true;
 }
 
