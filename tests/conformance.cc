@@ -235,6 +235,12 @@ TEST_CASE("num_literals.lsl") {
   checkPrettyPrintOutput("num_literals.lsl", ctx, pretty_ctx);
 }
 
+TEST_CASE("vector_ambiguity.lsl") {
+  OptimizationContext ctx {};
+  PrettyPrintOpts pretty_ctx {};
+  checkPrettyPrintOutput("vector_ambiguity.lsl", ctx, pretty_ctx);
+}
+
 TEST_SUITE_END();
 
 TEST_SUITE_BEGIN("Tree Printer");

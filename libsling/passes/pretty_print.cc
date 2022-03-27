@@ -56,6 +56,22 @@ void PrettyPrintVisitor::prettify_siblings_sep(LLASTNode* node, const char* sepa
   }
 }
 
+// special-case for vectors and quaternions so we don't accidentally output
+// expressions in the members in a context where the brackets could be interpreted
+// as shift operators
+void PrettyPrintVisitor::prettify_coordinate_members(LLASTNode *node) {
+  std::stringstream orig_stream(std::move(stream));
+  stream = std::stringstream();
+  prettify_siblings_sep(node, ", ");
+  std::string innards {stream.str()};
+  stream = std::move(orig_stream);
+  if (innards.front() == '<')
+    stream << ' ';
+  stream << innards;
+  if (innards.back() == '>')
+    stream << ' ';
+}
+
 bool PrettyPrintVisitor::visit(LLASTNode *node) {
   std::stringstream descriptor_sstr;
   descriptor_sstr << "UNKNOWN NODE \"" << node->get_node_name() << "\" @ " << (void *)this << "> */";
@@ -433,14 +449,14 @@ bool PrettyPrintVisitor::visit(LLScriptTypecastExpression *node) {
 
 bool PrettyPrintVisitor::visit(LLScriptVectorExpression *node) {
   stream << '<';
-  prettify_siblings_sep(node->get_children(), ", ");
+  prettify_coordinate_members(node->get_children());
   stream << '>';
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LLScriptQuaternionExpression *node) {
   stream << '<';
-  prettify_siblings_sep(node->get_children(), ", ");
+  prettify_coordinate_members(node->get_children());
   stream << '>';
   return false;
 }
@@ -453,7 +469,7 @@ bool PrettyPrintVisitor::visit(LLScriptVectorConstant *node) {
     stream << pretty_buf;
   } else {
     stream << '<';
-    prettify_siblings_sep(node->get_children(), ", ");
+    prettify_coordinate_members(node->get_children());
     stream << '>';
   }
   return false;
@@ -467,7 +483,7 @@ bool PrettyPrintVisitor::visit(LLScriptQuaternionConstant *node) {
     stream << pretty_buf;
   } else {
     stream << '<';
-    prettify_siblings_sep(node->get_children(), ", ");
+    prettify_coordinate_members(node->get_children());
     stream << '>';
   }
   return false;
