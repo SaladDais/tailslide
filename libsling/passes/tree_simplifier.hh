@@ -26,7 +26,6 @@ class TreeSimplifyingVisitor: public ASTVisitor {
     virtual bool visit(LLScriptDeclaration* node);
     virtual bool visit(LLScriptGlobalStorage* node);
     virtual bool visit(LLScriptExpression* node);
-    virtual bool visit(LLScriptSimpleAssignable *node);
     virtual bool visit(LLScriptLValueExpression *node);
     virtual bool visit(LLScriptConstantExpression *node);
 };

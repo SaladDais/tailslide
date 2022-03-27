@@ -96,19 +96,15 @@ bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
 bool ConstantDeterminingVisitor::visit(LLScriptGlobalVariable *node) {
   // if it's initialized, set its constant value
   auto *identifier = (LLScriptIdentifier *) node->get_child(0);
+  auto *sym = identifier->get_symbol();
   LLASTNode *rvalue = node->get_child(1);
-  if (rvalue->get_node_type() == NODE_SIMPLE_ASSIGNABLE) {
-    identifier->get_symbol()->set_constant_value(rvalue->get_child(0)->get_constant_value());
+  if (rvalue) {
+    sym->set_constant_value(rvalue->get_constant_value());
   }
+  // TODO: error on non-constant expressions here
   return true;
 }
 
-bool ConstantDeterminingVisitor::visit(LLScriptSimpleAssignable *node) {
-  if (LLASTNode *child = node->get_child(0)) {
-      node->set_constant_value(child->get_constant_value());
-  }
-  return true;
-}
 
 bool ConstantDeterminingVisitor::visit(LLScriptVectorConstant *node) {
   float v[3];
@@ -258,7 +254,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptLValueExpression *node) {
 
 bool ConstantDeterminingVisitor::visit(LLScriptListExpression *node) {
   LLASTNode *child = node->get_children();
-  LLScriptSimpleAssignable *assignable = nullptr;
+  LLScriptConstant *new_child = nullptr;
 
   // if we have children
   if (child->get_node_type() != NODE_NULL) {
@@ -270,17 +266,16 @@ bool ConstantDeterminingVisitor::visit(LLScriptListExpression *node) {
 
     // create assignables for them
     for (child = node->get_children(); child; child = child->get_next()) {
-      if (assignable == nullptr) {
-        assignable = gAllocationManager->new_tracked<LLScriptSimpleAssignable>(child->get_constant_value());
+      if (new_child == nullptr) {
+        new_child = child->get_constant_value()->copy();
       } else {
-        assignable->add_next_sibling(
-            gAllocationManager->new_tracked<LLScriptSimpleAssignable>(child->get_constant_value()));
+        new_child->add_next_sibling(child->get_constant_value()->copy());
       }
     }
   }
 
   // create constant value
-  node->set_constant_value(gAllocationManager->new_tracked<LLScriptListConstant>(assignable));
+  node->set_constant_value(gAllocationManager->new_tracked<LLScriptListConstant>(new_child));
   return true;
 }
 

@@ -21,22 +21,6 @@ bool TypeCheckVisitor::visit(LLScriptGlobalVariable *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptSimpleAssignable *node) {
-  LLASTNode *s_val = node->get_child(0);
-  LLScriptType *type;
-  if (s_val == nullptr) {
-    type = TYPE(LST_NULL);
-  } else if (s_val->get_node_type() == NODE_IDENTIFIER) {
-    auto *id = (LLScriptIdentifier *) s_val;
-    type = id->get_type();
-  } else if (s_val->get_node_type() == NODE_CONSTANT) {
-    type = s_val->get_type();
-  } else {
-    type = TYPE(LST_ERROR);
-  }
-  node->set_type(type);
-  return true;
-}
 
 bool TypeCheckVisitor::visit(LLScriptStateStatement *node) {
   auto *id = (LLScriptIdentifier *) node->get_child(0);

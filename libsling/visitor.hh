@@ -21,9 +21,6 @@ class ASTVisitor {
     virtual bool visit(LLScriptGlobalVariable *node) {
       return visit((LLASTNode *)node);
     };
-    virtual bool visit(LLScriptSimpleAssignable *node) {
-      return visit((LLASTNode *)node);
-    };
     virtual bool visit(LLScriptConstant *node) {
       return visit((LLASTNode *)node);
     };

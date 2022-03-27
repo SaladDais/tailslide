@@ -61,7 +61,6 @@ public:
     virtual bool visit(LLScriptListExpression *node);
     virtual bool visit(LLScriptGlobalStorage *node);
     virtual bool visit(LLScriptScript *node);
-    virtual bool visit(LLScriptSimpleAssignable *node);
 
     void prettify_siblings_sep(LLASTNode *node, const char *separator);
     void prettify_coordinate_members(LLASTNode *node);

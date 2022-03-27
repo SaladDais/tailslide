@@ -20,8 +20,6 @@ bool ASTVisitor::visit_specific(LLASTNode *node) {
       return visit((LLScriptGlobalVariable *)node);
     case NODE_IDENTIFIER:
       return visit((LLScriptIdentifier *)node);
-    case NODE_SIMPLE_ASSIGNABLE:
-      return visit((LLScriptSimpleAssignable *)node);
     case NODE_CONSTANT: {
       switch(node->get_node_sub_type()) {
         case NODE_INTEGER_CONSTANT:

@@ -22,7 +22,6 @@ private:
 static bool cast_requires_parens(LLScriptTypecastExpression* node) {
   switch (node->get_child(0)->get_node_type()) {
     case NODE_CONSTANT:
-    case NODE_SIMPLE_ASSIGNABLE:
     case NODE_IDENTIFIER:
       return false;
     default:;
@@ -539,10 +538,6 @@ bool PrettyPrintVisitor::visit(LLScriptGlobalStorage *node) {
 }
 
 bool PrettyPrintVisitor::visit(LLScriptScript *node) {
-  return true;
-}
-
-bool PrettyPrintVisitor::visit(LLScriptSimpleAssignable *node) {
   return true;
 }
 

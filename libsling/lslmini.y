@@ -52,7 +52,6 @@
         class LLScriptType;
         class LLScriptConstant;
         class LLScriptIdentifier;
-        class LLScriptSimpleAssignable;
         class LLScriptGlobalVariable;
         class LLScriptEvent;
         class LLScriptEventHandler;
@@ -76,7 +75,6 @@
 	class Sling::LLScriptType				*type;
 	class Sling::LLScriptConstant			*constant;
 	class Sling::LLScriptIdentifier		*identifier;
-	class Sling::LLScriptSimpleAssignable	*assignable;
 	class Sling::LLScriptGlobalVariable	*global;
 	class Sling::LLScriptEvent				*event;
 	class Sling::LLScriptEventHandler		*handler;
@@ -109,8 +107,6 @@
 %token <sval>			STATE_DEFAULT
 
 %token <ival>			INTEGER_CONSTANT
-%token <ival>			INTEGER_TRUE
-%token <ival>			INTEGER_FALSE
 
 %token <fval>			FP_CONSTANT
 
@@ -157,13 +153,7 @@
 %type <global_store>	globals
 %type <global_store>	global
 %type <global>			global_variable
-%type <assignable>		simple_assignable
-%type <assignable>		simple_assignable_no_list
 %type <constant>		constant
-%type <assignable>		special_constant
-%type <assignable>		vector_constant
-%type <assignable>		quaternion_constant
-%type <assignable>		list_constant
 %type <assignable>		list_entries
 %type <assignable>		list_entry
 %type <type>			typename
@@ -298,47 +288,14 @@ global_variable
 	{
     $$ = gAllocationManager->new_tracked<LLScriptGlobalVariable>($1, nullptr);
 	}
-	| name_type '=' simple_assignable ';'
+	| name_type '=' expression ';'
 	{
     $$ = gAllocationManager->new_tracked<LLScriptGlobalVariable>($1, $3);
 	}
-    | name_type '=' expression ';'
-    {
-    ERROR(&@3, E_GLOBAL_INITIALIZER_NOT_CONSTANT);
-    $$ = nullptr;
-    }
     | name_type '=' error ';'
     {
     $$ = nullptr;
     }
-	;
-
-simple_assignable
-	: simple_assignable_no_list
-	{
-    $$ = $1;
-	}
-	| list_constant
-	{
-    $$ = $1;
-	}
-	;
-
-simple_assignable_no_list
-	: IDENTIFIER
-	{
-    $$ = gAllocationManager->new_tracked<LLScriptSimpleAssignable>(
-        gAllocationManager->new_tracked<LLScriptIdentifier>($1)
-    );
-	}
-	| constant
-	{
-    $$ = gAllocationManager->new_tracked<LLScriptSimpleAssignable>($1);
-	}
-	| special_constant
-	{
-    $$ = $1; //gAllocationManager->new_tracked<LLScriptSimpleAssignable>($1);
-	}
 	;
 
 constant
@@ -361,65 +318,6 @@ constant
 	| STRING_CONSTANT
 	{
     $$ = gAllocationManager->new_tracked<LLScriptStringConstant>($1);
-	}
-	;
-
-special_constant
-	: vector_constant
-	{
-    $$ = $1;
-	}
-	| quaternion_constant
-	{
-    $$ = $1;
-	}
-	;
-
-vector_constant
-	: '<' simple_assignable ',' simple_assignable ',' simple_assignable '>'
-	{
-    $$ = gAllocationManager->new_tracked<LLScriptSimpleAssignable>(gAllocationManager->new_tracked<LLScriptVectorConstant>($2, $4, $6));
-	}
-	;
-
-quaternion_constant
-	: '<' simple_assignable ',' simple_assignable ',' simple_assignable ',' simple_assignable '>'
-	{
-    $$ = gAllocationManager->new_tracked<LLScriptSimpleAssignable>(gAllocationManager->new_tracked<LLScriptQuaternionConstant>($2, $4, $6, $8));
-	}
-	;
-
-list_constant
-	: '[' list_entries ']'
-	{
-    $$ = gAllocationManager->new_tracked<LLScriptSimpleAssignable>(gAllocationManager->new_tracked<LLScriptListConstant>($2));
-	}
-	| '[' ']'
-	{
-    $$ = gAllocationManager->new_tracked<LLScriptSimpleAssignable>(gAllocationManager->new_tracked<LLScriptListConstant>((LLScriptSimpleAssignable*)nullptr));
-	}
-	;
-
-list_entries
-	: list_entry
-	{
-    $$ = $1;
-	}
-	| list_entry ',' list_entries
-	{
-    if ( $1 ) {
-        $1->add_next_sibling($3);
-        $$ = $1;
-    } else {
-        $$ = $3;
-    }
-	}
-	;
-
-list_entry
-	: simple_assignable_no_list
-	{
-    $$ = $1;
 	}
 	;
 

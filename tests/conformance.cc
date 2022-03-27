@@ -11,7 +11,7 @@ TEST_SUITE_BEGIN("Lint");
 TEST_CASE("bad_globals.lsl") {
   auto parser = runConformance("bad_globals.lsl", true);
   // syntax error due to bad tokens
-  CHECK(Logger::get()->get_errors() == 3);
+  CHECK(Logger::get()->get_errors() == 2);
 }
 SIMPLE_LINT_TEST_CASE("camera_demo.lsl")
 SIMPLE_LINT_TEST_CASE("color-change.lsl")

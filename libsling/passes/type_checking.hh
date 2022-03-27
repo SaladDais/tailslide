@@ -9,7 +9,6 @@ class TypeCheckVisitor: public DepthFirstASTVisitor {
     virtual bool visit(LLASTNode *node);
 
     virtual bool visit(LLScriptGlobalVariable *node);
-    virtual bool visit(LLScriptSimpleAssignable *node);
     virtual bool visit(LLScriptStateStatement *node);
     virtual bool visit(LLScriptJumpStatement *node);
     virtual bool visit(LLScriptDeclaration *node);

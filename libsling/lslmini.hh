@@ -104,7 +104,7 @@ class LLScriptIdentifier : public LLASTNode {
 
 class LLScriptGlobalVariable : public LLASTNode {
   public:
-    LLScriptGlobalVariable( class LLScriptIdentifier *identifier, class LLScriptSimpleAssignable *value )
+    LLScriptGlobalVariable( class LLScriptIdentifier *identifier, class LLScriptExpression *value )
       : LLASTNode(2, identifier, value) { DEBUG( LOG_DEBUG_SPAM, NULL, "made a global var\n"); };
     virtual const char *get_node_name() { return "global var"; }
     virtual LLNodeType get_node_type() { return NODE_GLOBAL_VARIABLE; };
@@ -123,21 +123,6 @@ class LLScriptConstant : public LLASTNode {
     // make a shallow copy of the constant
     virtual LLScriptConstant* copy() = 0;
     virtual LLScriptConstant* cast(LST_TYPE to_type) { return nullptr; };
-};
-
-class LLScriptSimpleAssignable : public LLASTNode {
-public:
-  LLScriptSimpleAssignable( class LLScriptConstant *constant ) : LLASTNode() {
-    assert(constant);
-    if (constant->is_static())
-      constant = constant->copy();
-    push_child(constant);
-    set_type(constant->get_type());
-    set_constant_value(constant);
-  };
-  LLScriptSimpleAssignable( class LLScriptIdentifier *id ) : LLASTNode(1, id) {};
-  virtual const char *get_node_name() { return "assignable"; }
-  virtual LLNodeType get_node_type() { return NODE_SIMPLE_ASSIGNABLE; };
 };
 
 /////////////////////////////////////////////////////
@@ -236,7 +221,7 @@ class LLScriptStringConstant : public LLScriptConstant {
 // TODO: is this even a constant, really?
 class LLScriptListConstant : public LLScriptConstant {
   public:
-    LLScriptListConstant( class LLScriptSimpleAssignable *v ) : LLScriptConstant(), value(v) {
+    LLScriptListConstant( class LLScriptConstant *v ) : LLScriptConstant(), value(v) {
       type = TYPE(LST_LIST);
       // so we can do symbol resolution inside the list constant
       if (value != NULL)
@@ -254,8 +239,8 @@ class LLScriptListConstant : public LLScriptConstant {
 
     virtual LLNodeSubType get_node_sub_type() { return NODE_LIST_CONSTANT; }
 
-    class LLScriptSimpleAssignable *get_value() { return value; }
-    void set_value(class LLScriptSimpleAssignable *val) { value = val; }
+    class LLScriptConstant *get_value() { return value; }
+    void set_value(class LLScriptConstant *val) { value = val; }
 
     int get_length() {
       LLASTNode *node = (LLASTNode*)value;
@@ -273,7 +258,7 @@ class LLScriptListConstant : public LLScriptConstant {
     };
 
   private:
-    class LLScriptSimpleAssignable *value;
+    class LLScriptConstant *value;
 };
 
 /////////////////////////////////////////////////////
@@ -281,8 +266,6 @@ class LLScriptListConstant : public LLScriptConstant {
 
 class LLScriptVectorConstant : public LLScriptConstant {
   public:
-    LLScriptVectorConstant( class LLScriptSimpleAssignable *v1, class LLScriptSimpleAssignable *v2, class LLScriptSimpleAssignable *v3)
-        : LLScriptConstant(), value(NULL) { push_child(v1); push_child(v2); push_child(v3); type = TYPE(LST_VECTOR); };
     LLScriptVectorConstant( float v1, float v2, float v3 ) {
       value = gAllocationManager->new_tracked<LLVector>( v1, v2, v3 );
       type = TYPE(LST_VECTOR);
@@ -319,8 +302,6 @@ class LLScriptVectorConstant : public LLScriptConstant {
 
 class LLScriptQuaternionConstant : public LLScriptConstant {
   public:
-    LLScriptQuaternionConstant( class LLScriptSimpleAssignable *v1, class LLScriptSimpleAssignable *v2, class LLScriptSimpleAssignable *v3, class LLScriptSimpleAssignable *v4)
-        : LLScriptConstant(), value(NULL) { push_child(v1); push_child(v2); push_child(v3); push_child(v4); type = TYPE(LST_QUATERNION); };
     LLScriptQuaternionConstant( float v1, float v2, float v3, float v4 ) {
       value = gAllocationManager->new_tracked<LLQuaternion>( v1, v2, v3, v4 );
       type = TYPE(LST_QUATERNION);

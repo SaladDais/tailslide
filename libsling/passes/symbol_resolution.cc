@@ -10,7 +10,7 @@ class GlobalSymbolResolutionVisitor: public ASTVisitor {
   public:
     virtual bool visit(LLScriptGlobalVariable *node) {
       // descend first so we can resolve any symbol references present in the rvalue
-      // SimpleAssignable before we've defined the identifier from the lvalue.
+      // before we've defined the identifier from the lvalue.
       // Necessary so things like `string foo = foo;` will error correctly.
       visit_children(node);
 
@@ -22,14 +22,9 @@ class GlobalSymbolResolutionVisitor: public ASTVisitor {
       return false;
     };
 
-    virtual bool visit(LLScriptSimpleAssignable *node) {
-      LLASTNode *s_val = node->get_child(0);
-      if (s_val && s_val->get_node_type() == NODE_IDENTIFIER) {
-        auto *id = (LLScriptIdentifier *) s_val;
-        id->resolve_symbol(SYM_VARIABLE);
-        return false;
-      }
-      return true;
+    virtual bool visit(LLScriptLValueExpression *node) {
+      ((LLScriptIdentifier*)node->get_child(0))->resolve_symbol(SYM_VARIABLE);
+      return false;
     }
 
     virtual bool visit(LLScriptGlobalFunction *node) {

@@ -1,4 +1,4 @@
-integer number = 2+2;               // non constant                             $[E10021]
+
 integer number = 3;                 // will only pass because above fails       $[E20009]
 integer number = 4;                 // already declared                         $[E10001]
 vector j = <1,2,"3">;               // $[E20009] $[E10016]
