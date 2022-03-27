@@ -43,5 +43,18 @@ default {
         if ( (integer)"foo" == 0 ) return;      // $[E20012]
         if ( (float)"0x1" == 1.0 ) return;      // $[E20012]
         if ( (float)((float)"1.0") == 1.0 ) return;      // $[E20012]
+
+        llFrand(r.z);
+
+        jump foo;
+        integer x = 1;
+        @foo;
+        // Should not be folded due to the label between the declaration of the var and
+        // its use. x will really be equal to 0 here but all the unstructured jumping makes
+        // it hard to reason about.
+        //
+        // TODO: it's ok to fold if all uses of the label occur between the declaration and
+        //  use of the var.
+        if ( x == 1 ) return;
     }
 }

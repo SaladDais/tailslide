@@ -112,6 +112,7 @@ bool TreeSimplifyingVisitor::visit(LLScriptSimpleAssignable *node) {
 bool TreeSimplifyingVisitor::visit(LLScriptLValueExpression *node) {
   if (!ctx.fold_constants)
     return false;
+
   LLASTNode *child = node->get_child(0);
   if (child && child->get_node_type() == NODE_IDENTIFIER) {
     auto *id = (LLScriptIdentifier *)child;
@@ -123,11 +124,7 @@ bool TreeSimplifyingVisitor::visit(LLScriptLValueExpression *node) {
     // lexer tokens in SL proper.
     if (sym->get_sub_type() == SYM_BUILTIN)
       return false;
-    // no inlining references to lists, they don't get put in
-    // a constant pool like strings or keys!
-    if (sym->get_type()->get_itype() == LST_LIST)
-      return false;
-    LLScriptConstant *cv = child->get_constant_value();
+    LLScriptConstant *cv = node->get_constant_value();
     if (cv) {
       auto *new_expr = gAllocationManager->new_tracked<LLScriptConstantExpression>(cv);
       new_expr->set_lloc(node->get_lloc());
