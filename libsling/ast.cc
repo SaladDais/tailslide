@@ -42,7 +42,7 @@ void LLASTNode::visit(ASTVisitor *visitor) {
 }
 
 
-void LLASTNode::propogate_values() {
+void LLASTNode::propagate_values() {
   ConstantDeterminingVisitor visitor;
   visit(&visitor);
 }
@@ -53,7 +53,7 @@ void LLASTNode::determine_reachability() {
 }
 
 // walk tree post-order and propogate types
-void LLASTNode::propogate_types() {
+void LLASTNode::determine_types() {
   TypeCheckVisitor visitor;
   visit(&visitor);
 }

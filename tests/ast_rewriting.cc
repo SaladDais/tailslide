@@ -42,7 +42,7 @@ TEST_CASE("simple_expr_replacement.lsl") {
     AddSubbingVisitor visitor;
     script->visit(&visitor);
     // all existing constant values are now potentially dirty, recalculate.
-    script->propogate_values();
+    script->propagate_values();
   });
 }
 
@@ -76,7 +76,7 @@ public:
     // swap the old expression out with the new one
     LLASTNode::replace_node(expr, new_expr);
     // make sure all the newly added nodes have correct type information
-    new_expr->propogate_types();
+    new_expr->determine_types();
     new_expr->visit(this);
     return false;
   };
@@ -97,7 +97,7 @@ TEST_CASE("fancy_expr_replacement.lsl") {
     FancyAddReplacementVisitor visitor;
     script->visit(&visitor);
     // all existing constant values are now potentially dirty, recalculate.
-    script->propogate_values();
+    script->propagate_values();
   });
 }
 

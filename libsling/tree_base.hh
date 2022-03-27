@@ -97,7 +97,6 @@ public:
       if (next_child != NULL)
         next_child->set_prev(prev_child);
 
-      // TODO: unset symbol table entries for descendants of popped?
       // must be done last so we don't change the parent of siblings
       child->set_parent(NULL);
     }

@@ -118,22 +118,16 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
     // generic visitor functions
     void visit(ASTVisitor *visitor);
 
-    // collect symbols from function/state/variable declarations
+    // Convenience methods for common visitor uses
     void collect_symbols();
-
-    // propogate types   TODO: rename to propogate_and_check_type / determine_and_check_type ?
-    virtual void propogate_types();
-
-    // propogate const values     TODO: come up with a better name?
-    virtual void propogate_values();
-
-    // final pre walk checks    TODO: come up with a better name?
+    void determine_types();
+    void propagate_values();
     void determine_reachability();
+    void check_symbols(); // look for unused symbols, etc
 
     /// symbol functions        ///
     virtual LLScriptSymbol *lookup_symbol( const char *name, LLSymbolType type = SYM_ANY, LLASTNode *start_node = NULL );
     void            define_symbol( LLScriptSymbol *symbol, bool check_existing = true );
-    void            check_symbols(); // look for unused symbols, etc
     LLScriptSymbolTable *get_symbol_table() { return symbol_table; }
 
 

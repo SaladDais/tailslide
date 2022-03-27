@@ -24,9 +24,9 @@ ParserRef runConformance(const char* name, bool allow_syntax_errors)
   } else {
     script->collect_symbols();
     script->link_symbol_tables();
-    script->propogate_types();
+    script->determine_types();
     script->recalculate_reference_data();
-    script->propogate_values();
+    script->propagate_values();
     script->determine_reachability();
     script->check_symbols();
   }

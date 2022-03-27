@@ -159,9 +159,9 @@ int main(int argc, char **argv) {
     script->collect_symbols();
     script->link_symbol_tables();
     LOG(LOG_INFO, nullptr, "Propogating types");
-    script->propogate_types();
+    script->determine_types();
     script->recalculate_reference_data();
-    script->propogate_values();
+    script->propagate_values();
     script->determine_reachability();
 
     if (check_assertions) {

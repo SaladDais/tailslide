@@ -218,7 +218,6 @@ class LLScriptStringConstant : public LLScriptConstant {
 /////////////////////////////////////////////////////
 // List Constant
 
-// TODO: is this even a constant, really?
 class LLScriptListConstant : public LLScriptConstant {
   public:
     LLScriptListConstant( class LLScriptConstant *v ) : LLScriptConstant() {

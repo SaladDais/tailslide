@@ -92,7 +92,7 @@ const static int operator_result_table[][4] = {
         {'*',         LST_VECTOR,        LST_FLOATINGPOINT, LST_VECTOR}, // scale vector
         {'*',         LST_VECTOR,        LST_VECTOR,        LST_FLOATINGPOINT}, // dot product
         {'*',         LST_VECTOR,        LST_QUATERNION,    LST_VECTOR}, // rotate
-        {'*',         LST_QUATERNION,    LST_QUATERNION,    LST_QUATERNION},
+        {'*',         LST_QUATERNION,    LST_QUATERNION,    LST_QUATERNION}, // merge rotations, effectively
 
         // /
         {'/',         LST_INTEGER,       LST_INTEGER,       LST_INTEGER},
@@ -101,8 +101,8 @@ const static int operator_result_table[][4] = {
         {'/',         LST_FLOATINGPOINT, LST_FLOATINGPOINT, LST_FLOATINGPOINT},
         {'/',         LST_VECTOR,        LST_INTEGER,       LST_VECTOR}, // scale vector
         {'/',         LST_VECTOR,        LST_FLOATINGPOINT, LST_VECTOR}, // scale vector
-        {'/',         LST_VECTOR,        LST_QUATERNION,    LST_VECTOR}, // TODO: what does this do
-        {'/',         LST_QUATERNION,    LST_QUATERNION,    LST_QUATERNION}, // TODO: what does this do
+        {'/',         LST_VECTOR,        LST_QUATERNION,    LST_VECTOR}, // rotate by inverse of rside
+        {'/',         LST_QUATERNION,    LST_QUATERNION,    LST_QUATERNION}, // rotate by inverse of rside
 
         // %
         {'%',         LST_INTEGER,       LST_INTEGER,       LST_INTEGER},

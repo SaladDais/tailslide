@@ -24,7 +24,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptScript *node) {
       break;
     if (LLASTNode *gs_child = child->get_child(0)) {
       if (gs_child->get_node_type() == NODE_GLOBAL_VARIABLE)
-        gs_child->propogate_values();
+        gs_child->propagate_values();
     }
     child = child->get_next();
   }

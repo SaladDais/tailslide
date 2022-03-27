@@ -327,7 +327,7 @@ bool TypeCheckVisitor::visit(LLScriptLValueExpression *node) {
         return false;
       }
 
-      // Make sure it's a vector or quaternion. TODO: is there a better way to do this?
+      // Make sure it's a vector or quaternion.
       switch (symbol->get_type()->get_itype()) {
         case LST_QUATERNION:
           if (member[0] == 's') {
