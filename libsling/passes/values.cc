@@ -36,11 +36,13 @@ bool ConstantDeterminingVisitor::visit(LLScriptScript *node) {
 bool ConstantDeterminingVisitor::visit(LLScriptDeclaration *node) {
   auto *id = (LLScriptIdentifier *) node->get_child(0);
   LLASTNode *rvalue = node->get_child(1);
-  if (rvalue == nullptr || rvalue->get_node_type() == NODE_NULL)
-    return false;
+  LLScriptConstant *cv = nullptr;
+  if (rvalue && rvalue->get_node_type() != NODE_NULL) {
+    cv = rvalue->get_constant_value();
+  }
   DEBUG(LOG_DEBUG_SPAM, NULL, "set %s const to %p\n", id->get_name(), rvalue->get_constant_value());
-  id->get_symbol()->set_constant_value(rvalue->get_constant_value());
-  return true;
+  id->get_symbol()->set_constant_value(cv);
+  return false;
 }
 
 bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
@@ -61,14 +63,13 @@ bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
   // if (constant_value != nullptr)
   //   return; // we already have a value
 
-  // only check normal and lvalue expressions
+  // only check normal expressions
   switch (node->get_node_sub_type()) {
     case NODE_NO_SUB_TYPE:
     case NODE_CONSTANT_EXPRESSION:
     case NODE_PARENTHESIS_EXPRESSION:
     case NODE_BINARY_EXPRESSION:
     case NODE_UNARY_EXPRESSION:
-    case NODE_LVALUE_EXPRESSION:
       break;
     default:
       return true;
@@ -103,9 +104,9 @@ bool ConstantDeterminingVisitor::visit(LLScriptGlobalVariable *node) {
 }
 
 bool ConstantDeterminingVisitor::visit(LLScriptSimpleAssignable *node) {
-  // SimpleAssignables take on the value of whatever they contain
-  if (node->get_child(0))
-    node->set_constant_value(node->get_child(0)->get_constant_value());
+  if (LLASTNode *child = node->get_child(0)) {
+      node->set_constant_value(child->get_constant_value());
+  }
   return true;
 }
 
@@ -177,16 +178,22 @@ bool ConstantDeterminingVisitor::visit(LLScriptQuaternionConstant *node) {
   return true;
 }
 
-bool ConstantDeterminingVisitor::visit(LLScriptIdentifier *node) {
-  LLScriptSymbol *symbol = node->get_symbol();
-  LLScriptConstant *constant_value = nullptr;
-  const char *member = node->get_member();
+bool ConstantDeterminingVisitor::visit(LLScriptLValueExpression *node) {
+  auto *id = (LLScriptIdentifier*)node->get_child(0);
+  LLScriptSymbol *symbol = id->get_symbol();
+
   // can't determine value if we don't have a symbol
   if (symbol == nullptr) {
     node->set_constant_value(nullptr);
     return true;
   }
 
+  auto *member_id = (LLScriptIdentifier*)node->get_child(1);
+  const char *member = nullptr;
+  if (member_id && member_id->get_node_type() == NODE_IDENTIFIER)
+    member = ((LLScriptIdentifier*)member_id)->get_name();
+
+  LLScriptConstant *constant_value = nullptr;
   DEBUG(LOG_DEBUG_SPAM, NULL, "id %s assigned %d times\n", get_name(), symbol->get_assignments());
   if (symbol->get_assignments() == 0) {
     constant_value = symbol->get_constant_value();
@@ -395,51 +402,4 @@ bool ConstantDeterminingVisitor::visit(LLScriptTypecastExpression *node) {
 }
 
 
-LLScriptConstant *LLScriptGlobalVariable::get_constant_value() {
-  // It's not really constant if it gets mutated more than once, is it?
-  // note that initialization during declaration doesn't count.
-  auto *id = (LLScriptIdentifier *) get_child(0);
-  if (id->get_symbol()->get_assignments() == 0) {
-    return constant_value;
-  }
-  return nullptr;
-}
-
-LLScriptConstant *LLScriptDeclaration::get_constant_value() {
-  auto *id = (LLScriptIdentifier *) get_child(0);
-  if (id->get_symbol()->get_assignments() == 0) {
-    return constant_value;
-  }
-  return nullptr;
-}
-
-LLScriptConstant *LLScriptExpression::get_constant_value() {
-  // replacing `foo = "bar"` with `"bar"` == no
-  if (!operation_mutates(operation)) {
-    return constant_value;
-  }
-  return nullptr;
-}
-
-
-LLScriptConstant *LLScriptLValueExpression::get_constant_value() {
-  if (is_foldable) {
-    // We have to be careful about folding lists
-    if (this->type == TYPE(LST_LIST)) {
-      LLASTNode *top_foldable = this;
-      LLASTNode *current_node = this;
-
-      // Don't fold this in if it's a list expression at the foldable level
-      while (current_node != nullptr && current_node->node_allows_folding()) {
-        top_foldable = current_node;
-        current_node = current_node->get_parent();
-      }
-      if (top_foldable->get_type() == TYPE(LST_LIST))
-        return nullptr;
-    }
-
-    return constant_value;
-  }
-  return nullptr;
-}
 }

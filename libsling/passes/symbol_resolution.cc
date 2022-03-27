@@ -27,8 +27,9 @@ class GlobalSymbolResolutionVisitor: public ASTVisitor {
       if (s_val && s_val->get_node_type() == NODE_IDENTIFIER) {
         auto *id = (LLScriptIdentifier *) s_val;
         id->resolve_symbol(SYM_VARIABLE);
+        return false;
       }
-      return false;
+      return true;
     }
 
     virtual bool visit(LLScriptGlobalFunction *node) {
@@ -147,11 +148,23 @@ bool SymbolResolutionVisitor::visit(LLScriptLabel *node) {
   return true;
 }
 
-bool SymbolResolutionVisitor::visit(LLScriptLValueExpression *node) {
-  auto *id = (LLScriptIdentifier *) node->get_child(0);
-  id->resolve_symbol(SYM_VARIABLE);
+bool SymbolResolutionVisitor::visit(LLScriptStateStatement *node) {
+  if (auto *id = (LLScriptIdentifier *) node->get_child(0))
+    id->resolve_symbol(SYM_STATE);
   return true;
 }
 
+bool SymbolResolutionVisitor::visit(LLScriptLValueExpression *node) {
+  auto *id = (LLScriptIdentifier *) node->get_child(0);
+  id->resolve_symbol(SYM_VARIABLE);
+  // not interested in the identifier children
+  return false;
+}
+
+bool SymbolResolutionVisitor::visit(LLScriptFunctionExpression *node) {
+  auto *id = (LLScriptIdentifier *) node->get_child(0);
+  id->resolve_symbol(SYM_FUNCTION);
+  return true;
+}
 
 }

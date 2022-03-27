@@ -52,6 +52,7 @@ public:
     virtual bool visit(LLScriptWhileStatement *node);
     virtual bool visit(LLScriptDeclaration *node);
     virtual bool visit(LLScriptExpression *node);
+    virtual bool visit(LLScriptLValueExpression *node);
     virtual bool visit(LLScriptTypecastExpression *node);
     virtual bool visit(LLScriptPrintExpression *node);
     virtual bool visit(LLScriptFunctionExpression *node);

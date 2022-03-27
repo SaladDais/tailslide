@@ -28,7 +28,6 @@ bool TypeCheckVisitor::visit(LLScriptSimpleAssignable *node) {
     type = TYPE(LST_NULL);
   } else if (s_val->get_node_type() == NODE_IDENTIFIER) {
     auto *id = (LLScriptIdentifier *) s_val;
-    id->resolve_symbol(SYM_VARIABLE);
     type = id->get_type();
   } else if (s_val->get_node_type() == NODE_CONSTANT) {
     type = s_val->get_type();
@@ -42,8 +41,6 @@ bool TypeCheckVisitor::visit(LLScriptSimpleAssignable *node) {
 bool TypeCheckVisitor::visit(LLScriptStateStatement *node) {
   auto *id = (LLScriptIdentifier *) node->get_child(0);
   node->set_type(TYPE(LST_NULL));
-  if (id != nullptr)
-    id->resolve_symbol(SYM_STATE);
 
   // see if we're in a state or function, and if we're inside of an if
   bool is_in_if = false;
@@ -296,7 +293,6 @@ static bool validate_func_arg_spec(
 
 bool TypeCheckVisitor::visit(LLScriptFunctionExpression *node) {
   auto *id = (LLScriptIdentifier *) node->get_child(0);
-  id->resolve_symbol(SYM_FUNCTION);
   node->set_type(id->get_type());
 
   // can't check types if function is undeclared
@@ -320,14 +316,76 @@ bool TypeCheckVisitor::visit(LLScriptEventHandler *node) {
 
 bool TypeCheckVisitor::visit(LLScriptLValueExpression *node) {
   auto *id = (LLScriptIdentifier *) node->get_child(0);
-  id->resolve_symbol(SYM_VARIABLE);
+  LLASTNode *member_node = node->get_child(1);
   node->set_type(id->get_type());
 
-  LLScriptSymbol *sym = id->get_symbol();
+  auto *symbol = id->get_symbol();
+  if (!symbol) {
+    return false;
+  }
+
+  auto symbol_type = symbol->get_symbol_type();
+
+  /// If we're requesting a member, like var.x or var.y
+  if (member_node && member_node->get_node_type() == NODE_IDENTIFIER) {
+    const char *name = id->get_name();
+    const char *member = ((LLScriptIdentifier*)member_node)->get_name();
+
+    if (member != nullptr) {
+      // all members must be single letters
+      if (member[1] != 0) {
+        ERROR(IN(node), E_INVALID_MEMBER, name, member);
+        node->set_type(TYPE(LST_ERROR));
+        return false;
+      }
+
+      /// Make sure it's a variable
+      if (symbol_type != SYM_VARIABLE) {
+        ERROR(IN(node), E_MEMBER_NOT_VARIABLE, name, member, LLScriptSymbol::get_type_name(symbol_type));
+        node->set_type(TYPE(LST_ERROR));
+        return false;
+      }
+
+      // ZERO_VECTOR.x is not valid, because it's really `<0,0,0>.x` which is not allowed!
+      if (symbol->get_sub_type() == SYM_BUILTIN) {
+        ERROR(IN(node), E_INVALID_MEMBER, name, member);
+        node->set_type(TYPE(LST_ERROR));
+        return false;
+      }
+
+      // Make sure it's a vector or quaternion. TODO: is there a better way to do this?
+      switch (symbol->get_type()->get_itype()) {
+        case LST_QUATERNION:
+          if (member[0] == 's') {
+            node->set_type(TYPE(LST_FLOATINGPOINT));
+            break;
+          }
+          // FALL THROUGH
+        case LST_VECTOR:
+          switch (member[0]) {
+            case 'x':
+            case 'y':
+            case 'z':
+              node->set_type(TYPE(LST_FLOATINGPOINT));
+              break;
+            default:
+              ERROR(IN(node), E_INVALID_MEMBER, name, member);
+              node->set_type(TYPE(LST_ERROR));
+              break;
+          }
+          break;
+        default:
+          ERROR(IN(node), E_MEMBER_WRONG_TYPE, name, member);
+          node->set_type(TYPE(LST_ERROR));
+          break;
+      }
+    }
+  }
+
   // This refers to a local, walk back and see there's anything
   // between us and its declaration that'd make it unfoldable
-  if (sym != nullptr && sym->get_sub_type() == SYM_LOCAL && sym->get_var_decl() != nullptr) {
-    LLASTNode *local_decl = sym->get_var_decl();
+  if (symbol->get_sub_type() == SYM_LOCAL && symbol->get_var_decl() != nullptr) {
+    LLASTNode *local_decl = symbol->get_var_decl();
 
     // walk up and find the statement at the top of this expression;
     LLASTNode *upper_node = node->get_parent();
@@ -350,11 +408,11 @@ bool TypeCheckVisitor::visit(LLScriptLValueExpression *node) {
       // we could check if there was also a jump to that label somewhere
       // before us in the same scope (before the declaration obviously.)
       node->set_is_foldable(found_stmt && (found_stmt->get_node_sub_type() != NODE_LABEL));
-      return true;
+      return false;
     }
   }
   node->set_is_foldable(true);
-  return true;
+  return false;
 }
 
 bool TypeCheckVisitor::visit(LLScriptTypecastExpression *node) {

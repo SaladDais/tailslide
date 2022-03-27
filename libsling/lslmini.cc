@@ -159,11 +159,7 @@ void LLScriptIdentifier::resolve_symbol(LLSymbolType symbol_type) {
 
   // If we already have a symbol, we don't need to look it up.
   if (symbol != nullptr) {
-    // TODO: Pull all this member stuff out into LValueExpression instead
-    //  we need this special-case just for member accesses...
-    //  maybe all the `type` setting belongs in the type checking visitor.
-    if (type == nullptr)
-      type = symbol->get_type();
+    type = symbol->get_type();
     return;
   }
 
@@ -208,61 +204,8 @@ void LLScriptIdentifier::resolve_symbol(LLSymbolType symbol_type) {
     return;
   }
 
-  /// If we're requesting a member, like var.x or var.y
-  if (member != nullptr) {
-
-    // all members must be single letters
-    if (member[1] != 0) {
-      ERROR(HERE, E_INVALID_MEMBER, name, member);
-      type = TYPE(LST_ERROR);
-      return;
-    }
-
-    /// Make sure it's a variable
-    if (symbol_type != SYM_VARIABLE) {
-      ERROR(HERE, E_MEMBER_NOT_VARIABLE, name, member, LLScriptSymbol::get_type_name(symbol_type));
-      symbol = nullptr;
-      type = TYPE(LST_ERROR);
-      return;
-    }
-
-    // ZERO_VECTOR.x is not valid, because it's really `<0,0,0>.x` which is not allowed!
-    if (symbol->get_sub_type() == SYM_BUILTIN) {
-      ERROR(HERE, E_INVALID_MEMBER, name, member);
-      type = TYPE(LST_ERROR);
-      return;
-    }
-
-    // Make sure it's a vector or quaternion. TODO: is there a better way to do this?
-    switch (symbol->get_type()->get_itype()) {
-      case LST_QUATERNION:
-        if (member[0] == 's') {
-          type = TYPE(LST_FLOATINGPOINT);
-          break;
-        }
-        // FALL THROUGH
-      case LST_VECTOR:
-        switch (member[0]) {
-          case 'x':
-          case 'y':
-          case 'z':
-            type = TYPE(LST_FLOATINGPOINT);
-            break;
-          default:
-            ERROR(HERE, E_INVALID_MEMBER, name, member);
-            type = TYPE(LST_ERROR);
-            break;
-        }
-        break;
-      default:
-        ERROR(HERE, E_MEMBER_WRONG_TYPE, name, member);
-        type = TYPE(LST_ERROR);
-        break;
-    }
-  } else {
-    // Set our type to our symbol's type.
-    type = symbol->get_type();
-  }
+  // Set our type to our symbol's type.
+  type = symbol->get_type();
 }
 
 LLASTNode *LLASTNode::find_previous_in_scope(std::function<bool(LLASTNode *)> const &checker) {
@@ -392,6 +335,62 @@ void LLScriptScript::optimize(const OptimizationContext &ctx) {
     if (optimized)
       recalculate_reference_data();
   } while (optimized);
+}
+
+
+LLScriptConstant *LLScriptIdentifier::get_constant_value() {
+  if (symbol && symbol->get_assignments() == 0)
+    return symbol->get_constant_value();
+  return nullptr;
+}
+
+
+LLScriptConstant *LLScriptGlobalVariable::get_constant_value() {
+  // It's not really constant if it gets mutated more than once, is it?
+  // note that initialization during declaration doesn't count.
+  auto *id = (LLScriptIdentifier *) get_child(0);
+  if (id->get_symbol()->get_assignments() == 0) {
+    return constant_value;
+  }
+  return nullptr;
+}
+
+LLScriptConstant *LLScriptDeclaration::get_constant_value() {
+  auto *id = (LLScriptIdentifier *) get_child(0);
+  if (id->get_symbol()->get_assignments() == 0) {
+    return constant_value;
+  }
+  return nullptr;
+}
+
+LLScriptConstant *LLScriptExpression::get_constant_value() {
+  // replacing `foo = "bar"` with `"bar"` == no
+  if (!operation_mutates(operation)) {
+    return constant_value;
+  }
+  return nullptr;
+}
+
+
+LLScriptConstant *LLScriptLValueExpression::get_constant_value() {
+  if (is_foldable) {
+    // We have to be careful about folding lists
+    if (this->type == TYPE(LST_LIST)) {
+      LLASTNode *top_foldable = this;
+      LLASTNode *current_node = this;
+
+      // Don't fold this in if it's a list expression at the foldable level
+      while (current_node != nullptr && current_node->node_allows_folding()) {
+        top_foldable = current_node;
+        current_node = current_node->get_parent();
+      }
+      if (top_foldable->get_type() == TYPE(LST_LIST))
+        return nullptr;
+    }
+
+    return constant_value;
+  }
+  return nullptr;
 }
 
 }

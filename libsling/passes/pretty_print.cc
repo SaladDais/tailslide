@@ -84,10 +84,6 @@ bool PrettyPrintVisitor::visit(LLScriptIdentifier *node) {
   } else {
     stream << name;
   }
-  const char *member = node->get_member();
-  if (member) {
-    stream << '.' << member;
-  }
   return false;
 }
 
@@ -400,6 +396,16 @@ bool PrettyPrintVisitor::visit(LLScriptExpression *node) {
       stream << operation_str(operation);
       left->visit(this);
     }
+  }
+  return false;
+}
+
+bool PrettyPrintVisitor::visit(LLScriptLValueExpression *node) {
+  node->get_child(0)->visit(this);
+  LLASTNode *member = node->get_child(1);
+  if (member && member->get_node_type() != NODE_NULL) {
+    stream << '.';
+    member->visit(this);
   }
   return false;
 }

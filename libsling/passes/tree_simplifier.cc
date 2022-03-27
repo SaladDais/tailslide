@@ -111,15 +111,17 @@ bool TreeSimplifyingVisitor::visit(LLScriptSimpleAssignable *node) {
 
 bool TreeSimplifyingVisitor::visit(LLScriptLValueExpression *node) {
   if (!ctx.fold_constants)
-    return true;
+    return false;
   LLASTNode *child = node->get_child(0);
   if (child && child->get_node_type() == NODE_IDENTIFIER) {
     auto *id = (LLScriptIdentifier *)child;
     auto *sym = id->get_symbol();
+    if (!sym)
+      return false;
     // Is this a builtin constant? Don't bother replacing it.
     // These references are usually "free" given that they're
     // lexer tokens in SL proper.
-    if (!sym || sym->get_sub_type() == SYM_BUILTIN)
+    if (sym->get_sub_type() == SYM_BUILTIN)
       return false;
     // no inlining references to lists, they don't get put in
     // a constant pool like strings or keys!
@@ -137,7 +139,7 @@ bool TreeSimplifyingVisitor::visit(LLScriptLValueExpression *node) {
       return false;
     }
   }
-  return true;
+  return false;
 }
 
 bool TreeSimplifyingVisitor::visit(LLScriptConstantExpression *node) {

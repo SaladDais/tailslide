@@ -16,7 +16,7 @@ class ConstantDeterminingVisitor : public DepthFirstASTVisitor {
     virtual bool visit(LLScriptSimpleAssignable *node);
     virtual bool visit(LLScriptVectorConstant *node);
     virtual bool visit(LLScriptQuaternionConstant *node);
-    virtual bool visit(LLScriptIdentifier *node);
+    virtual bool visit(LLScriptLValueExpression *node);
     virtual bool visit(LLScriptListExpression *node);
     virtual bool visit(LLScriptVectorExpression *node);
     virtual bool visit(LLScriptQuaternionExpression *node);

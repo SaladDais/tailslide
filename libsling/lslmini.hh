@@ -78,14 +78,12 @@ class LLScriptGlobalStorage : public LLASTNode {
 
 class LLScriptIdentifier : public LLASTNode {
   public:
-    LLScriptIdentifier( const char *name ) : LLASTNode(0), symbol(NULL), name(name), member(NULL) {};
-    LLScriptIdentifier( const char *name, const char *member ) : LLASTNode(0), symbol(NULL), name(name), member(member) {};
-    LLScriptIdentifier( class LLScriptType *_type, const char *name ) : LLASTNode(0), symbol(NULL), name(name), member(NULL) { type = _type; };
-    LLScriptIdentifier( class LLScriptType *_type, const char *name, YYLTYPE *lloc ) : LLASTNode( lloc, 0), symbol(NULL), name(name), member(NULL) { type = _type; };
-    LLScriptIdentifier( LLScriptIdentifier *other ) : LLASTNode(0), symbol(NULL), name(other->get_name()), member(other->get_member()) {};
+    LLScriptIdentifier( const char *name ) : LLASTNode(0), symbol(NULL), name(name) {};
+    LLScriptIdentifier( class LLScriptType *_type, const char *name ) : LLASTNode(0), symbol(NULL), name(name) { type = _type; };
+    LLScriptIdentifier( class LLScriptType *_type, const char *name, YYLTYPE *lloc ) : LLASTNode( lloc, 0), symbol(NULL), name(name) { type = _type; };
+    LLScriptIdentifier( LLScriptIdentifier *other ) : LLASTNode(0), symbol(NULL), name(other->get_name()) {};
 
     const char    *get_name() { return name; }
-    const char    *get_member() { return member; }
 
     void resolve_symbol(LLSymbolType symbol_type);
     void set_symbol( LLScriptSymbol *_symbol ) { symbol = _symbol; };
@@ -93,15 +91,15 @@ class LLScriptIdentifier : public LLASTNode {
 
     virtual const char *get_node_name() {
       static thread_local char buf[256];
-      snprintf(buf, 256, "identifier \"%s%s%s\"", name, member ? "." : "", member ? member : "" );
+      snprintf(buf, 256, "identifier \"%s\"", name);
       return buf;
     }
     virtual LLNodeType get_node_type() { return NODE_IDENTIFIER; };
+    virtual class LLScriptConstant *get_constant_value();
 
   private:
     LLScriptSymbol                  *symbol;
     const char                      *name;
-    const char                      *member;
 };
 
 class LLScriptGlobalVariable : public LLASTNode {
@@ -134,6 +132,8 @@ public:
     if (constant->is_static())
       constant = constant->copy();
     push_child(constant);
+    set_type(constant->get_type());
+    set_constant_value(constant);
   };
   LLScriptSimpleAssignable( class LLScriptIdentifier *id ) : LLASTNode(1, id) {};
   virtual const char *get_node_name() { return "assignable"; }
@@ -351,7 +351,6 @@ class LLScriptQuaternionConstant : public LLScriptConstant {
   private:
     LLQuaternion *value;
 };
-
 
 
 class LLScriptGlobalFunction : public LLASTNode {
@@ -658,7 +657,13 @@ class LLScriptLValueExpression : public LLScriptExpression {
   public:
     LLScriptLValueExpression( LLScriptIdentifier *identifier )
       : LLScriptExpression(1, identifier), is_foldable(false) {};
-    virtual const char *get_node_name() { return "lvalue expression"; };
+    LLScriptLValueExpression( LLScriptIdentifier *identifier, LLScriptIdentifier *member )
+        : LLScriptExpression(2, identifier, member), is_foldable(false) {};
+    virtual const char *get_node_name() {
+      static thread_local char buf[256];
+      snprintf(buf, 256, "lvalue expression {%sfoldable}", is_foldable ? "" : "not ");
+      return buf;
+    };
     virtual LLNodeSubType get_node_sub_type() { return NODE_LVALUE_EXPRESSION; };
 
     virtual LLScriptConstant* get_constant_value();

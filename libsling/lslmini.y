@@ -327,7 +327,9 @@ simple_assignable
 simple_assignable_no_list
 	: IDENTIFIER
 	{
-    $$ = gAllocationManager->new_tracked<LLScriptSimpleAssignable>(gAllocationManager->new_tracked<LLScriptIdentifier>($1));
+    $$ = gAllocationManager->new_tracked<LLScriptSimpleAssignable>(
+        gAllocationManager->new_tracked<LLScriptIdentifier>($1)
+    );
 	}
 	| constant
 	{
@@ -1039,7 +1041,10 @@ lvalue
 	}
 	| IDENTIFIER PERIOD IDENTIFIER
 	{
-    $$ = gAllocationManager->new_tracked<LLScriptLValueExpression>(gAllocationManager->new_tracked<LLScriptIdentifier>($1, $3));
+    $$ = gAllocationManager->new_tracked<LLScriptLValueExpression>(
+        gAllocationManager->new_tracked<LLScriptIdentifier>($1),
+        gAllocationManager->new_tracked<LLScriptIdentifier>($3)
+    );
 	}
 	;
 		
