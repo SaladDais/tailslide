@@ -77,16 +77,6 @@ bool TypeCheckVisitor::visit(LLScriptStateStatement *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptJumpStatement *node) {
-  auto *id = (LLScriptIdentifier *) node->get_child(0);
-  // labels and jump statements are special in that they can jump forwards
-  // in the script, so we resolve their symbols for the first time here
-  // rather than during the general symbol resolution step.
-  id->resolve_symbol(SYM_LABEL);
-  node->set_type(id->get_type());
-  return true;
-}
-
 bool TypeCheckVisitor::visit(LLScriptDeclaration *node) {
   auto *id = (LLScriptIdentifier *) node->get_child(0);
   LLASTNode *rvalue = node->get_child(1);
