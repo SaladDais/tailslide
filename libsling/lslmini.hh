@@ -221,17 +221,16 @@ class LLScriptStringConstant : public LLScriptConstant {
 // TODO: is this even a constant, really?
 class LLScriptListConstant : public LLScriptConstant {
   public:
-    LLScriptListConstant( class LLScriptConstant *v ) : LLScriptConstant(), value(v) {
+    LLScriptListConstant( class LLScriptConstant *v ) : LLScriptConstant() {
       type = TYPE(LST_LIST);
       // so we can do symbol resolution inside the list constant
-      if (value != NULL)
-        value->set_parent(this);
+      push_child(v);
     }
 
     virtual const char *get_node_name() {
       static thread_local char buf[256];
       int len = 0;
-      if (value)
+      if (get_children())
         len = get_length();
       snprintf(buf, 256, "list constant: %d entries", len);
       return buf;
@@ -239,11 +238,11 @@ class LLScriptListConstant : public LLScriptConstant {
 
     virtual LLNodeSubType get_node_sub_type() { return NODE_LIST_CONSTANT; }
 
-    class LLScriptConstant *get_value() { return value; }
-    void set_value(class LLScriptConstant *val) { value = val; }
+    class LLScriptConstant *get_value() { return (LLScriptConstant*)get_children(); }
+    void set_value(class LLScriptConstant *val) {  }
 
     int get_length() {
-      LLASTNode *node = (LLASTNode*)value;
+      LLASTNode *node = get_children();
       int i = 0;
       for ( ; node; node = node->get_next() )
         ++i;
@@ -256,9 +255,6 @@ class LLScriptListConstant : public LLScriptConstant {
       new_const->constant_value = new_const;
       return new_const;
     };
-
-  private:
-    class LLScriptConstant *value;
 };
 
 /////////////////////////////////////////////////////

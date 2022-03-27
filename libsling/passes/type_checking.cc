@@ -426,14 +426,6 @@ bool TypeCheckVisitor::visit(LLScriptVectorExpression *node) {
 
 bool TypeCheckVisitor::visit(LLScriptVectorConstant *node) {
   node->set_type(TYPE(LST_VECTOR));
-  LLASTNode *child = node->get_children();
-  for (; child; child = child->get_next()) {
-    if (!child->get_type()->can_coerce(TYPE(LST_FLOATINGPOINT))) {
-      ERROR(IN(node), E_WRONG_TYPE_IN_MEMBER_ASSIGNMENT, "vector",
-            child->get_type()->get_node_name());
-      return true;
-    }
-  }
   return true;
 }
 
@@ -452,14 +444,6 @@ bool TypeCheckVisitor::visit(LLScriptQuaternionExpression *node) {
 
 bool TypeCheckVisitor::visit(LLScriptQuaternionConstant *node) {
   node->set_type(TYPE(LST_QUATERNION));
-  LLASTNode *child = node->get_children();
-  for (; child; child = child->get_next()) {
-    if (!child->get_type()->can_coerce(TYPE(LST_FLOATINGPOINT))) {
-      ERROR(IN(node), E_WRONG_TYPE_IN_MEMBER_ASSIGNMENT, "quaternion",
-            child->get_type()->get_node_name());
-      return true;
-    }
-  }
   return true;
 }
 

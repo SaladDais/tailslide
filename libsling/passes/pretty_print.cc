@@ -462,29 +462,19 @@ bool PrettyPrintVisitor::visit(LLScriptQuaternionExpression *node) {
 
 bool PrettyPrintVisitor::visit(LLScriptVectorConstant *node) {
   LLVector *v = node->get_value();
-  if (v != nullptr) {
-    char pretty_buf[256];
-    snprintf(pretty_buf, 256, "<%#.6g, %#.6g, %#.6g>", v->x, v->y, v->z);
-    stream << pretty_buf;
-  } else {
-    stream << '<';
-    prettify_coordinate_members(node->get_children());
-    stream << '>';
-  }
+  assert(v != nullptr);
+  char pretty_buf[256];
+  snprintf(pretty_buf, 256, "<%#.6g, %#.6g, %#.6g>", v->x, v->y, v->z);
+  stream << pretty_buf;
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LLScriptQuaternionConstant *node) {
   LLQuaternion *v = node->get_value();
-  if (v != nullptr) {
-    char pretty_buf[256];
-    snprintf(pretty_buf, 256, "<%#.6g, %#.6g, %#.6g, %#.6g>", v->x, v->y, v->z, v->s);
-    stream << pretty_buf;
-  } else {
-    stream << '<';
-    prettify_coordinate_members(node->get_children());
-    stream << '>';
-  }
+  assert(v != nullptr);
+  char pretty_buf[256];
+  snprintf(pretty_buf, 256, "<%#.6g, %#.6g, %#.6g, %#.6g>", v->x, v->y, v->z, v->s);
+  stream << pretty_buf;
   return false;
 }
 

@@ -116,18 +116,6 @@ void ASTVisitor::visit_children(LLASTNode *node) {
     child->visit(this);
     child = next;
   }
-
-  /* Stupid list constants with their stupid hidden trees */
-  if (node->get_node_sub_type() == NODE_LIST_CONSTANT) {
-    LLASTNode *list_child = ((LLScriptListConstant *) node)->get_value();
-    while (list_child != nullptr) {
-      LLASTNode *next = list_child->get_next();
-      assert(list_child != next);
-      assert(list_child != node);
-      list_child->visit(this);
-      list_child = next;
-    }
-  }
 }
 
 }
