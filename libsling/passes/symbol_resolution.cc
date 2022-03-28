@@ -4,9 +4,21 @@
 namespace Sling {
 
 
+bool ExprSymbolResolutionVisitor::visit(LLScriptLValueExpression *node) {
+  ((LLScriptIdentifier*)node->get_child(0))->resolve_symbol(SYM_VARIABLE);
+  return false;
+}
+
+bool ExprSymbolResolutionVisitor::visit(LLScriptFunctionExpression *node) {
+  auto *id = (LLScriptIdentifier *) node->get_child(0);
+  id->resolve_symbol(SYM_FUNCTION);
+  return true;
+}
+
+
 // all global var definitions are implicitly hoisted above function definitions
 // all functions and states have their declarations implicitly hoisted as well.
-class GlobalSymbolResolutionVisitor: public ASTVisitor {
+class GlobalSymbolResolutionVisitor: public ExprSymbolResolutionVisitor {
   public:
     virtual bool visit(LLScriptGlobalVariable *node) {
       // descend first so we can resolve any symbol references present in the rvalue
@@ -21,11 +33,6 @@ class GlobalSymbolResolutionVisitor: public ASTVisitor {
       node->define_symbol(identifier->get_symbol());
       return false;
     };
-
-    virtual bool visit(LLScriptLValueExpression *node) {
-      ((LLScriptIdentifier*)node->get_child(0))->resolve_symbol(SYM_VARIABLE);
-      return false;
-    }
 
     virtual bool visit(LLScriptGlobalFunction *node) {
       auto *identifier = (LLScriptIdentifier *) node->get_child(0);
@@ -166,19 +173,6 @@ bool SymbolResolutionVisitor::visit(LLScriptJumpStatement *node) {
 bool SymbolResolutionVisitor::visit(LLScriptStateStatement *node) {
   if (auto *id = (LLScriptIdentifier *) node->get_child(0))
     id->resolve_symbol(SYM_STATE);
-  return true;
-}
-
-bool SymbolResolutionVisitor::visit(LLScriptLValueExpression *node) {
-  auto *id = (LLScriptIdentifier *) node->get_child(0);
-  id->resolve_symbol(SYM_VARIABLE);
-  // not interested in the identifier children
-  return false;
-}
-
-bool SymbolResolutionVisitor::visit(LLScriptFunctionExpression *node) {
-  auto *id = (LLScriptIdentifier *) node->get_child(0);
-  id->resolve_symbol(SYM_FUNCTION);
   return true;
 }
 

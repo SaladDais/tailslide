@@ -414,7 +414,10 @@ bool TypeCheckVisitor::visit(LLScriptTypecastExpression *node) {
   auto *from_type = child->get_type();
   auto *to_type = node->get_type();
   if(!is_cast_legal(from_type->get_itype(), to_type->get_itype())) {
-    ERROR(IN(node), E_ILLEGAL_CAST, from_type->get_node_name(), to_type->get_node_name());
+    // this is just an error bubbling up
+    if (from_type->get_type() != TYPE(LST_ERROR)) {
+      ERROR(IN(node), E_ILLEGAL_CAST, from_type->get_node_name(), to_type->get_node_name());
+    }
     node->set_type(TYPE(LST_ERROR));
   }
   return true;

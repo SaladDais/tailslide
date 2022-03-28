@@ -267,7 +267,7 @@ const char *Logger::error_messages[] = {
         "Returning a %s value from a %s function.",
         "Not all code paths return a value.",
         "%s", // Syntax error, bison includes all the info.
-        "Global initialize must be constant.",
+        "Global initializer must be constant.",
         "Expression and constant without operator.\n"
           "Are you doing `foo-2`? Separate operators with spaces.\n"
           "See: http://secondlife.com/badgeo/wakka.php?wakka=knownbugs",

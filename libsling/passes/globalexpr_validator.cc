@@ -16,7 +16,7 @@ bool GlobalExprValidatingVisitor::visit(LLScriptGlobalVariable *node) {
   // Worth checking the children specifically to see if there's anything other
   // than non-constness that'd make the rvalue invalid.
   if (valid_rvalue)
-    visit_children(rvalue);
+    rvalue->visit(this);
 
   if (!valid_rvalue) {
     assert(rvalue);
@@ -38,6 +38,7 @@ bool SimpleAssignableValidatingVisitor::visit(LLScriptExpression *node) {
     case NODE_CONSTANT_EXPRESSION:
     case NODE_VECTOR_EXPRESSION:
     case NODE_QUATERNION_EXPRESSION:
+    case NODE_LIST_EXPRESSION:
       return true;
     default:
       valid_rvalue = false;

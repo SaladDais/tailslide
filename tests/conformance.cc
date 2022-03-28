@@ -63,6 +63,7 @@ SIMPLE_LINT_TEST_CASE("warning1.lsl")
 SIMPLE_LINT_TEST_CASE("warning2.lsl")
 SIMPLE_LINT_TEST_CASE("weirdscope-jump.lsl")
 SIMPLE_LINT_TEST_CASE("xytext1.2.lsl")
+SIMPLE_LINT_TEST_CASE("ll_global_rules.lsl")
 
 SIMPLE_LINT_TEST_CASE("bugs/0001.lsl")
 SIMPLE_LINT_TEST_CASE("bugs/0002.lsl")

@@ -1,6 +1,6 @@
+integer number = llGetUnixTime();   // function exprs not treated as constant   $[E10021] $[E20009]
+integer number = 3;                 // not allowed even though above fails      $[E10001]
 
-integer number = 3;                 // will only pass because above fails       $[E20009]
-integer number = 4;                 // already declared                         $[E10001]
 vector j = <1,2,"3">;               // $[E20009] $[E10016]
 rotation b = <1,2,3,"4">;           // $[E20009] $[E10016]
 rotation c = <1,2,3,<1,2,3> >;      // $[E20009] $[E10016]

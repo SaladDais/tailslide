@@ -521,7 +521,6 @@ public:
     virtual const char *get_node_name() {
       return "constant expression";
     };
-    virtual LLNodeType get_node_type() { return NODE_EXPRESSION; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_CONSTANT_EXPRESSION; };
 };
 
@@ -534,7 +533,6 @@ public:
     virtual const char *get_node_name() {
       return "parenthesis expression";
     };
-    virtual LLNodeType get_node_type() { return NODE_EXPRESSION; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_PARENTHESIS_EXPRESSION; };
 };
 
@@ -549,7 +547,6 @@ public:
       snprintf( buf, 256, "binary expression: '%s'", operation_str(operation) );
       return buf;
     };
-    virtual LLNodeType get_node_type() { return NODE_EXPRESSION; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_BINARY_EXPRESSION; };
 };
 
@@ -563,7 +560,6 @@ public:
       snprintf( buf, 256, "unary expression: '%s'", operation_str(operation) );
       return buf;
     };
-    virtual LLNodeType get_node_type() { return NODE_EXPRESSION; };
     virtual LLNodeSubType get_node_sub_type() { return NODE_UNARY_EXPRESSION; };
 };
 
