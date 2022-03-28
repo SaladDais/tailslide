@@ -313,6 +313,7 @@ bool TypeCheckVisitor::visit(LLScriptLValueExpression *node) {
 
   auto *symbol = id->get_symbol();
   if (!symbol) {
+    node->set_type(TYPE(LST_ERROR));
     return false;
   }
 
