@@ -70,6 +70,7 @@ target_sources(libsling PRIVATE
         libsling/tree_base.hh
         libsling/types.hh
         libsling/visitor.hh
+        libsling/passes/globalexpr_validator.hh
         libsling/passes/determine_reachable.hh
         libsling/passes/pretty_print.hh
         libsling/passes/symbol_resolution.hh
@@ -90,6 +91,7 @@ target_sources(libsling PRIVATE
         libsling/symtab.cc
         libsling/types.cc
         libsling/visitor.cc
+        libsling/passes/globalexpr_validator.cc
         libsling/passes/determine_reachable.cc
         libsling/passes/pretty_print.cc
         libsling/passes/symbol_resolution.cc

@@ -28,6 +28,7 @@ ParserRef runConformance(const char* name, bool allow_syntax_errors)
     script->recalculate_reference_data();
     script->propagate_values();
     script->determine_reachability();
+    script->validate_globals(true);
     script->check_symbols();
   }
 
@@ -92,6 +93,7 @@ static void checkStringOutput(
     massager(parser->script);
   if (ctx)
     parser->script->optimize(ctx);
+  parser->script->validate_globals(true);
   parser->script->check_symbols();
   parser->script->get_symbol_table()->set_mangled_names();
 

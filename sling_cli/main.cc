@@ -172,8 +172,9 @@ int main(int argc, char **argv) {
     if (!Logger::get()->get_errors()) {
       script->optimize(optim_ctx);
 
-      // do this last since symbol usage may change
+      // do these last since symbol usage and expressions may change
       // when rewriting the tree
+      script->validate_globals(true);
       script->check_symbols();
       if (pretty_print) {
         script->get_symbol_table()->set_mangled_names();
@@ -183,6 +184,7 @@ int main(int argc, char **argv) {
         std::cout << print_visitor.stream.str() << "\n";
       }
     } else {
+      script->validate_globals(true);
       script->check_symbols();
     }
     Logger::get()->report();

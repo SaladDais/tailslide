@@ -66,6 +66,7 @@ class LLScriptScript : public LLASTNode {
 
     void optimize(const OptimizationContext &ctx);
     void recalculate_reference_data();
+    void validate_globals(bool sl_strict);
 };
 
 class LLScriptGlobalStorage : public LLASTNode {

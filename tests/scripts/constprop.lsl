@@ -1,6 +1,7 @@
 // Constant propagation test
 
 integer s = 2;
+float minus_pi = -PI;
 
 default {
     state_entry() {
@@ -43,6 +44,7 @@ default {
         if ( (integer)"foo" == 0 ) return;      // $[E20012]
         if ( (float)"0x1" == 1.0 ) return;      // $[E20012]
         if ( (float)((float)"1.0") == 1.0 ) return;      // $[E20012]
+        if ( minus_pi == -PI ) return;          // $[E20012]
 
         llFrand(r.z);
 

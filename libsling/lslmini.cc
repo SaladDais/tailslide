@@ -8,6 +8,7 @@
 #include "visitor.hh"
 #include "passes/tree_simplifier.hh"
 #include "passes/symbol_resolution.hh"
+#include "passes/globalexpr_validator.hh"
 
 
 extern FILE *yyin;
@@ -335,6 +336,17 @@ void LLScriptScript::optimize(const OptimizationContext &ctx) {
     if (optimized)
       recalculate_reference_data();
   } while (optimized);
+}
+
+
+void LLScriptScript::validate_globals(bool sl_strict) {
+  if (sl_strict) {
+    SimpleAssignableValidatingVisitor visitor;
+    visit(&visitor);
+  } else {
+    GlobalExprValidatingVisitor visitor;
+    visit(&visitor);
+  }
 }
 
 
