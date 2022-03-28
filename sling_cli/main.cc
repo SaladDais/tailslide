@@ -11,7 +11,7 @@
 using namespace Sling;
 
 void version() {
-  fprintf(stderr, "Sling CLI tool");
+  fprintf(stderr, "Sling LSL CLI");
   fprintf(stderr, " built on " __DATE__ "\n");
   fprintf(stderr, " based on https://github.com/pclewis/lslint\n");
 }
@@ -31,25 +31,25 @@ int main(int argc, char **argv) {
           ("version", "Display the banner and current version of Sling");
 
   options.add_options("Obfuscation")
-          ("stdobf", "Standard obfuscation method - uses all methods with no negative performance impact")
+          ("obfuscate", "Standard obfuscation method - uses all methods with no negative performance impact")
           ("minw", "Minimize whitespace within the script")
-          ("mangle_glob", "Mangle and shorten global variable names")
-          ("mangle_loc", "Mangle and shorten local variable names")
-          ("mangle_func", "Mangle and shorten function names")
-          ("show_unmangled", "Put a comment next to instances of mangled identifiers with the original name")
-          ("obfuscate_numbers", "Obfuscate numeric literals");
+          ("mangle-globals", "Mangle and shorten global variable names")
+          ("mangle-locals", "Mangle and shorten local variable names")
+          ("mangle-funcs", "Mangle and shorten function names")
+          ("show-unmangled", "Put a comment next to instances of mangled identifiers with the original name")
+          ("obfuscate-numbers", "Obfuscate numeric literals");
 
   options.add_options("Optimization / Debug")
           ("O1", "Simple optimizations with no risk or effect on readability")
           ("O2", "Slightly risky optimizations, logic is partially rewritten")
           ("O3", "Risky optimizations that might render script unreadable by humans")
-          ("fold_constants", "Simplify the source by performing constant folding")
-          ("prune_glob", "Prune unused globals")
-          ("prune_loc", "Prune unused locals")
-          ("prune_func", "Prune unused functions")
+          ("fold-constants", "Simplify the source by performing constant folding")
+          ("prune-globals", "Prune unused globals")
+          ("prune-locals", "Prune unused locals")
+          ("prune-funcs", "Prune unused functions")
           ("lint", "Only lint the file for errors, don't optimize or pretty print.")
-          ("showtree", "Show the AST after optimizations")
-          ("check_asserts", "check assert comments and suppress errors based on matches");
+          ("show-tree", "Show the AST after optimizations")
+          ("check-asserts", "check assert comments and suppress errors based on matches");
 
   options.add_options()
           ("script", "Input script's filename", cxxopts::value<std::string>());
@@ -85,31 +85,31 @@ int main(int argc, char **argv) {
     }
   }
 
-  bool check_assertions = vm.count("check_asserts");
-  if (vm.count("showtree"))
+  bool check_assertions = vm.count("check-asserts");
+  if (vm.count("show-tree"))
     show_tree = true;
   if (vm.count("lint")) {
     pretty_print = false;
   } else {
     if (vm.count("minw"))
       pretty_opts.minify_whitespace = true;
-    if (vm.count("mangle_glob"))
+    if (vm.count("mangle-globals"))
       pretty_opts.mangle_global_names = true;
-    if (vm.count("mangle_loc"))
+    if (vm.count("mangle-locals"))
       pretty_opts.mangle_local_names = true;
-    if (vm.count("mangle_func"))
+    if (vm.count("mangle-funcs"))
       pretty_opts.mangle_func_names = true;
-    if (vm.count("show_unmangled"))
+    if (vm.count("show-unmangled"))
       pretty_opts.show_unmangled = true;
-    if (vm.count("obfuscate_numbers"))
+    if (vm.count("obfuscate-numbers"))
       pretty_opts.obfuscate_numbers = true;
-    if (vm.count("fold_constants"))
+    if (vm.count("fold-constants"))
       optim_ctx.fold_constants = true;
-    if (vm.count("prune_glob"))
+    if (vm.count("prune-globals"))
       optim_ctx.prune_unused_globals = true;
-    if (vm.count("prune_func"))
+    if (vm.count("prune-funcs"))
       optim_ctx.prune_unused_functions = true;
-    if (vm.count("prune_loc"))
+    if (vm.count("prune-locals"))
       optim_ctx.prune_unused_locals = true;
     if (vm.count("O2")) {
       optim_ctx.prune_unused_globals = true;
@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
       // stops `-1` from being treated as `unary_minus(1)`
       pretty_opts.obfuscate_numbers = true;
     }
-    if (vm.count("stdobf")) {
+    if (vm.count("obfuscate")) {
       optim_ctx.prune_unused_globals = true;
       optim_ctx.prune_unused_locals = true;
       optim_ctx.prune_unused_functions = true;
@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
     LOG(LOG_INFO, nullptr, "Script parsed, collecting symbols");
     script->collect_symbols();
     script->link_symbol_tables();
-    LOG(LOG_INFO, nullptr, "Propogating types");
+    LOG(LOG_INFO, nullptr, "Propagating types");
     script->determine_types();
     script->recalculate_reference_data();
     script->propagate_values();

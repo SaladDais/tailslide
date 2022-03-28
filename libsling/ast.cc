@@ -52,7 +52,7 @@ void LLASTNode::determine_reachability() {
   visit(&visitor);
 }
 
-// walk tree post-order and propogate types
+// walk tree post-order and propagate types
 void LLASTNode::determine_types() {
   TypeCheckVisitor visitor;
   visit(&visitor);

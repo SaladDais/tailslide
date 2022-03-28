@@ -1,4 +1,4 @@
-// Constant propogation test
+// Constant propagation test
 
 integer s = 2;
 

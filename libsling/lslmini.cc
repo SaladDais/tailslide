@@ -64,7 +64,7 @@ void LLASTNode::link_symbol_tables(bool unlink) {
   visit(&visitor);
 }
 
-// Lookup a symbol, propogating up the tree until it is found.
+// Lookup a symbol, propagating up the tree until it is found.
 LLScriptSymbol *LLASTNode::lookup_symbol(const char *name, LLSymbolType sym_type, LLASTNode *start_node) {
   LLScriptSymbol *sym = nullptr;
 
@@ -79,7 +79,7 @@ LLScriptSymbol *LLASTNode::lookup_symbol(const char *name, LLSymbolType sym_type
   return sym;
 }
 
-// Define a symbol, propogating up the tree to the nearest scope level.
+// Define a symbol, propagating up the tree to the nearest scope level.
 void LLASTNode::define_symbol(LLScriptSymbol *symbol, bool check_existing) {
 
   // If we have a symbol table, define it there
