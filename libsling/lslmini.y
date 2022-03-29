@@ -154,8 +154,6 @@
 %type <global_store>	global
 %type <global>			global_variable
 %type <constant>		constant
-%type <assignable>		list_entries
-%type <assignable>		list_entry
 %type <type>			typename
 %type <global_funcs>	global_function
 %type <global_decl>		function_parameters
