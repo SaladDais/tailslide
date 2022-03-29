@@ -70,9 +70,12 @@ default
 
 TOTAL:: Errors: 0  Warnings: 0
 script [none] (cv=) (1,1)
+  null [none] (cv=) (1,1)
   state [none] (cv=) (1,1)
+    null [none] (cv=) (1,1)
     event handler [none] (cv=) (2,8)
       identifier "state_entry" [none] (cv=) (2,8)
+      null [none] (cv=) (2,8)
       compound statement [none] (cv=) (2,22)
         statement [none] (cv=) (3,9)
           function call [none] (cv=) (3,9)

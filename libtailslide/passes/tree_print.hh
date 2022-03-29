@@ -10,6 +10,9 @@ namespace Tailslide {
 class TreePrintingVisitor: public ASTVisitor {
   public:
     virtual bool visit(LLASTNode *node);
+    // Don't skip by null nodes, they're important parts of the tree we need to show.
+    virtual bool visit(LLASTNullNode *node) { return visit((LLASTNode *)node); }
+
     int walklevel = 0;
     std::stringstream stream {};
 };
