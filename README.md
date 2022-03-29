@@ -56,17 +56,32 @@ world!");
 }/*{
 ```
 
-is completely handled, and equivalent to
+is completely handled:
 
 ```
-default {
-    state_entry() {
+$ tailslide --show-tree tests/scripts/parser_abuse.lsl
+default
+{
+    state_entry()
+    {
         llOwnerSay("\"Hello\nworld!");
     }
 }
+
+TOTAL:: Errors: 0  Warnings: 0
+script [none] (cv=) (1,1)
+  state [none] (cv=) (1,1)
+    event handler [none] (cv=) (2,8)
+      identifier "state_entry" [none] (cv=) (2,8)
+      compound statement [none] (cv=) (2,22)
+        statement [none] (cv=) (3,9)
+          function call [none] (cv=) (3,9)
+            identifier "llOwnerSay" [none] (cv=) (3,9)
+            constant expression [string] (cv=string constant: "\"Hello\nworld!") (3,20)
+              string constant: "\"Hello\nworld!" [string] (cv=string constant: "\"Hello\nworld!") (3,20)
 ```
 
-Special attention has been paid to all the weird, undocumented corner cases.
+Special attention has been paid to weird, undocumented corner cases.
 
 ## Optimizations
 
@@ -83,6 +98,9 @@ foo = foo + 2 + 4 + 3 + 5;
 won't currently be simplified at all due to how expressions are represented and will
 require term rewriting to move non-constant parts of expressions as far to the right (left) as possible.
 
+There are still some cases where constants may be folded but currently aren't, and some differences
+in how floating point operations are folded.
+
 ### Unused Variable / Function Pruning
 
 Any variable or function that is unused after constant folding may be pruned to save bytecode space.
@@ -94,7 +112,7 @@ To reduce bytecode size, Tailslide can mangle user-defined symbols into more com
 `_a`, `_b`, etc. This may also help with disambiguation when converting the AST to another
 language with different scoping / variable shadowing rules.
 
-This isn't the most efficient naming scheme if targeting SL if targeting SL in particular
+This isn't the most efficient naming scheme if targeting SL in particular,
 since it's better to take advantage of strings already in the constant pool.
 
 # License
