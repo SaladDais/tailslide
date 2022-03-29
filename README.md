@@ -64,7 +64,7 @@ Obviously, there will be some differences, mostly around floating point operatio
 
 ### Constant Folding
 
-The naive approach is taken. Sling makes multiple walks down the tree checking if an expression is constant, and replaces
+Sling makes multiple walks down the tree checking if an expression is constant, and replaces
 it with its value.
 
 ```
@@ -86,6 +86,8 @@ To reduce bytecode size, Sling can mangle user-defined symbols into more compact
 `_a`, `_b`, etc. This may also help with disambiguation when converting the AST to another
 language with different scoping / variable shadowing rules.
 
+This isn't the most efficient naming scheme if targeting SL if targeting SL in particular
+since it's better to take advantage of strings already in the constant pool.
 
 # License
 MIT, scripts used for test data (barring those added by me and those in `bugs/`) are

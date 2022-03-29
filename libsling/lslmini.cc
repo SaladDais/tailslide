@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cassert>
+#include <cmath>
 
 #include "lslmini.hh"
 #include "logger.hh"
@@ -403,6 +404,20 @@ LLScriptConstant *LLScriptLValueExpression::get_constant_value() {
     return constant_value;
   }
   return nullptr;
+}
+
+bool LLScriptFloatConstant::is_finite() {
+  return std::isfinite(get_value());
+}
+
+bool LLScriptVectorConstant::is_finite() {
+  LLVector *v = get_value();
+  return std::isfinite(v->x) && std::isfinite(v->y) && std::isfinite(v->z);
+}
+
+bool LLScriptQuaternionConstant::is_finite() {
+  LLQuaternion *v = get_value();
+  return std::isfinite(v->x) && std::isfinite(v->y) && std::isfinite(v->z) && std::isfinite(v->s);
 }
 
 }

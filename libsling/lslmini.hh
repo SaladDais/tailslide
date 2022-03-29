@@ -123,6 +123,7 @@ class LLScriptConstant : public LLASTNode {
     virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc) = 0;
     // make a shallow copy of the constant
     virtual LLScriptConstant* copy() = 0;
+    virtual bool is_finite() { return true; };
     virtual LLScriptConstant* cast(LST_TYPE to_type) { return nullptr; };
 };
 
@@ -173,6 +174,7 @@ class LLScriptFloatConstant : public LLScriptConstant {
 
     float get_value() { return value; }
     void set_value(float val) { value = val; }
+    virtual bool is_finite();
     virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
     virtual LLScriptConstant* copy() {
       auto* new_const = gAllocationManager->new_tracked<LLScriptFloatConstant>(value);
@@ -280,6 +282,7 @@ class LLScriptVectorConstant : public LLScriptConstant {
 
     LLVector *get_value() { return value; }
     void set_value(LLVector *val) { value = val; }
+    virtual bool is_finite();
 
     virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
     virtual LLScriptConstant* copy() {
@@ -316,6 +319,7 @@ class LLScriptQuaternionConstant : public LLScriptConstant {
 
     LLQuaternion *get_value() { return value; }
     void set_value(class LLQuaternion *val) { value = val; }
+    virtual bool is_finite();
 
     virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
 

@@ -63,9 +63,12 @@ bool TreeSimplifyingVisitor::visit(LLScriptExpression* node) {
   LLScriptConstant *cv = node->get_constant_value();
   if(!cv)
     return true;
-  auto c_type = node->get_type()->get_itype();
+  auto c_type = cv->get_type()->get_itype();
   // this expression results in a list, don't fold the result in.
   if (c_type == LST_LIST)
+    return true;
+  // LSL doesn't really have NaN or inf literals, can't fold this.
+  if (!cv->is_finite())
     return true;
   // this expression may result in a new entry in the string constant pool,
   // and we're not allowed to create new ones, don't fold.
@@ -100,7 +103,7 @@ bool TreeSimplifyingVisitor::visit(LLScriptLValueExpression *node) {
     if (sym->get_sub_type() == SYM_BUILTIN)
       return false;
     LLScriptConstant *cv = node->get_constant_value();
-    if (cv) {
+    if (cv && cv->is_finite()) {
       auto *new_expr = gAllocationManager->new_tracked<LLScriptConstantExpression>(cv);
       new_expr->set_lloc(node->get_lloc());
       LLASTNode::replace_node(
