@@ -41,10 +41,24 @@ jobs:
           CXX=${{matrix.compiler}} cmake .. -DTAILSLIDE_SANITIZE=ON ${{matrix.extra_compile_flags}}
           make -j2
           popd
+          mkdir coverage
           ./build/tailslide-test
 
-      - name: print coverage
+      - name: Merge coverage data
         if: ${{matrix.check_coverage}}
         run: |
           llvm-profdata-11 merge default.profraw -o default.profdata
           llvm-cov-11 report -ignore-filename-regex=\(tests\|extern\)/.* -show-region-summary=false --instr-profile default.profdata build/tailslide-test
+          llvm-cov-11 export -ignore-filename-regex=\(tests\|extern\)/.* -format lcov --instr-profile default.profdata build/tailslide-test > coverage.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        if: ${{matrix.check_coverage}}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.info
+          directory: ./coverage/reports/
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          path_to_write_report: ./coverage/codecov_report.txt
+          verbose: false
