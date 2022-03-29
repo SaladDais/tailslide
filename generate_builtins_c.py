@@ -21,11 +21,11 @@ def main():
     with open(SYNTAX_PATH) as f:
         all_code = tuple(f.readlines())
 
-    with open('libsling/builtins_txt.cc', 'w') as f:
+    with open('libtailslide/builtins_txt.cc', 'w') as f:
         f.write("""#ifdef _WIN32
 #pragma execution_character_set("utf-8")
 #endif
-namespace Sling {
+namespace Tailslide {
 const char *builtins_txt[] = {
 """)
         for line in all_code:

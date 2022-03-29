@@ -22,7 +22,7 @@ jobs:
             compiler: g++
           - os: ubuntu
             compiler: clang++
-            extra_compile_flags: "-DSLING_COVERAGE=ON"
+            extra_compile_flags: "-DTAILSLIDE_COVERAGE=ON"
             check_coverage: true
 #          - os: macos
 #            boostrap_command: true
@@ -38,13 +38,13 @@ jobs:
         run: |
           mkdir build
           pushd build
-          CXX=${{matrix.compiler}} cmake .. -DSLING_SANITIZE=ON -DSLING_BUILD_CLI=ON ${{matrix.extra_compile_flags}}
+          CXX=${{matrix.compiler}} cmake .. -DTAILSLIDE_SANITIZE=ON ${{matrix.extra_compile_flags}}
           make -j2
           popd
-          ./build/sling-test
+          ./build/tailslide-test
 
       - name: print coverage
         if: ${{matrix.check_coverage}}
         run: |
           llvm-profdata-11 merge default.profraw -o default.profdata
-          llvm-cov-11 report -ignore-filename-regex=\(tests\|extern\)/.* -show-region-summary=false --instr-profile default.profdata build/sling-test
+          llvm-cov-11 report -ignore-filename-regex=\(tests\|extern\)/.* -show-region-summary=false --instr-profile default.profdata build/tailslide-test

@@ -1,6 +1,6 @@
 #include "testutils.hh"
 
-using namespace Sling;
+using namespace Tailslide;
 
 TEST_SUITE_BEGIN("AST Rewriting");
 

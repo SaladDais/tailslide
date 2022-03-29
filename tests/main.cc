@@ -20,7 +20,7 @@
 
 #include <cassert>
 
-using namespace Sling;
+using namespace Tailslide;
 
 struct BoostLikeReporter : doctest::IReporter
 {
@@ -132,7 +132,7 @@ int main(int argc, char** argv)
         }
     }
 
-  sling_init_builtins(nullptr);
+  tailslide_init_builtins(nullptr);
     int result = context.run();
     if (doctest::parseFlag(argc, argv, "--help") || doctest::parseFlag(argc, argv, "-h"))
     {

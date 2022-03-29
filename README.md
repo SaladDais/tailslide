@@ -1,6 +1,6 @@
 # Intro
 
-Sling provides an embeddable parser, AST representation, and tree walker library for
+Tailslide provides an embeddable parser, AST representation, and tree walker library for
 Second Life's Linden Scripting Language. These can be used as the foundation for an
 LSL compiler or a superset of LSL.
 
@@ -12,7 +12,7 @@ please see [lslint](https://github.com/Makopo/lslint) or
 [LSL-PyOptimizer](https://github.com/Sei-Lisa/LSL-PyOptimizer), respectively.
 
 # Credits
-Sling is heavily based on the [lslint](https://github.com/pclewis/lslint)
+Tailslide is heavily based on the [lslint](https://github.com/pclewis/lslint)
 LSL linter written by pclewis, see the [NOTICE.txt](NOTICE.txt) file for the
 original README and credits.
 
@@ -25,8 +25,8 @@ On OS X you _must_ install the Homebrew versions of `flex` and `bison` because t
 versions provided with XCode are extremely old.
 
 ```bash
-git clone https://github.com/SaladDais/sling.git
-cd sling
+git clone https://github.com/SaladDais/tailslide.git
+cd tailslide
 mkdir build
 cd build
 cmake ..
@@ -69,7 +69,7 @@ Special attention has been paid to all the weird, undocumented corner cases.
 
 ### Constant Folding
 
-The constant folding implementation is currently very simple. Sling makes multiple
+The constant folding implementation is currently very simple. Tailslide makes multiple
 walks down the tree checking if an expression is constant, and replaces it with its value.
 
 ```
@@ -87,7 +87,7 @@ Any variable or function that is unused after constant folding may be pruned to 
 ### Symbol Mangling
 
 Names of user defined functions, their parameters and globals contribute to bytecode size.
-To reduce bytecode size, Sling can mangle user-defined symbols into more compact ones like
+To reduce bytecode size, Tailslide can mangle user-defined symbols into more compact ones like
 `_a`, `_b`, etc. This may also help with disambiguation when converting the AST to another
 language with different scoping / variable shadowing rules.
 

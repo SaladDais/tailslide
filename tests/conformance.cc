@@ -1,10 +1,10 @@
 // This file was originally part of the Luau programming language and is licensed under MIT License;
-#include "libsling.hh"
+#include "tailslide.hh"
 #include "doctest.hh"
 #include "passes/pretty_print.hh"
 #include "testutils.hh"
 
-using namespace Sling;
+using namespace Tailslide;
 
 TEST_SUITE_BEGIN("Lint");
 

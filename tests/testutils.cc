@@ -1,6 +1,6 @@
 #include "testutils.hh"
 
-using namespace Sling;
+using namespace Tailslide;
 
 ParserRef runConformance(const char* name, bool allow_syntax_errors)
 {
@@ -9,7 +9,7 @@ ParserRef runConformance(const char* name, bool allow_syntax_errors)
   path += "/scripts/";
   path += name;
 
-  ParserRef parser(new ScopedSlingParser());
+  ParserRef parser(new ScopedTailslideParser());
   Logger::get()->set_check_assertions(true);
   parser->parse(path);
   LLScriptScript *script = parser->script;
