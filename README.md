@@ -1,5 +1,8 @@
 # Intro
 
+![Build Status](https://github.com/SaladDais/tailslide/workflows/build/badge.svg) [![codecov](https://codecov.io/gh/SaladDais/tailslide/branch/master/graph/badge.svg?token=5BQCSA63F1)](https://codecov.io/gh/SaladDais/tailslide)
+
+
 Tailslide provides an embeddable parser, AST representation, and tree walker library for
 Second Life's Linden Scripting Language. These can be used as the foundation for an
 LSL compiler or a superset of LSL.
