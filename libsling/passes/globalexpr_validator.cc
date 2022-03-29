@@ -6,9 +6,10 @@ bool GlobalExprValidatingVisitor::visit(LLScriptGlobalVariable *node) {
   valid_rvalue = true;
   LLASTNode *rvalue = node->get_child(1);
   if (rvalue && rvalue->get_node_type() != NODE_NULL && !rvalue->is_constant()) {
-    // don't bother checking if the rvalue isn't constant due to a type or symbol
-    // resolution error.
-    if (rvalue->get_type() == TYPE(LST_ERROR)) {
+    // don't bother complaining if the rvalue isn't constant due to a type or symbol
+    // resolution error that we've already reported.
+    if (rvalue->get_constant_precluded()) {
+      valid_rvalue = false;
       return false;
     }
     valid_rvalue = false;

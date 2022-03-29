@@ -178,18 +178,26 @@ bool TypeCheckVisitor::visit(LLScriptExpression *node) {
   LLScriptType *type;
   LLASTNode *left = node->get_child(0);
   LLASTNode *right = node->get_child(1);
+  LLScriptType *l_type = left->get_type();
+  LLScriptType *r_type = right ? right->get_type() : nullptr;
   if (operation == 0 || operation == '(') {
-    type = left->get_type();
+    type = l_type;
+  } else if (l_type == TYPE(LST_ERROR) || r_type == TYPE(LST_ERROR)) {
+    // If we have a type error on either side of the expression we can't
+    // guess as to what the result of the expression is meant to be.
+    type = TYPE(LST_ERROR);
   } else {
-    type = left->get_type()->get_result_type(operation, right ? right->get_type() : nullptr);
+    type = l_type->get_result_type(operation, r_type);
     if (type == nullptr) {
       ERROR(
           IN(node),
           E_INVALID_OPERATOR,
-          left->get_type()->get_node_name(),
+          l_type->get_node_name(),
           operation_str(operation),
-          right ? right->get_type()->get_node_name() : ""
+          r_type ? r_type->get_node_name() : ""
       );
+      // We don't know what type this expression is supposed to result in,
+      // either because this operation is unsupported.
       type = TYPE(LST_ERROR);
     }
   }
@@ -204,10 +212,7 @@ bool TypeCheckVisitor::visit(LLScriptListConstant *node) {
   while (val_c != nullptr) {
     if (val_c->get_type() == TYPE(LST_LIST)) {
       ERROR(IN(node), E_LIST_IN_LIST);
-      node->set_type(TYPE(LST_ERROR));
-    } else if (val_c->get_type() == TYPE(LST_ERROR)) {
-      // error type should bubble up
-      node->set_type(TYPE(LST_ERROR));
+      val_c->set_type(TYPE(LST_ERROR));
     }
     val_c = val_c->get_next();
   }
@@ -221,10 +226,7 @@ bool TypeCheckVisitor::visit(LLScriptListExpression *node) {
   while (val_c != nullptr) {
     if (val_c->get_type() == TYPE(LST_LIST)) {
       ERROR(IN(node), E_LIST_IN_LIST);
-      node->set_type(TYPE(LST_ERROR));
-    } else if (val_c->get_type() == TYPE(LST_ERROR)) {
-      // error type should bubble up
-      node->set_type(TYPE(LST_ERROR));
+      val_c->set_type(TYPE(LST_ERROR));
     }
     val_c = val_c->get_next();
   }
@@ -419,7 +421,6 @@ bool TypeCheckVisitor::visit(LLScriptTypecastExpression *node) {
     if (from_type->get_type() != TYPE(LST_ERROR)) {
       ERROR(IN(node), E_ILLEGAL_CAST, from_type->get_node_name(), to_type->get_node_name());
     }
-    node->set_type(TYPE(LST_ERROR));
   }
   return true;
 }
@@ -431,7 +432,6 @@ bool TypeCheckVisitor::visit(LLScriptVectorExpression *node) {
     if (!child->get_type()->can_coerce(TYPE(LST_FLOATINGPOINT))) {
       ERROR(IN(node), E_WRONG_TYPE_IN_MEMBER_ASSIGNMENT, "vector",
             child->get_type()->get_node_name());
-      node->set_type(TYPE(LST_ERROR));
       return true;
     }
   }
@@ -450,7 +450,6 @@ bool TypeCheckVisitor::visit(LLScriptQuaternionExpression *node) {
     if (!child->get_type()->can_coerce(TYPE(LST_FLOATINGPOINT))) {
       ERROR(IN(node), E_WRONG_TYPE_IN_MEMBER_ASSIGNMENT, "quaternion",
             child->get_type()->get_node_name());
-      node->set_type(TYPE(LST_ERROR));
       return true;
     }
   }

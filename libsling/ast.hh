@@ -153,7 +153,13 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
 
     /// constants ///
     virtual class LLScriptConstant  *get_constant_value()    { return constant_value; };
-    void set_constant_value(class LLScriptConstant *cv) {constant_value = cv;};
+    void set_constant_value(class LLScriptConstant *cv) {
+      if (cv)
+        constant_precluded = false;
+      constant_value = cv;
+    };
+    void set_constant_precluded(bool precluded) { constant_precluded = precluded; };
+    bool get_constant_precluded() { return constant_precluded; };
     virtual bool node_allows_folding() { return false; };
     bool            is_constant()           { return get_constant_value() != NULL; };
 
@@ -163,6 +169,7 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
     class LLScriptType          *type;
     LLScriptSymbolTable         *symbol_table;
     class LLScriptConstant      *constant_value;
+    bool                        constant_precluded = false;
 
   private:
     YYLTYPE                      lloc;

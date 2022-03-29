@@ -51,6 +51,8 @@ class LLScriptSymbol: public LLTrackableObject {
 
     class LLScriptConstant *get_constant_value()                            { return constant_value;    };
     void                    set_constant_value(class LLScriptConstant *v)   { constant_value = v;       };
+    bool get_constant_precluded() { return constant_precluded; };
+    void set_constant_precluded(bool precluded) { constant_precluded = precluded; };
 
     char                   *get_mangled_name()             { return mangled_name; };
     void                    set_mangled_name(char* m_name) {
@@ -66,6 +68,7 @@ class LLScriptSymbol: public LLTrackableObject {
     class LLScriptFunctionDec *function_decl;
     class LLASTNode     *var_decl;
     class LLScriptConstant *constant_value;
+    bool constant_precluded = false;
     int                  references;            // how many times this symbol is referred to
     int                  assignments;           // how many times it is assigned to
     char                *mangled_name;

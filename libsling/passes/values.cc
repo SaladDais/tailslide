@@ -5,8 +5,18 @@ namespace Sling {
 
 bool ConstantDeterminingVisitor::before_descend(LLASTNode *node) {
   // invalidate any old constant value we had, it might not be valid anymore
-  if (!node->is_static() && node->get_node_type() != NODE_CONSTANT)
+  if (!node->is_static() && node->get_node_type() != NODE_CONSTANT) {
     node->set_constant_value(nullptr);
+    node->set_constant_precluded(false);
+  }
+
+  if (node->get_type() == TYPE(LST_ERROR)) {
+    // absolutely no chance of us figuring out a constant value
+    // for this node, don't descend.
+    node->set_constant_precluded(true);
+    return false;
+  }
+
   // need special iteration order for script nodes
   // don't automatically descend!
   if (node->get_node_type() == NODE_SCRIPT)
@@ -37,11 +47,15 @@ bool ConstantDeterminingVisitor::visit(LLScriptDeclaration *node) {
   auto *id = (LLScriptIdentifier *) node->get_child(0);
   LLASTNode *rvalue = node->get_child(1);
   LLScriptConstant *cv = nullptr;
+  bool cv_precluded = false;
   if (rvalue && rvalue->get_node_type() != NODE_NULL) {
     cv = rvalue->get_constant_value();
+    cv_precluded = rvalue->get_constant_precluded();
   }
   DEBUG(LOG_DEBUG_SPAM, NULL, "set %s const to %p\n", id->get_name(), rvalue->get_constant_value());
-  id->get_symbol()->set_constant_value(cv);
+  auto *sym = id->get_symbol();
+  sym->set_constant_value(cv);
+  sym->set_constant_precluded(cv_precluded);
   return false;
 }
 
@@ -57,11 +71,13 @@ bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
       get_node_sub_type()
   );
 
-  // Can't really be avoided in cases where the tree has been modified since
-  // the value was calculated, absent some way of finding out which constant values
-  // depend on the dirtied expression.
-  // if (constant_value != nullptr)
-  //   return; // we already have a value
+  LLASTNode *left = node->get_child(0);
+  LLASTNode *right = node->get_child(1);
+
+  if (left->get_type() == TYPE(LST_ERROR) || (right && right->get_type() == TYPE(LST_ERROR))) {
+    node->set_constant_precluded(true);
+    return true;
+  }
 
   // only check normal expressions
   switch (node->get_node_sub_type()) {
@@ -76,16 +92,17 @@ bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
   }
 
   if (operation == 0 || operation == '(')
-    constant_value = node->get_child(0)->get_constant_value();
-  else if (operation == '=')
-    constant_value = node->get_child(1)->get_constant_value();
-  else {
-    LLScriptConstant *left = node->get_child(0)->get_constant_value();
-    LLScriptConstant *right = node->get_child(1) ? node->get_child(1)->get_constant_value() : nullptr;
+    constant_value = left->get_constant_value();
+  else if (operation == '=') {
+    assert(right);
+    constant_value = right->get_constant_value();
+  } else {
+    LLScriptConstant *c_left = left->get_constant_value();
+    LLScriptConstant *c_right = right ? right->get_constant_value() : nullptr;
 
-    // we need a constant value from the left, and if we have a right side, it MUST have a constant value too
-    if (left && (node->get_child(1) == nullptr || right != nullptr))
-      constant_value = left->operation(operation, right, node->get_lloc());
+    // we need a constant value from the c_left, and if we have a c_right side, it MUST have a constant value too
+    if (c_left && (right == nullptr || c_right != nullptr))
+      constant_value = c_left->operation(operation, c_right, node->get_lloc());
     else
       constant_value = nullptr;
   }
@@ -100,8 +117,8 @@ bool ConstantDeterminingVisitor::visit(LLScriptGlobalVariable *node) {
   LLASTNode *rvalue = node->get_child(1);
   if (rvalue) {
     sym->set_constant_value(rvalue->get_constant_value());
+    sym->set_constant_precluded(rvalue->get_constant_precluded());
   }
-  // TODO: error on non-constant expressions here
   return true;
 }
 
@@ -112,6 +129,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptLValueExpression *node) {
   // can't determine value if we don't have a symbol
   if (symbol == nullptr) {
     node->set_constant_value(nullptr);
+    node->set_constant_precluded(true);
     return true;
   }
 
@@ -125,14 +143,12 @@ bool ConstantDeterminingVisitor::visit(LLScriptLValueExpression *node) {
   if (symbol->get_assignments() == 0) {
     constant_value = symbol->get_constant_value();
     if (constant_value != nullptr && member != nullptr) { // getting a member
-      switch (constant_value->get_type()->get_itype()) {
+      LST_TYPE c_type = constant_value->get_type()->get_itype();
+      switch (c_type) {
         case LST_VECTOR: {
           auto *c = (LLScriptVectorConstant *) constant_value;
           auto *v = (LLVector *) c->get_value();
-          if (v == nullptr) {
-            constant_value = nullptr;
-            break;
-          }
+          assert(v);
           switch (member[0]) {
             case 'x':
               constant_value = gAllocationManager->new_tracked<LLScriptFloatConstant>(v->x);
@@ -151,10 +167,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptLValueExpression *node) {
         case LST_QUATERNION: {
           auto *c = (LLScriptQuaternionConstant *) constant_value;
           auto *v = (LLQuaternion *) c->get_value();
-          if (v == nullptr) {
-            constant_value = nullptr;
-            break;
-          }
+          assert(v);
           switch (member[0]) {
             case 'x':
               constant_value = gAllocationManager->new_tracked<LLScriptFloatConstant>(v->x);
@@ -191,8 +204,10 @@ bool ConstantDeterminingVisitor::visit(LLScriptListExpression *node) {
   if (child->get_node_type() != NODE_NULL) {
     // make sure they are all constant
     for (child = node->get_children(); child; child = child->get_next()) {
-      if (!child->is_constant())
+      if (!child->is_constant()) {
+        node->set_constant_precluded(child->get_constant_precluded());
         return true;
+      }
     }
 
     // create assignables for them
@@ -220,8 +235,10 @@ bool ConstantDeterminingVisitor::visit(LLScriptVectorExpression *node) {
       return true;
 
     // all children must be constant
-    if (!child->is_constant())
+    if (!child->is_constant()) {
+      node->set_constant_precluded(child->get_constant_precluded());
       return true;
+    }
 
     // all children must be float/int constants - get their val or bail if they're wrong
     switch (child->get_constant_value()->get_type()->get_itype()) {
@@ -232,6 +249,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptVectorExpression *node) {
         v[cv++] = (F32) ((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
         break;
       default:
+        node->set_constant_precluded(true);
         return true;
     }
   }
@@ -256,8 +274,10 @@ bool ConstantDeterminingVisitor::visit(LLScriptQuaternionExpression *node) {
       return true;
 
     // all children must be constant
-    if (!child->is_constant())
+    if (!child->is_constant()) {
+      node->set_constant_precluded(child->get_constant_precluded());
       return true;
+    }
 
     // all children must be float/int constants - get their val or bail if they're wrong
     switch (child->get_constant_value()->get_type()->get_itype()) {
@@ -268,6 +288,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptQuaternionExpression *node) {
         v[cv++] = (F32) ((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
         break;
       default:
+        node->set_constant_precluded(true);
         return true;
     }
   }
@@ -283,9 +304,11 @@ bool ConstantDeterminingVisitor::visit(LLScriptQuaternionExpression *node) {
 
 bool ConstantDeterminingVisitor::visit(LLScriptTypecastExpression *node) {
   // what are we casting to
-  auto *val = node->get_child(0)->get_constant_value();
+  auto *child = node->get_child(0);
+  auto *val = child->get_constant_value();
   node->set_constant_value(nullptr);
   if (!val) {
+    node->set_constant_precluded(child->get_constant_precluded());
     return true;
   }
   auto orig_type = val->get_type()->get_itype();
@@ -294,6 +317,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptTypecastExpression *node) {
   if (orig_type == to_type) {
     // no-op case
     node->set_constant_value(val);
+    node->set_constant_precluded(child->get_constant_precluded());
     return true;
   }
 
