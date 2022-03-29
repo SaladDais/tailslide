@@ -1,4 +1,5 @@
 #include <cstring>
+#include <string>
 
 #include "allocator.hh"
 
@@ -54,4 +55,22 @@ char *parse_string(char *input) {
   str[end] = '\0';
   return str;
 }
+
+std::string escape_string(const char *data) {
+  std::string new_str;
+  size_t datasize = strlen(data);
+  for(int i=0; i<datasize; ++i) {
+    char c = data[i];
+    if (c == '\\')
+      new_str += "\\\\";
+    else if (c == '"')
+      new_str += "\\\"";
+    else if (c == '\n')
+      new_str += "\\n";
+    else
+      new_str += c;
+  }
+  return new_str;
+}
+
 }

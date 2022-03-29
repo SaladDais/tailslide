@@ -22,7 +22,7 @@ public:
     inline T* new_tracked(Args&&... args) {
       static_assert(std::is_base_of<LLTrackableObject, T>::value, "Must be based on LLTrackableObject");
       T* val = new T(std::forward<Args>(args)...);
-      _tracked_objects.template emplace_back(val);
+      _tracked_objects.emplace_back(val);
       return val;
     }
 

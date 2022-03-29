@@ -3,6 +3,7 @@
 
 namespace Tailslide {
 char *parse_string(char *input);
+std::string escape_string(const char *str);
 }
 
 #endif

@@ -65,7 +65,6 @@ public:
     void prettify_siblings_sep(LLASTNode *node, const char *separator);
     void prettify_coordinate_members(LLASTNode *node);
     void do_tabs();
-    static std::string escape_str(const char *str);
     std::stringstream stream {};
 protected:
     const PrettyPrintOpts &opts;

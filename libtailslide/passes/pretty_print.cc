@@ -2,6 +2,7 @@
 
 #include "pretty_print.hh"
 #include "lslmini.hh"
+#include "strings.hh"
 
 
 namespace Tailslide {
@@ -505,7 +506,7 @@ bool PrettyPrintVisitor::visit(LLScriptFloatConstant *node) {
 }
 
 bool PrettyPrintVisitor::visit(LLScriptStringConstant *node) {
-  stream << '"' << escape_str(node->get_value()) << '"';
+  stream << '"' << escape_string(node->get_value()) << '"';
   return false;
 }
 
@@ -537,20 +538,4 @@ void PrettyPrintVisitor::do_tabs() {
   }
 }
 
-std::string PrettyPrintVisitor::escape_str(const char *data) {
-  std::string new_str;
-  size_t datasize = strlen(data);
-  for(int i=0; i<datasize; ++i) {
-    char c = data[i];
-    if (c == '\\')
-      new_str += "\\\\";
-    else if (c == '"')
-      new_str += "\\\"";
-    else if (c == '\n')
-      new_str += "\\n";
-    else
-      new_str += c;
-  }
-  return new_str;
-}
 }

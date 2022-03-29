@@ -13,6 +13,7 @@
 #include "symtab.hh"
 #include "ast.hh"
 #include "types.hh"
+#include "strings.hh"
 
 namespace Tailslide {
 
@@ -197,7 +198,7 @@ class LLScriptStringConstant : public LLScriptConstant {
 
     virtual const char *get_node_name() {
       static thread_local char buf[256];
-      snprintf(buf, 256, "string constant: `%s'", value);
+      snprintf(buf, 256, "string constant: \"%s\"", escape_string(value).c_str());
       return buf;
     }
 
