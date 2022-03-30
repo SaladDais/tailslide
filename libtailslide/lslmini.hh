@@ -20,10 +20,6 @@ namespace Tailslide {
 typedef int   S32;
 typedef float F32;
 
-#define BUFFER_SIZE     1024
-#define UUID_STR_LENGTH 36
-#define MAX_NODES       3
-
 extern thread_local class LLScriptScript *gScript;
 extern thread_local bool gFatalError;
 
