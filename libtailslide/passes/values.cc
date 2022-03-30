@@ -68,7 +68,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
       "expression.determine_value() op=%d cv=%s st=%d\n",
       operation,
       constant_value ? constant_value->get_node_name() : NULL,
-      get_node_sub_type()
+      node->get_node_sub_type()
   );
 
   LLASTNode *left = node->get_child(0);
@@ -139,7 +139,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptLValueExpression *node) {
     member = ((LLScriptIdentifier*)member_id)->get_name();
 
   LLScriptConstant *constant_value = nullptr;
-  DEBUG(LOG_DEBUG_SPAM, NULL, "id %s assigned %d times\n", get_name(), symbol->get_assignments());
+  DEBUG(LOG_DEBUG_SPAM, NULL, "id %s assigned %d times\n", id->get_name(), symbol->get_assignments());
   if (symbol->get_assignments() == 0) {
     constant_value = symbol->get_constant_value();
     if (constant_value != nullptr && member != nullptr) { // getting a member

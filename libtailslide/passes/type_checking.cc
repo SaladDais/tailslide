@@ -141,8 +141,8 @@ bool TypeCheckVisitor::visit(LLScriptIfStatement *node) {
   if (is_branch_empty(node->get_child(1)) && is_branch_empty(node->get_child(2))) {
     ERROR(IN(node->get_child(0)), W_EMPTY_IF);
     DEBUG(LOG_DEBUG_SPAM, nullptr, "TYPE=%d SUBTYPE=%d CHILDREN=%p n=%s\n",
-          get_child(1)->get_node_type(), get_child(1)->get_node_sub_type(),
-          get_child(1)->get_children(), get_child(1)->get_node_name());
+          node->get_child(1)->get_node_type(), node->get_child(1)->get_node_sub_type(),
+          node->get_child(1)->get_children(), node->get_child(1)->get_node_name());
     //    do_walk( this );
   }
   return true;

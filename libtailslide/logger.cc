@@ -241,8 +241,6 @@ void LogMessage::print(FILE *fp) {
 }
 
 
-
-
 /// ERROR MESSAGE
 
 const char *Logger::error_messages[] = {

@@ -96,31 +96,12 @@ enum ErrorCode {
     W_LAST,
 };
 
+#ifndef HIDE_TAILSLIDE_INTERNALS
 #define LOG         Logger::get()->log
-#define LOGV        Logger::get()->logv
 #define IN(v)       (v)->get_lloc()
 #define LINECOL(l)  (l)->first_line, (l)->first_column
-#define HERE        IN(this)
 #define ERROR       Logger::get()->error
-
-
-#ifdef WIN32 /* hi my name is ms and i am stupid */
-#ifdef DEBUG_LEVEL
-#define DEBUG LOG
-#else /* not DEBUG_LEVEL */
-#define DEBUG __noop
-#endif /* not DEBUG_LEVEL */
-#else /* not WIN32 */
-#ifdef DEBUG_LEVEL
-#define DEBUG LOG
-#else /* not DEBUG_LEVEL */
-#ifdef __GNUC__
-#define DEBUG(args...) do {} while(0)
-#else /* not __GNUC__ */
-#define DEBUG(...) do {} while(0)
-#endif /* not __GNUC__ */
-#endif /* not DEBUG_LEVEL */
-#endif /* not WIN32 */
+#endif
 
 // Logger for a script. Singleton
 class Logger {
@@ -170,6 +151,13 @@ class Logger {
     static const char* error_messages[];
     static const char* warning_messages[];
 };
+
+inline void DEBUG(LogLevel level, YYLTYPE *yylloc, const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  Logger::get()->logv(level, yylloc, fmt, args);
+  va_end(args);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Log message entry, for sorting

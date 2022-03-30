@@ -155,10 +155,10 @@ int main(int argc, char **argv) {
   LLScriptScript* script = tailslide_parser.script;
 
   if (script) {
-    LOG(LOG_INFO, nullptr, "Script parsed, collecting symbols");
+    std::cerr << "Script parsed, collecting symbols" << std::endl;
     script->collect_symbols();
     script->link_symbol_tables();
-    LOG(LOG_INFO, nullptr, "Propagating types");
+    std::cerr << "Propagating types" << std::endl;
     script->determine_types();
     script->recalculate_reference_data();
     script->propagate_values();
@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
     }
     Logger::get()->report();
     if (show_tree) {
-      LOG(LOG_INFO, nullptr, "Tree:");
+      std::cout << "Tree:" << std::endl;
       TreePrintingVisitor visitor;
       script->visit(&visitor);
       std::cout << visitor.stream.str();

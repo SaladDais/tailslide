@@ -3,6 +3,12 @@
 
 #include <string>
 
+// This is the header for the public API, don't let any internal
+// macros or whatnot leak out to consumers.
+#ifndef SHOW_TAILSLIDE_INTERNALS
+# define HIDE_TAILSLIDE_INTERNALS
+#endif
+
 #include "lslmini.hh"
 
 namespace Tailslide {

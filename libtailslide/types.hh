@@ -3,8 +3,6 @@
 #include "ast.hh"           // LLASTNode
 #include <vector>
 
-#define TYPE(t) LLScriptType::get(t)    // convenience
-
 namespace Tailslide {
 enum LST_TYPE {
   LST_ERROR         = 0,   // special value so processing can continue without throwing bogus errors
@@ -52,6 +50,11 @@ class LLScriptType : public LLASTNode {
     LST_TYPE itype;
     static LLScriptType types[LST_MAX];
 };
+
+// convenience
+inline LLScriptType *TYPE(LST_TYPE type) {
+  return LLScriptType::get(type);
+}
 
 bool operation_mutates(int operation);
 const char* operation_str(int operation);

@@ -171,9 +171,9 @@ void LLScriptIdentifier::resolve_symbol(LLSymbolType symbol_type) {
     for (i = 0; DEPRECATED_FUNCTIONS[i][0]; ++i) {
       if (!strcmp(name, DEPRECATED_FUNCTIONS[i][0])) {
         if (DEPRECATED_FUNCTIONS[i][1] == nullptr) {
-          ERROR(HERE, E_DEPRECATED, name);
+          ERROR(IN(this), E_DEPRECATED, name);
         } else {
-          ERROR(HERE, E_DEPRECATED_WITH_REPLACEMENT, name, DEPRECATED_FUNCTIONS[i][1]);
+          ERROR(IN(this), E_DEPRECATED_WITH_REPLACEMENT, name, DEPRECATED_FUNCTIONS[i][1]);
         }
         symbol = nullptr;
         type = TYPE(LST_ERROR);
@@ -188,7 +188,7 @@ void LLScriptIdentifier::resolve_symbol(LLSymbolType symbol_type) {
   if (symbol == nullptr) {                       // no symbol of the right type
     symbol = lookup_symbol(name, SYM_ANY);    // so try the wrong one, so we can have a more descriptive error message in that case.
     if (symbol != nullptr && symbol->get_symbol_type() != symbol_type) {
-      ERROR(HERE, E_WRONG_TYPE, name,
+      ERROR(IN(this), E_WRONG_TYPE, name,
             LLScriptSymbol::get_type_name(symbol_type),
             LLScriptSymbol::get_type_name(symbol->get_symbol_type())
       );
@@ -196,7 +196,7 @@ void LLScriptIdentifier::resolve_symbol(LLSymbolType symbol_type) {
       /* Name suggestion was here */
       if (type != TYPE(LST_ERROR)) {
         // don't re-warn about undeclared if we already know we're broken.
-        ERROR(HERE, E_UNDECLARED, name);
+        ERROR(IN(this), E_UNDECLARED, name);
       }
     }
 
