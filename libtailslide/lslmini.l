@@ -30,11 +30,11 @@ namespace Tailslide {
 %}
 
 
-N			[0-9]
-L			[a-zA-Z_]
-H			[a-fA-F0-9]
-E			[Ee][+-]?{N}+
-FS			(f|F)
+N             [0-9]
+L             [a-zA-Z_]
+H             [a-fA-F0-9]
+E             [Ee][+-]?{N}+
+FS            (f|F)
 
  /* exclusive state to eat comments of any length without overflowing any buffers */
 %x COMMENT
@@ -60,83 +60,83 @@ FS			(f|F)
 <C_COMMENT>\n     { LLOC_LINES(1); LLOC_STEP(); }
 <C_COMMENT>.      { LLOC_STEP(); }
 
-"integer"			{ return(INTEGER); }
-"float"				{ return(FLOAT_TYPE); }
-"string"			{ return(STRING); }
-"key"				{ return(LLKEY); }
-"vector"			{ return(VECTOR); }
-"quaternion"		{ return(QUATERNION); }
-"rotation"			{ return(QUATERNION); }
-"list"				{ return(LIST); }
+"integer"           { return(INTEGER); }
+"float"             { return(FLOAT_TYPE); }
+"string"            { return(STRING); }
+"key"               { return(LLKEY); }
+"vector"            { return(VECTOR); }
+"quaternion"        { return(QUATERNION); }
+"rotation"          { return(QUATERNION); }
+"list"              { return(LIST); }
 
-"default"			{ yylval->sval = gAllocationManager->alloc(strlen(yytext) + 1); strcpy(yylval->sval, yytext); return(STATE_DEFAULT); }
-"state"				{ return(STATE); }
-"event"				{ return(EVENT); }
-"jump"				{ return(JUMP); }
-"return"			{ return(RETURN); }
-"if"				{ return(IF); }
-"else"				{ return(ELSE); }
-"for"				{ return(FOR); }
-"do"				{ return(DO); }
-"while"				{ return(WHILE); }
-"print"				{ return(PRINT); }
+"default"               { yylval->sval = gAllocationManager->alloc(strlen(yytext) + 1); strcpy(yylval->sval, yytext); return(STATE_DEFAULT); }
+"state"                 { return(STATE); }
+"event"                 { return(EVENT); }
+"jump"                  { return(JUMP); }
+"return"                { return(RETURN); }
+"if"                    { return(IF); }
+"else"                  { return(ELSE); }
+"for"                   { return(FOR); }
+"do"                    { return(DO); }
+"while"                 { return(WHILE); }
+"print"                 { return(PRINT); }
 
-"."						{ return(PERIOD); }
-
-
-0[xX]{H}+			{ yylval->ival = strtoul(yytext, NULL, 0);  return(INTEGER_CONSTANT); }
-{N}+                { yylval->ival = strtoul(yytext, NULL, 10); return(INTEGER_CONSTANT); }
-
-{L}({L}|{N})*		{ yylval->sval = gAllocationManager->alloc(strlen(yytext) + 1); strcpy(yylval->sval, yytext); return(IDENTIFIER); }
-
-{N}+{E}					{ yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
-{N}*"."{N}+({E})?{FS}?	{ yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
-{N}+"."{N}*({E})?{FS}?	{ yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
-
-L?\"(\\.|[^\\"])*\"	{ yylval->sval = Tailslide::parse_string(yytext); return(STRING_CONSTANT); }
-
-"++"				{ return(INC_OP); }
-"--"				{ return(DEC_OP); }
-"+="				{ return(ADD_ASSIGN); }
-"-="				{ return(SUB_ASSIGN); }
-"*="				{ return(MUL_ASSIGN); }
-"/="				{ return(DIV_ASSIGN); }
-"%="				{ return(MOD_ASSIGN); }
-";"					{ return(';'); }
-"{"					{ return('{'); }
-"}"					{ return('}'); }
-","					{ return(','); }
-"="					{ return('='); }
-"("					{ return('('); }
-")"					{ return(')'); }
-"-"					{ return('-'); }
-"+"					{ return('+'); }
-"*"					{ return('*'); }
-"/"					{ return('/'); }
-"%"					{ return('%'); }
-"@"					{ return('@'); }
-":"					{ return(':'); }
-">"					{ return('>'); }
-"<"					{ return('<'); }
-"]"					{ return(']'); }
-"["					{ return('['); }
-"=="				{ return(EQ);  }
-"!="				{ return(NEQ);  }
-">="				{ return(GEQ);  }
-"<="				{ return(LEQ);  }
-"&"					{ return('&');  }
-"|"					{ return('|');  }
-"^"					{ return('^');  }
-"~"					{ return('~');  }
-"!"					{ return('!');  }
-"&&"				{ return(BOOLEAN_AND);	}
-"||"				{ return(BOOLEAN_OR);	}
-"<<"				{ return(SHIFT_LEFT);  }
-">>"				{ return(SHIFT_RIGHT); }
+"."                     { return(PERIOD); }
 
 
-\n                  { LLOC_LINES(1); LLOC_STEP(); } 
-.					{ LLOC_STEP(); /* ignore bad characters */ }
+0[xX]{H}+               { yylval->ival = strtoul(yytext, NULL, 0);  return(INTEGER_CONSTANT); }
+{N}+                    { yylval->ival = strtoul(yytext, NULL, 10); return(INTEGER_CONSTANT); }
+
+{L}({L}|{N})*           { yylval->sval = gAllocationManager->alloc(strlen(yytext) + 1); strcpy(yylval->sval, yytext); return(IDENTIFIER); }
+
+{N}+{E}                 { yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
+{N}*"."{N}+({E})?{FS}?  { yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
+{N}+"."{N}*({E})?{FS}?  { yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
+
+L?\"(\\.|[^\\"])*\"     { yylval->sval = Tailslide::parse_string(yytext); return(STRING_CONSTANT); }
+
+"++"                    { return(INC_OP); }
+"--"                    { return(DEC_OP); }
+"+="                    { return(ADD_ASSIGN); }
+"-="                    { return(SUB_ASSIGN); }
+"*="                    { return(MUL_ASSIGN); }
+"/="                    { return(DIV_ASSIGN); }
+"%="                    { return(MOD_ASSIGN); }
+";"                     { return(';'); }
+"{"                     { return('{'); }
+"}"                     { return('}'); }
+","                     { return(','); }
+"="                     { return('='); }
+"("                     { return('('); }
+")"                     { return(')'); }
+"-"                     { return('-'); }
+"+"                     { return('+'); }
+"*"                     { return('*'); }
+"/"                     { return('/'); }
+"%"                     { return('%'); }
+"@"                     { return('@'); }
+":"                     { return(':'); }
+">"                     { return('>'); }
+"<"                     { return('<'); }
+"]"                     { return(']'); }
+"["                     { return('['); }
+"=="                    { return(EQ);  }
+"!="                    { return(NEQ);  }
+">="                    { return(GEQ);  }
+"<="                    { return(LEQ);  }
+"&"                     { return('&');  }
+"|"                     { return('|');  }
+"^"                     { return('^');  }
+"~"                     { return('~');  }
+"!"                     { return('!');  }
+"&&"                    { return(BOOLEAN_AND);    }
+"||"                    { return(BOOLEAN_OR);    }
+"<<"                    { return(SHIFT_LEFT);  }
+">>"                    { return(SHIFT_RIGHT); }
+
+
+\n                      { LLOC_LINES(1); LLOC_STEP(); }
+.                       { LLOC_STEP(); /* ignore bad characters */ }
 
 %%
 
