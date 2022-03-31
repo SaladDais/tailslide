@@ -464,9 +464,18 @@ LLScriptConstant *LLScriptFloatConstant::cast(LST_TYPE to_type) {
   auto cv = ((LLScriptFloatConstant *)constant_value)->get_value();
   switch(to_type) {
     case LST_STRING: {
+      std::string f_as_str {std::to_string(cv)};
+      if (f_as_str == "inf")
+        f_as_str = "Infinity";
+      else if (f_as_str == "-inf")
+        f_as_str = "-Infinity";
+      // Only one kind of NaN in LSL!
+      else if (f_as_str == "nan" || f_as_str == "-nan")
+        f_as_str = "NaN";
+
       return gAllocationManager->new_tracked<LLScriptStringConstant>(gAllocationManager->copy_str(
           // to_string correctly handles -inf and friends
-          std::to_string(cv).c_str()
+          f_as_str.c_str()
       ));
     }
     default:

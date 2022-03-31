@@ -1,4 +1,5 @@
 #include <iomanip>
+#include <cmath>
 
 #include "pretty_print.hh"
 #include "lslmini.hh"
@@ -461,21 +462,51 @@ bool PrettyPrintVisitor::visit(LLScriptQuaternionExpression *node) {
   return false;
 }
 
+static std::string format_float(float v) {
+  if (!std::isfinite(v)) {
+    // this really should never happen, as LSL doesn't have a NaN literal and we should
+    // refuse to fold constants that result in NaN, but as a last resort try typecasting
+    // from string (which will not be legal in a global context.)
+    if (std::isnan(v)) {
+      return "((string)\"nan\")";
+    } else if (v > 0.0) {
+      // about as close as we can get to an inf literal in LSL, exponent places it outside
+      // the range of both float and double width.
+      return "2.0e+999";
+    } else {
+      return "-2.0e+999";
+    }
+  }
+  char pretty_buf[256];
+  snprintf(pretty_buf, 256, "%#.6g", v);
+  return pretty_buf;
+}
+
 bool PrettyPrintVisitor::visit(LLScriptVectorConstant *node) {
   LLVector *v = node->get_value();
-  assert(v != nullptr);
-  char pretty_buf[256];
-  snprintf(pretty_buf, 256, "<%#.6g, %#.6g, %#.6g>", v->x, v->y, v->z);
-  stream << pretty_buf;
+  assert (v != nullptr);
+  stream << '<';
+  stream << format_float(v->x);
+  stream << ", ";
+  stream << format_float(v->y);
+  stream << ", ";
+  stream << format_float(v->z);
+  stream << ">";
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LLScriptQuaternionConstant *node) {
   LLQuaternion *v = node->get_value();
-  assert(v != nullptr);
-  char pretty_buf[256];
-  snprintf(pretty_buf, 256, "<%#.6g, %#.6g, %#.6g, %#.6g>", v->x, v->y, v->z, v->s);
-  stream << pretty_buf;
+  assert (v != nullptr);
+  stream << '<';
+  stream << format_float(v->x);
+  stream << ", ";
+  stream << format_float(v->y);
+  stream << ", ";
+  stream << format_float(v->z);
+  stream << ", ";
+  stream << format_float(v->s);
+  stream << ">";
   return false;
 }
 
@@ -499,9 +530,7 @@ bool PrettyPrintVisitor::visit(LLScriptIntegerConstant *node) {
 }
 
 bool PrettyPrintVisitor::visit(LLScriptFloatConstant *node) {
-  char pretty_buf[256];
-  snprintf(pretty_buf, 256, "%#.6g", node->get_value());
-  stream << pretty_buf;
+  stream << format_float(node->get_value());
   return false;
 }
 

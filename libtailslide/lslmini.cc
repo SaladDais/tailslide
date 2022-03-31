@@ -404,18 +404,18 @@ LLScriptConstant *LLScriptLValueExpression::get_constant_value() {
   return nullptr;
 }
 
-bool LLScriptFloatConstant::is_finite() {
-  return std::isfinite(get_value());
+bool LLScriptFloatConstant::contains_nan() {
+  return std::isnan(get_value());
 }
 
-bool LLScriptVectorConstant::is_finite() {
+bool LLScriptVectorConstant::contains_nan() {
   LLVector *v = get_value();
-  return std::isfinite(v->x) && std::isfinite(v->y) && std::isfinite(v->z);
+  return std::isnan(v->x) || std::isnan(v->y) || std::isnan(v->z);
 }
 
-bool LLScriptQuaternionConstant::is_finite() {
+bool LLScriptQuaternionConstant::contains_nan() {
   LLQuaternion *v = get_value();
-  return std::isfinite(v->x) && std::isfinite(v->y) && std::isfinite(v->z) && std::isfinite(v->s);
+  return std::isnan(v->x) || std::isnan(v->y) || std::isnan(v->z) || std::isnan(v->s);
 }
 
 }

@@ -242,6 +242,12 @@ TEST_CASE("vector_ambiguity.lsl") {
   checkPrettyPrintOutput("vector_ambiguity.lsl", ctx, pretty_ctx);
 }
 
+TEST_CASE("infinity_repr.lsl") {
+  OptimizationContext ctx {};
+  PrettyPrintOpts pretty_ctx {};
+  checkPrettyPrintOutput("infinity_repr.lsl", ctx, pretty_ctx);
+}
+
 TEST_SUITE_END();
 
 TEST_SUITE_BEGIN("Tree Printer");

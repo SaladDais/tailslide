@@ -46,9 +46,12 @@ default {
         if ( (float)((float)"1.0") == 1.0 ) return;      // $[E20012]
         if ( minus_pi == -PI ) return;          // $[E20012]
         if ( (float)"inf" == (float)"inf" ) return; // $[E20012]
+        // SL doesn't ever do -NaN
+        if ( "NaN" == (string)(((float)"inf") * 0.0) ) return; // $[E20012]
 
         llFrand(r.z);
-        llFrand((float)"inf"); // not foldable, no inf literal!
+        llFrand((float)"inf");
+        llFrand(((float)"inf") * 0.0); // will result in NaN, don't fold.
 
         jump foo;
         integer x = 1;
