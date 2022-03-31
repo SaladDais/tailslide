@@ -127,7 +127,7 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
 
     /// symbol functions        ///
     virtual LLScriptSymbol *lookup_symbol( const char *name, LLSymbolType type = SYM_ANY, LLASTNode *start_node = NULL );
-    void            define_symbol( LLScriptSymbol *symbol, bool check_existing = true );
+    void            define_symbol( LLScriptSymbol *symbol );
     LLScriptSymbolTable *get_symbol_table() { return symbol_table; }
 
 

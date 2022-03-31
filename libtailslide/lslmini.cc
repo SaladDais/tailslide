@@ -82,7 +82,7 @@ LLScriptSymbol *LLASTNode::lookup_symbol(const char *name, LLSymbolType sym_type
 }
 
 // Define a symbol, propagating up the tree to the nearest scope level.
-void LLASTNode::define_symbol(LLScriptSymbol *symbol, bool check_existing) {
+void LLASTNode::define_symbol(LLScriptSymbol *symbol) {
 
   // If we have a symbol table, define it there
   if (symbol_table) {
@@ -90,47 +90,45 @@ void LLASTNode::define_symbol(LLScriptSymbol *symbol, bool check_existing) {
 
     DEBUG(LOG_DEBUG_SPAM, nullptr, "symbol definition caught in %s\n", get_node_name());
 
-    if (check_existing) {
-      // Check if already defined, if it exists in the current scope then shadowing is never allowed!
-      shadow = symbol_table->lookup(symbol->get_name());
-      if (shadow) {
-        if (shadow->get_symbol_type() == SYM_EVENT)
-          if (symbol->get_symbol_type() == SYM_EVENT)
-            ERROR(IN(symbol), E_MULTIPLE_EVENT_HANDLERS, symbol->get_name());
-          else
-            ERROR(IN(symbol), E_EVENT_AS_IDENTIFIER, symbol->get_name());
+    // Check if already defined, if it exists in the current scope then shadowing is never allowed!
+    shadow = symbol_table->lookup(symbol->get_name());
+    if (shadow) {
+      if (shadow->get_symbol_type() == SYM_EVENT)
+        if (symbol->get_symbol_type() == SYM_EVENT)
+          ERROR(IN(symbol), E_MULTIPLE_EVENT_HANDLERS, symbol->get_name());
         else
-          ERROR(IN(symbol), E_DUPLICATE_DECLARATION, symbol->get_name(), shadow->get_lloc()->first_line, shadow->get_lloc()->first_column);
-      } else {
-        // Check for shadowed declarations
-        if (shadow == nullptr && get_parent())
-          shadow = get_parent()->lookup_symbol(symbol->get_name(), symbol->get_symbol_type());
-        if (shadow == nullptr && get_root())
-          shadow = get_root()->lookup_symbol(symbol->get_name());
+          ERROR(IN(symbol), E_EVENT_AS_IDENTIFIER, symbol->get_name());
+      else
+        ERROR(IN(symbol), E_DUPLICATE_DECLARATION, symbol->get_name(), shadow->get_lloc()->first_line, shadow->get_lloc()->first_column);
+    } else {
+      // Check for shadowed declarations
+      if (get_parent())
+        shadow = get_parent()->lookup_symbol(symbol->get_name(), symbol->get_symbol_type());
+      // If we still didn't find anything, look in the root scope for _any_ kind of symbol,
+      // shadowing certain kinds of builtins can be problematic.
+      if (shadow == nullptr && get_root())
+        shadow = get_root()->lookup_symbol(symbol->get_name());
 
-        // define it for now even if it shadows so that we have something to work with.
-        symbol_table->define(symbol);
+      // define it for now even if it shadows so that we have something to work with.
+      symbol_table->define(symbol);
 
-        if (shadow != nullptr) {
-          // events are _expected_ to "shadow" the event prototype declaration from the outer scope.
-          if (shadow->get_symbol_type() == SYM_EVENT && symbol->get_symbol_type() == SYM_EVENT)
-            return;
-          if (shadow->get_sub_type() == SYM_BUILTIN) {
-            // you're never allowed to shadow event names
-            if (shadow->get_symbol_type() == SYM_EVENT)
-              ERROR(IN(symbol), E_EVENT_AS_IDENTIFIER, symbol->get_name());
-            else if (shadow->get_symbol_type() != SYM_FUNCTION || symbol->get_symbol_type() == SYM_FUNCTION)
-              ERROR(IN(symbol), E_SHADOW_CONSTANT, symbol->get_name());
-          } else {
-            // nothing in a local scope can ever shadow a function, both
-            // can be referenced simultaneously. Anything other than a function _will_ be shadowed.
-            if (shadow->get_symbol_type() != SYM_FUNCTION || symbol->get_symbol_type() == SYM_FUNCTION)
-              ERROR(IN(symbol), W_SHADOW_DECLARATION, symbol->get_name(), LINECOL(shadow->get_lloc()));
-          }
+      if (shadow != nullptr) {
+        // events are _expected_ to "shadow" the event prototype declaration from the outer scope.
+        if (shadow->get_symbol_type() == SYM_EVENT && symbol->get_symbol_type() == SYM_EVENT)
+          return;
+        if (shadow->get_sub_type() == SYM_BUILTIN) {
+          // you're never allowed to shadow event names
+          if (shadow->get_symbol_type() == SYM_EVENT)
+            ERROR(IN(symbol), E_EVENT_AS_IDENTIFIER, symbol->get_name());
+          else if (shadow->get_symbol_type() != SYM_FUNCTION || symbol->get_symbol_type() == SYM_FUNCTION)
+            ERROR(IN(symbol), E_SHADOW_CONSTANT, symbol->get_name());
+        } else {
+          // nothing in a local scope can ever shadow a function, both
+          // can be referenced simultaneously. Anything other than a function _will_ be shadowed.
+          if (shadow->get_symbol_type() != SYM_FUNCTION || symbol->get_symbol_type() == SYM_FUNCTION)
+            ERROR(IN(symbol), W_SHADOW_DECLARATION, symbol->get_name(), LINECOL(shadow->get_lloc()));
         }
       }
-    } else {
-      symbol_table->define(symbol);
     }
   } else if (get_parent()) {
     // Otherwise, ask our parent to define it
