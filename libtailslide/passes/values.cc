@@ -323,7 +323,6 @@ bool ConstantDeterminingVisitor::visit(LLScriptTypecastExpression *node) {
 
   LLScriptConstant *constant_value = nullptr;
   switch (orig_type) {
-    case LST_KEY:
     case LST_STRING:
       constant_value = ((LLScriptStringConstant *) val)->cast(to_type);
       break;
@@ -344,6 +343,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptTypecastExpression *node) {
       break;
     case LST_MAX:
     case LST_NULL:
+    case LST_KEY:
     case LST_ERROR:
       break;
   }
