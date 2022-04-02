@@ -67,7 +67,6 @@ target_sources(libtailslide PRIVATE
         libtailslide/lslmini.hh
         libtailslide/strings.hh
         libtailslide/symtab.hh
-        libtailslide/tree_base.hh
         libtailslide/types.hh
         libtailslide/visitor.hh
         libtailslide/passes/globalexpr_validator.hh

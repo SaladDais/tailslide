@@ -1,10 +1,9 @@
 #ifndef AST_HH
 #define AST_HH 1
 #include <cassert>
-#include <cstdlib> // NULL
+#include <cstdlib> // nullptr
 #include <cstdarg> // va_arg
 #include <set>
-#include "tree_base.hh"
 #include "symtab.hh" // symbol table
 #include "logger.hh"
 #include "allocator.hh"
@@ -69,45 +68,76 @@ enum LLNodeSubType {
 };
 
 class OptimizationContext;
-class LLASTNullNode;
 class ASTVisitor;
 
-class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
+class LLASTNode : public LLTrackableObject {
   public:
-    LLASTNode() : ATreeBase(), type(NULL), symbol_table(NULL), constant_value(NULL), lloc(glloc), declaration_allowed(true) {};
-    LLASTNode( YYLTYPE *lloc, int num, ... )
-      : ATreeBase(), type(NULL), symbol_table(NULL), constant_value(NULL), lloc(*lloc), declaration_allowed(true) {
+    LLASTNode();
+    LLASTNode( YYLTYPE *loc, int num, ... )
+      : LLASTNode() {
+      lloc = *loc;
       va_list ap;
       va_start(ap, num);
       add_children( num, ap );
       va_end(ap);
     }
 
-    LLASTNode( int num, ... ) : ATreeBase(), type(NULL), symbol_table(NULL), constant_value(NULL), lloc(glloc), declaration_allowed(true) {
+    explicit LLASTNode( int num, ... ) : LLASTNode() {
       va_list ap;
       va_start(ap, num);
       add_children( num, ap );
       va_end(ap);
     }
+
+    ~LLASTNode() override = default;
+
+    void add_children(int num, va_list ap);
+
+    LLASTNode *get_next() { return next; }
+    LLASTNode *get_prev() { return prev; }
+    LLASTNode *get_children() { return children; }
+    LLASTNode *get_parent() { return parent; }
+
+    LLASTNode *get_child(int i) {
+      LLASTNode *c = children;
+      while (i-- && c)
+        c = c->get_next();
+      return c;
+    }
+
+    // Get the topmost node in the tree
+    LLASTNode *get_root() {
+      LLASTNode *last_node = this;
+      LLASTNode *test_root;
+      while ((test_root = last_node->get_parent()) != nullptr)
+        last_node = test_root;
+      return last_node;
+    }
+
+    LLASTNode *new_null_node();
+
+    /* Set our parent, and make sure all our siblings do too. */
+    void set_parent( LLASTNode *newparent );
+    // Add child to end of list.
+    void push_child(LLASTNode *child);
+    /* Set our next sibling, and ensure it links back to us. */
+    void set_next(LLASTNode *newnext);
+    /* Set our previous sibling, and ensure it links back to us. */
+    void set_prev(LLASTNode *newprev);
+    void add_next_sibling(LLASTNode *sibling);
+    void add_prev_sibling(LLASTNode *sibling);
+    /* remove a child from the list of nodes, shifting other children up */
+    void remove_child(LLASTNode *child);
+    /* replace a node from the list of children with null, returning it */
+    LLASTNode *take_child(int child_num);
+
+    // replace an arbitrary node with another, setting
+    // prev, next and parent as appropriate
+    static void replace_node(LLASTNode *old_node, LLASTNode *replacement);
+
 
     void                set_type(LLScriptType *_type) { type = _type;   }
     class LLScriptType *get_type()                    { return type;    }
-
-
-    /* Set our parent, and make sure all our siblings do too. */
-    virtual void    set_parent( LLASTNode *newparent ) {
-      // walk tree, (un)registering descendants' symbol tables with
-      // the root table
-      assert(newparent != this);
-      if (static_node) {
-        if (!newparent) return;
-        assert(0);
-      }
-      link_symbol_tables(true);
-      ATreeBase::set_parent(newparent);
-      if (newparent != NULL)
-        link_symbol_tables();
-    }
 
     void mark_static() { static_node = true;}
     bool is_static() {return static_node;}
@@ -126,7 +156,7 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
     void check_symbols(); // look for unused symbols, etc
 
     /// symbol functions        ///
-    virtual LLScriptSymbol *lookup_symbol( const char *name, LLSymbolType type = SYM_ANY, LLASTNode *start_node = NULL );
+    virtual LLScriptSymbol *lookup_symbol( const char *name, LLSymbolType type = SYM_ANY, LLASTNode *start_node = nullptr );
     void            define_symbol( LLScriptSymbol *symbol );
     LLScriptSymbolTable *get_symbol_table() { return symbol_table; }
 
@@ -161,9 +191,7 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
     void set_constant_precluded(bool precluded) { constant_precluded = precluded; };
     bool get_constant_precluded() { return constant_precluded; };
     virtual bool node_allows_folding() { return false; };
-    bool            is_constant()           { return get_constant_value() != NULL; };
-
-    static LLASTNullNode * new_null_node();
+    bool            is_constant()           { return get_constant_value() != nullptr; };
 
   protected:
     class LLScriptType          *type;
@@ -175,6 +203,11 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
     YYLTYPE                      lloc;
     thread_local static YYLTYPE               glloc;
 
+    LLASTNode *children;
+    LLASTNode *parent;
+    LLASTNode *next;
+    LLASTNode *prev;
+
   protected:
     bool                        declaration_allowed;
     bool                        static_node = false;
@@ -182,7 +215,6 @@ class LLASTNode : public ATreeBase<LLASTNode, class LLASTNullNode> {
 
 class LLASTNullNode : public LLASTNode {
   public:
-    LLASTNullNode();
     virtual const char *get_node_name() { return "null"; };
     virtual LLNodeType get_node_type() { return NODE_NULL; };
 };

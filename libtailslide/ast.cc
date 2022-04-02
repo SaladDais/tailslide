@@ -9,12 +9,140 @@ namespace Tailslide {
 
 thread_local YYLTYPE LLASTNode::glloc = {0, 0, 0, 0};
 
-LLASTNullNode::LLASTNullNode(): LLASTNode() {
+LLASTNode::LLASTNode() : type(nullptr), symbol_table(nullptr), constant_value(nullptr), lloc(glloc),
+                         declaration_allowed(true), children(nullptr), next(nullptr), prev(nullptr), parent(nullptr) {
   type = TYPE(LST_NULL);
 }
 
-LLASTNullNode *LLASTNode::new_null_node() {
+void LLASTNode::add_children(int num, va_list ap) {
+  LLASTNode *node;
+  for (; num--;) {
+    node = va_arg(ap, LLASTNode*);
+    if (node == nullptr)
+      node = new_null_node();
+    push_child(node);
+  }
+}
+
+LLASTNode *LLASTNode::new_null_node() {
   return gAllocationManager->new_tracked<LLASTNullNode>();
+}
+
+
+void LLASTNode::set_parent(LLASTNode *newparent) {
+  // walk tree, (un)registering descendants' symbol tables with
+  // the root table
+  assert(newparent != this);
+  if (static_node) {
+    if (!newparent) return;
+    assert(0);
+  }
+  link_symbol_tables(true);
+
+  parent = newparent;
+  // because children are an intrusive linked list updating one child's parent
+  // must update the parent of all of its siblings.
+  for (auto* next_ptr = next; next_ptr != nullptr; next_ptr=next_ptr->next) {
+    assert(next_ptr != this);
+    next_ptr->parent = newparent;
+  }
+  for (auto* prev_ptr = prev; prev_ptr != nullptr; prev_ptr=prev_ptr->prev) {
+    assert(prev_ptr != this);
+    prev_ptr->parent = newparent;
+  }
+
+  if (newparent)
+    link_symbol_tables();
+}
+
+void LLASTNode::push_child(LLASTNode *child) {
+  if (child == nullptr)
+    return;
+  if (children == nullptr) {
+    children = child;
+  } else {
+    children->add_next_sibling(child);
+  }
+  assert (child != this);
+  child->set_parent(this);
+}
+
+LLASTNode *LLASTNode::take_child(int child_num) {
+  LLASTNode *child = get_child(child_num);
+  if (child == nullptr)
+    return nullptr;
+  replace_node(child, new_null_node());
+  return child;
+}
+
+void LLASTNode::remove_child(LLASTNode *child) {
+  if (child == nullptr) return;
+
+  LLASTNode *prev_child = child->get_prev();
+  LLASTNode *next_child = child->get_next();
+
+  child->prev = nullptr;
+  child->next = nullptr;
+
+  if (prev_child != nullptr)
+    prev_child->set_next(next_child);
+  else
+    children = next_child;
+
+  if (next_child != nullptr)
+    next_child->set_prev(prev_child);
+
+  // must be done last so we don't change the parent of siblings
+  child->set_parent(nullptr);
+}
+
+void LLASTNode::set_next(LLASTNode *newnext) {
+  DEBUG(LOG_DEBUG_SPAM, nullptr, "%s.set_next(%s)\n", get_node_name(), newnext ? newnext->get_node_name() : "nullptr");
+  next = newnext;
+  assert(next != this);
+  if (newnext && newnext->get_prev() != this)
+    newnext->set_prev(this);
+}
+
+void LLASTNode::set_prev(LLASTNode *newprev) {
+  DEBUG(LOG_DEBUG_SPAM, nullptr, "%s.set_prev(%s)\n", get_node_name(), newprev ? newprev->get_node_name() : "nullptr");
+  prev = newprev;
+  if (newprev && newprev->get_next() != this)
+    newprev->set_next(this);
+}
+
+void LLASTNode::add_next_sibling(LLASTNode *sibling) {
+  assert (sibling != parent);
+  assert (sibling != this);
+  if (sibling == nullptr) return;
+  if (next)
+    next->add_next_sibling(sibling);
+  else
+    set_next(sibling);
+}
+
+void LLASTNode::add_prev_sibling(LLASTNode *sibling) {
+  assert (sibling != parent);
+  if (sibling == nullptr) return;
+  if (prev)
+    prev->add_prev_sibling(sibling);
+  else
+    set_prev(sibling);
+}
+
+void LLASTNode::replace_node(LLASTNode *old_node, LLASTNode *replacement) {
+  assert(replacement != nullptr && old_node != nullptr);
+  replacement->set_prev(old_node->get_prev());
+  replacement->set_next(old_node->get_next());
+  auto *parent = old_node->get_parent();
+
+  // First child, have to replace `children` entirely.
+  if (old_node->get_prev() == nullptr && old_node->get_parent() != nullptr)
+    old_node->get_parent()->children = replacement;
+  old_node->next = nullptr;
+  old_node->prev = nullptr;
+  old_node->set_parent(nullptr);
+  replacement->set_parent(parent);
 }
 
 void LLASTNode::visit(ASTVisitor *visitor) {
