@@ -34,7 +34,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptScript *node) {
       break;
     if (LLASTNode *gs_child = child->get_child(0)) {
       if (gs_child->get_node_type() == NODE_GLOBAL_VARIABLE)
-        gs_child->propagate_values();
+        gs_child->visit(this);
     }
     child = child->get_next();
   }
@@ -52,7 +52,11 @@ bool ConstantDeterminingVisitor::visit(LLScriptDeclaration *node) {
     cv = rvalue->get_constant_value();
     cv_precluded = rvalue->get_constant_precluded();
   }
-  DEBUG(LOG_DEBUG_SPAM, NULL, "set %s const to %p\n", id->get_name(), rvalue->get_constant_value());
+  DEBUG(LOG_DEBUG_SPAM, nullptr,
+      "set %s const to %p\n",
+      id->get_name(),
+      rvalue ? rvalue->get_constant_value(): nullptr
+  );
   auto *sym = id->get_symbol();
   sym->set_constant_value(cv);
   sym->set_constant_precluded(cv_precluded);
@@ -64,10 +68,10 @@ bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
   LLScriptConstant *constant_value = node->get_constant_value();
   DEBUG(
       LOG_DEBUG_SPAM,
-      NULL,
+      nullptr,
       "expression.determine_value() op=%d cv=%s st=%d\n",
       operation,
-      constant_value ? constant_value->get_node_name() : NULL,
+      constant_value ? constant_value->get_node_name() : nullptr,
       node->get_node_sub_type()
   );
 
@@ -102,7 +106,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
 
     // we need a constant value from the c_left, and if we have a c_right side, it MUST have a constant value too
     if (c_left && (right == nullptr || c_right != nullptr))
-      constant_value = c_left->operation(operation, c_right, node->get_lloc());
+      constant_value = operation_behavior->operation(operation, c_left, c_right, node->get_lloc());
     else
       constant_value = nullptr;
   }
@@ -139,7 +143,7 @@ bool ConstantDeterminingVisitor::visit(LLScriptLValueExpression *node) {
     member = ((LLScriptIdentifier*)member_id)->get_name();
 
   LLScriptConstant *constant_value = nullptr;
-  DEBUG(LOG_DEBUG_SPAM, NULL, "id %s assigned %d times\n", id->get_name(), symbol->get_assignments());
+  DEBUG(LOG_DEBUG_SPAM, nullptr, "id %s assigned %d times\n", id->get_name(), symbol->get_assignments());
   if (symbol->get_assignments() == 0) {
     constant_value = symbol->get_constant_value();
     if (constant_value != nullptr && member != nullptr) { // getting a member
@@ -311,43 +315,8 @@ bool ConstantDeterminingVisitor::visit(LLScriptTypecastExpression *node) {
     node->set_constant_precluded(child->get_constant_precluded());
     return true;
   }
-  auto orig_type = val->get_type()->get_itype();
-  auto to_type = node->get_type()->get_itype();
-
-  if (orig_type == to_type) {
-    // no-op case
-    node->set_constant_value(val);
-    node->set_constant_precluded(child->get_constant_precluded());
-    return true;
-  }
-
-  LLScriptConstant *constant_value = nullptr;
-  switch (orig_type) {
-    case LST_STRING:
-      constant_value = ((LLScriptStringConstant *) val)->cast(to_type);
-      break;
-    case LST_INTEGER:
-      constant_value = ((LLScriptIntegerConstant *) val)->cast(to_type);
-      break;
-    case LST_FLOATINGPOINT:
-      constant_value = ((LLScriptFloatConstant *) val)->cast(to_type);
-      break;
-    case LST_LIST:
-      constant_value = ((LLScriptListConstant *) val)->cast(to_type);
-      break;
-    case LST_VECTOR:
-      constant_value = ((LLScriptVectorConstant *) val)->cast(to_type);
-      break;
-    case LST_QUATERNION:
-      constant_value = ((LLScriptQuaternionConstant *) val)->cast(to_type);
-      break;
-    case LST_MAX:
-    case LST_NULL:
-    case LST_KEY:
-    case LST_ERROR:
-      break;
-  }
-  node->set_constant_value(constant_value);
+  auto to_type = node->get_type();
+  node->set_constant_value(operation_behavior->cast(to_type, val, val->get_lloc()));
   return true;
 }
 

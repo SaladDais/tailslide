@@ -171,7 +171,8 @@ void LLASTNode::visit(ASTVisitor *visitor) {
 
 
 void LLASTNode::propagate_values() {
-  ConstantDeterminingVisitor visitor;
+  TailslideOperationBehavior behavior;
+  ConstantDeterminingVisitor visitor(&behavior);
   visit(&visitor);
 }
 

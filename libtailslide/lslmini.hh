@@ -117,11 +117,9 @@ class LLScriptConstant : public LLASTNode {
     LLScriptConstant() : LLASTNode(0) { constant_value = this; }
     virtual const char *get_node_name() { return "unknown constant"; }
     virtual LLNodeType get_node_type() { return NODE_CONSTANT; };
-    virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc) = 0;
     // make a shallow copy of the constant
     virtual LLScriptConstant* copy() = 0;
     virtual bool contains_nan() { return false; };
-    virtual LLScriptConstant* cast(LST_TYPE to_type) { return nullptr; };
 };
 
 /////////////////////////////////////////////////////
@@ -141,13 +139,11 @@ class LLScriptIntegerConstant : public LLScriptConstant {
 
     int get_value() { return value; }
     void set_value(int val) { value = val; }
-    virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
     virtual LLScriptConstant* copy() {
       auto* new_const = gAllocationManager->new_tracked<LLScriptIntegerConstant>(value);
       new_const->constant_value = new_const;
       return new_const;
     };
-    LLScriptConstant *cast(LST_TYPE to_type);
 
   private:
     int value;
@@ -172,13 +168,11 @@ class LLScriptFloatConstant : public LLScriptConstant {
     float get_value() { return value; }
     void set_value(float val) { value = val; }
     virtual bool contains_nan();
-    virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
     virtual LLScriptConstant* copy() {
       auto* new_const = gAllocationManager->new_tracked<LLScriptFloatConstant>(value);
       new_const->constant_value = new_const;
       return new_const;
     };
-    virtual LLScriptConstant *cast (LST_TYPE to_type);
 
   private:
     float value;
@@ -202,13 +196,11 @@ class LLScriptStringConstant : public LLScriptConstant {
 
     char *get_value() { return value; }
     void set_value(char *val) { value = val; }
-    virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
     virtual LLScriptConstant* copy() {
       auto* new_const = gAllocationManager->new_tracked<LLScriptStringConstant>(value);
       new_const->constant_value = new_const;
       return new_const;
     };
-    virtual LLScriptConstant *cast(LST_TYPE to_type);
 
   private:
     char *value;
@@ -248,7 +240,6 @@ class LLScriptListConstant : public LLScriptConstant {
       return i;
     }
 
-    virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
     virtual LLScriptConstant* copy() {
       auto* new_const = gAllocationManager->new_tracked<LLScriptListConstant>(*this);
       new_const->constant_value = new_const;
@@ -281,7 +272,6 @@ class LLScriptVectorConstant : public LLScriptConstant {
     void set_value(LLVector *val) { value = val; }
     virtual bool contains_nan();
 
-    virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
     virtual LLScriptConstant* copy() {
       auto* new_const = gAllocationManager->new_tracked<LLScriptVectorConstant>(value->x, value->y, value->z);
       new_const->constant_value = new_const;
@@ -317,8 +307,6 @@ class LLScriptQuaternionConstant : public LLScriptConstant {
     LLQuaternion *get_value() { return value; }
     void set_value(class LLQuaternion *val) { value = val; }
     virtual bool contains_nan();
-
-    virtual LLScriptConstant *operation(int op, LLScriptConstant *other_const, YYLTYPE *lloc);
 
     virtual LLScriptConstant* copy() {
       auto* new_const = gAllocationManager->new_tracked<LLScriptQuaternionConstant>(value->x, value->y, value->z, value->s);

@@ -2,14 +2,44 @@
 
 #include "lslmini.hh"
 #include "allocator.hh"
+#include "operations.hh"
+
 
 #define RET_IF_ZERO(_x) if(!(_x)) return NULL
 
 namespace Tailslide {
 
+LLScriptConstant *TailslideOperationBehavior::operation(
+    int oper, LLScriptConstant *cv, LLScriptConstant *other_cv, YYLTYPE *lloc) {
+
+  auto *left_type = cv->get_type();
+
+  switch (left_type->get_itype()) {
+    case LST_STRING:
+      return operation(oper, (LLScriptStringConstant*)cv, other_cv, lloc);
+    case LST_INTEGER:
+      return operation(oper, (LLScriptIntegerConstant*)cv, other_cv, lloc);
+    case LST_FLOATINGPOINT:
+      return operation(oper, (LLScriptFloatConstant*)cv, other_cv, lloc);
+    case LST_LIST:
+      return operation(oper, (LLScriptListConstant*)cv, other_cv, lloc);
+    case LST_VECTOR:
+      return operation(oper, (LLScriptVectorConstant*)cv, other_cv, lloc);
+    case LST_QUATERNION:
+      return operation(oper, (LLScriptQuaternionConstant*)cv, other_cv, lloc);
+    case LST_MAX:
+    case LST_NULL:
+    case LST_KEY:
+    case LST_ERROR:
+      return nullptr;
+  }
+}
+
 //////////////////////////////////////////////
 // Integer Constants
-LLScriptConstant *LLScriptIntegerConstant::operation(int operation, LLScriptConstant *other_const, YYLTYPE *lloc) {
+LLScriptConstant *TailslideOperationBehavior::operation(
+    int operation, LLScriptIntegerConstant *cv, LLScriptConstant *other_const, YYLTYPE *lloc) {
+  S32 value = cv->get_value();
   // unary op
   if (other_const == nullptr) {
     int nv;
@@ -137,7 +167,9 @@ LLScriptConstant *LLScriptIntegerConstant::operation(int operation, LLScriptCons
 
 //////////////////////////////////////////////
 // Float Constants
-LLScriptConstant *LLScriptFloatConstant::operation(int operation, LLScriptConstant *other_const, YYLTYPE *lloc) {
+LLScriptConstant *TailslideOperationBehavior::operation(
+    int operation, LLScriptFloatConstant *cv, LLScriptConstant *other_const, YYLTYPE *lloc) {
+  float value = cv->get_value();
   // unary op
   if (other_const == nullptr) {
     if (operation == '-')
@@ -233,7 +265,9 @@ inline char *join_string(char *left, char *right) {
   return ns;
 }
 
-LLScriptConstant *LLScriptStringConstant::operation(int operation, LLScriptConstant *other_const, YYLTYPE *lloc) {
+LLScriptConstant *TailslideOperationBehavior::operation(
+    int operation, LLScriptStringConstant *cv, LLScriptConstant *other_const, YYLTYPE *lloc) {
+  char *value = cv->get_value();
   // unary op
   if (other_const == nullptr) {
     return nullptr;
@@ -262,7 +296,8 @@ LLScriptConstant *LLScriptStringConstant::operation(int operation, LLScriptConst
 
 //////////////////////////////////////////////
 // List Constants
-LLScriptConstant *LLScriptListConstant::operation(int operation, LLScriptConstant *other_const, YYLTYPE *lloc) {
+LLScriptConstant *TailslideOperationBehavior::operation(
+    int operation, LLScriptListConstant *cv, LLScriptConstant *other_const, YYLTYPE *lloc) {
   // unary op
   if (other_const == nullptr) {
     return nullptr;
@@ -275,17 +310,21 @@ LLScriptConstant *LLScriptListConstant::operation(int operation, LLScriptConstan
       switch (operation) {
         case EQ:
           // warn on list == list
-          if (get_length() != 0 && other->get_length() != 0) {
+          if (cv->get_length() != 0 && other->get_length() != 0) {
             ERROR(lloc, W_LIST_COMPARE);
           }
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(get_length() == other->get_length());
+          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(
+            cv->get_length() == other->get_length()
+          );
         case NEQ:
           // warn on list == list
-          if (get_length() != 0 && other->get_length() != 0) {
+          if (cv->get_length() != 0 && other->get_length() != 0) {
             ERROR(lloc, W_LIST_COMPARE);
           }
           // Yes, really.
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(get_length() - other->get_length());
+          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(
+            cv->get_length() - other->get_length()
+          );
         default:
           return nullptr;
       }
@@ -298,7 +337,9 @@ LLScriptConstant *LLScriptListConstant::operation(int operation, LLScriptConstan
 
 //////////////////////////////////////////////
 // Vector Constants
-LLScriptConstant *LLScriptVectorConstant::operation(int operation, LLScriptConstant *other_const, YYLTYPE *lloc) {
+LLScriptConstant *TailslideOperationBehavior::operation(
+    int operation, LLScriptVectorConstant *cv, LLScriptConstant *other_const, YYLTYPE *lloc) {
+  LLVector *value = cv->get_value();
   // Make sure we have a value
   if (value == nullptr)
     return nullptr;
@@ -392,7 +433,9 @@ LLScriptConstant *LLScriptVectorConstant::operation(int operation, LLScriptConst
 
 //////////////////////////////////////////////
 // Quaternion Constants
-LLScriptConstant *LLScriptQuaternionConstant::operation(int operation, LLScriptConstant *other_const, YYLTYPE *lloc) {
+LLScriptConstant *TailslideOperationBehavior::operation(
+    int operation, LLScriptQuaternionConstant *cv, LLScriptConstant *other_const, YYLTYPE *lloc) {
+  LLQuaternion *value = cv->get_value();
   if (value == nullptr)
     return nullptr;
 
@@ -427,56 +470,91 @@ LLScriptConstant *LLScriptQuaternionConstant::operation(int operation, LLScriptC
 }
 
 
-LLScriptConstant* LLScriptStringConstant::cast(LST_TYPE to_type) {
-  auto *cv = ((LLScriptStringConstant *)constant_value)->get_value();
-  switch(to_type) {
+
+//////
+// Casts
+//////
+
+LLScriptConstant *TailslideOperationBehavior::cast(LLScriptType *to_type, LLScriptConstant *cv, YYLTYPE *lloc) {
+
+  auto *orig_type = cv->get_type();
+  if (orig_type == to_type) {
+    // no-op case
+    return cv;
+  }
+
+  switch (orig_type->get_itype()) {
+    case LST_STRING:
+      return cast(to_type, (LLScriptStringConstant *)cv, lloc);
+    case LST_INTEGER:
+      return cast(to_type, (LLScriptIntegerConstant *)cv, lloc);
+    case LST_FLOATINGPOINT:
+      return cast(to_type, (LLScriptFloatConstant *)cv, lloc);
+    case LST_LIST:
+      return cast(to_type, (LLScriptListConstant *)cv, lloc);
+    case LST_VECTOR:
+      return cast(to_type, (LLScriptVectorConstant *)cv, lloc);
+    case LST_QUATERNION:
+      return cast(to_type, (LLScriptQuaternionConstant *)cv, lloc);
+    case LST_MAX:
+    case LST_NULL:
+    case LST_KEY:
+    case LST_ERROR:
+      return nullptr;
+  }
+}
+
+
+
+LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScriptStringConstant *cv, YYLTYPE *lloc) {
+  auto *v = cv->get_value();
+  switch(to_type->get_itype()) {
     case LST_INTEGER: {
       int base = 10;
       // Need to explicitly determine what the base should be, we only support
-      // base 10 and base16 and we don't want `011` to be treated as octal!
+      // base 10 and base 16 and we don't want `011` to be treated as octal!
       // This check is safe because `cv` must be a null terminated string.
-      if (cv[0] == '0' && (cv[1] == 'x' || cv[2] == 'X'))
+      if (v[0] == '0' && (v[1] == 'x' || v[2] == 'X'))
         base = 16;
-      return gAllocationManager->new_tracked<LLScriptIntegerConstant>((S32)strtoul(cv, nullptr, base));
+      return gAllocationManager->new_tracked<LLScriptIntegerConstant>((S32)strtoul(v, nullptr, base));
     }
     case LST_FLOATINGPOINT: {
-      return gAllocationManager->new_tracked<LLScriptFloatConstant>((F32)strtod(cv, nullptr));
+      return gAllocationManager->new_tracked<LLScriptFloatConstant>((F32)strtod(v, nullptr));
     }
     default:
       return nullptr;
   }
 }
 
-LLScriptConstant* LLScriptIntegerConstant::cast(LST_TYPE to_type) {
-  auto cv = ((LLScriptIntegerConstant *)constant_value)->get_value();
-  switch(to_type) {
+LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScriptIntegerConstant *cv, YYLTYPE *lloc) {
+  auto v = cv->get_value();
+  switch(to_type->get_itype()) {
     case LST_STRING: {
-      return gAllocationManager->new_tracked<LLScriptStringConstant>(gAllocationManager->copy_str(
-          std::to_string(cv).c_str()
-      ));
+      return gAllocationManager->new_tracked<LLScriptStringConstant>(
+          gAllocationManager->copy_str(std::to_string(v).c_str())
+      );
     }
     default:
       return nullptr;
   }
 }
 
-LLScriptConstant *LLScriptFloatConstant::cast(LST_TYPE to_type) {
-  auto cv = ((LLScriptFloatConstant *)constant_value)->get_value();
-  switch(to_type) {
+LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScriptFloatConstant *cv, YYLTYPE *lloc) {
+  auto v = cv->get_value();
+  switch(to_type->get_itype()) {
     case LST_STRING: {
-      std::string f_as_str {std::to_string(cv)};
+      std::string f_as_str {std::to_string(v)};
       if (f_as_str == "inf")
         f_as_str = "Infinity";
       else if (f_as_str == "-inf")
         f_as_str = "-Infinity";
-      // Only one kind of NaN in LSL!
+        // Only one kind of NaN in LSL!
       else if (f_as_str == "nan" || f_as_str == "-nan")
         f_as_str = "NaN";
 
-      return gAllocationManager->new_tracked<LLScriptStringConstant>(gAllocationManager->copy_str(
-          // to_string correctly handles -inf and friends
-          f_as_str.c_str()
-      ));
+      return gAllocationManager->new_tracked<LLScriptStringConstant>(
+          gAllocationManager->copy_str(f_as_str.c_str())
+      );
     }
     default:
       return nullptr;

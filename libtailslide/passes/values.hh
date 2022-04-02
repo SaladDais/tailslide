@@ -3,10 +3,13 @@
 
 #include "lslmini.hh"
 #include "visitor.hh"
+#include "operations.hh"
 
 namespace Tailslide {
 class ConstantDeterminingVisitor : public DepthFirstASTVisitor {
   public:
+    explicit ConstantDeterminingVisitor(AOperationBehavior *behavior): operation_behavior(behavior) {}
+
     virtual bool before_descend(LLASTNode *node);
 
     virtual bool visit(LLScriptScript *node);
@@ -18,6 +21,8 @@ class ConstantDeterminingVisitor : public DepthFirstASTVisitor {
     virtual bool visit(LLScriptVectorExpression *node);
     virtual bool visit(LLScriptQuaternionExpression *node);
     virtual bool visit(LLScriptTypecastExpression *node);
+  protected:
+    AOperationBehavior *operation_behavior = nullptr;
 };
 }
 

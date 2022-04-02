@@ -65,6 +65,7 @@ target_sources(libtailslide PRIVATE
         libtailslide/ast.hh
         libtailslide/logger.hh
         libtailslide/lslmini.hh
+        libtailslide/operations.hh
         libtailslide/strings.hh
         libtailslide/symtab.hh
         libtailslide/types.hh
@@ -85,7 +86,7 @@ target_sources(libtailslide PRIVATE
         libtailslide/builtins_txt.cc
         libtailslide/logger.cc
         libtailslide/lslmini.cc
-        libtailslide/operators.cc
+        libtailslide/operations.cc
         libtailslide/strings.cc
         libtailslide/symtab.cc
         libtailslide/types.cc
