@@ -91,26 +91,18 @@ int main(int argc, char **argv) {
   if (vm.count("lint")) {
     pretty_print = false;
   } else {
-    if (vm.count("minw"))
-      pretty_opts.minify_whitespace = true;
-    if (vm.count("mangle-globals"))
-      pretty_opts.mangle_global_names = true;
-    if (vm.count("mangle-locals"))
-      pretty_opts.mangle_local_names = true;
-    if (vm.count("mangle-funcs"))
-      pretty_opts.mangle_func_names = true;
-    if (vm.count("show-unmangled"))
-      pretty_opts.show_unmangled = true;
-    if (vm.count("obfuscate-numbers"))
-      pretty_opts.obfuscate_numbers = true;
-    if (vm.count("fold-constants"))
-      optim_ctx.fold_constants = true;
-    if (vm.count("prune-globals"))
-      optim_ctx.prune_unused_globals = true;
-    if (vm.count("prune-funcs"))
-      optim_ctx.prune_unused_functions = true;
-    if (vm.count("prune-locals"))
-      optim_ctx.prune_unused_locals = true;
+
+    pretty_opts.minify_whitespace = vm.count("minw") != 0;
+    pretty_opts.mangle_global_names = vm.count("mangle-globals") != 0;
+    pretty_opts.mangle_local_names = vm.count("mangle-locals") != 0;
+    pretty_opts.mangle_func_names = vm.count("mangle-funcs") != 0;
+    pretty_opts.show_unmangled = vm.count("show-unmangled") != 0;
+    pretty_opts.obfuscate_numbers = vm.count("obfuscate-numbers") != 0;
+    optim_ctx.fold_constants = vm.count("fold-constants") != 0;
+    optim_ctx.prune_unused_globals = vm.count("prune-globals") != 0;
+    optim_ctx.prune_unused_functions = vm.count("prune-funcs") != 0;
+    optim_ctx.prune_unused_locals = vm.count("prune-locals") != 0;
+
     if (vm.count("O2")) {
       optim_ctx.prune_unused_globals = true;
       optim_ctx.prune_unused_locals = true;
@@ -155,10 +147,8 @@ int main(int argc, char **argv) {
   LLScriptScript* script = tailslide_parser.script;
 
   if (script) {
-    std::cerr << "Script parsed, collecting symbols" << std::endl;
     script->collect_symbols();
     script->link_symbol_tables();
-    std::cerr << "Propagating types" << std::endl;
     script->determine_types();
     script->recalculate_reference_data();
     script->propagate_values();
