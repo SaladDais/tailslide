@@ -2,9 +2,9 @@
 
 namespace Tailslide {
 
-bool GlobalExprValidatingVisitor::visit(LLScriptGlobalVariable *node) {
+bool GlobalExprValidatingVisitor::visit(LSLGlobalVariable *node) {
   valid_rvalue = true;
-  LLASTNode *rvalue = node->get_child(1);
+  LSLASTNode *rvalue = node->get_child(1);
   if (rvalue && rvalue->get_node_type() != NODE_NULL && !rvalue->is_constant()) {
     // don't bother complaining if the rvalue isn't constant due to a type or symbol
     // resolution error that we've already reported.
@@ -27,12 +27,12 @@ bool GlobalExprValidatingVisitor::visit(LLScriptGlobalVariable *node) {
   return false;
 }
 
-bool GlobalExprValidatingVisitor::visit(LLScriptFunctionExpression *node) {
+bool GlobalExprValidatingVisitor::visit(LSLFunctionExpression *node) {
   valid_rvalue = false;
   return false;
 }
 
-bool SimpleAssignableValidatingVisitor::visit(LLScriptExpression *node) {
+bool SimpleAssignableValidatingVisitor::visit(LSLExpression *node) {
   // other expression types that don't really need their own visitors, but
   // may not be valid in SA context
   switch(node->get_node_sub_type()) {
@@ -47,19 +47,19 @@ bool SimpleAssignableValidatingVisitor::visit(LLScriptExpression *node) {
   }
 }
 
-bool SimpleAssignableValidatingVisitor::visit(LLScriptUnaryExpression *node) {
+bool SimpleAssignableValidatingVisitor::visit(LSLUnaryExpression *node) {
   // only unary minus is allowed
   if (node->get_operation() != '-') {
     valid_rvalue = false;
     return false;
   }
   // and only for certain builtins, by virtue of them _actually_ being lexer tokens
-  LLASTNode *rvalue = node->get_child(0);
+  LSLASTNode *rvalue = node->get_child(0);
   if (rvalue->get_node_sub_type() != NODE_LVALUE_EXPRESSION) {
     valid_rvalue = false;
     return false;
   }
-  auto *id = (LLScriptIdentifier*)rvalue->get_child(0);
+  auto *id = (LSLIdentifier*)rvalue->get_child(0);
   auto *sym = id->get_symbol();
   // exprs not checked if type or symbol error occurred earlier
   assert(sym);
@@ -81,7 +81,7 @@ bool SimpleAssignableValidatingVisitor::visit(LLScriptUnaryExpression *node) {
   return true;
 }
 
-bool SimpleAssignableValidatingVisitor::visit(LLScriptLValueExpression *node) {
+bool SimpleAssignableValidatingVisitor::visit(LSLLValueExpression *node) {
   // no member accessors allowed!
   auto *member = node->get_child(1);
   if (member && member->get_node_type() != NODE_NULL) {

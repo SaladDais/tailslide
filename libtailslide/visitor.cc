@@ -4,113 +4,113 @@
 namespace Tailslide {
 
 
-bool ASTVisitor::visit_specific(LLASTNode *node) {
+bool ASTVisitor::visit_specific(LSLASTNode *node) {
   switch(node->get_node_type()) {
     case NODE_NODE:
       return visit(node);
     case NODE_NULL:
-      return visit((LLASTNullNode *)node);
+      return visit((LSLASTNullNode *)node);
     case NODE_SCRIPT:
-      return visit((LLScriptScript *)node);
+      return visit((LSLScript *)node);
     case NODE_GLOBAL_STORAGE:
-      return visit((LLScriptGlobalStorage *)node);
+      return visit((LSLGlobalStorage *)node);
     case NODE_GLOBAL_FUNCTION:
-      return visit((LLScriptGlobalFunction *)node);
+      return visit((LSLGlobalFunction *)node);
     case NODE_GLOBAL_VARIABLE:
-      return visit((LLScriptGlobalVariable *)node);
+      return visit((LSLGlobalVariable *)node);
     case NODE_IDENTIFIER:
-      return visit((LLScriptIdentifier *)node);
+      return visit((LSLIdentifier *)node);
     case NODE_CONSTANT: {
       switch(node->get_node_sub_type()) {
         case NODE_INTEGER_CONSTANT:
-          return visit((LLScriptIntegerConstant *)node);
+          return visit((LSLIntegerConstant *)node);
         case NODE_FLOAT_CONSTANT:
-          return visit((LLScriptFloatConstant *)node);
+          return visit((LSLFloatConstant *)node);
         case NODE_STRING_CONSTANT:
-          return visit((LLScriptStringConstant *)node);
+          return visit((LSLStringConstant *)node);
         case NODE_VECTOR_CONSTANT:
-          return visit((LLScriptVectorConstant *)node);
+          return visit((LSLVectorConstant *)node);
         case NODE_QUATERNION_CONSTANT:
-          return visit((LLScriptQuaternionConstant *)node);
+          return visit((LSLQuaternionConstant *)node);
         case NODE_LIST_CONSTANT:
-          return visit((LLScriptListConstant *)node);
+          return visit((LSLListConstant *)node);
         default:
-          return visit((LLScriptConstant *)node);
+          return visit((LSLConstant *)node);
       }
     }
     case NODE_FUNCTION_DEC:
-      return visit((LLScriptFunctionDec *)node);
+      return visit((LSLFunctionDec *)node);
     case NODE_EVENT_DEC:
-      return visit((LLScriptEventDec *)node);
+      return visit((LSLEventDec *)node);
     case NODE_FOR_EXPRESSION_LIST:
-      return visit((LLScriptForExpressionList *)node);
+      return visit((LSLForExpressionList *)node);
     case NODE_STATE:
-      return visit((LLScriptState *)node);
+      return visit((LSLState *)node);
     case NODE_EVENT_HANDLER:
-      return visit((LLScriptEventHandler *)node);
+      return visit((LSLEventHandler *)node);
     case NODE_STATEMENT:
       switch(node->get_node_sub_type()) {
         case NODE_COMPOUND_STATEMENT:
-          return visit((LLScriptCompoundStatement *)node);
+          return visit((LSLCompoundStatement *)node);
         case NODE_RETURN_STATEMENT:
-          return visit((LLScriptReturnStatement *)node);
+          return visit((LSLReturnStatement *)node);
         case NODE_LABEL:
-          return visit((LLScriptLabel *)node);
+          return visit((LSLLabel *)node);
         case NODE_JUMP_STATEMENT:
-          return visit((LLScriptJumpStatement *)node);
+          return visit((LSLJumpStatement *)node);
         case NODE_IF_STATEMENT:
-          return visit((LLScriptIfStatement *)node);
+          return visit((LSLIfStatement *)node);
         case NODE_FOR_STATEMENT:
-          return visit((LLScriptForStatement *)node);
+          return visit((LSLForStatement *)node);
         case NODE_DO_STATEMENT:
-          return visit((LLScriptDoStatement *)node);
+          return visit((LSLDoStatement *)node);
         case NODE_WHILE_STATEMENT:
-          return visit((LLScriptWhileStatement *)node);
+          return visit((LSLWhileStatement *)node);
         case NODE_DECLARATION:
-          return visit((LLScriptDeclaration *)node);
+          return visit((LSLDeclaration *)node);
         case NODE_STATE_STATEMENT:
-          return visit((LLScriptStateStatement *)node);
+          return visit((LSLStateStatement *)node);
         default:
-          return visit((LLScriptStatement *)node);
+          return visit((LSLStatement *)node);
       }
     case NODE_EXPRESSION:
       switch(node->get_node_sub_type()) {
         case NODE_TYPECAST_EXPRESSION:
-          return visit((LLScriptTypecastExpression *)node);
+          return visit((LSLTypecastExpression *)node);
         case NODE_PRINT_EXPRESSION:
-          return visit((LLScriptPrintExpression *)node);
+          return visit((LSLPrintExpression *)node);
         case NODE_FUNCTION_EXPRESSION:
-          return visit((LLScriptFunctionExpression *)node);
+          return visit((LSLFunctionExpression *)node);
         case NODE_VECTOR_EXPRESSION:
-          return visit((LLScriptVectorExpression *)node);
+          return visit((LSLVectorExpression *)node);
         case NODE_QUATERNION_EXPRESSION:
-          return visit((LLScriptQuaternionExpression *)node);
+          return visit((LSLQuaternionExpression *)node);
         case NODE_LIST_EXPRESSION:
-          return visit((LLScriptListExpression *)node);
+          return visit((LSLListExpression *)node);
         case NODE_LVALUE_EXPRESSION:
-          return visit((LLScriptLValueExpression *)node);
+          return visit((LSLLValueExpression *)node);
         case NODE_PARENTHESIS_EXPRESSION:
-          return visit((LLScriptParenthesisExpression *)node);
+          return visit((LSLParenthesisExpression *)node);
         case NODE_BINARY_EXPRESSION:
-          return visit((LLScriptBinaryExpression *)node);
+          return visit((LSLBinaryExpression *)node);
         case NODE_UNARY_EXPRESSION:
-          return visit((LLScriptUnaryExpression *)node);
+          return visit((LSLUnaryExpression *)node);
         case NODE_CONSTANT_EXPRESSION:
-          return visit((LLScriptConstantExpression *)node);
+          return visit((LSLConstantExpression *)node);
         default:
-          return visit((LLScriptExpression *)node);
+          return visit((LSLExpression *)node);
       }
     case NODE_TYPE:
-      return visit((LLScriptType *)node);
+      return visit((LSLType *)node);
   }
   return visit(node);
 }
 
-void ASTVisitor::visit_children(LLASTNode *node) {
-  LLASTNode *child = node->get_children();
+void ASTVisitor::visit_children(LSLASTNode *node) {
+  LSLASTNode *child = node->get_children();
 
   while (child != nullptr) {
-    LLASTNode *next = child->get_next();
+    LSLASTNode *next = child->get_next();
     assert(child != next);
     assert(child != node);
     child->visit(this);

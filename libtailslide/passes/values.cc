@@ -3,7 +3,7 @@
 
 namespace Tailslide {
 
-bool ConstantDeterminingVisitor::before_descend(LLASTNode *node) {
+bool ConstantDeterminingVisitor::before_descend(LSLASTNode *node) {
   // invalidate any old constant value we had, it might not be valid anymore
   if (!node->is_static() && node->get_node_type() != NODE_CONSTANT) {
     node->set_constant_value(nullptr);
@@ -24,15 +24,15 @@ bool ConstantDeterminingVisitor::before_descend(LLASTNode *node) {
   return true;
 }
 
-bool ConstantDeterminingVisitor::visit(LLScriptScript *node) {
+bool ConstantDeterminingVisitor::visit(LSLScript *node) {
   // need to iterate over global vars FIRST since expressions in
   // global functions may make use of them.
-  LLASTNode *child = node->get_children();
+  LSLASTNode *child = node->get_children();
   while (child != nullptr) {
     // passed the end of the list of globals
     if (child->get_node_type() != NODE_GLOBAL_STORAGE)
       break;
-    if (LLASTNode *gs_child = child->get_child(0)) {
+    if (LSLASTNode *gs_child = child->get_child(0)) {
       if (gs_child->get_node_type() == NODE_GLOBAL_VARIABLE)
         gs_child->visit(this);
     }
@@ -43,10 +43,10 @@ bool ConstantDeterminingVisitor::visit(LLScriptScript *node) {
   return false;
 }
 
-bool ConstantDeterminingVisitor::visit(LLScriptDeclaration *node) {
-  auto *id = (LLScriptIdentifier *) node->get_child(0);
-  LLASTNode *rvalue = node->get_child(1);
-  LLScriptConstant *cv = nullptr;
+bool ConstantDeterminingVisitor::visit(LSLDeclaration *node) {
+  auto *id = (LSLIdentifier *) node->get_child(0);
+  LSLASTNode *rvalue = node->get_child(1);
+  LSLConstant *cv = nullptr;
   bool cv_precluded = false;
   if (rvalue && rvalue->get_node_type() != NODE_NULL) {
     cv = rvalue->get_constant_value();
@@ -63,9 +63,9 @@ bool ConstantDeterminingVisitor::visit(LLScriptDeclaration *node) {
   return false;
 }
 
-bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
+bool ConstantDeterminingVisitor::visit(LSLExpression *node) {
   int operation = node->get_operation();
-  LLScriptConstant *constant_value = node->get_constant_value();
+  LSLConstant *constant_value = node->get_constant_value();
   DEBUG(
       LOG_DEBUG_SPAM,
       nullptr,
@@ -75,8 +75,8 @@ bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
       node->get_node_sub_type()
   );
 
-  LLASTNode *left = node->get_child(0);
-  LLASTNode *right = node->get_child(1);
+  LSLASTNode *left = node->get_child(0);
+  LSLASTNode *right = node->get_child(1);
 
   if (left->get_type() == TYPE(LST_ERROR) || (right && right->get_type() == TYPE(LST_ERROR))) {
     node->set_constant_precluded(true);
@@ -101,8 +101,8 @@ bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
     assert(right);
     constant_value = right->get_constant_value();
   } else {
-    LLScriptConstant *c_left = left->get_constant_value();
-    LLScriptConstant *c_right = right ? right->get_constant_value() : nullptr;
+    LSLConstant *c_left = left->get_constant_value();
+    LSLConstant *c_right = right ? right->get_constant_value() : nullptr;
 
     // we need a constant value from the c_left, and if we have a c_right side, it MUST have a constant value too
     if (c_left && (right == nullptr || c_right != nullptr))
@@ -114,11 +114,11 @@ bool ConstantDeterminingVisitor::visit(LLScriptExpression *node) {
   return true;
 }
 
-bool ConstantDeterminingVisitor::visit(LLScriptGlobalVariable *node) {
+bool ConstantDeterminingVisitor::visit(LSLGlobalVariable *node) {
   // if it's initialized, set its constant value
-  auto *identifier = (LLScriptIdentifier *) node->get_child(0);
+  auto *identifier = (LSLIdentifier *) node->get_child(0);
   auto *sym = identifier->get_symbol();
-  LLASTNode *rvalue = node->get_child(1);
+  LSLASTNode *rvalue = node->get_child(1);
   if (rvalue) {
     sym->set_constant_value(rvalue->get_constant_value());
     sym->set_constant_precluded(rvalue->get_constant_precluded());
@@ -126,9 +126,9 @@ bool ConstantDeterminingVisitor::visit(LLScriptGlobalVariable *node) {
   return true;
 }
 
-bool ConstantDeterminingVisitor::visit(LLScriptLValueExpression *node) {
-  auto *id = (LLScriptIdentifier*)node->get_child(0);
-  LLScriptSymbol *symbol = id->get_symbol();
+bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {
+  auto *id = (LSLIdentifier*)node->get_child(0);
+  LSLSymbol *symbol = id->get_symbol();
 
   // can't determine value if we don't have a symbol
   if (symbol == nullptr) {
@@ -137,12 +137,12 @@ bool ConstantDeterminingVisitor::visit(LLScriptLValueExpression *node) {
     return true;
   }
 
-  auto *member_id = (LLScriptIdentifier*)node->get_child(1);
+  auto *member_id = (LSLIdentifier*)node->get_child(1);
   const char *member = nullptr;
   if (member_id && member_id->get_node_type() == NODE_IDENTIFIER)
-    member = ((LLScriptIdentifier*)member_id)->get_name();
+    member = ((LSLIdentifier*)member_id)->get_name();
 
-  LLScriptConstant *constant_value = nullptr;
+  LSLConstant *constant_value = nullptr;
   DEBUG(LOG_DEBUG_SPAM, nullptr, "id %s assigned %d times\n", id->get_name(), symbol->get_assignments());
   if (symbol->get_assignments() == 0) {
     constant_value = symbol->get_constant_value();
@@ -150,18 +150,18 @@ bool ConstantDeterminingVisitor::visit(LLScriptLValueExpression *node) {
       LST_TYPE c_type = constant_value->get_type()->get_itype();
       switch (c_type) {
         case LST_VECTOR: {
-          auto *c = (LLScriptVectorConstant *) constant_value;
-          auto *v = (LLVector *) c->get_value();
+          auto *c = (LSLVectorConstant *) constant_value;
+          auto *v = (LSLVector *) c->get_value();
           assert(v);
           switch (member[0]) {
             case 'x':
-              constant_value = gAllocationManager->new_tracked<LLScriptFloatConstant>(v->x);
+              constant_value = gAllocationManager->new_tracked<LSLFloatConstant>(v->x);
               break;
             case 'y':
-              constant_value = gAllocationManager->new_tracked<LLScriptFloatConstant>(v->y);
+              constant_value = gAllocationManager->new_tracked<LSLFloatConstant>(v->y);
               break;
             case 'z':
-              constant_value = gAllocationManager->new_tracked<LLScriptFloatConstant>(v->z);
+              constant_value = gAllocationManager->new_tracked<LSLFloatConstant>(v->z);
               break;
             default:
               constant_value = nullptr;
@@ -169,21 +169,21 @@ bool ConstantDeterminingVisitor::visit(LLScriptLValueExpression *node) {
           break;
         }
         case LST_QUATERNION: {
-          auto *c = (LLScriptQuaternionConstant *) constant_value;
-          auto *v = (LLQuaternion *) c->get_value();
+          auto *c = (LSLQuaternionConstant *) constant_value;
+          auto *v = (LSLQuaternion *) c->get_value();
           assert(v);
           switch (member[0]) {
             case 'x':
-              constant_value = gAllocationManager->new_tracked<LLScriptFloatConstant>(v->x);
+              constant_value = gAllocationManager->new_tracked<LSLFloatConstant>(v->x);
               break;
             case 'y':
-              constant_value = gAllocationManager->new_tracked<LLScriptFloatConstant>(v->y);
+              constant_value = gAllocationManager->new_tracked<LSLFloatConstant>(v->y);
               break;
             case 'z':
-              constant_value = gAllocationManager->new_tracked<LLScriptFloatConstant>(v->z);
+              constant_value = gAllocationManager->new_tracked<LSLFloatConstant>(v->z);
               break;
             case 's':
-              constant_value = gAllocationManager->new_tracked<LLScriptFloatConstant>(v->s);
+              constant_value = gAllocationManager->new_tracked<LSLFloatConstant>(v->s);
               break;
             default:
               constant_value = nullptr;
@@ -200,9 +200,9 @@ bool ConstantDeterminingVisitor::visit(LLScriptLValueExpression *node) {
   return true;
 }
 
-bool ConstantDeterminingVisitor::visit(LLScriptListExpression *node) {
-  LLASTNode *child = node->get_children();
-  LLScriptConstant *new_child = nullptr;
+bool ConstantDeterminingVisitor::visit(LSLListExpression *node) {
+  LSLASTNode *child = node->get_children();
+  LSLConstant *new_child = nullptr;
 
   // if we have children
   if (child->get_node_type() != NODE_NULL) {
@@ -225,15 +225,15 @@ bool ConstantDeterminingVisitor::visit(LLScriptListExpression *node) {
   }
 
   // create constant value
-  node->set_constant_value(gAllocationManager->new_tracked<LLScriptListConstant>(new_child));
+  node->set_constant_value(gAllocationManager->new_tracked<LSLListConstant>(new_child));
   return true;
 }
 
-bool ConstantDeterminingVisitor::visit(LLScriptVectorExpression *node) {
+bool ConstantDeterminingVisitor::visit(LSLVectorExpression *node) {
   float v[3];
   int cv = 0;
 
-  for (LLASTNode *child = node->get_children(); child; child = child->get_next()) {
+  for (LSLASTNode *child = node->get_children(); child; child = child->get_next()) {
     // if we have too many children, make sure we don't overflow cv
     if (cv >= 3)
       return true;
@@ -247,10 +247,10 @@ bool ConstantDeterminingVisitor::visit(LLScriptVectorExpression *node) {
     // all children must be float/int constants - get their val or bail if they're wrong
     switch (child->get_constant_value()->get_type()->get_itype()) {
       case LST_FLOATINGPOINT:
-        v[cv++] = ((LLScriptFloatConstant *) child->get_constant_value())->get_value();
+        v[cv++] = ((LSLFloatConstant *) child->get_constant_value())->get_value();
         break;
       case LST_INTEGER:
-        v[cv++] = (F32) ((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
+        v[cv++] = (F32) ((LSLIntegerConstant *) child->get_constant_value())->get_value();
         break;
       default:
         node->set_constant_precluded(true);
@@ -263,16 +263,16 @@ bool ConstantDeterminingVisitor::visit(LLScriptVectorExpression *node) {
     return true;
 
   // create constant value
-  node->set_constant_value(gAllocationManager->new_tracked<LLScriptVectorConstant>(v[0], v[1], v[2]));
+  node->set_constant_value(gAllocationManager->new_tracked<LSLVectorConstant>(v[0], v[1], v[2]));
   return true;
 }
 
 
-bool ConstantDeterminingVisitor::visit(LLScriptQuaternionExpression *node) {
+bool ConstantDeterminingVisitor::visit(LSLQuaternionExpression *node) {
   float v[4];
   int cv = 0;
 
-  for (LLASTNode *child = node->get_children(); child; child = child->get_next()) {
+  for (LSLASTNode *child = node->get_children(); child; child = child->get_next()) {
     // if we have too many children, make sure we don't overflow cv
     if (cv >= 4)
       return true;
@@ -286,10 +286,10 @@ bool ConstantDeterminingVisitor::visit(LLScriptQuaternionExpression *node) {
     // all children must be float/int constants - get their val or bail if they're wrong
     switch (child->get_constant_value()->get_type()->get_itype()) {
       case LST_FLOATINGPOINT:
-        v[cv++] = ((LLScriptFloatConstant *) child->get_constant_value())->get_value();
+        v[cv++] = ((LSLFloatConstant *) child->get_constant_value())->get_value();
         break;
       case LST_INTEGER:
-        v[cv++] = (F32) ((LLScriptIntegerConstant *) child->get_constant_value())->get_value();
+        v[cv++] = (F32) ((LSLIntegerConstant *) child->get_constant_value())->get_value();
         break;
       default:
         node->set_constant_precluded(true);
@@ -302,11 +302,11 @@ bool ConstantDeterminingVisitor::visit(LLScriptQuaternionExpression *node) {
     return true;
 
   // create constant value
-  node->set_constant_value(gAllocationManager->new_tracked<LLScriptQuaternionConstant>(v[0], v[1], v[2], v[3]));
+  node->set_constant_value(gAllocationManager->new_tracked<LSLQuaternionConstant>(v[0], v[1], v[2], v[3]));
   return true;
 }
 
-bool ConstantDeterminingVisitor::visit(LLScriptTypecastExpression *node) {
+bool ConstantDeterminingVisitor::visit(LSLTypecastExpression *node) {
   // what are we casting to
   auto *child = node->get_child(0);
   auto *val = child->get_constant_value();

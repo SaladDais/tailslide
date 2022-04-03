@@ -11,7 +11,7 @@
 namespace Tailslide {
 
 // Base node types
-enum LLNodeType {
+enum LSLNodeType {
 
   NODE_NODE,
   NODE_NULL,
@@ -32,7 +32,7 @@ enum LLNodeType {
 };
 
 // Node Sub-types
-enum LLNodeSubType {
+enum LSLNodeSubType {
 
   NODE_NO_SUB_TYPE,
 
@@ -70,11 +70,11 @@ enum LLNodeSubType {
 class OptimizationContext;
 class ASTVisitor;
 
-class LLASTNode : public LLTrackableObject {
+class LSLASTNode : public TrackableObject {
   public:
-    LLASTNode();
-    LLASTNode( YYLTYPE *loc, int num, ... )
-      : LLASTNode() {
+    LSLASTNode();
+    LSLASTNode( YYLTYPE *loc, int num, ... )
+      : LSLASTNode() {
       lloc = *loc;
       va_list ap;
       va_start(ap, num);
@@ -82,62 +82,62 @@ class LLASTNode : public LLTrackableObject {
       va_end(ap);
     }
 
-    explicit LLASTNode( int num, ... ) : LLASTNode() {
+    explicit LSLASTNode( int num, ... ) : LSLASTNode() {
       va_list ap;
       va_start(ap, num);
       add_children( num, ap );
       va_end(ap);
     }
 
-    ~LLASTNode() override = default;
+    ~LSLASTNode() override = default;
 
     void add_children(int num, va_list ap);
 
-    LLASTNode *get_next() { return next; }
-    LLASTNode *get_prev() { return prev; }
-    LLASTNode *get_children() { return children; }
-    LLASTNode *get_parent() { return parent; }
+    LSLASTNode *get_next() { return next; }
+    LSLASTNode *get_prev() { return prev; }
+    LSLASTNode *get_children() { return children; }
+    LSLASTNode *get_parent() { return parent; }
 
-    LLASTNode *get_child(int i) {
-      LLASTNode *c = children;
+    LSLASTNode *get_child(int i) {
+      LSLASTNode *c = children;
       while (i-- && c)
         c = c->get_next();
       return c;
     }
 
     // Get the topmost node in the tree
-    LLASTNode *get_root() {
-      LLASTNode *last_node = this;
-      LLASTNode *test_root;
+    LSLASTNode *get_root() {
+      LSLASTNode *last_node = this;
+      LSLASTNode *test_root;
       while ((test_root = last_node->get_parent()) != nullptr)
         last_node = test_root;
       return last_node;
     }
 
-    LLASTNode *new_null_node();
+    LSLASTNode *new_null_node();
 
     /* Set our parent, and make sure all our siblings do too. */
-    void set_parent( LLASTNode *newparent );
+    void set_parent( LSLASTNode *newparent );
     // Add child to end of list.
-    void push_child(LLASTNode *child);
+    void push_child(LSLASTNode *child);
     /* Set our next sibling, and ensure it links back to us. */
-    void set_next(LLASTNode *newnext);
+    void set_next(LSLASTNode *newnext);
     /* Set our previous sibling, and ensure it links back to us. */
-    void set_prev(LLASTNode *newprev);
-    void add_next_sibling(LLASTNode *sibling);
-    void add_prev_sibling(LLASTNode *sibling);
+    void set_prev(LSLASTNode *newprev);
+    void add_next_sibling(LSLASTNode *sibling);
+    void add_prev_sibling(LSLASTNode *sibling);
     /* remove a child from the list of nodes, shifting other children up */
-    void remove_child(LLASTNode *child);
+    void remove_child(LSLASTNode *child);
     /* replace a node from the list of children with null, returning it */
-    LLASTNode *take_child(int child_num);
+    LSLASTNode *take_child(int child_num);
 
     // replace an arbitrary node with another, setting
     // prev, next and parent as appropriate
-    static void replace_node(LLASTNode *old_node, LLASTNode *replacement);
+    static void replace_node(LSLASTNode *old_node, LSLASTNode *replacement);
 
 
-    void                set_type(LLScriptType *_type) { type = _type;   }
-    class LLScriptType *get_type()                    { return type;    }
+    void                set_type(LSLType *_type) { type = _type;   }
+    class LSLType *get_type()                    { return type;    }
 
     void mark_static() { static_node = true;}
     bool is_static() {return static_node;}
@@ -156,9 +156,9 @@ class LLASTNode : public LLTrackableObject {
     void check_symbols(); // look for unused symbols, etc
 
     /// symbol functions        ///
-    virtual LLScriptSymbol *lookup_symbol( const char *name, LLSymbolType type = SYM_ANY, LLASTNode *start_node = nullptr );
-    void            define_symbol( LLScriptSymbol *symbol );
-    LLScriptSymbolTable *get_symbol_table() { return symbol_table; }
+    virtual LSLSymbol *lookup_symbol( const char *name, LSLSymbolType type = SYM_ANY, LSLASTNode *start_node = nullptr );
+    void            define_symbol( LSLSymbol *symbol );
+    LSLSymbolTable *get_symbol_table() { return symbol_table; }
 
 
     YYLTYPE     *get_lloc()     { return &lloc; };
@@ -172,18 +172,18 @@ class LLASTNode : public LLTrackableObject {
     bool get_declaration_allowed() { return declaration_allowed; };
 
     // bad hacks for figuring out if something is _really_ in scope
-    class LLASTNode* find_previous_in_scope(std::function<bool (class LLASTNode *)> const &checker);
-    class LLASTNode* find_desc_in_scope(std::function<bool (class LLASTNode *)> const &checker);
+    class LSLASTNode* find_previous_in_scope(std::function<bool (class LSLASTNode *)> const &checker);
+    class LSLASTNode* find_desc_in_scope(std::function<bool (class LSLASTNode *)> const &checker);
 
 
     /// identification          ///
     virtual const char  *get_node_name() { return "node";    };
-    virtual LLNodeType  get_node_type() { return NODE_NODE; };
-    virtual LLNodeSubType get_node_sub_type() { return NODE_NO_SUB_TYPE; }
+    virtual LSLNodeType  get_node_type() { return NODE_NODE; };
+    virtual LSLNodeSubType get_node_sub_type() { return NODE_NO_SUB_TYPE; }
 
     /// constants ///
-    virtual class LLScriptConstant  *get_constant_value()    { return constant_value; };
-    void set_constant_value(class LLScriptConstant *cv) {
+    virtual class LSLConstant  *get_constant_value()    { return constant_value; };
+    void set_constant_value(class LSLConstant *cv) {
       if (cv)
         constant_precluded = false;
       constant_value = cv;
@@ -194,29 +194,29 @@ class LLASTNode : public LLTrackableObject {
     bool            is_constant()           { return get_constant_value() != nullptr; };
 
   protected:
-    class LLScriptType          *type;
-    LLScriptSymbolTable         *symbol_table;
-    class LLScriptConstant      *constant_value;
+    class LSLType          *type;
+    LSLSymbolTable         *symbol_table;
+    class LSLConstant      *constant_value;
     bool                        constant_precluded = false;
 
   private:
     YYLTYPE                      lloc;
     thread_local static YYLTYPE               glloc;
 
-    LLASTNode *children;
-    LLASTNode *parent;
-    LLASTNode *next;
-    LLASTNode *prev;
+    LSLASTNode *children;
+    LSLASTNode *parent;
+    LSLASTNode *next;
+    LSLASTNode *prev;
 
   protected:
     bool                        declaration_allowed;
     bool                        static_node = false;
 };
 
-class LLASTNullNode : public LLASTNode {
+class LSLASTNullNode : public LSLASTNode {
   public:
     virtual const char *get_node_name() { return "null"; };
-    virtual LLNodeType get_node_type() { return NODE_NULL; };
+    virtual LSLNodeType get_node_type() { return NODE_NULL; };
 };
 
 }

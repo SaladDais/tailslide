@@ -2,15 +2,15 @@
 
 namespace Tailslide {
 
-bool TypeCheckVisitor::visit(LLASTNode *node) {
+bool TypeCheckVisitor::visit(LSLASTNode *node) {
   if (!node->get_type())
-    node->set_type(LLScriptType::get(LST_NULL));
+    node->set_type(LSLType::get(LST_NULL));
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptGlobalVariable *node) {
-  auto *id = (LLScriptIdentifier *) node->get_child(0);
-  LLASTNode *rvalue = node->get_child(1);
+bool TypeCheckVisitor::visit(LSLGlobalVariable *node) {
+  auto *id = (LSLIdentifier *) node->get_child(0);
+  LSLASTNode *rvalue = node->get_child(1);
   // already have our expected type from the declaration
   if (rvalue == nullptr || rvalue->get_node_type() == NODE_NULL)
     return true;
@@ -26,14 +26,14 @@ bool TypeCheckVisitor::visit(LLScriptGlobalVariable *node) {
 }
 
 
-bool TypeCheckVisitor::visit(LLScriptStateStatement *node) {
-  auto *id = (LLScriptIdentifier *) node->get_child(0);
+bool TypeCheckVisitor::visit(LSLStateStatement *node) {
+  auto *id = (LSLIdentifier *) node->get_child(0);
   node->set_type(TYPE(LST_NULL));
 
   // see if we're in a state or function, and if we're inside of an if
   bool is_in_if = false;
 
-  for (LLASTNode *ancestor = node->get_parent(); ancestor; ancestor = ancestor->get_parent()) {
+  for (LSLASTNode *ancestor = node->get_parent(); ancestor; ancestor = ancestor->get_parent()) {
     switch (ancestor->get_node_type()) {
       case NODE_STATEMENT:
         if (ancestor->get_node_sub_type() == NODE_IF_STATEMENT)
@@ -49,7 +49,7 @@ bool TypeCheckVisitor::visit(LLScriptStateStatement *node) {
                 (id != nullptr && ancestor->get_child(0)->get_node_type() ==
                                   NODE_IDENTIFIER) &&
                 // in state x calling state x
-                !strcmp(((LLScriptIdentifier *) ancestor->get_child(0))->get_name(),
+                !strcmp(((LSLIdentifier *) ancestor->get_child(0))->get_name(),
                         id->get_name())
             )
             ) {
@@ -81,9 +81,9 @@ bool TypeCheckVisitor::visit(LLScriptStateStatement *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptDeclaration *node) {
-  auto *id = (LLScriptIdentifier *) node->get_child(0);
-  LLASTNode *rvalue = node->get_child(1);
+bool TypeCheckVisitor::visit(LSLDeclaration *node) {
+  auto *id = (LSLIdentifier *) node->get_child(0);
+  LSLASTNode *rvalue = node->get_child(1);
   if (rvalue == nullptr || rvalue->get_node_type() == NODE_NULL)
     return true;
   // we already know there's something messed up going on with the types
@@ -97,8 +97,8 @@ bool TypeCheckVisitor::visit(LLScriptDeclaration *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptReturnStatement *node) {
-  LLASTNode *ancestor = node->get_parent();
+bool TypeCheckVisitor::visit(LSLReturnStatement *node) {
+  LSLASTNode *ancestor = node->get_parent();
 
   // crawl up until we find an event handler or global func
   while (ancestor->get_node_type() != NODE_EVENT_HANDLER &&
@@ -124,7 +124,7 @@ bool TypeCheckVisitor::visit(LLScriptReturnStatement *node) {
   return true;
 }
 
-static bool is_branch_empty(LLASTNode *node) {
+static bool is_branch_empty(LSLASTNode *node) {
   if (node == nullptr || node->get_node_type() == NODE_NULL)
     return true;
   if (node->get_node_type() != NODE_STATEMENT)
@@ -134,7 +134,7 @@ static bool is_branch_empty(LLASTNode *node) {
   return false;
 }
 
-bool TypeCheckVisitor::visit(LLScriptIfStatement *node) {
+bool TypeCheckVisitor::visit(LSLIfStatement *node) {
   node->set_type(TYPE(LST_NULL));
   // warn if main branch is an empty statement and secondary branch is null
   // or empty
@@ -148,7 +148,7 @@ bool TypeCheckVisitor::visit(LLScriptIfStatement *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptForStatement *node) {
+bool TypeCheckVisitor::visit(LSLForStatement *node) {
   node->set_type(TYPE(LST_NULL));
   if (is_branch_empty(node->get_child(3))) {
     ERROR(IN(node), W_EMPTY_LOOP);
@@ -156,7 +156,7 @@ bool TypeCheckVisitor::visit(LLScriptForStatement *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptDoStatement *node) {
+bool TypeCheckVisitor::visit(LSLDoStatement *node) {
   node->set_type(TYPE(LST_NULL));
   if (is_branch_empty(node->get_child(0))) {
     ERROR(IN(node), W_EMPTY_LOOP);
@@ -164,7 +164,7 @@ bool TypeCheckVisitor::visit(LLScriptDoStatement *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptWhileStatement *node) {
+bool TypeCheckVisitor::visit(LSLWhileStatement *node) {
   node->set_type(TYPE(LST_NULL));
   if (is_branch_empty(node->get_child(1))) {
     ERROR(IN(node), W_EMPTY_LOOP);
@@ -173,13 +173,13 @@ bool TypeCheckVisitor::visit(LLScriptWhileStatement *node) {
 }
 
 
-bool TypeCheckVisitor::visit(LLScriptExpression *node) {
+bool TypeCheckVisitor::visit(LSLExpression *node) {
   int operation = node->get_operation();
-  LLScriptType *type;
-  LLASTNode *left = node->get_child(0);
-  LLASTNode *right = node->get_child(1);
-  LLScriptType *l_type = left->get_type();
-  LLScriptType *r_type = right ? right->get_type() : nullptr;
+  LSLType *type;
+  LSLASTNode *left = node->get_child(0);
+  LSLASTNode *right = node->get_child(1);
+  LSLType *l_type = left->get_type();
+  LSLType *r_type = right ? right->get_type() : nullptr;
   if (operation == 0 || operation == '(') {
     type = l_type;
   } else if (l_type == TYPE(LST_ERROR) || r_type == TYPE(LST_ERROR)) {
@@ -205,10 +205,10 @@ bool TypeCheckVisitor::visit(LLScriptExpression *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptListConstant *node) {
+bool TypeCheckVisitor::visit(LSLListConstant *node) {
   node->set_type(TYPE(LST_LIST));
 
-  LLASTNode *val_c = node->get_value();
+  LSLASTNode *val_c = node->get_value();
   while (val_c != nullptr) {
     if (val_c->get_type() == TYPE(LST_LIST)) {
       ERROR(IN(node), E_LIST_IN_LIST);
@@ -219,10 +219,10 @@ bool TypeCheckVisitor::visit(LLScriptListConstant *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptListExpression *node) {
+bool TypeCheckVisitor::visit(LSLListExpression *node) {
   node->set_type(TYPE(LST_LIST));
 
-  LLASTNode *val_c = node->get_children();
+  LSLASTNode *val_c = node->get_children();
   while (val_c != nullptr) {
     if (val_c->get_type() == TYPE(LST_LIST)) {
       ERROR(IN(node), E_LIST_IN_LIST);
@@ -236,19 +236,19 @@ bool TypeCheckVisitor::visit(LLScriptListExpression *node) {
 // check argument types and count for function calls
 // and event handler definitions
 static bool validate_func_arg_spec(
-    LLScriptIdentifier *id,
-    LLASTNode *node,
-    LLScriptIdentifier *params
+    LSLIdentifier *id,
+    LSLASTNode *node,
+    LSLIdentifier *params
 ) {
   bool is_event_handler = node->get_node_type() == NODE_EVENT_HANDLER;
 
-  LLScriptFunctionDec *function_decl;
-  LLScriptIdentifier *declared_param_id;
-  LLScriptIdentifier *passed_param_id;
+  LSLFunctionDec *function_decl;
+  LSLIdentifier *declared_param_id;
+  LSLIdentifier *passed_param_id;
   int param_num = 1;
 
   function_decl = id->get_symbol()->get_function_decl();
-  declared_param_id = (LLScriptIdentifier *) function_decl->get_children();
+  declared_param_id = (LSLIdentifier *) function_decl->get_children();
   passed_param_id = params;
 
   while (declared_param_id != nullptr && passed_param_id != nullptr) {
@@ -268,8 +268,8 @@ static bool validate_func_arg_spec(
       );
       return false;
     }
-    passed_param_id = (LLScriptIdentifier *) passed_param_id->get_next();
-    declared_param_id = (LLScriptIdentifier *) declared_param_id->get_next();
+    passed_param_id = (LSLIdentifier *) passed_param_id->get_next();
+    declared_param_id = (LSLIdentifier *) declared_param_id->get_next();
     ++param_num;
   }
 
@@ -283,8 +283,8 @@ static bool validate_func_arg_spec(
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptFunctionExpression *node) {
-  auto *id = (LLScriptIdentifier *) node->get_child(0);
+bool TypeCheckVisitor::visit(LSLFunctionExpression *node) {
+  auto *id = (LSLIdentifier *) node->get_child(0);
   node->set_type(id->get_type());
 
   // can't check types if function is undeclared
@@ -293,24 +293,24 @@ bool TypeCheckVisitor::visit(LLScriptFunctionExpression *node) {
     return true;
   }
 
-  validate_func_arg_spec(id, node, (LLScriptIdentifier *) node->get_child(1));
+  validate_func_arg_spec(id, node, (LSLIdentifier *) node->get_child(1));
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptEventHandler *node) {
-  auto *id = (LLScriptIdentifier *) node->get_child(0);
+bool TypeCheckVisitor::visit(LSLEventHandler *node) {
+  auto *id = (LSLIdentifier *) node->get_child(0);
   node->set_type(TYPE(LST_NULL));
   // can't check arg spec if event handler isn't valid
   if (id->get_symbol() == nullptr)
     return true;
 
-  validate_func_arg_spec(id, node, (LLScriptIdentifier *) node->get_child(1)->get_children());
+  validate_func_arg_spec(id, node, (LSLIdentifier *) node->get_child(1)->get_children());
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptLValueExpression *node) {
-  auto *id = (LLScriptIdentifier *) node->get_child(0);
-  LLASTNode *member_node = node->get_child(1);
+bool TypeCheckVisitor::visit(LSLLValueExpression *node) {
+  auto *id = (LSLIdentifier *) node->get_child(0);
+  LSLASTNode *member_node = node->get_child(1);
   node->set_type(id->get_type());
 
   auto *symbol = id->get_symbol();
@@ -324,7 +324,7 @@ bool TypeCheckVisitor::visit(LLScriptLValueExpression *node) {
   /// If we're requesting a member, like var.x or var.y
   if (member_node && member_node->get_node_type() == NODE_IDENTIFIER) {
     const char *name = id->get_name();
-    const char *member = ((LLScriptIdentifier*)member_node)->get_name();
+    const char *member = ((LSLIdentifier*)member_node)->get_name();
 
     if (member != nullptr) {
       // all members must be single letters
@@ -336,7 +336,7 @@ bool TypeCheckVisitor::visit(LLScriptLValueExpression *node) {
 
       /// Make sure it's a variable
       if (symbol_type != SYM_VARIABLE) {
-        ERROR(IN(node), E_MEMBER_NOT_VARIABLE, name, member, LLScriptSymbol::get_type_name(symbol_type));
+        ERROR(IN(node), E_MEMBER_NOT_VARIABLE, name, member, LSLSymbol::get_type_name(symbol_type));
         node->set_type(TYPE(LST_ERROR));
         return false;
       }
@@ -380,17 +380,17 @@ bool TypeCheckVisitor::visit(LLScriptLValueExpression *node) {
   // This refers to a local, walk back and see there's anything
   // between us and its declaration that'd make it unfoldable
   if (symbol->get_sub_type() == SYM_LOCAL && symbol->get_var_decl() != nullptr) {
-    LLASTNode *local_decl = symbol->get_var_decl();
+    LSLASTNode *local_decl = symbol->get_var_decl();
 
     // walk up and find the statement at the top of this expression;
-    LLASTNode *upper_node = node->get_parent();
+    LSLASTNode *upper_node = node->get_parent();
     while (upper_node != nullptr && upper_node->get_node_type() != NODE_STATEMENT) {
       upper_node = upper_node->get_parent();
     }
     if (upper_node != nullptr) {
-      auto *parent_stmt = (LLScriptStatement *) upper_node;
-      auto *found_stmt = (LLScriptStatement *) parent_stmt->find_previous_in_scope(
-          [local_decl](LLASTNode *to_check) {
+      auto *parent_stmt = (LSLStatement *) upper_node;
+      auto *found_stmt = (LSLStatement *) parent_stmt->find_previous_in_scope(
+          [local_decl](LSLASTNode *to_check) {
             // stop searching once we hit the declaration or a label
             return to_check == local_decl || to_check->get_node_sub_type() == NODE_LABEL;
           }
@@ -410,7 +410,7 @@ bool TypeCheckVisitor::visit(LLScriptLValueExpression *node) {
   return false;
 }
 
-bool TypeCheckVisitor::visit(LLScriptTypecastExpression *node) {
+bool TypeCheckVisitor::visit(LSLTypecastExpression *node) {
   auto *child = node->get_child(0);
   if(!child)
     return true;
@@ -425,9 +425,9 @@ bool TypeCheckVisitor::visit(LLScriptTypecastExpression *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptVectorExpression *node) {
+bool TypeCheckVisitor::visit(LSLVectorExpression *node) {
   node->set_type(TYPE(LST_VECTOR));
-  LLASTNode *child = node->get_children();
+  LSLASTNode *child = node->get_children();
   for (; child; child = child->get_next()) {
     if (!child->get_type()->can_coerce(TYPE(LST_FLOATINGPOINT))) {
       ERROR(IN(node), E_WRONG_TYPE_IN_MEMBER_ASSIGNMENT, "vector",
@@ -438,14 +438,14 @@ bool TypeCheckVisitor::visit(LLScriptVectorExpression *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptVectorConstant *node) {
+bool TypeCheckVisitor::visit(LSLVectorConstant *node) {
   node->set_type(TYPE(LST_VECTOR));
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptQuaternionExpression *node) {
+bool TypeCheckVisitor::visit(LSLQuaternionExpression *node) {
   node->set_type(TYPE(LST_QUATERNION));
-  LLASTNode *child = node->get_children();
+  LSLASTNode *child = node->get_children();
   for (; child; child = child->get_next()) {
     if (!child->get_type()->can_coerce(TYPE(LST_FLOATINGPOINT))) {
       ERROR(IN(node), E_WRONG_TYPE_IN_MEMBER_ASSIGNMENT, "quaternion",
@@ -456,7 +456,7 @@ bool TypeCheckVisitor::visit(LLScriptQuaternionExpression *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LLScriptQuaternionConstant *node) {
+bool TypeCheckVisitor::visit(LSLQuaternionConstant *node) {
   node->set_type(TYPE(LST_QUATERNION));
   return true;
 }

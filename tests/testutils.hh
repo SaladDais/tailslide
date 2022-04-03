@@ -30,13 +30,13 @@ void checkPrettyPrintOutput(
         const char* name,
         const Tailslide::OptimizationContext &ctx,
         const Tailslide::PrettyPrintOpts &pretty_opts,
-        void (*massager)(Tailslide::LLScriptScript* script) = nullptr
+        void (*massager)(Tailslide::LSLScript* script) = nullptr
 );
 
 void checkTreeDumpOutput(
     const char* name,
     const Tailslide::OptimizationContext &ctx,
-    void (*massager)(Tailslide::LLScriptScript* script) = nullptr
+    void (*massager)(Tailslide::LSLScript* script) = nullptr
 );
 
 #endif

@@ -10,7 +10,7 @@ namespace Tailslide {
 extern char *builtins_txt[];
 
 static ScriptAllocationManager gStaticAllocator {};
-static LLScriptSymbolTable gGlobalSymbolTable {};
+static LSLSymbolTable gGlobalSymbolTable {};
 
 struct LSLTypeMap {
     const char *name;
@@ -27,20 +27,20 @@ struct LSLTypeMap {
         {nullptr,    LST_ERROR}
 };
 
-LLScriptType *str_to_type(const char *str) {
+LSLType *str_to_type(const char *str) {
   for (int i = 0; types[i].name != nullptr; ++i) {
     if (strcmp(types[i].name, str) == 0)
-      return LLScriptType::get(types[i].type);
+      return LSLType::get(types[i].type);
   }
   fprintf(stderr, "invalid type in builtins.txt: %s\n", str);
   exit(EXIT_FAILURE);
-  return LLScriptType::get(LST_ERROR);
+  return LSLType::get(LST_ERROR);
 }
 
 // called once at startup, not thread-safe.
 void tailslide_init_builtins(const char *builtins_file) {
   assert(gAllocationManager == nullptr);
-  LLScriptFunctionDec *dec = nullptr;
+  LSLFunctionDec *dec = nullptr;
   FILE *fp = nullptr;
   char buf[1024];
   char original[1024];
@@ -99,13 +99,13 @@ void tailslide_init_builtins(const char *builtins_file) {
       }
 
       // key constants don't exist, and there are no key literals either.
-      LLScriptType *const_type;
+      LSLType *const_type;
       if (strcmp(ret_type, "key") == 0) {
         const_type = str_to_type("string");
       } else {
         const_type = str_to_type(ret_type);
       }
-      auto *sym = gStaticAllocator.new_tracked<LLScriptSymbol>(
+      auto *sym = gStaticAllocator.new_tracked<LSLSymbol>(
         gStaticAllocator.copy_str(name), const_type, SYM_VARIABLE, SYM_BUILTIN
       );
 
@@ -133,7 +133,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
               const_val = const_val_hex;
             }
           }
-          auto const_built = gStaticAllocator.new_tracked<LLScriptIntegerConstant>(const_val);
+          auto const_built = gStaticAllocator.new_tracked<LSLIntegerConstant>(const_val);
           const_built->mark_static();
           sym->set_constant_value(const_built);
         }
@@ -141,7 +141,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
         case LST_FLOATINGPOINT: {
           float const_val;
           _CONST_SSCANF(1, "%f", &const_val);
-          auto const_built = gStaticAllocator.new_tracked<LLScriptFloatConstant>(const_val);
+          auto const_built = gStaticAllocator.new_tracked<LSLFloatConstant>(const_val);
           const_built->mark_static();
           sym->set_constant_value(const_built);
         }
@@ -149,7 +149,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
         case LST_VECTOR: {
           float x, y, z;
           _CONST_SSCANF(3, "<%f, %f, %f>", &x, &y, &z);
-          auto const_built = gStaticAllocator.new_tracked<LLScriptVectorConstant>(x, y, z);
+          auto const_built = gStaticAllocator.new_tracked<LSLVectorConstant>(x, y, z);
           const_built->mark_static();
           sym->set_constant_value(const_built);
         }
@@ -157,7 +157,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
         case LST_QUATERNION: {
           float x, y, z, s;
           _CONST_SSCANF(4, "<%f, %f, %f, %f>", &x, &y, &z, &s);
-          auto const_built = gStaticAllocator.new_tracked<LLScriptQuaternionConstant>(x, y, z, s);
+          auto const_built = gStaticAllocator.new_tracked<LSLQuaternionConstant>(x, y, z, s);
           const_built->mark_static();
           sym->set_constant_value(const_built);
         }
@@ -167,7 +167,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
           if (value[0] != '"') {
             _CONST_PARSE_FAIL();
           }
-          auto const_built = gStaticAllocator.new_tracked<LLScriptStringConstant>(
+          auto const_built = gStaticAllocator.new_tracked<LSLStringConstant>(
               parse_string(value)
           );
           const_built->mark_static();
@@ -192,16 +192,16 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
         return;
       }
 
-      dec = gStaticAllocator.new_tracked<LLScriptFunctionDec>();
+      dec = gStaticAllocator.new_tracked<LSLFunctionDec>();
       while ((ptype = strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
         if ((pname = strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
-          dec->push_child(gStaticAllocator.new_tracked<LLScriptIdentifier>(
+          dec->push_child(gStaticAllocator.new_tracked<LSLIdentifier>(
             str_to_type(ptype), gStaticAllocator.copy_str(pname))
           );
         }
       }
 
-      gGlobalSymbolTable.define(gStaticAllocator.new_tracked<LLScriptSymbol>(
+      gGlobalSymbolTable.define(gStaticAllocator.new_tracked<LSLSymbol>(
         gStaticAllocator.copy_str(name), str_to_type("void"), SYM_EVENT, SYM_BUILTIN, dec
       ));
     } else {
@@ -213,16 +213,16 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
         return;
       }
 
-      dec = gStaticAllocator.new_tracked<LLScriptFunctionDec>();
+      dec = gStaticAllocator.new_tracked<LSLFunctionDec>();
       while ((ptype = strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
         if ((pname = strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
-          dec->push_child(gStaticAllocator.new_tracked<LLScriptIdentifier>(
+          dec->push_child(gStaticAllocator.new_tracked<LSLIdentifier>(
             str_to_type(ptype), gStaticAllocator.copy_str(pname)
           ));
         }
       }
 
-      gGlobalSymbolTable.define(gStaticAllocator.new_tracked<LLScriptSymbol>(
+      gGlobalSymbolTable.define(gStaticAllocator.new_tracked<LSLSymbol>(
         gStaticAllocator.copy_str(name), str_to_type(ret_type), SYM_FUNCTION, SYM_BUILTIN, dec
       ));
     }
@@ -231,11 +231,11 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
   gAllocationManager = nullptr;
 }
 
-LLScriptSymbol *LLScriptScript::lookup_symbol(const char *name, LLSymbolType sym_type, LLASTNode *start_node) {
+LSLSymbol *LSLScript::lookup_symbol(const char *name, LSLSymbolType sym_type, LSLASTNode *start_node) {
   auto *sym = gGlobalSymbolTable.lookup(name, sym_type);
   if (sym != nullptr)
     return sym;
-  return LLASTNode::lookup_symbol(name, sym_type, start_node);
+  return LSLASTNode::lookup_symbol(name, sym_type, start_node);
 }
 
 }

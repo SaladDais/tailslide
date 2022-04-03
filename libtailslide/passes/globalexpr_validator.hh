@@ -10,8 +10,8 @@ namespace Tailslide {
 // be evaluated at compile-time and doesn't mutate state.
 class GlobalExprValidatingVisitor: public ASTVisitor {
   protected:
-    virtual bool visit(LLScriptGlobalVariable *node);
-    virtual bool visit(LLScriptFunctionExpression *node);
+    virtual bool visit(LSLGlobalVariable *node);
+    virtual bool visit(LSLFunctionExpression *node);
     // reset to `true` before checking each rvalue, if it's false after
     // visiting the rvalue then raise an error about non-constant expression.
     bool valid_rvalue = true;
@@ -22,9 +22,9 @@ class GlobalExprValidatingVisitor: public ASTVisitor {
 // Useful if you care about linting with SL in mind.
 class SimpleAssignableValidatingVisitor: public GlobalExprValidatingVisitor {
   protected:
-    virtual bool visit(LLScriptExpression *node);
-    virtual bool visit(LLScriptUnaryExpression *node);
-    virtual bool visit(LLScriptLValueExpression *node);
+    virtual bool visit(LSLExpression *node);
+    virtual bool visit(LSLUnaryExpression *node);
+    virtual bool visit(LSLLValueExpression *node);
 };
 
 }

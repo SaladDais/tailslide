@@ -8,7 +8,7 @@
 
 namespace Tailslide {
 
-void LLScriptSymbolTable::define(LLScriptSymbol *symbol) {
+void LSLSymbolTable::define(LSLSymbol *symbol) {
   symbols.insert(SensitiveSymbolMap::value_type(symbol->get_name(), symbol));
   DEBUG(
     LOG_DEBUG_SPAM,
@@ -20,7 +20,7 @@ void LLScriptSymbolTable::define(LLScriptSymbol *symbol) {
   );
 }
 
-LLScriptSymbol *LLScriptSymbolTable::lookup(const char *name, LLSymbolType type) {
+LSLSymbol *LSLSymbolTable::lookup(const char *name, LSLSymbolType type) {
   auto sym_range = symbols.equal_range(name);
   for (auto it = sym_range.first; it != sym_range.second; ++it) {
     if (type == SYM_ANY || type == it->second->get_symbol_type())
@@ -29,12 +29,12 @@ LLScriptSymbol *LLScriptSymbolTable::lookup(const char *name, LLSymbolType type)
   return nullptr;
 }
 
-void LLScriptSymbolTable::check_symbols() {
+void LSLSymbolTable::check_symbols() {
   for (auto &symbol: symbols) {
-    LLScriptSymbol *sym = symbol.second;
+    LSLSymbol *sym = symbol.second;
     if (sym->get_sub_type() != SYM_BUILTIN && sym->get_sub_type() != SYM_EVENT_PARAMETER &&
         sym->get_references() <= 1) {
-      ERROR(IN(sym), W_DECLARED_BUT_NOT_USED, LLScriptSymbol::get_type_name(sym->get_symbol_type()), sym->get_name());
+      ERROR(IN(sym), W_DECLARED_BUT_NOT_USED, LSLSymbol::get_type_name(sym->get_symbol_type()), sym->get_name());
     }
     if (sym->get_symbol_type() == SYM_LABEL) {
       if (sym->get_references() > 2) {
@@ -44,7 +44,7 @@ void LLScriptSymbolTable::check_symbols() {
   }
 }
 
-bool LLScriptSymbolTable::remove(LLScriptSymbol *symbol) {
+bool LSLSymbolTable::remove(LSLSymbol *symbol) {
   for (auto iter = symbols.begin(); iter != symbols.end(); ++iter) {
     if (iter->second == symbol) {
       symbols.erase(iter);
@@ -54,7 +54,7 @@ bool LLScriptSymbolTable::remove(LLScriptSymbol *symbol) {
   return false;
 }
 
-void LLScriptSymbolTable::reset_reference_data() {
+void LSLSymbolTable::reset_reference_data() {
   for (auto &symbol: symbols) {
     symbol.second->reset_tracking();
   }
@@ -64,7 +64,7 @@ void LLScriptSymbolTable::reset_reference_data() {
 }
 
 /* Oddly enough, using shorter names in globals save bytecode space. */
-void LLScriptSymbolTable::set_mangled_names() {
+void LSLSymbolTable::set_mangled_names() {
   int seq = 0;
   auto table_mangler = [seq, this](SensitiveSymbolMap &node_symbols) mutable {
     std::set<std::string> key_names;
@@ -77,7 +77,7 @@ void LLScriptSymbolTable::set_mangled_names() {
     for (auto &key_name: sorted_key_names) {
     auto range = node_symbols.equal_range(key_name.c_str());
       for (auto &symbol = range.first; symbol != range.second; ++symbol) {
-        LLScriptSymbol *sym = symbol->second;
+        LSLSymbol *sym = symbol->second;
         // can't rename events or builtin names, obviously!
         if (sym->get_symbol_type() == SYM_EVENT || sym->get_sub_type() == SYM_BUILTIN)
           continue;
@@ -101,12 +101,12 @@ void LLScriptSymbolTable::set_mangled_names() {
   }
 }
 
-void LLScriptSymbolTable::register_subtable(LLScriptSymbolTable *table) {
+void LSLSymbolTable::register_subtable(LSLSymbolTable *table) {
   if (table != this)
     desc_tables.push_back(table);
 }
 
-void LLScriptSymbolTable::unregister_subtable(LLScriptSymbolTable *table) {
+void LSLSymbolTable::unregister_subtable(LSLSymbolTable *table) {
   auto found = std::find(desc_tables.begin(), desc_tables.end(), table);
   if (found != desc_tables.end())
     desc_tables.erase(found);

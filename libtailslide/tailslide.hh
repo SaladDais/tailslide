@@ -25,7 +25,7 @@ public:
       Logger::get()->reset();
     };
 
-    LLScriptScript* script;
+    LSLScript* script;
     bool ast_sane;
     void parse(FILE *yyin);
     void parse(const std::string &filename);

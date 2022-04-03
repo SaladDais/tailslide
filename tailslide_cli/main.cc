@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
   tailslide_parser.parse(yyin);
   if (yyin != nullptr)
     fclose(yyin);
-  LLScriptScript* script = tailslide_parser.script;
+  LSLScript* script = tailslide_parser.script;
 
   if (script) {
     script->collect_symbols();

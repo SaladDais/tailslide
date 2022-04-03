@@ -3,21 +3,21 @@
 struct YYLTYPE;
 
 namespace Tailslide {
-class LLScriptType;
-class LLScriptConstant;
-class LLScriptIntegerConstant;
-class LLScriptStringConstant;
-class LLScriptFloatConstant;
-class LLScriptListConstant;
-class LLScriptQuaternionConstant;
-class LLScriptVectorConstant;
+class LSLType;
+class LSLConstant;
+class LSLIntegerConstant;
+class LSLStringConstant;
+class LSLFloatConstant;
+class LSLListConstant;
+class LSLQuaternionConstant;
+class LSLVectorConstant;
 
 class AOperationBehavior {
   public:
-    virtual LLScriptConstant *operation(
-        int oper, LLScriptConstant *cv, LLScriptConstant *other_cv, YYLTYPE *lloc) = 0;
-    virtual LLScriptConstant *cast(
-        LLScriptType *to_type, LLScriptConstant *cv, YYLTYPE *lloc) = 0;
+    virtual LSLConstant *operation(
+        int oper, LSLConstant *cv, LSLConstant *other_cv, YYLTYPE *lloc) = 0;
+    virtual LSLConstant *cast(
+        LSLType *to_type, LSLConstant *cv, YYLTYPE *lloc) = 0;
 };
 
 // Arbitrary operation behavior implemented by Tailslide itself. May not match the target platform's
@@ -25,28 +25,28 @@ class AOperationBehavior {
 class TailslideOperationBehavior : public AOperationBehavior {
   public:
     // dispatch method
-    LLScriptConstant *operation(
-        int operation, LLScriptConstant *cv, LLScriptConstant *other_cv, YYLTYPE *lloc) override;
+    LSLConstant *operation(
+        int operation, LSLConstant *cv, LSLConstant *other_cv, YYLTYPE *lloc) override;
 
     // type-specific operation methods
-    LLScriptConstant *operation(int operation, LLScriptIntegerConstant *cv, LLScriptConstant *other_cv);
-    LLScriptConstant *operation(int operation, LLScriptFloatConstant *cv, LLScriptConstant *other_cv);
-    LLScriptConstant *operation(int operation, LLScriptStringConstant *cv, LLScriptConstant *other_cv);
-    LLScriptConstant *operation(
-        int operation, LLScriptListConstant *cv, LLScriptConstant *other_cv, YYLTYPE *lloc);
-    LLScriptConstant *operation(int operation, LLScriptVectorConstant *cv, LLScriptConstant *other_cv);
-    LLScriptConstant *operation(int operation, LLScriptQuaternionConstant *cv, LLScriptConstant *other_cv);
+    LSLConstant *operation(int operation, LSLIntegerConstant *cv, LSLConstant *other_cv);
+    LSLConstant *operation(int operation, LSLFloatConstant *cv, LSLConstant *other_cv);
+    LSLConstant *operation(int operation, LSLStringConstant *cv, LSLConstant *other_cv);
+    LSLConstant *operation(
+        int operation, LSLListConstant *cv, LSLConstant *other_cv, YYLTYPE *lloc);
+    LSLConstant *operation(int operation, LSLVectorConstant *cv, LSLConstant *other_cv);
+    LSLConstant *operation(int operation, LSLQuaternionConstant *cv, LSLConstant *other_cv);
 
     // dispatch method
-    LLScriptConstant *cast(LLScriptType *to_type, LLScriptConstant *cv, YYLTYPE *lloc) override;
+    LSLConstant *cast(LSLType *to_type, LSLConstant *cv, YYLTYPE *lloc) override;
 
     // type-specific cast methods
-    LLScriptConstant *cast(LLScriptType *to_type, LLScriptIntegerConstant *cv);
-    LLScriptConstant *cast(LLScriptType *to_type, LLScriptFloatConstant *cv);
-    LLScriptConstant *cast(LLScriptType *to_type, LLScriptStringConstant *cv);
-    LLScriptConstant *cast(LLScriptType *to_type, LLScriptListConstant *cv) { return nullptr; };
-    LLScriptConstant *cast(LLScriptType *to_type, LLScriptVectorConstant *cv) { return nullptr; };
-    LLScriptConstant *cast(LLScriptType *to_type, LLScriptQuaternionConstant *cv) { return nullptr; };
+    LSLConstant *cast(LSLType *to_type, LSLIntegerConstant *cv);
+    LSLConstant *cast(LSLType *to_type, LSLFloatConstant *cv);
+    LSLConstant *cast(LSLType *to_type, LSLStringConstant *cv);
+    LSLConstant *cast(LSLType *to_type, LSLListConstant *cv) { return nullptr; };
+    LSLConstant *cast(LSLType *to_type, LSLVectorConstant *cv) { return nullptr; };
+    LSLConstant *cast(LSLType *to_type, LSLQuaternionConstant *cv) { return nullptr; };
 };
 
 }

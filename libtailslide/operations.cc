@@ -9,30 +9,30 @@
 
 namespace Tailslide {
 
-LLScriptConstant *TailslideOperationBehavior::operation(
-    int oper, LLScriptConstant *cv, LLScriptConstant *other_cv, YYLTYPE *lloc) {
+LSLConstant *TailslideOperationBehavior::operation(
+    int oper, LSLConstant *cv, LSLConstant *other_cv, YYLTYPE *lloc) {
 
   auto *left_type = cv->get_type();
-  LLScriptConstant *new_cv = nullptr;
+  LSLConstant *new_cv = nullptr;
 
   switch (left_type->get_itype()) {
     case LST_STRING:
-      new_cv = operation(oper, (LLScriptStringConstant*)cv, other_cv);
+      new_cv = operation(oper, (LSLStringConstant*)cv, other_cv);
       break;
     case LST_INTEGER:
-      new_cv = operation(oper, (LLScriptIntegerConstant*)cv, other_cv);
+      new_cv = operation(oper, (LSLIntegerConstant*)cv, other_cv);
       break;
     case LST_FLOATINGPOINT:
-      new_cv = operation(oper, (LLScriptFloatConstant*)cv, other_cv);
+      new_cv = operation(oper, (LSLFloatConstant*)cv, other_cv);
       break;
     case LST_LIST:
-      new_cv = operation(oper, (LLScriptListConstant*)cv, other_cv, lloc);
+      new_cv = operation(oper, (LSLListConstant*)cv, other_cv, lloc);
       break;
     case LST_VECTOR:
-      new_cv = operation(oper, (LLScriptVectorConstant*)cv, other_cv);
+      new_cv = operation(oper, (LSLVectorConstant*)cv, other_cv);
       break;
     case LST_QUATERNION:
-      new_cv = operation(oper, (LLScriptQuaternionConstant*)cv, other_cv);
+      new_cv = operation(oper, (LSLQuaternionConstant*)cv, other_cv);
       break;
     case LST_MAX:
     case LST_NULL:
@@ -47,8 +47,8 @@ LLScriptConstant *TailslideOperationBehavior::operation(
 
 //////////////////////////////////////////////
 // Integer Constants
-LLScriptConstant *TailslideOperationBehavior::operation(
-    int operation, LLScriptIntegerConstant *cv, LLScriptConstant *other_const) {
+LSLConstant *TailslideOperationBehavior::operation(
+    int operation, LSLIntegerConstant *cv, LSLConstant *other_const) {
   S32 value = cv->get_value();
   // unary op
   if (other_const == nullptr) {
@@ -66,13 +66,13 @@ LLScriptConstant *TailslideOperationBehavior::operation(
       default:
         return nullptr;
     }
-    return gAllocationManager->new_tracked<LLScriptIntegerConstant>(nv);
+    return gAllocationManager->new_tracked<LSLIntegerConstant>(nv);
   }
 
   // binary op
   switch (other_const->get_node_sub_type()) {
     case NODE_INTEGER_CONSTANT: {
-      int ov = ((LLScriptIntegerConstant *) other_const)->get_value();
+      int ov = ((LSLIntegerConstant *) other_const)->get_value();
       int nv;
       switch (operation) {
         case '+':
@@ -137,10 +137,10 @@ LLScriptConstant *TailslideOperationBehavior::operation(
         default:
           return nullptr;
       }
-      return gAllocationManager->new_tracked<LLScriptIntegerConstant>(nv);
+      return gAllocationManager->new_tracked<LSLIntegerConstant>(nv);
     }
     case NODE_FLOAT_CONSTANT: {
-      float ov = ((LLScriptFloatConstant *) other_const)->get_value();
+      float ov = ((LSLFloatConstant *) other_const)->get_value();
       float nv;
       switch (operation) {
         case '+':
@@ -158,17 +158,17 @@ LLScriptConstant *TailslideOperationBehavior::operation(
           nv = (float)value / ov;
           break;
         case '>':
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>((float)value > ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>((float)value > ov);
         case '<':
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>((float)value < ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>((float)value < ov);
         case EQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>((float)value == ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>((float)value == ov);
         case NEQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>((float)value != ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>((float)value != ov);
         default:
           return nullptr;
       }
-      return gAllocationManager->new_tracked<LLScriptFloatConstant>(nv);
+      return gAllocationManager->new_tracked<LSLFloatConstant>(nv);
     }
     default:
       return nullptr;
@@ -177,20 +177,20 @@ LLScriptConstant *TailslideOperationBehavior::operation(
 
 //////////////////////////////////////////////
 // Float Constants
-LLScriptConstant *TailslideOperationBehavior::operation(
-    int operation, LLScriptFloatConstant *cv, LLScriptConstant *other_const) {
+LSLConstant *TailslideOperationBehavior::operation(
+    int operation, LSLFloatConstant *cv, LSLConstant *other_const) {
   float value = cv->get_value();
   // unary op
   if (other_const == nullptr) {
     if (operation == '-')
-      return gAllocationManager->new_tracked<LLScriptFloatConstant>(-value);
+      return gAllocationManager->new_tracked<LSLFloatConstant>(-value);
     return nullptr;
   }
 
   // binary op
   switch (other_const->get_node_sub_type()) {
     case NODE_INTEGER_CONSTANT: {
-      int ov = ((LLScriptIntegerConstant *) other_const)->get_value();
+      int ov = ((LSLIntegerConstant *) other_const)->get_value();
       float nv;
       switch (operation) {
         case '+':
@@ -207,28 +207,28 @@ LLScriptConstant *TailslideOperationBehavior::operation(
           nv = value / (float)ov;
           break;
         case '>':
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(value > (float)ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(value > (float)ov);
         case '<':
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(value < (float)ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(value < (float)ov);
         case GEQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(value >= (float)ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(value >= (float)ov);
         case LEQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(value <= (float)ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(value <= (float)ov);
         case BOOLEAN_AND:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(value != 0.0 && ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(value != 0.0 && ov);
         case BOOLEAN_OR:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(value != 0.0 || ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(value != 0.0 || ov);
         case EQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(value == (float)ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(value == (float)ov);
         case NEQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(value != (float)ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(value != (float)ov);
         default:
           return nullptr;
       }
-      return gAllocationManager->new_tracked<LLScriptFloatConstant>(nv);
+      return gAllocationManager->new_tracked<LSLFloatConstant>(nv);
     }
     case NODE_FLOAT_CONSTANT: {
-      float ov = ((LLScriptFloatConstant *) other_const)->get_value();
+      float ov = ((LSLFloatConstant *) other_const)->get_value();
       float nv;
       switch (operation) {
         case '+':
@@ -245,21 +245,21 @@ LLScriptConstant *TailslideOperationBehavior::operation(
           nv = value / ov;
           break;
         case '>':
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(value > ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(value > ov);
         case '<':
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(value < ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(value < ov);
         case GEQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(value >= ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(value >= ov);
         case LEQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(value <= ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(value <= ov);
         case EQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(value == ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(value == ov);
         case NEQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(value != ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(value != ov);
         default:
           return nullptr;
       }
-      return gAllocationManager->new_tracked<LLScriptFloatConstant>(nv);
+      return gAllocationManager->new_tracked<LSLFloatConstant>(nv);
     }
     default:
       return nullptr;
@@ -275,8 +275,8 @@ inline char *join_string(char *left, char *right) {
   return ns;
 }
 
-LLScriptConstant *TailslideOperationBehavior::operation(
-    int operation, LLScriptStringConstant *cv, LLScriptConstant *other_const) {
+LSLConstant *TailslideOperationBehavior::operation(
+    int operation, LSLStringConstant *cv, LSLConstant *other_const) {
   char *value = cv->get_value();
   // unary op
   if (other_const == nullptr) {
@@ -286,15 +286,15 @@ LLScriptConstant *TailslideOperationBehavior::operation(
   // binary op
   switch (other_const->get_node_sub_type()) {
     case NODE_STRING_CONSTANT: {
-      char *ov = ((LLScriptStringConstant *) other_const)->get_value();
+      char *ov = ((LSLStringConstant *) other_const)->get_value();
       switch (operation) {
         case '+':
-          return gAllocationManager->new_tracked<LLScriptStringConstant>(join_string(value, ov));
+          return gAllocationManager->new_tracked<LSLStringConstant>(join_string(value, ov));
         case EQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(!strcmp(value, ov));
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(!strcmp(value, ov));
           // If you want LSO's behaviour, remove the `!= 0`.
         case NEQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(strcmp(value, ov) != 0);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(strcmp(value, ov) != 0);
         default:
           return nullptr;
       }
@@ -306,8 +306,8 @@ LLScriptConstant *TailslideOperationBehavior::operation(
 
 //////////////////////////////////////////////
 // List Constants
-LLScriptConstant *TailslideOperationBehavior::operation(
-    int operation, LLScriptListConstant *cv, LLScriptConstant *other_const, YYLTYPE *lloc) {
+LSLConstant *TailslideOperationBehavior::operation(
+    int operation, LSLListConstant *cv, LSLConstant *other_const, YYLTYPE *lloc) {
   // unary op
   if (other_const == nullptr) {
     return nullptr;
@@ -316,14 +316,14 @@ LLScriptConstant *TailslideOperationBehavior::operation(
   // binary op
   switch (other_const->get_node_sub_type()) {
     case NODE_LIST_CONSTANT: {
-      LLScriptListConstant *other = ((LLScriptListConstant *) other_const);
+      LSLListConstant *other = ((LSLListConstant *) other_const);
       switch (operation) {
         case EQ:
           // warn on list == list
           if (cv->get_length() != 0 && other->get_length() != 0) {
             ERROR(lloc, W_LIST_COMPARE);
           }
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(
             cv->get_length() == other->get_length()
           );
         case NEQ:
@@ -332,7 +332,7 @@ LLScriptConstant *TailslideOperationBehavior::operation(
             ERROR(lloc, W_LIST_COMPARE);
           }
           // Yes, really.
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(
             cv->get_length() - other->get_length()
           );
         default:
@@ -347,9 +347,9 @@ LLScriptConstant *TailslideOperationBehavior::operation(
 
 //////////////////////////////////////////////
 // Vector Constants
-LLScriptConstant *TailslideOperationBehavior::operation(
-    int operation, LLScriptVectorConstant *cv, LLScriptConstant *other_const) {
-  LLVector *value = cv->get_value();
+LSLConstant *TailslideOperationBehavior::operation(
+    int operation, LSLVectorConstant *cv, LSLConstant *other_const) {
+  LSLVector *value = cv->get_value();
   // Make sure we have a value
   if (value == nullptr)
     return nullptr;
@@ -357,7 +357,7 @@ LLScriptConstant *TailslideOperationBehavior::operation(
   // unary op
   if (other_const == nullptr) {
     if (operation == '-')
-      return gAllocationManager->new_tracked<LLScriptVectorConstant>(-value->x, -value->y, -value->z);
+      return gAllocationManager->new_tracked<LSLVectorConstant>(-value->x, -value->y, -value->z);
     else
       return nullptr;
   }
@@ -365,7 +365,7 @@ LLScriptConstant *TailslideOperationBehavior::operation(
   // binary op
   switch (other_const->get_node_sub_type()) {
     case NODE_INTEGER_CONSTANT: {
-      int ov = ((LLScriptIntegerConstant *) other_const)->get_value();
+      int ov = ((LSLIntegerConstant *) other_const)->get_value();
       float nv[3];
       switch (operation) {
         case '*':
@@ -382,10 +382,10 @@ LLScriptConstant *TailslideOperationBehavior::operation(
         default:
           return nullptr;
       }
-      return gAllocationManager->new_tracked<LLScriptVectorConstant>(nv[0], nv[1], nv[2]);
+      return gAllocationManager->new_tracked<LSLVectorConstant>(nv[0], nv[1], nv[2]);
     }
     case NODE_FLOAT_CONSTANT: {
-      float ov = ((LLScriptFloatConstant *) other_const)->get_value();
+      float ov = ((LSLFloatConstant *) other_const)->get_value();
       float nv[3];
       switch (operation) {
         case '*':
@@ -402,10 +402,10 @@ LLScriptConstant *TailslideOperationBehavior::operation(
         default:
           return nullptr;
       }
-      return gAllocationManager->new_tracked<LLScriptVectorConstant>(nv[0], nv[1], nv[2]);
+      return gAllocationManager->new_tracked<LSLVectorConstant>(nv[0], nv[1], nv[2]);
     }
     case NODE_VECTOR_CONSTANT: {
-      LLVector *ov = ((LLScriptVectorConstant *) other_const)->get_value();
+      LSLVector *ov = ((LSLVectorConstant *) other_const)->get_value();
       if (ov == nullptr)
         return nullptr;
       float nv[3];
@@ -421,20 +421,20 @@ LLScriptConstant *TailslideOperationBehavior::operation(
           nv[2] = value->z - ov->z;
           break;
         case '*':
-          return gAllocationManager->new_tracked<LLScriptFloatConstant>((value->x * ov->z) + (value->y * ov->y) + (value->z * ov->x));
+          return gAllocationManager->new_tracked<LSLFloatConstant>((value->x * ov->z) + (value->y * ov->y) + (value->z * ov->x));
         case '%':           // cross product
           nv[0] = (value->y * ov->z) - (value->z * ov->y);
           nv[1] = (value->z * ov->x) - (value->x * ov->z);
           nv[2] = (value->x * ov->y) - (value->y * ov->x);
           break;
         case EQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(*value == *ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(*value == *ov);
         case NEQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(*value != *ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(*value != *ov);
         default:
           return nullptr;
       }
-      return gAllocationManager->new_tracked<LLScriptVectorConstant>(nv[0], nv[1], nv[2]);
+      return gAllocationManager->new_tracked<LSLVectorConstant>(nv[0], nv[1], nv[2]);
     }
     default:
       return nullptr;
@@ -443,16 +443,16 @@ LLScriptConstant *TailslideOperationBehavior::operation(
 
 //////////////////////////////////////////////
 // Quaternion Constants
-LLScriptConstant *TailslideOperationBehavior::operation(
-    int operation, LLScriptQuaternionConstant *cv, LLScriptConstant *other_const) {
-  LLQuaternion *value = cv->get_value();
+LSLConstant *TailslideOperationBehavior::operation(
+    int operation, LSLQuaternionConstant *cv, LSLConstant *other_const) {
+  LSLQuaternion *value = cv->get_value();
   if (value == nullptr)
     return nullptr;
 
   // unary op
   if (other_const == nullptr) {
     if (operation == '-')
-      return gAllocationManager->new_tracked<LLScriptQuaternionConstant>(-value->x, -value->y, -value->z, -value->s);
+      return gAllocationManager->new_tracked<LSLQuaternionConstant>(-value->x, -value->y, -value->z, -value->s);
     else
       return nullptr;
   }
@@ -460,16 +460,16 @@ LLScriptConstant *TailslideOperationBehavior::operation(
   // binary op
   switch (other_const->get_node_sub_type()) {
     case NODE_QUATERNION_CONSTANT: {
-      LLQuaternion *ov = ((LLScriptQuaternionConstant *) other_const)->get_value();
+      LSLQuaternion *ov = ((LSLQuaternionConstant *) other_const)->get_value();
       if (ov == nullptr)
         return nullptr;
       switch (operation) {
         case EQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(*value == *ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(*value == *ov);
         case NEQ:
-          return gAllocationManager->new_tracked<LLScriptIntegerConstant>(*value != *ov);
+          return gAllocationManager->new_tracked<LSLIntegerConstant>(*value != *ov);
         case '-':
-          return gAllocationManager->new_tracked<LLScriptQuaternionConstant>(value->x - ov->x, value->y - ov->y, value->z - ov->z, value->s - ov->s);
+          return gAllocationManager->new_tracked<LSLQuaternionConstant>(value->x - ov->x, value->y - ov->y, value->z - ov->z, value->s - ov->s);
         default:
           return nullptr;
       }
@@ -485,7 +485,7 @@ LLScriptConstant *TailslideOperationBehavior::operation(
 // Casts
 //////
 
-LLScriptConstant *TailslideOperationBehavior::cast(LLScriptType *to_type, LLScriptConstant *cv, YYLTYPE *lloc) {
+LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLConstant *cv, YYLTYPE *lloc) {
 
   auto *orig_type = cv->get_type();
   if (orig_type == to_type) {
@@ -493,25 +493,25 @@ LLScriptConstant *TailslideOperationBehavior::cast(LLScriptType *to_type, LLScri
     return cv;
   }
 
-  LLScriptConstant *new_cv = nullptr;
+  LSLConstant *new_cv = nullptr;
   switch (orig_type->get_itype()) {
     case LST_STRING:
-      new_cv = cast(to_type, (LLScriptStringConstant *)cv);
+      new_cv = cast(to_type, (LSLStringConstant *)cv);
       break;
     case LST_INTEGER:
-      new_cv = cast(to_type, (LLScriptIntegerConstant *)cv);
+      new_cv = cast(to_type, (LSLIntegerConstant *)cv);
       break;
     case LST_FLOATINGPOINT:
-      new_cv = cast(to_type, (LLScriptFloatConstant *)cv);
+      new_cv = cast(to_type, (LSLFloatConstant *)cv);
       break;
     case LST_LIST:
-      new_cv = cast(to_type, (LLScriptListConstant *)cv);
+      new_cv = cast(to_type, (LSLListConstant *)cv);
       break;
     case LST_VECTOR:
-      new_cv = cast(to_type, (LLScriptVectorConstant *)cv);
+      new_cv = cast(to_type, (LSLVectorConstant *)cv);
       break;
     case LST_QUATERNION:
-      new_cv = cast(to_type, (LLScriptQuaternionConstant *)cv);
+      new_cv = cast(to_type, (LSLQuaternionConstant *)cv);
       break;
     case LST_MAX:
     case LST_NULL:
@@ -526,7 +526,7 @@ LLScriptConstant *TailslideOperationBehavior::cast(LLScriptType *to_type, LLScri
 
 
 
-LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScriptStringConstant *cv) {
+LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLStringConstant *cv) {
   auto *v = cv->get_value();
   switch(to_type->get_itype()) {
     case LST_INTEGER: {
@@ -536,21 +536,21 @@ LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScri
       // This check is safe because `cv` must be a null terminated string.
       if (v[0] == '0' && (v[1] == 'x' || v[2] == 'X'))
         base = 16;
-      return gAllocationManager->new_tracked<LLScriptIntegerConstant>((S32)strtoul(v, nullptr, base));
+      return gAllocationManager->new_tracked<LSLIntegerConstant>((S32)strtoul(v, nullptr, base));
     }
     case LST_FLOATINGPOINT: {
-      return gAllocationManager->new_tracked<LLScriptFloatConstant>((F32)strtod(v, nullptr));
+      return gAllocationManager->new_tracked<LSLFloatConstant>((F32)strtod(v, nullptr));
     }
     default:
       return nullptr;
   }
 }
 
-LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScriptIntegerConstant *cv) {
+LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLIntegerConstant *cv) {
   auto v = cv->get_value();
   switch(to_type->get_itype()) {
     case LST_STRING: {
-      return gAllocationManager->new_tracked<LLScriptStringConstant>(
+      return gAllocationManager->new_tracked<LSLStringConstant>(
           gAllocationManager->copy_str(std::to_string(v).c_str())
       );
     }
@@ -559,7 +559,7 @@ LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScri
   }
 }
 
-LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScriptFloatConstant *cv) {
+LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLFloatConstant *cv) {
   auto v = cv->get_value();
   switch(to_type->get_itype()) {
     case LST_STRING: {
@@ -572,7 +572,7 @@ LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScri
       else if (f_as_str == "nan" || f_as_str == "-nan")
         f_as_str = "NaN";
 
-      return gAllocationManager->new_tracked<LLScriptStringConstant>(
+      return gAllocationManager->new_tracked<LSLStringConstant>(
           gAllocationManager->copy_str(f_as_str.c_str())
       );
     }

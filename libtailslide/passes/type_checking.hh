@@ -6,26 +6,26 @@
 namespace Tailslide {
 class TypeCheckVisitor: public DepthFirstASTVisitor {
   public:
-    virtual bool visit(LLASTNode *node);
+    virtual bool visit(LSLASTNode *node);
 
-    virtual bool visit(LLScriptGlobalVariable *node);
-    virtual bool visit(LLScriptStateStatement *node);
-    virtual bool visit(LLScriptDeclaration *node);
-    virtual bool visit(LLScriptReturnStatement *node);
-    virtual bool visit(LLScriptIfStatement *node);
-    virtual bool visit(LLScriptForStatement *node);
-    virtual bool visit(LLScriptDoStatement *node);
-    virtual bool visit(LLScriptWhileStatement *node);
-    virtual bool visit(LLScriptExpression *node);
-    virtual bool visit(LLScriptEventHandler *node);
-    virtual bool visit(LLScriptFunctionExpression *node);
-    virtual bool visit(LLScriptLValueExpression *node);
-    virtual bool visit(LLScriptTypecastExpression *node);
-    virtual bool visit(LLScriptVectorExpression *node);
-    virtual bool visit(LLScriptVectorConstant *node);
-    virtual bool visit(LLScriptQuaternionExpression *node);
-    virtual bool visit(LLScriptQuaternionConstant *node);
-    virtual bool visit(LLScriptListConstant *node);
-    virtual bool visit(LLScriptListExpression *node);
+    virtual bool visit(LSLGlobalVariable *node);
+    virtual bool visit(LSLStateStatement *node);
+    virtual bool visit(LSLDeclaration *node);
+    virtual bool visit(LSLReturnStatement *node);
+    virtual bool visit(LSLIfStatement *node);
+    virtual bool visit(LSLForStatement *node);
+    virtual bool visit(LSLDoStatement *node);
+    virtual bool visit(LSLWhileStatement *node);
+    virtual bool visit(LSLExpression *node);
+    virtual bool visit(LSLEventHandler *node);
+    virtual bool visit(LSLFunctionExpression *node);
+    virtual bool visit(LSLLValueExpression *node);
+    virtual bool visit(LSLTypecastExpression *node);
+    virtual bool visit(LSLVectorExpression *node);
+    virtual bool visit(LSLVectorConstant *node);
+    virtual bool visit(LSLQuaternionExpression *node);
+    virtual bool visit(LSLQuaternionConstant *node);
+    virtual bool visit(LSLListConstant *node);
+    virtual bool visit(LSLListExpression *node);
 };
 }

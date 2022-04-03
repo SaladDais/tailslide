@@ -4,8 +4,8 @@
 namespace Tailslide {
 
 
-bool TreePrintingVisitor::visit(LLASTNode* node) {
-  LLASTNode *child = node->get_children();
+bool TreePrintingVisitor::visit(LSLASTNode* node) {
+  LSLASTNode *child = node->get_children();
   char buf[256];
 
   auto lloc = node->get_lloc();

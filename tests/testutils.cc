@@ -12,7 +12,7 @@ ParserRef runConformance(const char* name, bool allow_syntax_errors)
   ParserRef parser(new ScopedTailslideParser());
   Logger::get()->set_check_assertions(true);
   parser->parse(path);
-  LLScriptScript *script = parser->script;
+  LSLScript *script = parser->script;
 
   if (script == nullptr)
   {
@@ -49,13 +49,13 @@ void assertNoLintErrors(const std::string& name) {
 
 class ScriptFormatter {
 public:
-  virtual std::string format(LLScriptScript *script) const = 0;
+  virtual std::string format(LSLScript *script) const = 0;
 };
 
 class ScriptPrettyPrinter: public ScriptFormatter {
 public:
   explicit ScriptPrettyPrinter(const PrettyPrintOpts &pretty_opts): pretty_opts(pretty_opts) {};
-  virtual std::string format(LLScriptScript *script) const {
+  virtual std::string format(LSLScript *script) const {
     PrettyPrintVisitor pretty_visitor(pretty_opts);
     script->visit(&pretty_visitor);
     return pretty_visitor.stream.str();
@@ -65,7 +65,7 @@ public:
 
 class ScriptTreeDumper: public ScriptFormatter {
 public:
-  virtual std::string format(LLScriptScript *script) const {
+  virtual std::string format(LSLScript *script) const {
     TreePrintingVisitor tree_visitor;
     script->visit(&tree_visitor);
     return tree_visitor.stream.str();
@@ -76,7 +76,7 @@ static void checkStringOutput(
     const char* name,
     const char* expected_prefix,
     const OptimizationContext &ctx,
-    void (*massager)(LLScriptScript* script),
+    void (*massager)(LSLScript* script),
     const ScriptFormatter& formatter
 ) {
   ParserRef parser = runConformance(name);
@@ -130,7 +130,7 @@ void checkPrettyPrintOutput(
         const char* name,
         const OptimizationContext &ctx,
         const PrettyPrintOpts &pretty_opts,
-        void (*massager)(LLScriptScript* script)
+        void (*massager)(LSLScript* script)
 ) {
   checkStringOutput(
     name,
@@ -144,7 +144,7 @@ void checkPrettyPrintOutput(
 void checkTreeDumpOutput(
     const char* name,
     const OptimizationContext &ctx,
-    void (*massager)(LLScriptScript* script)
+    void (*massager)(LSLScript* script)
 ) {
   checkStringOutput(
       name,

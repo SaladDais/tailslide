@@ -161,7 +161,7 @@ inline void DEBUG(LogLevel level, YYLTYPE *yylloc, const char *fmt, ...) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Log message entry, for sorting
-class LogMessage: public LLTrackableObject {
+class LogMessage: public TrackableObject {
   public:
     LogMessage( LogLevel type, YYLTYPE *loc, char *message, ErrorCode error );
 

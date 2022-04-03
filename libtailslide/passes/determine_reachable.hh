@@ -7,8 +7,8 @@ namespace Tailslide {
 
 class DetermineReachableVisitor: public ASTVisitor {
   public:
-    virtual bool visit(LLScriptGlobalFunction* node);
-    virtual bool visit(LLScriptIfStatement *node);
+    virtual bool visit(LSLGlobalFunction* node);
+    virtual bool visit(LSLIfStatement *node);
 };
 
 }

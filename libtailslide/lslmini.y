@@ -10,10 +10,10 @@
 %}
 %{
     using namespace Tailslide;
-    thread_local LLScriptScript *Tailslide::gScript;
+    thread_local LSLScript *Tailslide::gScript;
     thread_local bool Tailslide::gFatalError;
     int yyerror( YYLTYPE*, void *, const char * );
-    #define MAKEID(type,id,pos) gAllocationManager->new_tracked<LLScriptIdentifier>(TYPE(type), (id), &(pos))
+    #define MAKEID(type,id,pos) gAllocationManager->new_tracked<LSLIdentifier>(TYPE(type), (id), &(pos))
     // slightly higher so we can still have assert comments that check for stack depth
     #define YYMAXDEPTH 10020
     #define YYINITDEPTH 10020
@@ -35,7 +35,7 @@
          (Current).first_column = (Rhs)[1].first_column,     \
          (Current).last_line    = (Rhs)[N].last_line,        \
          (Current).last_column  = (Rhs)[N].last_column,      \
-         LLASTNode::set_glloc(&(Current)))
+         LSLASTNode::set_glloc(&(Current)))
 
 %}
 
@@ -49,21 +49,21 @@
     namespace Tailslide {
         typedef int   S32;
         typedef float F32;
-        class LLScriptType;
-        class LLScriptConstant;
-        class LLScriptIdentifier;
-        class LLScriptGlobalVariable;
-        class LLScriptEvent;
-        class LLScriptEventHandler;
-        class LLScriptExpression;
-        class LLScriptStatement;
-        class LLScriptGlobalFunction;
-        class LLScriptFunctionDec;
-        class LLScriptEventDec;
-        class LLScriptForExpressionList;
-        class LLScriptState;
-        class LLScriptGlobalStorage;
-        class LLScriptScript;
+        class LSLType;
+        class LSLConstant;
+        class LSLIdentifier;
+        class LSLGlobalVariable;
+        class LSLEvent;
+        class LSLEventHandler;
+        class LSLExpression;
+        class LSLStatement;
+        class LSLGlobalFunction;
+        class LSLFunctionDec;
+        class LSLEventDec;
+        class LSLForExpressionList;
+        class LSLState;
+        class LSLGlobalStorage;
+        class LSLScript;
     }
 }
 
@@ -72,21 +72,21 @@
     Tailslide::S32                             ival;
     Tailslide::F32                             fval;
     char                                       *sval;
-    class Tailslide::LLScriptType              *type;
-    class Tailslide::LLScriptConstant          *constant;
-    class Tailslide::LLScriptIdentifier        *identifier;
-    class Tailslide::LLScriptGlobalVariable    *global;
-    class Tailslide::LLScriptEvent             *event;
-    class Tailslide::LLScriptEventHandler      *handler;
-    class Tailslide::LLScriptExpression        *expression;
-    class Tailslide::LLScriptStatement         *statement;
-    class Tailslide::LLScriptGlobalFunction    *global_funcs;
-    class Tailslide::LLScriptFunctionDec       *global_decl;
-    class Tailslide::LLScriptEventDec          *global_event_decl;
-    class Tailslide::LLScriptForExpressionList *for_expr;
-    class Tailslide::LLScriptState             *state;
-    class Tailslide::LLScriptGlobalStorage     *global_store;
-    class Tailslide::LLScriptScript            *script;
+    class Tailslide::LSLType              *type;
+    class Tailslide::LSLConstant          *constant;
+    class Tailslide::LSLIdentifier        *identifier;
+    class Tailslide::LSLGlobalVariable    *global;
+    class Tailslide::LSLEvent             *event;
+    class Tailslide::LSLEventHandler      *handler;
+    class Tailslide::LSLExpression        *expression;
+    class Tailslide::LSLStatement         *statement;
+    class Tailslide::LSLGlobalFunction    *global_funcs;
+    class Tailslide::LSLFunctionDec       *global_decl;
+    class Tailslide::LSLEventDec          *global_event_decl;
+    class Tailslide::LSLForExpressionList *for_expr;
+    class Tailslide::LSLState             *state;
+    class Tailslide::LSLGlobalStorage     *global_store;
+    class Tailslide::LSLScript            *script;
 };
 
 
@@ -237,11 +237,11 @@
 lscript_program
     : globals states
     {
-        gScript = gAllocationManager->new_tracked<LLScriptScript>($1, $2);
+        gScript = gAllocationManager->new_tracked<LSLScript>($1, $2);
     }
     | states
     {
-        gScript = gAllocationManager->new_tracked<LLScriptScript>(nullptr, $1);
+        gScript = gAllocationManager->new_tracked<LSLScript>(nullptr, $1);
     }
     ;
 
@@ -266,29 +266,29 @@ globals
 global
     : global_variable
     {
-        $$ = gAllocationManager->new_tracked<LLScriptGlobalStorage>($1, nullptr);
+        $$ = gAllocationManager->new_tracked<LSLGlobalStorage>($1, nullptr);
     }
     | global_function
     {
-        $$ = gAllocationManager->new_tracked<LLScriptGlobalStorage>(nullptr, $1);
+        $$ = gAllocationManager->new_tracked<LSLGlobalStorage>(nullptr, $1);
     }
     ;
 
 name_type
     : typename IDENTIFIER
     {
-        $$ = gAllocationManager->new_tracked<LLScriptIdentifier>($1, $2, &@2);
+        $$ = gAllocationManager->new_tracked<LSLIdentifier>($1, $2, &@2);
     }
     ;
 
 global_variable
     : name_type ';'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptGlobalVariable>($1, nullptr);
+        $$ = gAllocationManager->new_tracked<LSLGlobalVariable>($1, nullptr);
     }
     | name_type '=' expression ';'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptGlobalVariable>($1, $3);
+        $$ = gAllocationManager->new_tracked<LSLGlobalVariable>($1, $3);
     }
     | name_type '=' error ';'
     {
@@ -299,23 +299,23 @@ global_variable
 constant
     : '-' INTEGER_CONSTANT
     {
-        $$ = gAllocationManager->new_tracked<LLScriptIntegerConstant>(-$2);
+        $$ = gAllocationManager->new_tracked<LSLIntegerConstant>(-$2);
     }
     | INTEGER_CONSTANT
     {
-        $$ = gAllocationManager->new_tracked<LLScriptIntegerConstant>($1);
+        $$ = gAllocationManager->new_tracked<LSLIntegerConstant>($1);
     }
     | '-' FP_CONSTANT
     {
-        $$ = gAllocationManager->new_tracked<LLScriptFloatConstant>(-$2);
+        $$ = gAllocationManager->new_tracked<LSLFloatConstant>(-$2);
     }
     | FP_CONSTANT
     {
-        $$ = gAllocationManager->new_tracked<LLScriptFloatConstant>($1);
+        $$ = gAllocationManager->new_tracked<LSLFloatConstant>($1);
     }
     | STRING_CONSTANT
     {
-        $$ = gAllocationManager->new_tracked<LLScriptStringConstant>($1);
+        $$ = gAllocationManager->new_tracked<LSLStringConstant>($1);
     }
     ;
 
@@ -353,19 +353,19 @@ typename
 global_function
     : IDENTIFIER '(' ')' compound_statement
     {
-        $$ = gAllocationManager->new_tracked<LLScriptGlobalFunction>( MAKEID(LST_NULL, $1, @1), nullptr, $4 );
+        $$ = gAllocationManager->new_tracked<LSLGlobalFunction>( MAKEID(LST_NULL, $1, @1), nullptr, $4 );
     }
     | name_type '(' ')' compound_statement
     {
-        $$ = gAllocationManager->new_tracked<LLScriptGlobalFunction>( $1, nullptr, $4 );
+        $$ = gAllocationManager->new_tracked<LSLGlobalFunction>( $1, nullptr, $4 );
     }
     | IDENTIFIER '(' function_parameters ')' compound_statement
     {
-        $$ = gAllocationManager->new_tracked<LLScriptGlobalFunction>( MAKEID(LST_NULL, $1, @1), $3, $5 );
+        $$ = gAllocationManager->new_tracked<LSLGlobalFunction>( MAKEID(LST_NULL, $1, @1), $3, $5 );
     }
     | name_type '(' function_parameters ')' compound_statement
     {
-        $$ = gAllocationManager->new_tracked<LLScriptGlobalFunction>( $1, $3, $5 );
+        $$ = gAllocationManager->new_tracked<LSLGlobalFunction>( $1, $3, $5 );
     }
     ;
 
@@ -389,7 +389,7 @@ function_parameters
 function_parameter
     : typename IDENTIFIER
     {
-        $$ = gAllocationManager->new_tracked<LLScriptFunctionDec>( gAllocationManager->new_tracked<LLScriptIdentifier>($1, $2, &@2) );
+        $$ = gAllocationManager->new_tracked<LSLFunctionDec>( gAllocationManager->new_tracked<LSLIdentifier>($1, $2, &@2) );
     }
     ;
 
@@ -413,7 +413,7 @@ event_parameters
 event_parameter
     : typename IDENTIFIER
     {
-        $$ = gAllocationManager->new_tracked<LLScriptEventDec>( gAllocationManager->new_tracked<LLScriptIdentifier>($1, $2, &@2) );
+        $$ = gAllocationManager->new_tracked<LSLEventDec>( gAllocationManager->new_tracked<LSLIdentifier>($1, $2, &@2) );
     }
     ;
 
@@ -455,24 +455,24 @@ other_states
 default
     : STATE_DEFAULT '{' state_body '}'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptState>( nullptr, $3 );
+        $$ = gAllocationManager->new_tracked<LSLState>( nullptr, $3 );
     }
     | STATE_DEFAULT '{' '}'
     {
         ERROR( &@1, E_NO_EVENT_HANDLERS );
-        $$ = gAllocationManager->new_tracked<LLScriptState>( nullptr, nullptr );
+        $$ = gAllocationManager->new_tracked<LSLState>( nullptr, nullptr );
     }
     ;
 
 state
     : STATE IDENTIFIER '{' state_body '}'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptState>( MAKEID(LST_NULL, $2, @2), $4 );
+        $$ = gAllocationManager->new_tracked<LSLState>( MAKEID(LST_NULL, $2, @2), $4 );
     }
     | STATE IDENTIFIER '{' '}'
     {
         ERROR( &@1, E_NO_EVENT_HANDLERS );
-        $$ = gAllocationManager->new_tracked<LLScriptState>( nullptr, nullptr );
+        $$ = gAllocationManager->new_tracked<LSLState>( nullptr, nullptr );
     }
     ;
 
@@ -495,22 +495,22 @@ state_body
 event
     : IDENTIFIER '(' ')' compound_statement
     {
-        $$ = gAllocationManager->new_tracked<LLScriptEventHandler>(MAKEID(LST_NULL, $1, @1), nullptr, $4);
+        $$ = gAllocationManager->new_tracked<LSLEventHandler>(MAKEID(LST_NULL, $1, @1), nullptr, $4);
     }
     | IDENTIFIER '(' event_parameters ')' compound_statement
     {
-        $$ = gAllocationManager->new_tracked<LLScriptEventHandler>(MAKEID(LST_NULL, $1, @1), $3, $5);
+        $$ = gAllocationManager->new_tracked<LSLEventHandler>(MAKEID(LST_NULL, $1, @1), $3, $5);
     }
    ;
 
 compound_statement
     : '{' '}'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptCompoundStatement>(nullptr);
+        $$ = gAllocationManager->new_tracked<LSLCompoundStatement>(nullptr);
     }
     | '{' statements '}'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptCompoundStatement>($2);
+        $$ = gAllocationManager->new_tracked<LSLCompoundStatement>($2);
     }
     ;
 
@@ -534,35 +534,35 @@ statements
 statement
     : ';'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptStatement>(nullptr);
+        $$ = gAllocationManager->new_tracked<LSLStatement>(nullptr);
     }
     | STATE IDENTIFIER ';'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptStateStatement>(MAKEID(LST_NULL, $2, @2));
+        $$ = gAllocationManager->new_tracked<LSLStateStatement>(MAKEID(LST_NULL, $2, @2));
     }
     | STATE STATE_DEFAULT ';'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptStateStatement>();
+        $$ = gAllocationManager->new_tracked<LSLStateStatement>();
     }
     | JUMP IDENTIFIER ';'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptJumpStatement>(MAKEID(LST_NULL, $2, @2));
+        $$ = gAllocationManager->new_tracked<LSLJumpStatement>(MAKEID(LST_NULL, $2, @2));
     }
     | '@' IDENTIFIER ';'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptLabel>(MAKEID(LST_NULL, $2, @2));
+        $$ = gAllocationManager->new_tracked<LSLLabel>(MAKEID(LST_NULL, $2, @2));
     }
     | RETURN expression ';'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptReturnStatement>($2);
+        $$ = gAllocationManager->new_tracked<LSLReturnStatement>($2);
     }
     | RETURN ';'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptReturnStatement>(nullptr);
+        $$ = gAllocationManager->new_tracked<LSLReturnStatement>(nullptr);
     }
     | expression ';'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptStatement>($1);
+        $$ = gAllocationManager->new_tracked<LSLStatement>($1);
     }
     | declaration ';'
     {
@@ -574,52 +574,52 @@ statement
     }
     | IF '(' expression ')' statement    %prec LOWER_THAN_ELSE
     {
-        $$ = gAllocationManager->new_tracked<LLScriptIfStatement>($3, $5, nullptr);
+        $$ = gAllocationManager->new_tracked<LSLIfStatement>($3, $5, nullptr);
         $5->set_declaration_allowed(false);
     }
     | IF '(' expression ')' statement ELSE statement
     {
-        $$ = gAllocationManager->new_tracked<LLScriptIfStatement>($3, $5, $7);
+        $$ = gAllocationManager->new_tracked<LSLIfStatement>($3, $5, $7);
         $5->set_declaration_allowed(false);
         $7->set_declaration_allowed(false);
     }
     | FOR '(' forexpressions ';' expression ';' forexpressions ')' statement
     {
-        $$ = gAllocationManager->new_tracked<LLScriptForStatement>($3, $5, $7, $9);
+        $$ = gAllocationManager->new_tracked<LSLForStatement>($3, $5, $7, $9);
         $9->set_declaration_allowed(false);
     }
     | DO statement WHILE '(' expression ')' ';'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptDoStatement>($2, $5);
+        $$ = gAllocationManager->new_tracked<LSLDoStatement>($2, $5);
         $2->set_declaration_allowed(false);
     }
     | WHILE '(' expression ')' statement
     {
-        $$ = gAllocationManager->new_tracked<LLScriptWhileStatement>($3, $5);
+        $$ = gAllocationManager->new_tracked<LSLWhileStatement>($3, $5);
         $5->set_declaration_allowed(false);
     }
     | error ';'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptStatement>(nullptr);
+        $$ = gAllocationManager->new_tracked<LSLStatement>(nullptr);
     }
     ;
 
 declaration
     : typename IDENTIFIER
     {
-        $$ = gAllocationManager->new_tracked<LLScriptDeclaration>(gAllocationManager->new_tracked<LLScriptIdentifier>($1, $2, &@2), nullptr);
+        $$ = gAllocationManager->new_tracked<LSLDeclaration>(gAllocationManager->new_tracked<LSLIdentifier>($1, $2, &@2), nullptr);
     }
     | typename IDENTIFIER '=' expression
     {
         DEBUG( LOG_DEBUG_SPAM, nullptr, "= %s\n", $4->get_node_name());
-        $$ = gAllocationManager->new_tracked<LLScriptDeclaration>(gAllocationManager->new_tracked<LLScriptIdentifier>($1, $2, &@2), $4);
+        $$ = gAllocationManager->new_tracked<LSLDeclaration>(gAllocationManager->new_tracked<LSLIdentifier>($1, $2, &@2), $4);
     }
     ;
 
 forexpressions
     : /* empty */
     {
-        //$$ = gAllocationManager->new_tracked<LLScriptExpression>(0);
+        //$$ = gAllocationManager->new_tracked<LSLExpression>(0);
         $$ = nullptr;
     }
     | forexpression
@@ -641,14 +641,14 @@ forexpressions
 forexpression
     : expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptForExpressionList>( $1 );
+        $$ = gAllocationManager->new_tracked<LSLForExpressionList>( $1 );
     }
     ;
 
 funcexpressionlist
     : /* empty */
     {
-        //$$ = gAllocationManager->new_tracked<LLScriptExpression>(0);
+        //$$ = gAllocationManager->new_tracked<LSLExpression>(0);
         $$ = nullptr;
     }
     | nextfuncexpressionlist
@@ -676,7 +676,7 @@ nextfuncexpressionlist
 listexpressionlist
     : /* empty */
     {
-        //$$ = gAllocationManager->new_tracked<LLScriptExpression>(0);
+        //$$ = gAllocationManager->new_tracked<LSLExpression>(0);
         //$$ = nullptr;
         $$ = nullptr;
     }
@@ -709,122 +709,122 @@ expression
     }
     | lvalue '=' expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>( $1, '=', $3 );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>( $1, '=', $3 );
     }
     | lvalue ADD_ASSIGN expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>( $1, ADD_ASSIGN, $3 );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>( $1, ADD_ASSIGN, $3 );
     }
     | lvalue SUB_ASSIGN expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>( $1, SUB_ASSIGN, $3 );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>( $1, SUB_ASSIGN, $3 );
     }
     | lvalue MUL_ASSIGN expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>( $1, MUL_ASSIGN, $3 );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>( $1, MUL_ASSIGN, $3 );
     }
     | lvalue DIV_ASSIGN expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>( $1, DIV_ASSIGN, $3 );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>( $1, DIV_ASSIGN, $3 );
     }
     | lvalue MOD_ASSIGN expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>( $1, MOD_ASSIGN, $3 );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>( $1, MOD_ASSIGN, $3 );
     }
     | expression EQ expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>( $1, EQ, $3 );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>( $1, EQ, $3 );
     }
     | expression NEQ expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>( $1, NEQ, $3 );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>( $1, NEQ, $3 );
     }
     | expression LEQ expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>( $1, LEQ, $3 );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>( $1, LEQ, $3 );
     }
     | expression GEQ expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>( $1, GEQ, $3 );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>( $1, GEQ, $3 );
     }
     | expression '<' expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>( $1, '<', $3 );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>( $1, '<', $3 );
     }
     | expression '>' expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>( $1, '>', $3 );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>( $1, '>', $3 );
     }
     | expression '+' expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>( $1, '+', $3 );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>( $1, '+', $3 );
     }
     | expression '-' expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>( $1, '-', $3 );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>( $1, '-', $3 );
     }
     | expression '*' expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>( $1, '*', $3 );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>( $1, '*', $3 );
     }
     | expression '/' expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>(  $1, '/',  $3  );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>(  $1, '/',  $3  );
     }
     | expression '%' expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>(  $1, '%',  $3  );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>(  $1, '%',  $3  );
     }
     | expression '&' expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>(  $1, '&',  $3  );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>(  $1, '&',  $3  );
     }
     | expression '|' expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>(  $1, '|',  $3  );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>(  $1, '|',  $3  );
     }
     | expression '^' expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>(  $1, '^',  $3  );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>(  $1, '^',  $3  );
     }
     | expression BOOLEAN_AND expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>(  $1, BOOLEAN_AND,  $3  );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>(  $1, BOOLEAN_AND,  $3  );
     }
     | expression BOOLEAN_OR expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>(  $1, BOOLEAN_OR,  $3  );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>(  $1, BOOLEAN_OR,  $3  );
     }
     | expression SHIFT_LEFT expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>(  $1, SHIFT_LEFT,  $3  );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>(  $1, SHIFT_LEFT,  $3  );
     }
     | expression SHIFT_RIGHT expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptBinaryExpression>(  $1, SHIFT_RIGHT,  $3  );
+        $$ = gAllocationManager->new_tracked<LSLBinaryExpression>(  $1, SHIFT_RIGHT,  $3  );
     }
     ;
 
 unaryexpression
     : '-' expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptUnaryExpression>( $2, '-' );
+        $$ = gAllocationManager->new_tracked<LSLUnaryExpression>( $2, '-' );
     }
     | '!' expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptUnaryExpression>(  $2 , '!' );
+        $$ = gAllocationManager->new_tracked<LSLUnaryExpression>(  $2 , '!' );
     }
     | '~' expression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptUnaryExpression>(  $2 , '~' );
+        $$ = gAllocationManager->new_tracked<LSLUnaryExpression>(  $2 , '~' );
     }
     | INC_OP lvalue
     {
-        $$ = gAllocationManager->new_tracked<LLScriptUnaryExpression>(  $2 , INC_PRE_OP );
+        $$ = gAllocationManager->new_tracked<LSLUnaryExpression>(  $2 , INC_PRE_OP );
     }
     | DEC_OP lvalue
     {
-        $$ = gAllocationManager->new_tracked<LLScriptUnaryExpression>(  $2 , DEC_PRE_OP );
+        $$ = gAllocationManager->new_tracked<LSLUnaryExpression>(  $2 , DEC_PRE_OP );
     }
     | typecast
     {
@@ -836,29 +836,29 @@ unaryexpression
     }
     | '(' expression ')'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptParenthesisExpression>($2);
+        $$ = gAllocationManager->new_tracked<LSLParenthesisExpression>($2);
     }
     ;
 
 typecast
     : '(' typename ')' lvalue
     {
-        $$ = gAllocationManager->new_tracked<LLScriptTypecastExpression>($2, $4);
+        $$ = gAllocationManager->new_tracked<LSLTypecastExpression>($2, $4);
     }
     | '(' typename ')' constant
     {
-        $$ = gAllocationManager->new_tracked<LLScriptTypecastExpression>(
+        $$ = gAllocationManager->new_tracked<LSLTypecastExpression>(
             $2,
-            gAllocationManager->new_tracked<LLScriptConstantExpression>($4)
+            gAllocationManager->new_tracked<LSLConstantExpression>($4)
         );
     }
     | '(' typename ')' unarypostfixexpression
     {
-        $$ = gAllocationManager->new_tracked<LLScriptTypecastExpression>($2, $4);
+        $$ = gAllocationManager->new_tracked<LSLTypecastExpression>($2, $4);
     }
     | '(' typename ')' '(' expression ')'
     {
-        $$ = gAllocationManager->new_tracked<LLScriptTypecastExpression>($2, $5);
+        $$ = gAllocationManager->new_tracked<LSLTypecastExpression>($2, $5);
     }
     ;
 
@@ -882,18 +882,18 @@ unarypostfixexpression
     }
     | lvalue INC_OP
     {
-        $$ = gAllocationManager->new_tracked<LLScriptUnaryExpression>(  $1 , INC_POST_OP );
+        $$ = gAllocationManager->new_tracked<LSLUnaryExpression>(  $1 , INC_POST_OP );
     }
     | lvalue DEC_OP
     {
-        $$ = gAllocationManager->new_tracked<LLScriptUnaryExpression>(  $1 , DEC_POST_OP );
+        $$ = gAllocationManager->new_tracked<LSLUnaryExpression>(  $1 , DEC_POST_OP );
     }
     | IDENTIFIER '(' funcexpressionlist ')'
     {
         if ( $3 != nullptr ) {
-            $$ = gAllocationManager->new_tracked<LLScriptFunctionExpression>( gAllocationManager->new_tracked<LLScriptIdentifier>($1), $3 );
+            $$ = gAllocationManager->new_tracked<LSLFunctionExpression>( gAllocationManager->new_tracked<LSLIdentifier>($1), $3 );
         } else {
-            $$ = gAllocationManager->new_tracked<LLScriptFunctionExpression>( gAllocationManager->new_tracked<LLScriptIdentifier>($1) );
+            $$ = gAllocationManager->new_tracked<LSLFunctionExpression>( gAllocationManager->new_tracked<LSLIdentifier>($1) );
         }
 
     }
@@ -901,45 +901,45 @@ unarypostfixexpression
     {
     /* This is effectively a no-op to most people in modern LSL, but we might need
        `expression`'s side-effects. Oh well. */
-        $$ = gAllocationManager->new_tracked<LLScriptPrintExpression>($3);
+        $$ = gAllocationManager->new_tracked<LSLPrintExpression>($3);
     }
     | constant
     {
-        $$ = gAllocationManager->new_tracked<LLScriptConstantExpression>($1);
+        $$ = gAllocationManager->new_tracked<LSLConstantExpression>($1);
     }
     ;
 
 vector_initializer
     : '<' expression ',' expression ',' expression '>'    %prec INITIALIZER
     {
-        $$ = gAllocationManager->new_tracked<LLScriptVectorExpression>($2, $4, $6);
+        $$ = gAllocationManager->new_tracked<LSLVectorExpression>($2, $4, $6);
     }
     ;
 
 quaternion_initializer
     : '<' expression ',' expression ',' expression ',' expression '>' %prec INITIALIZER
     {
-        $$ = gAllocationManager->new_tracked<LLScriptQuaternionExpression>($2, $4, $6, $8);
+        $$ = gAllocationManager->new_tracked<LSLQuaternionExpression>($2, $4, $6, $8);
     }
     ;
 
 list_initializer
     : '[' listexpressionlist ']' %prec INITIALIZER
     {
-        $$ = gAllocationManager->new_tracked<LLScriptListExpression>($2);
+        $$ = gAllocationManager->new_tracked<LSLListExpression>($2);
     }
     ;
 
 lvalue
     : IDENTIFIER
     {
-        $$ = gAllocationManager->new_tracked<LLScriptLValueExpression>(gAllocationManager->new_tracked<LLScriptIdentifier>($1));
+        $$ = gAllocationManager->new_tracked<LSLLValueExpression>(gAllocationManager->new_tracked<LSLIdentifier>($1));
     }
     | IDENTIFIER PERIOD IDENTIFIER
     {
-        $$ = gAllocationManager->new_tracked<LLScriptLValueExpression>(
-            gAllocationManager->new_tracked<LLScriptIdentifier>($1),
-            gAllocationManager->new_tracked<LLScriptIdentifier>($3)
+        $$ = gAllocationManager->new_tracked<LSLLValueExpression>(
+            gAllocationManager->new_tracked<LSLIdentifier>($1),
+            gAllocationManager->new_tracked<LSLIdentifier>($3)
         );
     }
     ;

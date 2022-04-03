@@ -181,19 +181,19 @@ const static int operator_result_table[][4] = {
         {-1,          -1,                -1,                -1},
 };
 
-LLScriptType LLScriptType::types[LST_MAX] = {
-        LLScriptType(LST_ERROR, true),
-        LLScriptType(LST_NULL, true),
-        LLScriptType(LST_INTEGER, true),
-        LLScriptType(LST_FLOATINGPOINT, true),
-        LLScriptType(LST_STRING, true),
-        LLScriptType(LST_KEY, true),
-        LLScriptType(LST_VECTOR, true),
-        LLScriptType(LST_QUATERNION, true),
-        LLScriptType(LST_LIST, true),
+LSLType LSLType::types[LST_MAX] = {
+        LSLType(LST_ERROR, true),
+        LSLType(LST_NULL, true),
+        LSLType(LST_INTEGER, true),
+        LSLType(LST_FLOATINGPOINT, true),
+        LSLType(LST_STRING, true),
+        LSLType(LST_KEY, true),
+        LSLType(LST_VECTOR, true),
+        LSLType(LST_QUATERNION, true),
+        LSLType(LST_LIST, true),
 };
 
-bool LLScriptType::can_coerce(LLScriptType *to) {
+bool LSLType::can_coerce(LSLType *to) {
   int i;
 
   // error type matches anything
@@ -212,7 +212,7 @@ bool LLScriptType::can_coerce(LLScriptType *to) {
   return false;
 }
 
-class LLScriptType *LLScriptType::get_result_type(int op, LLScriptType *right) {
+class LSLType *LSLType::get_result_type(int op, LSLType *right) {
   int i;
 
   // error on either side is always error

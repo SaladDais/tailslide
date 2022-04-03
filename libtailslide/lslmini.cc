@@ -37,11 +37,11 @@ const char *DEPRECATED_FUNCTIONS[][2] = {
 
 class SymbolLinkageVisitor: public ASTVisitor {
 public:
-    SymbolLinkageVisitor(bool unlink, LLScriptSymbolTable* root_table):
+    SymbolLinkageVisitor(bool unlink, LSLSymbolTable* root_table):
             unlink(unlink), root_table(root_table) {};
 
-    bool visit(LLASTNode *node) override {
-      LLScriptSymbolTable *our_table = node->get_symbol_table();
+    bool visit(LSLASTNode *node) override {
+      LSLSymbolTable *our_table = node->get_symbol_table();
       if (our_table != nullptr) {
         if (unlink)
           root_table->unregister_subtable(our_table);
@@ -52,12 +52,12 @@ public:
     }
 private:
     bool unlink;
-    LLScriptSymbolTable *root_table;
+    LSLSymbolTable *root_table;
 };
 
-void LLASTNode::link_symbol_tables(bool unlink) {
-  LLASTNode *root = get_root();
-  LLScriptSymbolTable *root_table = root ? root->get_symbol_table() : nullptr;
+void LSLASTNode::link_symbol_tables(bool unlink) {
+  LSLASTNode *root = get_root();
+  LSLSymbolTable *root_table = root ? root->get_symbol_table() : nullptr;
   if (root_table == nullptr)
     return;
   // NB: if setting parent to a node in another tree,
@@ -67,8 +67,8 @@ void LLASTNode::link_symbol_tables(bool unlink) {
 }
 
 // Lookup a symbol, propagating up the tree until it is found.
-LLScriptSymbol *LLASTNode::lookup_symbol(const char *name, LLSymbolType sym_type, LLASTNode *start_node) {
-  LLScriptSymbol *sym = nullptr;
+LSLSymbol *LSLASTNode::lookup_symbol(const char *name, LSLSymbolType sym_type, LSLASTNode *start_node) {
+  LSLSymbol *sym = nullptr;
 
   // If we have a symbol table of our own, look for it there
   if (symbol_table)
@@ -82,11 +82,11 @@ LLScriptSymbol *LLASTNode::lookup_symbol(const char *name, LLSymbolType sym_type
 }
 
 // Define a symbol, propagating up the tree to the nearest scope level.
-void LLASTNode::define_symbol(LLScriptSymbol *symbol) {
+void LSLASTNode::define_symbol(LSLSymbol *symbol) {
 
   // If we have a symbol table, define it there
   if (symbol_table) {
-    LLScriptSymbol *shadow;
+    LSLSymbol *shadow;
 
     DEBUG(LOG_DEBUG_SPAM, nullptr, "symbol definition caught in %s\n", get_node_name());
 
@@ -140,7 +140,7 @@ void LLASTNode::define_symbol(LLScriptSymbol *symbol) {
 }
 
 // Define any symbols we have, and ask our children to
-void LLASTNode::collect_symbols() {
+void LSLASTNode::collect_symbols() {
   SymbolResolutionVisitor visitor;
   this->visit(&visitor);
 }
@@ -155,7 +155,7 @@ void LLASTNode::collect_symbols() {
 //    }
 //  But if "test" looked itself up, it would think it is an integer. It's parent function
 //  expression node can tell it what it needs to be before determining it's own type.
-void LLScriptIdentifier::resolve_symbol(LLSymbolType symbol_type) {
+void LSLIdentifier::resolve_symbol(LSLSymbolType symbol_type) {
 
   // If we already have a symbol, we don't need to look it up.
   if (symbol != nullptr) {
@@ -187,8 +187,8 @@ void LLScriptIdentifier::resolve_symbol(LLSymbolType symbol_type) {
     symbol = lookup_symbol(name, SYM_ANY);    // so try the wrong one, so we can have a more descriptive error message in that case.
     if (symbol != nullptr && symbol->get_symbol_type() != symbol_type) {
       ERROR(IN(this), E_WRONG_TYPE, name,
-            LLScriptSymbol::get_type_name(symbol_type),
-            LLScriptSymbol::get_type_name(symbol->get_symbol_type())
+            LSLSymbol::get_type_name(symbol_type),
+            LSLSymbol::get_type_name(symbol->get_symbol_type())
       );
     } else {
       /* Name suggestion was here */
@@ -208,10 +208,10 @@ void LLScriptIdentifier::resolve_symbol(LLSymbolType symbol_type) {
   type = symbol->get_type();
 }
 
-LLASTNode *LLASTNode::find_previous_in_scope(std::function<bool(LLASTNode *)> const &checker) {
-  LLASTNode *last_node = this;
+LSLASTNode *LSLASTNode::find_previous_in_scope(std::function<bool(LSLASTNode *)> const &checker) {
+  LSLASTNode *last_node = this;
   for (;;) {
-    LLASTNode *node = last_node->get_prev();
+    LSLASTNode *node = last_node->get_prev();
     // No previous statements, walk up a level
     if (node == nullptr) {
       node = last_node->get_parent();
@@ -237,7 +237,7 @@ LLASTNode *LLASTNode::find_previous_in_scope(std::function<bool(LLASTNode *)> co
     }
 
     if (check_sub_tree) {
-      LLASTNode *found_node = node->find_desc_in_scope(checker);
+      LSLASTNode *found_node = node->find_desc_in_scope(checker);
       // one of our descendants matched the check, return it.
       if (found_node != nullptr)
         return found_node;
@@ -250,14 +250,14 @@ LLASTNode *LLASTNode::find_previous_in_scope(std::function<bool(LLASTNode *)> co
 }
 
 // find statements under this node that are still in the same scope
-LLASTNode *LLASTNode::find_desc_in_scope(std::function<bool(LLASTNode *)> const &checker) {
-  LLASTNode *child = get_children();
+LSLASTNode *LSLASTNode::find_desc_in_scope(std::function<bool(LSLASTNode *)> const &checker) {
+  LSLASTNode *child = get_children();
   if (checker(this))
     return this;
   while (child) {
     // don't descend into statements that make new scopes
     if (child->get_node_sub_type() != NODE_COMPOUND_STATEMENT) {
-      LLASTNode *found_node = child->find_desc_in_scope(checker);
+      LSLASTNode *found_node = child->find_desc_in_scope(checker);
       if (found_node != nullptr)
         return found_node;
     }
@@ -266,8 +266,8 @@ LLASTNode *LLASTNode::find_desc_in_scope(std::function<bool(LLASTNode *)> const 
   return nullptr;
 }
 
-void LLASTNode::check_symbols() {
-  LLASTNode *node;
+void LSLASTNode::check_symbols() {
+  LSLASTNode *node;
   if (get_symbol_table() != nullptr)
     get_symbol_table()->check_symbols();
 
@@ -278,13 +278,13 @@ void LLASTNode::check_symbols() {
 
 class NodeReferenceUpdatingVisitor : public ASTVisitor {
   public:
-    virtual bool visit(LLScriptExpression *node) {
+    virtual bool visit(LSLExpression *node) {
       if (operation_mutates(node->get_operation())) {
-        LLASTNode *child = node->get_child(0);
+        LSLASTNode *child = node->get_child(0);
         // add assignment
         if (child->get_node_sub_type() == NODE_LVALUE_EXPRESSION &&
             child->get_child(0)->get_node_type() == NODE_IDENTIFIER) {
-          auto *id = (LLScriptIdentifier *) child->get_child(0);
+          auto *id = (LSLIdentifier *) child->get_child(0);
           if (id->get_symbol()) {
             if (id->get_symbol()->get_sub_type() == SYM_BUILTIN) {
               ERROR(IN(node), E_BUILTIN_LVALUE, id->get_symbol()->get_name());
@@ -298,12 +298,12 @@ class NodeReferenceUpdatingVisitor : public ASTVisitor {
       return true;
     };
 
-    virtual bool visit(LLScriptIdentifier *node) {
-      LLASTNode *upper_node = node->get_parent();
+    virtual bool visit(LSLIdentifier *node) {
+      LSLASTNode *upper_node = node->get_parent();
       while (upper_node != nullptr && upper_node->get_node_type() != NODE_GLOBAL_STORAGE) {
         // HACK: recursive calls don't count as a reference, won't handle mutual recursion!
         if (upper_node->get_node_type() == NODE_GLOBAL_FUNCTION) {
-          auto *ident = (LLScriptIdentifier *) upper_node->get_child(0);
+          auto *ident = (LSLIdentifier *) upper_node->get_child(0);
           if (ident != node && (ident)->get_symbol() == node->get_symbol())
             return false;
         }
@@ -315,14 +315,14 @@ class NodeReferenceUpdatingVisitor : public ASTVisitor {
     };
 };
 
-void LLScriptScript::recalculate_reference_data() {
+void LSLScript::recalculate_reference_data() {
 // get updated mutation / reference counts
   get_symbol_table()->reset_reference_data();
   auto visitor = NodeReferenceUpdatingVisitor();
   visit(&visitor);
 }
 
-void LLScriptScript::optimize(const OptimizationContext &ctx) {
+void LSLScript::optimize(const OptimizationContext &ctx) {
   int optimized;
   // make sure we have updated reference data before we start folding any constants
   recalculate_reference_data();
@@ -338,7 +338,7 @@ void LLScriptScript::optimize(const OptimizationContext &ctx) {
 }
 
 
-void LLScriptScript::validate_globals(bool sl_strict) {
+void LSLScript::validate_globals(bool sl_strict) {
   if (sl_strict) {
     SimpleAssignableValidatingVisitor visitor;
     visit(&visitor);
@@ -349,32 +349,32 @@ void LLScriptScript::validate_globals(bool sl_strict) {
 }
 
 
-LLScriptConstant *LLScriptIdentifier::get_constant_value() {
+LSLConstant *LSLIdentifier::get_constant_value() {
   if (symbol && symbol->get_assignments() == 0)
     return symbol->get_constant_value();
   return nullptr;
 }
 
 
-LLScriptConstant *LLScriptGlobalVariable::get_constant_value() {
+LSLConstant *LSLGlobalVariable::get_constant_value() {
   // It's not really constant if it gets mutated more than once, is it?
   // note that initialization during declaration doesn't count.
-  auto *id = (LLScriptIdentifier *) get_child(0);
+  auto *id = (LSLIdentifier *) get_child(0);
   if (id->get_symbol()->get_assignments() == 0) {
     return constant_value;
   }
   return nullptr;
 }
 
-LLScriptConstant *LLScriptDeclaration::get_constant_value() {
-  auto *id = (LLScriptIdentifier *) get_child(0);
+LSLConstant *LSLDeclaration::get_constant_value() {
+  auto *id = (LSLIdentifier *) get_child(0);
   if (id->get_symbol()->get_assignments() == 0) {
     return constant_value;
   }
   return nullptr;
 }
 
-LLScriptConstant *LLScriptExpression::get_constant_value() {
+LSLConstant *LSLExpression::get_constant_value() {
   // replacing `foo = "bar"` with `"bar"` == no
   if (!operation_mutates(operation)) {
     return constant_value;
@@ -383,12 +383,12 @@ LLScriptConstant *LLScriptExpression::get_constant_value() {
 }
 
 
-LLScriptConstant *LLScriptLValueExpression::get_constant_value() {
+LSLConstant *LSLLValueExpression::get_constant_value() {
   if (is_foldable) {
     // We have to be careful about folding lists
     if (this->type == TYPE(LST_LIST)) {
-      LLASTNode *top_foldable = this;
-      LLASTNode *current_node = this;
+      LSLASTNode *top_foldable = this;
+      LSLASTNode *current_node = this;
 
       // Don't fold this in if it's a list expression at the foldable level
       while (current_node != nullptr && current_node->node_allows_folding()) {
@@ -404,17 +404,17 @@ LLScriptConstant *LLScriptLValueExpression::get_constant_value() {
   return nullptr;
 }
 
-bool LLScriptFloatConstant::contains_nan() {
+bool LSLFloatConstant::contains_nan() {
   return std::isnan(get_value());
 }
 
-bool LLScriptVectorConstant::contains_nan() {
-  LLVector *v = get_value();
+bool LSLVectorConstant::contains_nan() {
+  LSLVector *v = get_value();
   return std::isnan(v->x) || std::isnan(v->y) || std::isnan(v->z);
 }
 
-bool LLScriptQuaternionConstant::contains_nan() {
-  LLQuaternion *v = get_value();
+bool LSLQuaternionConstant::contains_nan() {
+  LSLQuaternion *v = get_value();
   return std::isnan(v->x) || std::isnan(v->y) || std::isnan(v->z) || std::isnan(v->s);
 }
 

@@ -23,11 +23,11 @@ class TreeSimplifyingVisitor: public ASTVisitor {
     OptimizationContext ctx;
     int folded_total = 0;
 
-    virtual bool visit(LLScriptDeclaration* node);
-    virtual bool visit(LLScriptGlobalStorage* node);
-    virtual bool visit(LLScriptExpression* node);
-    virtual bool visit(LLScriptLValueExpression *node);
-    virtual bool visit(LLScriptConstantExpression *node);
+    virtual bool visit(LSLDeclaration* node);
+    virtual bool visit(LSLGlobalStorage* node);
+    virtual bool visit(LSLExpression* node);
+    virtual bool visit(LSLLValueExpression *node);
+    virtual bool visit(LSLConstantExpression *node);
 };
 }
 

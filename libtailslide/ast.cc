@@ -7,29 +7,29 @@
 
 namespace Tailslide {
 
-thread_local YYLTYPE LLASTNode::glloc = {0, 0, 0, 0};
+thread_local YYLTYPE LSLASTNode::glloc = {0, 0, 0, 0};
 
-LLASTNode::LLASTNode() : type(nullptr), symbol_table(nullptr), constant_value(nullptr), lloc(glloc),
+LSLASTNode::LSLASTNode() : type(nullptr), symbol_table(nullptr), constant_value(nullptr), lloc(glloc),
                          declaration_allowed(true), children(nullptr), next(nullptr), prev(nullptr), parent(nullptr) {
   type = TYPE(LST_NULL);
 }
 
-void LLASTNode::add_children(int num, va_list ap) {
-  LLASTNode *node;
+void LSLASTNode::add_children(int num, va_list ap) {
+  LSLASTNode *node;
   for (; num--;) {
-    node = va_arg(ap, LLASTNode*);
+    node = va_arg(ap, LSLASTNode*);
     if (node == nullptr)
       node = new_null_node();
     push_child(node);
   }
 }
 
-LLASTNode *LLASTNode::new_null_node() {
-  return gAllocationManager->new_tracked<LLASTNullNode>();
+LSLASTNode *LSLASTNode::new_null_node() {
+  return gAllocationManager->new_tracked<LSLASTNullNode>();
 }
 
 
-void LLASTNode::set_parent(LLASTNode *newparent) {
+void LSLASTNode::set_parent(LSLASTNode *newparent) {
   // walk tree, (un)registering descendants' symbol tables with
   // the root table
   assert(newparent != this);
@@ -55,7 +55,7 @@ void LLASTNode::set_parent(LLASTNode *newparent) {
     link_symbol_tables();
 }
 
-void LLASTNode::push_child(LLASTNode *child) {
+void LSLASTNode::push_child(LSLASTNode *child) {
   if (child == nullptr)
     return;
   if (children == nullptr) {
@@ -67,19 +67,19 @@ void LLASTNode::push_child(LLASTNode *child) {
   child->set_parent(this);
 }
 
-LLASTNode *LLASTNode::take_child(int child_num) {
-  LLASTNode *child = get_child(child_num);
+LSLASTNode *LSLASTNode::take_child(int child_num) {
+  LSLASTNode *child = get_child(child_num);
   if (child == nullptr)
     return nullptr;
   replace_node(child, new_null_node());
   return child;
 }
 
-void LLASTNode::remove_child(LLASTNode *child) {
+void LSLASTNode::remove_child(LSLASTNode *child) {
   if (child == nullptr) return;
 
-  LLASTNode *prev_child = child->get_prev();
-  LLASTNode *next_child = child->get_next();
+  LSLASTNode *prev_child = child->get_prev();
+  LSLASTNode *next_child = child->get_next();
 
   child->prev = nullptr;
   child->next = nullptr;
@@ -96,7 +96,7 @@ void LLASTNode::remove_child(LLASTNode *child) {
   child->set_parent(nullptr);
 }
 
-void LLASTNode::set_next(LLASTNode *newnext) {
+void LSLASTNode::set_next(LSLASTNode *newnext) {
   DEBUG(LOG_DEBUG_SPAM, nullptr, "%s.set_next(%s)\n", get_node_name(), newnext ? newnext->get_node_name() : "nullptr");
   next = newnext;
   assert(next != this);
@@ -104,14 +104,14 @@ void LLASTNode::set_next(LLASTNode *newnext) {
     newnext->set_prev(this);
 }
 
-void LLASTNode::set_prev(LLASTNode *newprev) {
+void LSLASTNode::set_prev(LSLASTNode *newprev) {
   DEBUG(LOG_DEBUG_SPAM, nullptr, "%s.set_prev(%s)\n", get_node_name(), newprev ? newprev->get_node_name() : "nullptr");
   prev = newprev;
   if (newprev && newprev->get_next() != this)
     newprev->set_next(this);
 }
 
-void LLASTNode::add_next_sibling(LLASTNode *sibling) {
+void LSLASTNode::add_next_sibling(LSLASTNode *sibling) {
   assert (sibling != parent);
   assert (sibling != this);
   if (sibling == nullptr) return;
@@ -121,7 +121,7 @@ void LLASTNode::add_next_sibling(LLASTNode *sibling) {
     set_next(sibling);
 }
 
-void LLASTNode::add_prev_sibling(LLASTNode *sibling) {
+void LSLASTNode::add_prev_sibling(LSLASTNode *sibling) {
   assert (sibling != parent);
   if (sibling == nullptr) return;
   if (prev)
@@ -130,7 +130,7 @@ void LLASTNode::add_prev_sibling(LLASTNode *sibling) {
     set_prev(sibling);
 }
 
-void LLASTNode::replace_node(LLASTNode *old_node, LLASTNode *replacement) {
+void LSLASTNode::replace_node(LSLASTNode *old_node, LSLASTNode *replacement) {
   assert(replacement != nullptr && old_node != nullptr);
   replacement->set_prev(old_node->get_prev());
   replacement->set_next(old_node->get_next());
@@ -145,7 +145,7 @@ void LLASTNode::replace_node(LLASTNode *old_node, LLASTNode *replacement) {
   replacement->set_parent(parent);
 }
 
-void LLASTNode::visit(ASTVisitor *visitor) {
+void LSLASTNode::visit(ASTVisitor *visitor) {
   if (!visitor->is_depth_first()) {
     // Use the node type and node subtype retvals to cast and choose
     // a more specific version of the visitor's visit methods to call.
@@ -170,19 +170,19 @@ void LLASTNode::visit(ASTVisitor *visitor) {
 }
 
 
-void LLASTNode::propagate_values() {
+void LSLASTNode::propagate_values() {
   TailslideOperationBehavior behavior;
   ConstantDeterminingVisitor visitor(&behavior);
   visit(&visitor);
 }
 
-void LLASTNode::determine_reachability() {
+void LSLASTNode::determine_reachability() {
   DetermineReachableVisitor visitor;
   visit(&visitor);
 }
 
 // walk tree post-order and propagate types
-void LLASTNode::determine_types() {
+void LSLASTNode::determine_types() {
   TypeCheckVisitor visitor;
   visit(&visitor);
 }

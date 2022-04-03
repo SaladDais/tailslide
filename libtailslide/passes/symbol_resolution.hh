@@ -9,24 +9,24 @@
 namespace Tailslide {
 
 class ExprSymbolResolutionVisitor : public ASTVisitor {
-    virtual bool visit(LLScriptLValueExpression *node);
-    virtual bool visit(LLScriptFunctionExpression *node);
+    virtual bool visit(LSLLValueExpression *node);
+    virtual bool visit(LSLFunctionExpression *node);
 };
 
 class SymbolResolutionVisitor : public ExprSymbolResolutionVisitor {
-    virtual bool visit(LLScriptDeclaration *node);
-    virtual bool visit(LLScriptGlobalVariable *node);
-    virtual bool visit(LLScriptGlobalFunction *node);
-    virtual bool visit(LLScriptScript *node);
-    virtual bool visit(LLScriptFunctionDec *node);
-    virtual bool visit(LLScriptEventHandler *node);
-    virtual bool visit(LLScriptEventDec *node);
-    virtual bool visit(LLScriptLabel *node);
-    virtual bool visit(LLScriptJumpStatement *node);
-    virtual bool visit(LLScriptStateStatement *node);
+    virtual bool visit(LSLDeclaration *node);
+    virtual bool visit(LSLGlobalVariable *node);
+    virtual bool visit(LSLGlobalFunction *node);
+    virtual bool visit(LSLScript *node);
+    virtual bool visit(LSLFunctionDec *node);
+    virtual bool visit(LSLEventHandler *node);
+    virtual bool visit(LSLEventDec *node);
+    virtual bool visit(LSLLabel *node);
+    virtual bool visit(LSLJumpStatement *node);
+    virtual bool visit(LSLStateStatement *node);
 
     void _resolve_pending_jumps();
-    std::vector<LLScriptIdentifier*> _pending_jump_labels;
+    std::vector<LSLIdentifier*> _pending_jump_labels;
 };
 
 }

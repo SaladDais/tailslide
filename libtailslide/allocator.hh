@@ -8,9 +8,9 @@
 
 namespace Tailslide {
 
-class LLTrackableObject {
+class TrackableObject {
 public:
-  virtual ~LLTrackableObject() = default;
+  virtual ~TrackableObject() = default;
 };
 
 class ScriptAllocationManager {
@@ -20,7 +20,7 @@ public:
 
     template<typename T, typename... Args>
     inline T* new_tracked(Args&&... args) {
-      static_assert(std::is_base_of<LLTrackableObject, T>::value, "Must be based on LLTrackableObject");
+      static_assert(std::is_base_of<TrackableObject, T>::value, "Must be based on LLTrackableObject");
       T* val = new T(std::forward<Args>(args)...);
       _tracked_objects.emplace_back(val);
       return val;
@@ -43,7 +43,7 @@ public:
       _mallocs.emplace_back(alloced_data);
     }
 private:
-    std::vector<LLTrackableObject *> _tracked_objects {};
+    std::vector<TrackableObject *> _tracked_objects {};
     std::vector<void *> _mallocs {};
 };
 

@@ -7,139 +7,139 @@ namespace Tailslide {
 
 class ASTVisitor {
   public:
-    virtual bool visit(LLASTNode *node) { return true; }
-    virtual bool visit(LLASTNullNode *node) { return false; }
-    virtual bool visit(LLScriptScript *node) {
-      return visit((LLASTNode *)node);
+    virtual bool visit(LSLASTNode *node) { return true; }
+    virtual bool visit(LSLASTNullNode *node) { return false; }
+    virtual bool visit(LSLScript *node) {
+      return visit((LSLASTNode *)node);
     };
-    virtual bool visit(LLScriptGlobalStorage *node) {
-      return visit((LLASTNode *)node);
+    virtual bool visit(LSLGlobalStorage *node) {
+      return visit((LSLASTNode *)node);
     };
-    virtual bool visit(LLScriptIdentifier *node) {
-      return visit((LLASTNode *)node);
+    virtual bool visit(LSLIdentifier *node) {
+      return visit((LSLASTNode *)node);
     };
-    virtual bool visit(LLScriptGlobalVariable *node) {
-      return visit((LLASTNode *)node);
+    virtual bool visit(LSLGlobalVariable *node) {
+      return visit((LSLASTNode *)node);
     };
-    virtual bool visit(LLScriptConstant *node) {
-      return visit((LLASTNode *)node);
+    virtual bool visit(LSLConstant *node) {
+      return visit((LSLASTNode *)node);
     };
-    virtual bool visit(LLScriptIntegerConstant *node) {
-      return visit((LLScriptConstant *)node);
+    virtual bool visit(LSLIntegerConstant *node) {
+      return visit((LSLConstant *)node);
     };
-    virtual bool visit(LLScriptFloatConstant *node) {
-      return visit((LLScriptConstant *)node);
+    virtual bool visit(LSLFloatConstant *node) {
+      return visit((LSLConstant *)node);
     };
-    virtual bool visit(LLScriptStringConstant *node) {
-      return visit((LLScriptConstant *)node);
+    virtual bool visit(LSLStringConstant *node) {
+      return visit((LSLConstant *)node);
     };
-    virtual bool visit(LLScriptListConstant *node) {
-      return visit((LLScriptConstant *)node);
+    virtual bool visit(LSLListConstant *node) {
+      return visit((LSLConstant *)node);
     };
-    virtual bool visit(LLScriptVectorConstant *node) {
-      return visit((LLScriptConstant *)node);
+    virtual bool visit(LSLVectorConstant *node) {
+      return visit((LSLConstant *)node);
     };
-    virtual bool visit(LLScriptQuaternionConstant *node) {
-      return visit((LLScriptConstant *)node);
+    virtual bool visit(LSLQuaternionConstant *node) {
+      return visit((LSLConstant *)node);
     };
-    virtual bool visit(LLScriptGlobalFunction *node) {
-      return visit((LLASTNode *)node);
+    virtual bool visit(LSLGlobalFunction *node) {
+      return visit((LSLASTNode *)node);
     };
-    virtual bool visit(LLScriptParamList *node) {
-      return visit((LLASTNode *)node);
+    virtual bool visit(LSLParamList *node) {
+      return visit((LSLASTNode *)node);
     };
-    virtual bool visit(LLScriptFunctionDec *node) {
-      return visit((LLScriptParamList *)node);
+    virtual bool visit(LSLFunctionDec *node) {
+      return visit((LSLParamList *)node);
     };
-    virtual bool visit(LLScriptEventDec *node) {
-      return visit((LLScriptParamList *)node);
+    virtual bool visit(LSLEventDec *node) {
+      return visit((LSLParamList *)node);
     };
-    virtual bool visit(LLScriptForExpressionList *node) {
-      return visit((LLASTNode *)node);
+    virtual bool visit(LSLForExpressionList *node) {
+      return visit((LSLASTNode *)node);
     };
-    virtual bool visit(LLScriptState *node) {
-      return visit((LLASTNode *)node);
+    virtual bool visit(LSLState *node) {
+      return visit((LSLASTNode *)node);
     };
-    virtual bool visit(LLScriptEventHandler *node) {
-      return visit((LLASTNode *)node);
+    virtual bool visit(LSLEventHandler *node) {
+      return visit((LSLASTNode *)node);
     };
-    virtual bool visit(LLScriptStatement *node) {
-      return visit((LLASTNode *)node);
+    virtual bool visit(LSLStatement *node) {
+      return visit((LSLASTNode *)node);
     };
-    virtual bool visit(LLScriptCompoundStatement *node) {
-      return visit((LLScriptStatement *)node);
+    virtual bool visit(LSLCompoundStatement *node) {
+      return visit((LSLStatement *)node);
     };
-    virtual bool visit(LLScriptStateStatement *node) {
-      return visit((LLScriptStatement *)node);
+    virtual bool visit(LSLStateStatement *node) {
+      return visit((LSLStatement *)node);
     };
-    virtual bool visit(LLScriptJumpStatement *node) {
-      return visit((LLScriptStatement *)node);
+    virtual bool visit(LSLJumpStatement *node) {
+      return visit((LSLStatement *)node);
     };
-    virtual bool visit(LLScriptLabel *node) {
-      return visit((LLScriptStatement *)node);
+    virtual bool visit(LSLLabel *node) {
+      return visit((LSLStatement *)node);
     };
-    virtual bool visit(LLScriptReturnStatement *node) {
-      return visit((LLScriptStatement *)node);
+    virtual bool visit(LSLReturnStatement *node) {
+      return visit((LSLStatement *)node);
     };
-    virtual bool visit(LLScriptIfStatement *node) {
-      return visit((LLScriptStatement *)node);
+    virtual bool visit(LSLIfStatement *node) {
+      return visit((LSLStatement *)node);
     };
-    virtual bool visit(LLScriptForStatement *node) {
-      return visit((LLScriptStatement *)node);
+    virtual bool visit(LSLForStatement *node) {
+      return visit((LSLStatement *)node);
     };
-    virtual bool visit(LLScriptDoStatement *node) {
-      return visit((LLScriptStatement *)node);
+    virtual bool visit(LSLDoStatement *node) {
+      return visit((LSLStatement *)node);
     };
-    virtual bool visit(LLScriptWhileStatement *node) {
-      return visit((LLScriptStatement *)node);
+    virtual bool visit(LSLWhileStatement *node) {
+      return visit((LSLStatement *)node);
     };
-    virtual bool visit(LLScriptDeclaration *node) {
-      return visit((LLScriptStatement *)node);
+    virtual bool visit(LSLDeclaration *node) {
+      return visit((LSLStatement *)node);
     };
-    virtual bool visit(LLScriptExpression *node) {
-      return visit((LLASTNode *)node);
+    virtual bool visit(LSLExpression *node) {
+      return visit((LSLASTNode *)node);
     };
-    virtual bool visit(LLScriptBinaryExpression *node) {
-      return visit((LLScriptExpression *)node);
+    virtual bool visit(LSLBinaryExpression *node) {
+      return visit((LSLExpression *)node);
     };
-    virtual bool visit(LLScriptUnaryExpression *node) {
-      return visit((LLScriptExpression *)node);
+    virtual bool visit(LSLUnaryExpression *node) {
+      return visit((LSLExpression *)node);
     };
-    virtual bool visit(LLScriptConstantExpression *node) {
-      return visit((LLScriptExpression *)node);
+    virtual bool visit(LSLConstantExpression *node) {
+      return visit((LSLExpression *)node);
     };
-    virtual bool visit(LLScriptParenthesisExpression *node) {
-      return visit((LLScriptExpression *)node);
+    virtual bool visit(LSLParenthesisExpression *node) {
+      return visit((LSLExpression *)node);
     };
-    virtual bool visit(LLScriptTypecastExpression *node) {
-      return visit((LLScriptExpression *)node);
+    virtual bool visit(LSLTypecastExpression *node) {
+      return visit((LSLExpression *)node);
     };
-    virtual bool visit(LLScriptPrintExpression *node) {
-      return visit((LLScriptExpression *)node);
+    virtual bool visit(LSLPrintExpression *node) {
+      return visit((LSLExpression *)node);
     };
-    virtual bool visit(LLScriptFunctionExpression *node) {
-      return visit((LLScriptExpression *)node);
+    virtual bool visit(LSLFunctionExpression *node) {
+      return visit((LSLExpression *)node);
     };
-    virtual bool visit(LLScriptVectorExpression *node) {
-      return visit((LLScriptExpression *)node);
+    virtual bool visit(LSLVectorExpression *node) {
+      return visit((LSLExpression *)node);
     };
-    virtual bool visit(LLScriptQuaternionExpression *node) {
-      return visit((LLScriptExpression *)node);
+    virtual bool visit(LSLQuaternionExpression *node) {
+      return visit((LSLExpression *)node);
     };
-    virtual bool visit(LLScriptListExpression *node) {
-      return visit((LLScriptExpression *)node);
+    virtual bool visit(LSLListExpression *node) {
+      return visit((LSLExpression *)node);
     };
-    virtual bool visit(LLScriptLValueExpression *node) {
-      return visit((LLScriptExpression *)node);
+    virtual bool visit(LSLLValueExpression *node) {
+      return visit((LSLExpression *)node);
     };
-    virtual bool visit(LLScriptType *node) {
-      return visit((LLASTNode*)node);
+    virtual bool visit(LSLType *node) {
+      return visit((LSLASTNode*)node);
     }
 
-    virtual bool visit_specific(LLASTNode *node);
-    void visit_children(LLASTNode *node);
+    virtual bool visit_specific(LSLASTNode *node);
+    void visit_children(LSLASTNode *node);
     // only used for depth-first visitors
-    virtual bool before_descend(LLASTNode *node) {return true;}
+    virtual bool before_descend(LSLASTNode *node) {return true;}
     virtual bool is_depth_first() {return false;}
 };
 

@@ -1,6 +1,6 @@
 #ifndef _TYPES_HH
 #define _TYPES_HH 1
-#include "ast.hh"           // LLASTNode
+#include "ast.hh"           // LSLASTNode
 #include <vector>
 
 namespace Tailslide {
@@ -17,18 +17,18 @@ enum LST_TYPE {
   LST_MAX           = 9,
 };
 
-class LLScriptType : public LLASTNode {
+class LSLType : public LSLASTNode {
   public:
-    explicit LLScriptType(LST_TYPE type, bool static_def=false) : LLASTNode(0), itype(type) {
-      // Parenting the global LLScriptType instances to a specific script's tree is illegal
+    explicit LSLType(LST_TYPE type, bool static_def=false) : LSLASTNode(0), itype(type) {
+      // Parenting the global LSLType instances to a specific script's tree is illegal
       if (static_def)
         mark_static();
     };
-    static LLScriptType *get( LST_TYPE type ) {
+    static LSLType *get( LST_TYPE type ) {
       return &types[type];
     }
-    bool can_coerce( LLScriptType *to );
-    LLScriptType *get_result_type(int op,  LLScriptType *right);
+    bool can_coerce( LSLType *to );
+    LSLType *get_result_type(int op,  LSLType *right);
 
     LST_TYPE get_itype() { return itype; } ;
     virtual const char *get_node_name() {
@@ -45,15 +45,15 @@ class LLScriptType : public LLASTNode {
         default:                return "!invalid!";
       }
     }
-    virtual LLNodeType get_node_type() { return NODE_TYPE; };
+    virtual LSLNodeType get_node_type() { return NODE_TYPE; };
   private:
     LST_TYPE itype;
-    static LLScriptType types[LST_MAX];
+    static LSLType types[LST_MAX];
 };
 
 // convenience
-inline LLScriptType *TYPE(LST_TYPE type) {
-  return LLScriptType::get(type);
+inline LSLType *TYPE(LST_TYPE type) {
+  return LSLType::get(type);
 }
 
 bool operation_mutates(int operation);

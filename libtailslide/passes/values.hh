@@ -10,17 +10,17 @@ class ConstantDeterminingVisitor : public DepthFirstASTVisitor {
   public:
     explicit ConstantDeterminingVisitor(AOperationBehavior *behavior): operation_behavior(behavior) {}
 
-    virtual bool before_descend(LLASTNode *node);
+    virtual bool before_descend(LSLASTNode *node);
 
-    virtual bool visit(LLScriptScript *node);
-    virtual bool visit(LLScriptDeclaration *node);
-    virtual bool visit(LLScriptExpression *node);
-    virtual bool visit(LLScriptGlobalVariable *node);
-    virtual bool visit(LLScriptLValueExpression *node);
-    virtual bool visit(LLScriptListExpression *node);
-    virtual bool visit(LLScriptVectorExpression *node);
-    virtual bool visit(LLScriptQuaternionExpression *node);
-    virtual bool visit(LLScriptTypecastExpression *node);
+    virtual bool visit(LSLScript *node);
+    virtual bool visit(LSLDeclaration *node);
+    virtual bool visit(LSLExpression *node);
+    virtual bool visit(LSLGlobalVariable *node);
+    virtual bool visit(LSLLValueExpression *node);
+    virtual bool visit(LSLListExpression *node);
+    virtual bool visit(LSLVectorExpression *node);
+    virtual bool visit(LSLQuaternionExpression *node);
+    virtual bool visit(LSLTypecastExpression *node);
   protected:
     AOperationBehavior *operation_behavior = nullptr;
 };

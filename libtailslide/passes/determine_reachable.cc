@@ -3,7 +3,7 @@
 namespace Tailslide {
 
 
-static bool allret(LLASTNode *p) {
+static bool allret(LSLASTNode *p) {
   bool ret = false;
   if (p->get_node_type() == NODE_STATEMENT && p->get_node_sub_type() == NODE_RETURN_STATEMENT) {
     // TODO check next value here for unreachable code
@@ -14,7 +14,7 @@ static bool allret(LLASTNode *p) {
 
     return (true_branch && false_branch);
   } else if (p->get_node_type() == NODE_STATEMENT && p->get_node_sub_type() == NODE_COMPOUND_STATEMENT) {
-    for (LLASTNode *q = p->get_children(); q; q = q->get_next()) {
+    for (LSLASTNode *q = p->get_children(); q; q = q->get_next()) {
       ret |= allret(q);
     }
   } else {
@@ -30,13 +30,13 @@ static bool allret(LLASTNode *p) {
   return ret;
 }
 
-bool DetermineReachableVisitor::visit(LLScriptGlobalFunction* node) {
-  auto *id = (LLScriptIdentifier *) node->get_child(0);
-  //LLScriptFunctionDec *decl = (LLScriptFunctionDec *) get_child(1);
-  auto *statement = (LLScriptStatement *) node->get_child(2);
+bool DetermineReachableVisitor::visit(LSLGlobalFunction* node) {
+  auto *id = (LSLIdentifier *) node->get_child(0);
+  //LSLFunctionDec *decl = (LSLFunctionDec *) get_child(1);
+  auto *statement = (LSLStatement *) node->get_child(2);
 
   if (id->get_symbol() != nullptr) {
-    LLScriptType *tipe = id->get_symbol()->get_type();
+    LSLType *tipe = id->get_symbol()->get_type();
 
     if (tipe->get_itype() != LST_NULL && !allret(statement)) {
       ERROR(IN(node->get_child(0)), E_NOT_ALL_PATHS_RETURN);
@@ -45,15 +45,15 @@ bool DetermineReachableVisitor::visit(LLScriptGlobalFunction* node) {
   return true;
 };
 
-bool DetermineReachableVisitor::visit(LLScriptIfStatement *node) {
+bool DetermineReachableVisitor::visit(LSLIfStatement *node) {
   // see if expression is constant
-  LLASTNode *cond = node->get_child(0);
+  LSLASTNode *cond = node->get_child(0);
   if (cond->get_constant_value() != nullptr) {
     // TODO: can conditions be something other than integer?
     // ^ Yep, `key`s for one, and probably a bunch of others.
     // `if (key_foo) {}` is the fastest way to validate UUIDs in LSL.
     if (cond->get_constant_value()->get_node_sub_type() == NODE_INTEGER_CONSTANT) {
-      if (((LLScriptIntegerConstant *) cond->get_constant_value())->get_value()) {
+      if (((LSLIntegerConstant *) cond->get_constant_value())->get_value()) {
         ERROR(IN(cond), W_CONDITION_ALWAYS_TRUE);
       } else {
         ERROR(IN(cond), W_CONDITION_ALWAYS_FALSE);
@@ -63,7 +63,7 @@ bool DetermineReachableVisitor::visit(LLScriptIfStatement *node) {
 
   // set if expression is an assignment
   if (cond->get_node_type() == NODE_EXPRESSION) {
-    auto *expr = (LLScriptExpression *) cond;
+    auto *expr = (LSLExpression *) cond;
     if (expr->get_operation() == '=') {
       ERROR(IN(expr), W_ASSIGNMENT_IN_COMPARISON);
     }

@@ -2,22 +2,22 @@
 
 namespace Tailslide {
 
-bool TreeSimplifyingVisitor::visit(LLScriptDeclaration* node) {
+bool TreeSimplifyingVisitor::visit(LSLDeclaration* node) {
   if (!ctx.prune_unused_locals)
     return true;
 
-  auto *id = (LLScriptIdentifier *) (node->get_child(0));
+  auto *id = (LSLIdentifier *) (node->get_child(0));
   auto *sym = id->get_symbol();
   if (!sym || sym->get_references() != 1 || sym->get_assignments() != 0)
     return true;
-  LLASTNode *rvalue = node->get_child(1);
+  LSLASTNode *rvalue = node->get_child(1);
   // rvalue can't be reduced to a constant, don't know that we don't need
   // the side-effects of evaluating the expression.
   if(rvalue && !rvalue->get_constant_value())
     return true;
 
   ++folded_total;
-  LLASTNode *ancestor = node;
+  LSLASTNode *ancestor = node;
   // walk up and remove it from whatever symbol table it's in
   while (ancestor != nullptr) {
     if (ancestor->get_symbol_table() != nullptr) {
@@ -32,14 +32,14 @@ bool TreeSimplifyingVisitor::visit(LLScriptDeclaration* node) {
   return false;
 }
 
-bool TreeSimplifyingVisitor::visit(LLScriptGlobalStorage* node) {
+bool TreeSimplifyingVisitor::visit(LSLGlobalStorage* node) {
   // GlobalStorages either contain a single var or a single function.
-  LLASTNode *contained = (node->get_child(0)->get_node_type() != NODE_NULL) ? node->get_child(0) : node->get_child(1);
+  LSLASTNode *contained = (node->get_child(0)->get_node_type() != NODE_NULL) ? node->get_child(0) : node->get_child(1);
   // and they both keep their identifier in the first child!
-  auto *id = (LLScriptIdentifier *) (contained->get_child(0));
+  auto *id = (LSLIdentifier *) (contained->get_child(0));
   assert(id != nullptr && id->get_node_type() == NODE_IDENTIFIER);
 
-  LLNodeType node_type = contained->get_node_type();
+  LSLNodeType node_type = contained->get_node_type();
   auto *sym = id->get_symbol();
 
   if (((node_type == NODE_GLOBAL_FUNCTION && ctx.prune_unused_functions) ||
@@ -47,7 +47,7 @@ bool TreeSimplifyingVisitor::visit(LLScriptGlobalStorage* node) {
       && sym->get_references() == 1) {
     ++folded_total;
     // these reside in the global scope, look for the root symbol table and the entry
-    LLASTNode *script = node->get_root();
+    LSLASTNode *script = node->get_root();
     script->get_symbol_table()->remove(sym);
     // remove the node itself
     node->get_parent()->remove_child(node);
@@ -56,11 +56,11 @@ bool TreeSimplifyingVisitor::visit(LLScriptGlobalStorage* node) {
   return true;
 }
 
-bool TreeSimplifyingVisitor::visit(LLScriptExpression* node) {
+bool TreeSimplifyingVisitor::visit(LSLExpression* node) {
   if (!ctx.fold_constants)
     return true;
 
-  LLScriptConstant *cv = node->get_constant_value();
+  LSLConstant *cv = node->get_constant_value();
   if(!cv)
     return true;
   auto c_type = cv->get_type()->get_itype();
@@ -79,21 +79,21 @@ bool TreeSimplifyingVisitor::visit(LLScriptExpression* node) {
 
   // We're going to change its parent / sibling connections,
   // so we need a copy.
-  auto *new_expr = gAllocationManager->new_tracked<LLScriptConstantExpression>(cv);
+  auto *new_expr = gAllocationManager->new_tracked<LSLConstantExpression>(cv);
   new_expr->set_lloc(node->get_lloc());
-  LLASTNode::replace_node(node, new_expr);
+  LSLASTNode::replace_node(node, new_expr);
   ++folded_total;
 
   return false;
 }
 
-bool TreeSimplifyingVisitor::visit(LLScriptLValueExpression *node) {
+bool TreeSimplifyingVisitor::visit(LSLLValueExpression *node) {
   if (!ctx.fold_constants)
     return false;
 
-  LLASTNode *child = node->get_child(0);
+  LSLASTNode *child = node->get_child(0);
   if (child && child->get_node_type() == NODE_IDENTIFIER) {
-    auto *id = (LLScriptIdentifier *)child;
+    auto *id = (LSLIdentifier *)child;
     auto *sym = id->get_symbol();
     if (!sym)
       return false;
@@ -102,11 +102,11 @@ bool TreeSimplifyingVisitor::visit(LLScriptLValueExpression *node) {
     // lexer tokens in SL proper.
     if (sym->get_sub_type() == SYM_BUILTIN)
       return false;
-    LLScriptConstant *cv = node->get_constant_value();
+    LSLConstant *cv = node->get_constant_value();
     if (cv && !cv->contains_nan()) {
-      auto *new_expr = gAllocationManager->new_tracked<LLScriptConstantExpression>(cv);
+      auto *new_expr = gAllocationManager->new_tracked<LSLConstantExpression>(cv);
       new_expr->set_lloc(node->get_lloc());
-      LLASTNode::replace_node(
+      LSLASTNode::replace_node(
           node,
           new_expr
       );
@@ -117,7 +117,7 @@ bool TreeSimplifyingVisitor::visit(LLScriptLValueExpression *node) {
   return false;
 }
 
-bool TreeSimplifyingVisitor::visit(LLScriptConstantExpression *node) {
+bool TreeSimplifyingVisitor::visit(LSLConstantExpression *node) {
   // Don't touch these at all, they can't be simplified any more!
   return false;
 }
