@@ -187,7 +187,8 @@ bool TypeCheckVisitor::visit(LSLExpression *node) {
     // guess as to what the result of the expression is meant to be.
     type = TYPE(LST_ERROR);
   } else {
-    type = l_type->get_result_type(operation, r_type);
+    int err_value = 0;
+    type = l_type->get_result_type(operation, r_type, &err_value);
     if (type == nullptr) {
       ERROR(
           IN(node),
@@ -199,6 +200,8 @@ bool TypeCheckVisitor::visit(LSLExpression *node) {
       // We don't know what type this expression is supposed to result in,
       // either because this operation is unsupported.
       type = TYPE(LST_ERROR);
+    } else if (err_value) {
+      ERROR(IN(node), err_value);
     }
   }
   node->set_type(type);

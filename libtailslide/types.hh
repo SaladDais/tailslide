@@ -28,7 +28,7 @@ class LSLType : public LSLASTNode {
       return &types[type];
     }
     bool can_coerce( LSLType *to );
-    LSLType *get_result_type(int op,  LSLType *right);
+    LSLType *get_result_type(int op,  LSLType *right, int *err_value);
 
     LST_TYPE get_itype() { return itype; } ;
     virtual const char *get_node_name() {

@@ -307,6 +307,7 @@ const char *Logger::warning_messages[] = {
         "Condition is always true.",
         "Condition is always false.",
         "Empty loop body.",
+        "`i_val *= f_val' can have unpredictable runtime behavior, prefer `i_val = (integer)(i_val * f_val)'"
 };
 
 }

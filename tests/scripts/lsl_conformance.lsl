@@ -469,7 +469,7 @@ tests()
 
     // multiplication assignment integer *= float
     i = 1;
-    i *= 0.5;
+    i *= 0.5; // $[E20015]
     ensureIntegerEqual("i = 1; i *= 0.5;", i, 0);
 
     // division assignment

@@ -15,6 +15,7 @@ TEST_CASE("bad_globals.lsl") {
 }
 SIMPLE_LINT_TEST_CASE("camera_demo.lsl")
 SIMPLE_LINT_TEST_CASE("color-change.lsl")
+SIMPLE_LINT_TEST_CASE("compound_assignment.lsl")
 SIMPLE_LINT_TEST_CASE("constants.lsl")
 SIMPLE_LINT_TEST_CASE("constprop.lsl")
 SIMPLE_LINT_TEST_CASE("declaration_expressions.lsl")

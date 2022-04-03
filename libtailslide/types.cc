@@ -212,7 +212,7 @@ bool LSLType::can_coerce(LSLType *to) {
   return false;
 }
 
-class LSLType *LSLType::get_result_type(int op, LSLType *right) {
+class LSLType *LSLType::get_result_type(int op, LSLType *right, int *err_value) {
   int i;
 
   // error on either side is always error
@@ -224,13 +224,16 @@ class LSLType *LSLType::get_result_type(int op, LSLType *right) {
   }
 
   // *_ASSIGN is just syntactic sugar. `foo *= 3` is the same as `foo = foo * 3`
+  bool compound_assignment = true;
   switch (op) {
     case ADD_ASSIGN: op = '+'; break;
     case SUB_ASSIGN: op = '-'; break;
     case MUL_ASSIGN: op = '*'; break;
     case DIV_ASSIGN: op = '/'; break;
     case MOD_ASSIGN: op = '%'; break;
-    default: break;
+    default:
+      compound_assignment = false;
+      break;
   }
 
   // go through each entry in the operator result table
@@ -252,7 +255,30 @@ class LSLType *LSLType::get_result_type(int op, LSLType *right) {
           match = (operator_result_table[i][2] == LST_ANY ||
                    operator_result_table[i][2] == (int) right->get_itype());
         if (match) {   // send back the type
-          return TYPE((LST_TYPE) operator_result_table[i][3]);
+          auto *ret_type = TYPE((LST_TYPE) operator_result_table[i][3]);
+          // for compound assignment operators the type of the operation's retval
+          // must additionally match the type of the lvalue, or it is not a valid
+          // compound assignment.
+          // For example, `int_val += 1.0` and `vec *= <1,1,1>` are forbidden.
+          // but something like `float_val += 1` is fine.
+          if (compound_assignment && ret_type != this) {
+            // ... is mostly true, but not entirely. There's one case in LL's compiler
+            // (that was probably a mistake) where `int_val *= float_val` is allowed.
+            // `int_val = int_val * float_val` is not legal since `int_val` must be promoted
+            // to a float which can't be assigned to an int lvalue, but the compound form doesn't
+            // even behave as you'd expect.
+            // In LSO it behaves the same as `(int_val = (integer)(int_val * float_val)) * 0.0`.
+            // In Mono it causes a runtime VM error due to invalid IL if you actually try to use
+            // the retval in something like `llOwnerSay((string)(int_val *= float_val))`.
+            // For now let's just warn and pretend it returns a float, because it sort of does in LSO.
+            if (get_itype() == LST_INTEGER && right && right->get_itype() == LST_FLOATINGPOINT && op == '*') {
+              if (err_value)
+                *err_value = W_INT_FLOAT_MUL_ASSIGN;
+              return TYPE(LST_FLOATINGPOINT);
+            }
+            return nullptr;
+          }
+          return ret_type;
         }
       }
     }
