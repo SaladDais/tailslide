@@ -5,9 +5,6 @@ namespace Tailslide {
 
 
 bool TreePrintingVisitor::visit(LSLASTNode* node) {
-  LSLASTNode *child = node->get_children();
-  char buf[256];
-
   auto lloc = node->get_lloc();
   auto type = node->get_type();
   auto constant_value = node->get_constant_value();
