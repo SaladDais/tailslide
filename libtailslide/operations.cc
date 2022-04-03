@@ -13,32 +13,42 @@ LLScriptConstant *TailslideOperationBehavior::operation(
     int oper, LLScriptConstant *cv, LLScriptConstant *other_cv, YYLTYPE *lloc) {
 
   auto *left_type = cv->get_type();
+  LLScriptConstant *new_cv = nullptr;
 
   switch (left_type->get_itype()) {
     case LST_STRING:
-      return operation(oper, (LLScriptStringConstant*)cv, other_cv, lloc);
+      new_cv = operation(oper, (LLScriptStringConstant*)cv, other_cv);
+      break;
     case LST_INTEGER:
-      return operation(oper, (LLScriptIntegerConstant*)cv, other_cv, lloc);
+      new_cv = operation(oper, (LLScriptIntegerConstant*)cv, other_cv);
+      break;
     case LST_FLOATINGPOINT:
-      return operation(oper, (LLScriptFloatConstant*)cv, other_cv, lloc);
+      new_cv = operation(oper, (LLScriptFloatConstant*)cv, other_cv);
+      break;
     case LST_LIST:
-      return operation(oper, (LLScriptListConstant*)cv, other_cv, lloc);
+      new_cv = operation(oper, (LLScriptListConstant*)cv, other_cv, lloc);
+      break;
     case LST_VECTOR:
-      return operation(oper, (LLScriptVectorConstant*)cv, other_cv, lloc);
+      new_cv = operation(oper, (LLScriptVectorConstant*)cv, other_cv);
+      break;
     case LST_QUATERNION:
-      return operation(oper, (LLScriptQuaternionConstant*)cv, other_cv, lloc);
+      new_cv = operation(oper, (LLScriptQuaternionConstant*)cv, other_cv);
+      break;
     case LST_MAX:
     case LST_NULL:
     case LST_KEY:
     case LST_ERROR:
       return nullptr;
   }
+  if (new_cv)
+    new_cv->set_lloc(lloc);
+  return new_cv;
 }
 
 //////////////////////////////////////////////
 // Integer Constants
 LLScriptConstant *TailslideOperationBehavior::operation(
-    int operation, LLScriptIntegerConstant *cv, LLScriptConstant *other_const, YYLTYPE *lloc) {
+    int operation, LLScriptIntegerConstant *cv, LLScriptConstant *other_const) {
   S32 value = cv->get_value();
   // unary op
   if (other_const == nullptr) {
@@ -168,7 +178,7 @@ LLScriptConstant *TailslideOperationBehavior::operation(
 //////////////////////////////////////////////
 // Float Constants
 LLScriptConstant *TailslideOperationBehavior::operation(
-    int operation, LLScriptFloatConstant *cv, LLScriptConstant *other_const, YYLTYPE *lloc) {
+    int operation, LLScriptFloatConstant *cv, LLScriptConstant *other_const) {
   float value = cv->get_value();
   // unary op
   if (other_const == nullptr) {
@@ -266,7 +276,7 @@ inline char *join_string(char *left, char *right) {
 }
 
 LLScriptConstant *TailslideOperationBehavior::operation(
-    int operation, LLScriptStringConstant *cv, LLScriptConstant *other_const, YYLTYPE *lloc) {
+    int operation, LLScriptStringConstant *cv, LLScriptConstant *other_const) {
   char *value = cv->get_value();
   // unary op
   if (other_const == nullptr) {
@@ -338,7 +348,7 @@ LLScriptConstant *TailslideOperationBehavior::operation(
 //////////////////////////////////////////////
 // Vector Constants
 LLScriptConstant *TailslideOperationBehavior::operation(
-    int operation, LLScriptVectorConstant *cv, LLScriptConstant *other_const, YYLTYPE *lloc) {
+    int operation, LLScriptVectorConstant *cv, LLScriptConstant *other_const) {
   LLVector *value = cv->get_value();
   // Make sure we have a value
   if (value == nullptr)
@@ -434,7 +444,7 @@ LLScriptConstant *TailslideOperationBehavior::operation(
 //////////////////////////////////////////////
 // Quaternion Constants
 LLScriptConstant *TailslideOperationBehavior::operation(
-    int operation, LLScriptQuaternionConstant *cv, LLScriptConstant *other_const, YYLTYPE *lloc) {
+    int operation, LLScriptQuaternionConstant *cv, LLScriptConstant *other_const) {
   LLQuaternion *value = cv->get_value();
   if (value == nullptr)
     return nullptr;
@@ -483,30 +493,40 @@ LLScriptConstant *TailslideOperationBehavior::cast(LLScriptType *to_type, LLScri
     return cv;
   }
 
+  LLScriptConstant *new_cv = nullptr;
   switch (orig_type->get_itype()) {
     case LST_STRING:
-      return cast(to_type, (LLScriptStringConstant *)cv, lloc);
+      new_cv = cast(to_type, (LLScriptStringConstant *)cv);
+      break;
     case LST_INTEGER:
-      return cast(to_type, (LLScriptIntegerConstant *)cv, lloc);
+      new_cv = cast(to_type, (LLScriptIntegerConstant *)cv);
+      break;
     case LST_FLOATINGPOINT:
-      return cast(to_type, (LLScriptFloatConstant *)cv, lloc);
+      new_cv = cast(to_type, (LLScriptFloatConstant *)cv);
+      break;
     case LST_LIST:
-      return cast(to_type, (LLScriptListConstant *)cv, lloc);
+      new_cv = cast(to_type, (LLScriptListConstant *)cv);
+      break;
     case LST_VECTOR:
-      return cast(to_type, (LLScriptVectorConstant *)cv, lloc);
+      new_cv = cast(to_type, (LLScriptVectorConstant *)cv);
+      break;
     case LST_QUATERNION:
-      return cast(to_type, (LLScriptQuaternionConstant *)cv, lloc);
+      new_cv = cast(to_type, (LLScriptQuaternionConstant *)cv);
+      break;
     case LST_MAX:
     case LST_NULL:
     case LST_KEY:
     case LST_ERROR:
       return nullptr;
   }
+  if (new_cv)
+    new_cv->set_lloc(lloc);
+  return new_cv;
 }
 
 
 
-LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScriptStringConstant *cv, YYLTYPE *lloc) {
+LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScriptStringConstant *cv) {
   auto *v = cv->get_value();
   switch(to_type->get_itype()) {
     case LST_INTEGER: {
@@ -526,7 +546,7 @@ LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScri
   }
 }
 
-LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScriptIntegerConstant *cv, YYLTYPE *lloc) {
+LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScriptIntegerConstant *cv) {
   auto v = cv->get_value();
   switch(to_type->get_itype()) {
     case LST_STRING: {
@@ -539,7 +559,7 @@ LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScri
   }
 }
 
-LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScriptFloatConstant *cv, YYLTYPE *lloc) {
+LLScriptConstant* TailslideOperationBehavior::cast(LLScriptType *to_type, LLScriptFloatConstant *cv) {
   auto v = cv->get_value();
   switch(to_type->get_itype()) {
     case LST_STRING: {
