@@ -212,7 +212,7 @@ bool LSLType::can_coerce(LSLType *to) {
   return false;
 }
 
-class LSLType *LSLType::get_result_type(int op, LSLType *right, int *err_value) {
+class LSLType *LSLType::get_result_type(int op, LSLType *right, LSLASTNode *node) {
   int i;
 
   // error on either side is always error
@@ -223,7 +223,7 @@ class LSLType *LSLType::get_result_type(int op, LSLType *right, int *err_value) 
     return right;
   }
 
-  // *_ASSIGN is just syntactic sugar. `foo *= 3` is the same as `foo = foo * 3`
+  // *_ASSIGN is usually just syntactic sugar. `foo *= 3` is the same as `foo = foo * 3`
   bool compound_assignment = true;
   switch (op) {
     case ADD_ASSIGN: op = '+'; break;
@@ -239,49 +239,54 @@ class LSLType *LSLType::get_result_type(int op, LSLType *right, int *err_value) 
   // go through each entry in the operator result table
   for (i = 0; operator_result_table[i][0] != -1; i++) {
 
-    // if the operator is the one we're looking for
-    if (operator_result_table[i][0] == op) {
+    // no operator match
+    if (operator_result_table[i][0] != op)
+      continue;
 
-      // if the left side matches our left side
-      if (operator_result_table[i][1] == get_itype() || operator_result_table[i][1] == LST_ANY) {
+    // the left side must match our left side
+    if (operator_result_table[i][1] != get_itype() && operator_result_table[i][1] != LST_ANY)
+      continue;
 
-        bool match;
+    bool match;
 
-        if (right == nullptr)
-          // right isn't empty and matches our side
-          match = (operator_result_table[i][2] == LST_NONE);
-        else
-          // or right IS empty and matches nothing
-          match = (operator_result_table[i][2] == LST_ANY ||
-                   operator_result_table[i][2] == (int) right->get_itype());
-        if (match) {   // send back the type
-          auto *ret_type = TYPE((LST_TYPE) operator_result_table[i][3]);
-          // for compound assignment operators the type of the operation's retval
-          // must additionally match the type of the lvalue, or it is not a valid
-          // compound assignment.
-          // For example, `int_val += 1.0` and `vec *= <1,1,1>` are forbidden.
-          // but something like `float_val += 1` is fine.
-          if (compound_assignment && ret_type != this) {
-            // ... is mostly true, but not entirely. There's one case in LL's compiler
-            // (that was probably a mistake) where `int_val *= float_val` is allowed.
-            // `int_val = int_val * float_val` is not legal since `int_val` must be promoted
-            // to a float which can't be assigned to an int lvalue, but the compound form doesn't
-            // even behave as you'd expect.
-            // In LSO it behaves the same as `(int_val = (integer)(int_val * float_val)) * 0.0`.
-            // In Mono it causes a runtime VM error due to invalid IL if you actually try to use
-            // the retval in something like `llOwnerSay((string)(int_val *= float_val))`.
-            // For now let's just warn and pretend it returns a float, because it sort of does in LSO.
-            if (get_itype() == LST_INTEGER && right && right->get_itype() == LST_FLOATINGPOINT && op == '*') {
-              if (err_value)
-                *err_value = W_INT_FLOAT_MUL_ASSIGN;
-              return TYPE(LST_FLOATINGPOINT);
-            }
-            return nullptr;
-          }
-          return ret_type;
+    if (right == nullptr)
+      // right IS empty and matches nothing
+      match = (operator_result_table[i][2] == LST_NONE);
+    else
+      // or right isn't empty and matches our side
+      match = (operator_result_table[i][2] == LST_ANY ||
+               operator_result_table[i][2] == (int) right->get_itype());
+
+    // no type match on the operation
+    if (!match)
+      continue;
+
+    // send back the type
+    auto *ret_type = TYPE((LST_TYPE) operator_result_table[i][3]);
+    // for compound assignment operators the type of the operation's retval
+    // must additionally match the type of the lvalue, or it is not a valid
+    // compound assignment.
+    // For example, `int_val += 1.0` and `vec *= <1,1,1>` are forbidden.
+    // but something like `float_val += 1` is fine.
+    if (compound_assignment && ret_type != this) {
+      // ... is mostly true, but not entirely. There's one case in LL's compiler
+      // (that was probably a mistake) where `int_val *= float_val` is allowed.
+      // `int_val = int_val * float_val` is not legal since `int_val` must be promoted
+      // to a float which can't be assigned to an int lvalue, but the compound form doesn't
+      // even behave as you'd expect.
+      // In LSO it behaves the same as `(int_val = (integer)(int_val * float_val)) * 0.0`.
+      // In Mono it causes a runtime VM error due to invalid IL if you actually try to use
+      // the retval in something like `llOwnerSay((string)(int_val *= float_val))`.
+      // For now let's just warn and pretend it returns a float, because it sort of does in LSO.
+      if (get_itype() == LST_INTEGER && right && right->get_itype() == LST_FLOATINGPOINT && op == '*') {
+        if (node) {
+          ERROR(IN(node), W_INT_FLOAT_MUL_ASSIGN);
         }
+        return TYPE(LST_FLOATINGPOINT);
       }
+      return nullptr;
     }
+    return ret_type;
   }
   return nullptr;
 }

@@ -8,20 +8,31 @@ bool TypeCheckVisitor::visit(LSLASTNode *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LSLGlobalVariable *node) {
+// both LSLGlobalVariable and LSLDeclaration have the same child layout
+// so they can have a common visitor.
+void TypeCheckVisitor::handle_declaration(LSLASTNode *node) {
   auto *id = (LSLIdentifier *) node->get_child(0);
   LSLASTNode *rvalue = node->get_child(1);
   // already have our expected type from the declaration
   if (rvalue == nullptr || rvalue->get_node_type() == NODE_NULL)
-    return true;
+    return;
   // we already know there's something messed up going on with the types
   // in the rvalue, don't re-error
   if (rvalue->get_type() == TYPE(LST_ERROR))
-    return true;
+    return;
   if (!rvalue->get_type()->can_coerce(id->get_type())) {
     ERROR(IN(node), E_WRONG_TYPE_IN_ASSIGNMENT, id->get_type()->get_node_name(),
           id->get_name(), rvalue->get_type()->get_node_name());
   }
+}
+
+bool TypeCheckVisitor::visit(LSLGlobalVariable *node) {
+  handle_declaration(node);
+  return true;
+}
+
+bool TypeCheckVisitor::visit(LSLDeclaration *node) {
+  handle_declaration(node);
   return true;
 }
 
@@ -81,21 +92,6 @@ bool TypeCheckVisitor::visit(LSLStateStatement *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LSLDeclaration *node) {
-  auto *id = (LSLIdentifier *) node->get_child(0);
-  LSLASTNode *rvalue = node->get_child(1);
-  if (rvalue == nullptr || rvalue->get_node_type() == NODE_NULL)
-    return true;
-  // we already know there's something messed up going on with the types
-  // in the rvalue, don't re-error
-  if (rvalue->get_type() == TYPE(LST_ERROR))
-    return true;
-  if (!rvalue->get_type()->can_coerce(id->get_type())) {
-    ERROR(IN(node), E_WRONG_TYPE_IN_ASSIGNMENT, id->get_type()->get_node_name(),
-          id->get_name(), rvalue->get_type()->get_node_name());
-  }
-  return true;
-}
 
 bool TypeCheckVisitor::visit(LSLReturnStatement *node) {
   LSLASTNode *ancestor = node->get_parent();
@@ -187,8 +183,7 @@ bool TypeCheckVisitor::visit(LSLExpression *node) {
     // guess as to what the result of the expression is meant to be.
     type = TYPE(LST_ERROR);
   } else {
-    int err_value = 0;
-    type = l_type->get_result_type(operation, r_type, &err_value);
+    type = l_type->get_result_type(operation, r_type, node);
     if (type == nullptr) {
       ERROR(
           IN(node),
@@ -200,8 +195,6 @@ bool TypeCheckVisitor::visit(LSLExpression *node) {
       // We don't know what type this expression is supposed to result in,
       // either because this operation is unsupported.
       type = TYPE(LST_ERROR);
-    } else if (err_value) {
-      ERROR(IN(node), err_value);
     }
   }
   node->set_type(type);
