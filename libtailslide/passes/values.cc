@@ -151,7 +151,7 @@ bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {
       switch (c_type) {
         case LST_VECTOR: {
           auto *c = (LSLVectorConstant *) constant_value;
-          auto *v = (LSLVector *) c->get_value();
+          auto *v = (Vector3 *) c->get_value();
           assert(v);
           switch (member[0]) {
             case 'x':
@@ -170,7 +170,7 @@ bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {
         }
         case LST_QUATERNION: {
           auto *c = (LSLQuaternionConstant *) constant_value;
-          auto *v = (LSLQuaternion *) c->get_value();
+          auto *v = (Quaternion *) c->get_value();
           assert(v);
           switch (member[0]) {
             case 'x':

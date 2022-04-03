@@ -341,7 +341,7 @@ LSLConstant *TailslideOperationBehavior::operation(
 // Vector Constants
 LSLConstant *TailslideOperationBehavior::operation(
     int operation, LSLVectorConstant *cv, LSLConstant *other_const) {
-  LSLVector *value = cv->get_value();
+  Vector3 *value = cv->get_value();
   // Make sure we have a value
   if (value == nullptr)
     return nullptr;
@@ -397,7 +397,7 @@ LSLConstant *TailslideOperationBehavior::operation(
       return gAllocationManager->new_tracked<LSLVectorConstant>(nv[0], nv[1], nv[2]);
     }
     case NODE_VECTOR_CONSTANT: {
-      LSLVector *ov = ((LSLVectorConstant *) other_const)->get_value();
+      Vector3 *ov = ((LSLVectorConstant *) other_const)->get_value();
       if (ov == nullptr)
         return nullptr;
       float nv[3];
@@ -437,7 +437,7 @@ LSLConstant *TailslideOperationBehavior::operation(
 // Quaternion Constants
 LSLConstant *TailslideOperationBehavior::operation(
     int operation, LSLQuaternionConstant *cv, LSLConstant *other_const) {
-  LSLQuaternion *value = cv->get_value();
+  Quaternion *value = cv->get_value();
   if (value == nullptr)
     return nullptr;
 
@@ -452,7 +452,7 @@ LSLConstant *TailslideOperationBehavior::operation(
   // binary op
   switch (other_const->get_node_sub_type()) {
     case NODE_QUATERNION_CONSTANT: {
-      LSLQuaternion *ov = ((LSLQuaternionConstant *) other_const)->get_value();
+      Quaternion *ov = ((LSLQuaternionConstant *) other_const)->get_value();
       if (ov == nullptr)
         return nullptr;
       switch (operation) {

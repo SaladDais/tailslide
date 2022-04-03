@@ -483,7 +483,7 @@ static std::string format_float(float v) {
 }
 
 bool PrettyPrintVisitor::visit(LSLVectorConstant *node) {
-  LSLVector *v = node->get_value();
+  Vector3 *v = node->get_value();
   assert (v != nullptr);
   stream << '<';
   stream << format_float(v->x);
@@ -496,7 +496,7 @@ bool PrettyPrintVisitor::visit(LSLVectorConstant *node) {
 }
 
 bool PrettyPrintVisitor::visit(LSLQuaternionConstant *node) {
-  LSLQuaternion *v = node->get_value();
+  Quaternion *v = node->get_value();
   assert (v != nullptr);
   stream << '<';
   stream << format_float(v->x);

@@ -23,28 +23,28 @@ typedef float F32;
 extern thread_local class LSLScript *gScript;
 extern thread_local bool gFatalError;
 
-class LSLVector: public TrackableObject {
+class Vector3: public TrackableObject {
   public:
-    LSLVector(float x, float y, float z) : x(x), y(y), z(z) {};
+    Vector3(float x, float y, float z) : x(x), y(y), z(z) {};
     float x, y, z;
 
-    bool operator==(const class LSLVector &other) {
+    bool operator==(const class Vector3 &other) {
       return (x == other.x) && (y == other.y) && (z == other.z);
     };
-    bool operator!=(const class LSLVector &other) {
+    bool operator!=(const class Vector3 &other) {
       return !(*this == other);
     };
 };
 
-class LSLQuaternion: public TrackableObject {
+class Quaternion: public TrackableObject {
   public:
-    LSLQuaternion(float x, float y, float z, float s) : x(x), y(y), z(z), s(s) {};
+    Quaternion(float x, float y, float z, float s) : x(x), y(y), z(z), s(s) {};
     float x, y, z, s;
 
-    bool operator==(const class LSLQuaternion &other) {
+    bool operator==(const class Quaternion &other) {
       return (x == other.x) && (y == other.y) && (z == other.z) && (s == other.s);
     };
-    bool operator!=(const class LSLQuaternion &other) {
+    bool operator!=(const class Quaternion &other) {
       return !(*this == other);
     };
 };
@@ -253,7 +253,7 @@ class LSLListConstant : public LSLConstant {
 class LSLVectorConstant : public LSLConstant {
   public:
     LSLVectorConstant( float v1, float v2, float v3 ) {
-      value = gAllocationManager->new_tracked<LSLVector>( v1, v2, v3 );
+      value = gAllocationManager->new_tracked<Vector3>(v1, v2, v3 );
       type = TYPE(LST_VECTOR);
     };
 
@@ -268,8 +268,8 @@ class LSLVectorConstant : public LSLConstant {
 
     virtual LSLNodeSubType get_node_sub_type() { return NODE_VECTOR_CONSTANT; }
 
-    LSLVector *get_value() { return value; }
-    void set_value(LSLVector *val) { value = val; }
+    Vector3 *get_value() { return value; }
+    void set_value(Vector3 *val) { value = val; }
     virtual bool contains_nan();
 
     virtual LSLConstant* copy() {
@@ -279,7 +279,7 @@ class LSLVectorConstant : public LSLConstant {
     };
 
   private:
-    LSLVector *value;
+    Vector3 *value;
 };
 
 
@@ -289,7 +289,7 @@ class LSLVectorConstant : public LSLConstant {
 class LSLQuaternionConstant : public LSLConstant {
   public:
     LSLQuaternionConstant( float v1, float v2, float v3, float v4 ) {
-      value = gAllocationManager->new_tracked<LSLQuaternion>( v1, v2, v3, v4 );
+      value = gAllocationManager->new_tracked<Quaternion>(v1, v2, v3, v4 );
       type = TYPE(LST_QUATERNION);
     };
 
@@ -304,8 +304,8 @@ class LSLQuaternionConstant : public LSLConstant {
 
     virtual LSLNodeSubType get_node_sub_type() { return NODE_QUATERNION_CONSTANT; }
 
-    LSLQuaternion *get_value() { return value; }
-    void set_value(class LSLQuaternion *val) { value = val; }
+    Quaternion *get_value() { return value; }
+    void set_value(class Quaternion *val) { value = val; }
     virtual bool contains_nan();
 
     virtual LSLConstant* copy() {
@@ -315,7 +315,7 @@ class LSLQuaternionConstant : public LSLConstant {
     };
 
   private:
-    LSLQuaternion *value;
+    Quaternion *value;
 };
 
 

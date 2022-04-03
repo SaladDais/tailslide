@@ -409,12 +409,12 @@ bool LSLFloatConstant::contains_nan() {
 }
 
 bool LSLVectorConstant::contains_nan() {
-  LSLVector *v = get_value();
+  Vector3 *v = get_value();
   return std::isnan(v->x) || std::isnan(v->y) || std::isnan(v->z);
 }
 
 bool LSLQuaternionConstant::contains_nan() {
-  LSLQuaternion *v = get_value();
+  Quaternion *v = get_value();
   return std::isnan(v->x) || std::isnan(v->y) || std::isnan(v->z) || std::isnan(v->s);
 }
 
