@@ -26,7 +26,7 @@ LSLConstant *TailslideOperationBehavior::operation(
       new_cv = operation(oper, (LSLFloatConstant*)cv, other_cv);
       break;
     case LST_LIST:
-      new_cv = operation(oper, (LSLListConstant*)cv, other_cv, lloc);
+      new_cv = operation(oper, (LSLListConstant*)cv, other_cv);
       break;
     case LST_VECTOR:
       new_cv = operation(oper, (LSLVectorConstant*)cv, other_cv);
@@ -307,7 +307,7 @@ LSLConstant *TailslideOperationBehavior::operation(
 //////////////////////////////////////////////
 // List Constants
 LSLConstant *TailslideOperationBehavior::operation(
-    int operation, LSLListConstant *cv, LSLConstant *other_const, YYLTYPE *lloc) {
+    int operation, LSLListConstant *cv, LSLConstant *other_const) {
   // unary op
   if (other_const == nullptr) {
     return nullptr;
@@ -319,18 +319,10 @@ LSLConstant *TailslideOperationBehavior::operation(
       LSLListConstant *other = ((LSLListConstant *) other_const);
       switch (operation) {
         case EQ:
-          // warn on list == list
-          if (cv->get_length() != 0 && other->get_length() != 0) {
-            ERROR(lloc, W_LIST_COMPARE);
-          }
           return gAllocationManager->new_tracked<LSLIntegerConstant>(
             cv->get_length() == other->get_length()
           );
         case NEQ:
-          // warn on list == list
-          if (cv->get_length() != 0 && other->get_length() != 0) {
-            ERROR(lloc, W_LIST_COMPARE);
-          }
           // Yes, really.
           return gAllocationManager->new_tracked<LSLIntegerConstant>(
             cv->get_length() - other->get_length()

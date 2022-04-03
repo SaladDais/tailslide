@@ -152,7 +152,7 @@ class LSLASTNode : public TrackableObject {
     void collect_symbols();
     void determine_types();
     void propagate_values();
-    void determine_reachability();
+    void check_best_practices();
     void check_symbols(); // look for unused symbols, etc
 
     /// symbol functions        ///

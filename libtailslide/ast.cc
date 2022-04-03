@@ -2,7 +2,7 @@
 #include "ast.hh"
 #include "visitor.hh"
 #include "passes/values.hh"
-#include "passes/determine_reachable.hh"
+#include "passes/best_practices.hh"
 #include "passes/type_checking.hh"
 
 namespace Tailslide {
@@ -176,8 +176,8 @@ void LSLASTNode::propagate_values() {
   visit(&visitor);
 }
 
-void LSLASTNode::determine_reachability() {
-  DetermineReachableVisitor visitor;
+void LSLASTNode::check_best_practices() {
+  BestPracticesVisitor visitor;
   visit(&visitor);
 }
 

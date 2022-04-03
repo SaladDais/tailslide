@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
     script->determine_types();
     script->recalculate_reference_data();
     script->propagate_values();
-    script->determine_reachability();
+    script->check_best_practices();
 
     if (check_assertions) {
       Logger::get()->filter_assert_errors();

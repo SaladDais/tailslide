@@ -1,4 +1,4 @@
-#include "determine_reachable.hh"
+#include "best_practices.hh"
 
 namespace Tailslide {
 
@@ -30,7 +30,7 @@ static bool allret(LSLASTNode *p) {
   return ret;
 }
 
-bool DetermineReachableVisitor::visit(LSLGlobalFunction* node) {
+bool BestPracticesVisitor::visit(LSLGlobalFunction* node) {
   auto *id = (LSLIdentifier *) node->get_child(0);
   //LSLFunctionDec *decl = (LSLFunctionDec *) get_child(1);
   auto *statement = (LSLStatement *) node->get_child(2);
@@ -43,9 +43,9 @@ bool DetermineReachableVisitor::visit(LSLGlobalFunction* node) {
     }
   }
   return true;
-};
+}
 
-bool DetermineReachableVisitor::visit(LSLIfStatement *node) {
+bool BestPracticesVisitor::visit(LSLIfStatement *node) {
   // see if expression is constant
   LSLASTNode *cond = node->get_child(0);
   if (cond->get_constant_value() != nullptr) {
@@ -66,6 +66,32 @@ bool DetermineReachableVisitor::visit(LSLIfStatement *node) {
     auto *expr = (LSLExpression *) cond;
     if (expr->get_operation() == '=') {
       ERROR(IN(expr), W_ASSIGNMENT_IN_COMPARISON);
+    }
+  }
+  return true;
+}
+
+bool BestPracticesVisitor::visit(LSLBinaryExpression *node) {
+  LSLConstant *left_cv = node->get_child(0)->get_constant_value();
+  LSLConstant *right_cv = node->get_child(1)->get_constant_value();
+
+  if (!left_cv || !right_cv)
+    return true;
+
+  if (left_cv->get_type() != TYPE(LST_LIST) || left_cv->get_type() != TYPE(LST_LIST))
+    return true;
+
+  auto *left_lcv = (LSLListConstant *)left_cv;
+  auto *right_lcv = (LSLListConstant *)right_cv;
+
+  switch (node->get_operation()) {
+    case NEQ:
+    case EQ: {
+      // warn on list == list unless it's against an empty list constant,
+      // integer len = (list_val != []) is a common pattern for getting the length of a list.
+      if (left_lcv->get_length() != 0 && right_lcv->get_length() != 0) {
+        ERROR(IN(node), W_LIST_COMPARE);
+      }
     }
   }
   return true;

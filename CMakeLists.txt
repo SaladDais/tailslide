@@ -71,7 +71,7 @@ target_sources(libtailslide PRIVATE
         libtailslide/types.hh
         libtailslide/visitor.hh
         libtailslide/passes/globalexpr_validator.hh
-        libtailslide/passes/determine_reachable.hh
+        libtailslide/passes/best_practices.hh
         libtailslide/passes/pretty_print.hh
         libtailslide/passes/symbol_resolution.hh
         libtailslide/passes/tree_simplifier.hh
@@ -92,7 +92,7 @@ target_sources(libtailslide PRIVATE
         libtailslide/types.cc
         libtailslide/visitor.cc
         libtailslide/passes/globalexpr_validator.cc
-        libtailslide/passes/determine_reachable.cc
+        libtailslide/passes/best_practices.cc
         libtailslide/passes/pretty_print.cc
         libtailslide/passes/symbol_resolution.cc
         libtailslide/passes/type_checking.cc

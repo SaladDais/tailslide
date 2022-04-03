@@ -5,10 +5,11 @@
 
 namespace Tailslide {
 
-class DetermineReachableVisitor: public ASTVisitor {
+class BestPracticesVisitor: public ASTVisitor {
   public:
     virtual bool visit(LSLGlobalFunction* node);
     virtual bool visit(LSLIfStatement *node);
+    virtual bool visit(LSLBinaryExpression *node);
 };
 
 }

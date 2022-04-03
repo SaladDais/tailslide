@@ -32,8 +32,7 @@ class TailslideOperationBehavior : public AOperationBehavior {
     LSLConstant *operation(int operation, LSLIntegerConstant *cv, LSLConstant *other_cv);
     LSLConstant *operation(int operation, LSLFloatConstant *cv, LSLConstant *other_cv);
     LSLConstant *operation(int operation, LSLStringConstant *cv, LSLConstant *other_cv);
-    LSLConstant *operation(
-        int operation, LSLListConstant *cv, LSLConstant *other_cv, YYLTYPE *lloc);
+    LSLConstant *operation(int operation, LSLListConstant *cv, LSLConstant *other_cv);
     LSLConstant *operation(int operation, LSLVectorConstant *cv, LSLConstant *other_cv);
     LSLConstant *operation(int operation, LSLQuaternionConstant *cv, LSLConstant *other_cv);
 
