@@ -4,12 +4,12 @@
     #include <stdio.h>
     #include <string.h>
 
+    using namespace Tailslide;
     //int yylex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param);
-    extern int yylex (YYSTYPE * yylval_param,YYLTYPE * yylloc_param , void *yyscanner);
+    extern int tailslide_lex (TAILSLIDE_STYPE * yylval_param, TAILSLIDE_LTYPE * yylloc_param , void *yyscanner);
 
 %}
 %{
-    using namespace Tailslide;
     thread_local LSLScript *Tailslide::gScript;
     thread_local bool Tailslide::gFatalError;
     int yyerror( YYLTYPE*, void *, const char * );
@@ -18,13 +18,16 @@
     #define YYMAXDEPTH 10020
     #define YYINITDEPTH 10020
     #define LSLINT_STACK_OVERFLOW_AT 10000
-    inline int _yylex( YYSTYPE * yylval, YYLTYPE *yylloc, void *yyscanner, int stack ) {
+    inline int _yylex( TAILSLIDE_STYPE * yylval, YYLTYPE *yylloc, void *yyscanner, int stack ) {
         if ( stack == LSLINT_STACK_OVERFLOW_AT ) {
             ERROR( yylloc, E_PARSER_STACK_DEPTH );
             return 0;
         }
-        return yylex( yylval, yylloc, yyscanner );
+        return tailslide_lex( yylval, yylloc, yyscanner );
     }
+    #ifdef yylex
+    #  undef yylex
+    #endif
     #define yylex(a,b,c) _yylex(a, b, c,  (int)(yyssp - yyss))
         
 
@@ -39,6 +42,7 @@
 
 %}
 
+%define api.prefix {tailslide_}
 %define parse.error verbose
 %locations
 %define api.pure
@@ -46,6 +50,8 @@
 %lex-param { void *scanner }
 
 %code requires {
+#include "loctype.hh"
+
     namespace Tailslide {
         typedef int   S32;
         typedef float F32;

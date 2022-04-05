@@ -4,6 +4,7 @@
 %option noyywrap
 %option nounput
 %option always-interactive
+%option prefix="tailslide_"
 
 %{
 #include <stdlib.h>
@@ -11,6 +12,8 @@
 #include "lslmini.tab.hh"
 
 using namespace Tailslide;
+
+#define YYSTYPE TAILSLIDE_STYPE
 
 #ifdef WIN32
 #include <io.h>

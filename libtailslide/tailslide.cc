@@ -2,13 +2,13 @@
 
 #include "tailslide.hh"
 
-int yylex_init(void **);
+int tailslide_lex_init(void **);
 
-void yyset_in(FILE *, void *);
+void tailslide_set_in(FILE *, void *);
 
-int yylex_destroy(void *);
+int tailslide_lex_destroy(void *);
 
-int yyparse(void *);
+int tailslide_parse(void *);
 
 namespace Tailslide {
 
@@ -34,16 +34,16 @@ void ScopedTailslideParser::parse(FILE *yyin) {
   void *scanner;
 
   // initialize flex
-  yylex_init(&scanner);
+  tailslide_lex_init(&scanner);
 
   // set input file
-  yyset_in(yyin, scanner);
+  tailslide_set_in(yyin, scanner);
 
   // parse
-  yyparse(scanner);
+  tailslide_parse(scanner);
 
   // clean up flex
-  yylex_destroy(scanner);
+  tailslide_lex_destroy(scanner);
 
   script = gScript;
   ast_sane = !gFatalError;

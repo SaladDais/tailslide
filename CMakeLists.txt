@@ -63,6 +63,7 @@ add_library(libtailslide STATIC)
 target_sources(libtailslide PRIVATE
         libtailslide/allocator.hh
         libtailslide/ast.hh
+        libtailslide/loctype.hh
         libtailslide/logger.hh
         libtailslide/lslmini.hh
         libtailslide/operations.hh
