@@ -7,19 +7,7 @@
 #include <utility>  // pair
 
 #include "allocator.hh"
-
-// have to do this here because of circular dependencies
-#if ! defined (YYLTYPE) && ! defined (YYLTYPE_IS_DECLARED)
-typedef struct YYLTYPE {
-    int first_line;
-    int first_column;
-    int last_line;
-    int last_column;
-} YYLTYPE;
-
-#define YYLTYPE_IS_DECLARED 1
-#define YYLTYPE_IS_TRIVIAL 1
-#endif
+#include "lslmini.tab.hh"
 
 namespace Tailslide {
 
