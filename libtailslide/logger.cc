@@ -295,7 +295,7 @@ const char *Logger::warning_messages[] = {
           "See: http://secondlife.com/badgeo/wakka.php?wakka=FunctionStateChangeHack",
         "Using an if statement to change state in a function is a hack and may have unintended side-effects.\n"
           "See: http://secondlife.com/badgeo/wakka.php?wakka=FunctionStateChangeHack",
-        "Multiple jumps for label `%s' - only the last will execute.",
+        "",
         "Empty if statement.",
         "`%s' treated as %d; this is probably not what you wanted.\n"
         "Make sure you separate opeartors with spaces.\n"
@@ -307,7 +307,9 @@ const char *Logger::warning_messages[] = {
         "Condition is always true.",
         "Condition is always false.",
         "Empty loop body.",
-        "`i_val *= f_val' can have unpredictable runtime behavior, prefer `i_val = (integer)(i_val * f_val)'"
+        "`i_val *= f_val' can have unpredictable runtime behavior, prefer `i_val = (integer)(i_val * f_val)'",
+        "`jump %s;' may jump to the wrong label due to label name clashes within function",
+        "label `@%s' is declared multiple times in the same function, which may cause undesired behavior"
 };
 
 }

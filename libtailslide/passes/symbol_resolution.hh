@@ -26,7 +26,8 @@ class SymbolResolutionVisitor : public ExprSymbolResolutionVisitor {
     virtual bool visit(LSLStateStatement *node);
 
     void _resolve_pending_jumps();
-    std::vector<LSLIdentifier*> _pending_jump_labels;
+    std::vector<LSLIdentifier*> _pending_jumps;
+    std::vector<LSLIdentifier*> _collected_labels;
 };
 
 }

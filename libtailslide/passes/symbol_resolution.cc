@@ -112,7 +112,7 @@ static void register_func_param_symbols(LSLASTNode *proto, bool is_event) {
 }
 
 bool SymbolResolutionVisitor::visit(LSLGlobalFunction *node) {
-  assert(_pending_jump_labels.empty());
+  assert(_pending_jumps.empty());
   visit_children(node);
   _resolve_pending_jumps();
   return false;
@@ -141,7 +141,7 @@ bool SymbolResolutionVisitor::visit(LSLEventHandler *node) {
     ERROR(IN(node), E_INVALID_EVENT, id->get_name());
   }
 
-  assert(_pending_jump_labels.empty());
+  assert(_pending_jumps.empty());
   visit_children(node);
   _resolve_pending_jumps();
   return false;
@@ -158,6 +158,7 @@ bool SymbolResolutionVisitor::visit(LSLLabel *node) {
       identifier->get_name(), identifier->get_type(), SYM_LABEL, SYM_LOCAL, node->get_lloc()
   ));
   node->define_symbol(identifier->get_symbol());
+  _collected_labels.emplace_back(identifier);
   return true;
 }
 
@@ -166,7 +167,7 @@ bool SymbolResolutionVisitor::visit(LSLJumpStatement *node) {
   // can only resolve the labels they refer to after we leave the enclosing
   // function or event handler, having passed the last place the label it
   // refers to could have been defined.
-  _pending_jump_labels.emplace_back((LSLIdentifier*)node->get_child(0));
+  _pending_jumps.emplace_back((LSLIdentifier*)node->get_child(0));
   return true;
 }
 
@@ -177,10 +178,51 @@ bool SymbolResolutionVisitor::visit(LSLStateStatement *node) {
 }
 
 void SymbolResolutionVisitor::_resolve_pending_jumps() {
-  for (auto *id : _pending_jump_labels) {
+  for (auto *id : _pending_jumps) {
+    // Labels are weird in that they pretend they're lexically scoped but they really
+    // aren't in either LSO or Mono. The label you're jumping to _must_
+    // be in the lexical scope of your `jump`, but it will actually jump to the
+    // last occurrence of a label with a given name within the function body,
+    // crossing lexical scope boundaries. This was likely a mistake, but we have
+    // to deal with it. Gnarly.
+
+    // First do the lookup by lexical scope, triggering an error if it fails.
     id->resolve_symbol(SYM_LABEL);
+    if (auto *orig_sym = id->get_symbol()) {
+      LSLSymbol *new_sym = nullptr;
+      // Now get the label this will jump to in SL, iterate in reverse so the last
+      // instance of a label in a function will come first
+      for (auto i = _collected_labels.rbegin(); i != _collected_labels.rend(); ++i) {
+        auto *cand_sym = (*i)->get_symbol();
+        if (!cand_sym || cand_sym->get_symbol_type() != SYM_LABEL)
+          continue;
+        // name matches
+        if (!strcmp(cand_sym->get_name(), orig_sym->get_name())) {
+          new_sym = cand_sym;
+          break;
+        }
+      }
+      assert(new_sym);
+      // This jump specifically will jump to a label other than the one you might expect,
+      // so warn on that along with the general warning for duplicate label names.
+      if (new_sym != orig_sym) {
+        ERROR(IN(id), W_JUMP_TO_WRONG_LABEL, orig_sym->get_name());
+      }
+      id->set_symbol(new_sym);
+    }
   }
-  _pending_jump_labels.clear();
+
+  // Walk the list of collected labels and warn on any duplicated names
+  std::set<std::string> label_names;
+  for (auto &label_id : _collected_labels) {
+    if (label_names.find(label_id->get_name()) != label_names.end()) {
+      ERROR(IN(label_id), W_DUPLICATE_LABEL_NAME, label_id->get_name());
+    } else {
+      label_names.insert(label_id->get_name());
+    }
+  }
+  _pending_jumps.clear();
+  _collected_labels.clear();
 }
 
 }

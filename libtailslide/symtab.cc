@@ -36,11 +36,6 @@ void LSLSymbolTable::check_symbols() {
         sym->get_references() <= 1) {
       ERROR(IN(sym), W_DECLARED_BUT_NOT_USED, LSLSymbol::get_type_name(sym->get_symbol_type()), sym->get_name());
     }
-    if (sym->get_symbol_type() == SYM_LABEL) {
-      if (sym->get_references() > 2) {
-        ERROR(sym->get_lloc(), W_MULTIPLE_JUMPS_FOR_LABEL, sym->get_name());
-      }
-    }
   }
 }
 
