@@ -58,19 +58,19 @@ void LSLSymbolTable::reset_reference_data() {
   }
 }
 
-/* Oddly enough, using shorter names in globals save bytecode space. */
+/* Oddly enough, using shorter names in globals saves bytecode space. */
 void LSLSymbolTable::set_mangled_names() {
   int seq = 0;
   auto table_mangler = [seq, this](SensitiveSymbolMap &node_symbols) mutable {
+    // We want mangled symbol name to be consistent across STL implementations,
+    // and our symbol map is specifically unsorted. Place the symbol names in an std::set
+    // which will de-dupe and has a specification-imposed iteration order.
     std::set<std::string> key_names;
-
     for (auto &it: node_symbols) {
       key_names.insert(it.first);
     }
-    std::vector<std::string> sorted_key_names(key_names.begin(), key_names.end());
-
-    for (auto &key_name: sorted_key_names) {
-    auto range = node_symbols.equal_range(key_name.c_str());
+    for (auto &key_name: key_names) {
+      auto range = node_symbols.equal_range(key_name.c_str());
       for (auto &symbol = range.first; symbol != range.second; ++symbol) {
         LSLSymbol *sym = symbol->second;
         // can't rename events or builtin names, obviously!
