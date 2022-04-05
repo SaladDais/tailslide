@@ -20,17 +20,15 @@ public:
     ~ScopedTailslideParser() {
       assert(&_allocation_manager == gAllocationManager);
       gAllocationManager = nullptr;
-      gScript = nullptr;
-      gFatalError = false;
       Logger::get()->reset();
     };
 
-    LSLScript* script;
-    bool ast_sane;
-    void parse(FILE *yyin);
-    void parse(const std::string &filename);
+    LSLScript *parse(FILE *yyin);
+    LSLScript *parse(const std::string &filename);
+    LSLScript *script = nullptr;
 private:
     ScriptAllocationManager _allocation_manager {};
+    ScriptContext context {};
 };
 
 }

@@ -15,13 +15,13 @@ enum LSLSymbolSubType    { SYM_LOCAL, SYM_GLOBAL, SYM_BUILTIN, SYM_FUNCTION_PARA
 
 class LSLSymbol: public TrackableObject {
   public:
-    LSLSymbol( const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, YYLTYPE *lloc, class LSLFunctionDec *function_decl = NULL, class LSLASTNode *var_decl = NULL )
+    LSLSymbol( ScriptContext *ctx, const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, YYLTYPE *lloc, class LSLFunctionDec *function_decl = NULL, class LSLASTNode *var_decl = NULL )
       : name(name), type(type), symbol_type(symbol_type), sub_type(sub_type), lloc(*lloc), function_decl(function_decl), var_decl(var_decl),
-      constant_value(NULL), references(0), assignments(0), mangled_name(NULL) {};
+      constant_value(NULL), references(0), assignments(0), mangled_name(NULL), TrackableObject(ctx) {};
 
-    LSLSymbol( const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, class LSLFunctionDec *function_decl = NULL, class LSLASTNode *var_decl = NULL )
+    LSLSymbol( ScriptContext *ctx, const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, class LSLFunctionDec *function_decl = NULL, class LSLASTNode *var_decl = NULL )
       : name(name), type(type), symbol_type(symbol_type), sub_type(sub_type), function_decl(function_decl), var_decl(var_decl),
-      constant_value(NULL), references(0), assignments(0), mangled_name(NULL) {};
+      constant_value(NULL), references(0), assignments(0), mangled_name(NULL), TrackableObject(ctx) {};
 
     const char          *get_name()         { return name; }
     class LSLType  *get_type()         { return type; }
@@ -100,6 +100,7 @@ struct cstr_equal_to
 
 class LSLSymbolTable: public TrackableObject {
   public:
+    LSLSymbolTable(ScriptContext *ctx): TrackableObject(ctx) {};
     LSLSymbol *lookup( const char *name, LSLSymbolType type = SYM_ANY );
     void            define( LSLSymbol *symbol );
     bool            remove( LSLSymbol *symbol );

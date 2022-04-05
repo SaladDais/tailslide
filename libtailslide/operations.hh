@@ -1,5 +1,7 @@
 #pragma once
 
+#include "allocator.hh"
+
 struct YYLTYPE;
 
 namespace Tailslide {
@@ -24,6 +26,7 @@ class AOperationBehavior {
 // runtime operation behavior!
 class TailslideOperationBehavior : public AOperationBehavior {
   public:
+    TailslideOperationBehavior(ScriptAllocationManager *allocator) {_allocator = allocator;};
     // dispatch method
     LSLConstant *operation(
         int operation, LSLConstant *cv, LSLConstant *other_cv, YYLTYPE *lloc) override;
@@ -46,6 +49,15 @@ class TailslideOperationBehavior : public AOperationBehavior {
     LSLConstant *cast(LSLType *to_type, LSLListConstant *cv) { return nullptr; };
     LSLConstant *cast(LSLType *to_type, LSLVectorConstant *cv) { return nullptr; };
     LSLConstant *cast(LSLType *to_type, LSLQuaternionConstant *cv) { return nullptr; };
+
+  protected:
+    inline char *join_string(char *left, char *right) {
+      char *ns = _allocator->alloc(strlen(left) + strlen(right) + 1);
+      strcpy(ns, left);
+      strcat(ns, right);
+      return ns;
+    }
+    ScriptAllocationManager *_allocator;
 };
 
 }

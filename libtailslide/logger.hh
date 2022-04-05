@@ -154,7 +154,7 @@ inline void DEBUG(LogLevel level, YYLTYPE *yylloc, const char *fmt, ...) {
 // Log message entry, for sorting
 class LogMessage: public TrackableObject {
   public:
-    LogMessage( LogLevel type, YYLTYPE *loc, char *message, ErrorCode error );
+    LogMessage( ScriptContext *ctx, LogLevel type, YYLTYPE *loc, char *message, ErrorCode error );
 
     LogLevel    get_type() { return type; }
     YYLTYPE    *get_loc()  { return &loc;  }

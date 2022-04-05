@@ -7,11 +7,12 @@
 
 namespace Tailslide {
 
-thread_local YYLTYPE LSLASTNode::glloc = {0, 0, 0, 0};
-
-LSLASTNode::LSLASTNode() : type(nullptr), symbol_table(nullptr), constant_value(nullptr), lloc(glloc),
-                         declaration_allowed(true), children(nullptr), next(nullptr), prev(nullptr), parent(nullptr) {
+LSLASTNode::LSLASTNode(ScriptContext *ctx) : type(nullptr), symbol_table(nullptr), constant_value(nullptr),
+                                             declaration_allowed(true), children(nullptr),
+                                             next(nullptr), prev(nullptr), parent(nullptr), TrackableObject(ctx) {
   type = TYPE(LST_NULL);
+  if (ctx)
+    lloc = ctx->glloc;
 }
 
 void LSLASTNode::add_children(int num, va_list ap) {
@@ -25,7 +26,7 @@ void LSLASTNode::add_children(int num, va_list ap) {
 }
 
 LSLASTNode *LSLASTNode::new_null_node() {
-  return gAllocationManager->new_tracked<LSLASTNullNode>();
+  return context->allocator->new_tracked<LSLASTNullNode>();
 }
 
 
@@ -171,7 +172,7 @@ void LSLASTNode::visit(ASTVisitor *visitor) {
 
 
 void LSLASTNode::propagate_values() {
-  TailslideOperationBehavior behavior;
+  TailslideOperationBehavior behavior(context->allocator);
   ConstantDeterminingVisitor visitor(&behavior);
   visit(&visitor);
 }

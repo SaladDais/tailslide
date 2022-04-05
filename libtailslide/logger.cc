@@ -2,6 +2,7 @@
 #include <vector>
 #include <algorithm>
 #include "logger.hh"
+#include "lslmini.hh"
 
 namespace Tailslide {
 
@@ -213,8 +214,8 @@ void Logger::report() {
   fprintf(stderr, "TOTAL:: Errors: %d  Warnings: %d\n", errors, warnings);
 }
 
-LogMessage::LogMessage(LogLevel type, YYLTYPE *loc, char *message, ErrorCode error) : type(type), error(error) {
-  char *np = gAllocationManager->alloc(strlen(message) + 1);
+LogMessage::LogMessage(ScriptContext *ctx, LogLevel type, YYLTYPE *loc, char *message, ErrorCode error) : TrackableObject(ctx), type(type), error(error) {
+  char *np = context->allocator->alloc(strlen(message) + 1);
   if (loc) this->loc = *loc;
   if (np != nullptr) {
     strcpy(np, message);
@@ -223,7 +224,7 @@ LogMessage::LogMessage(LogLevel type, YYLTYPE *loc, char *message, ErrorCode err
 }
 
 void LogMessage::cont(char *message) {
-  char *np = gAllocationManager->alloc(strlen(message) + 1);
+  char *np = context->allocator->alloc(strlen(message) + 1);
   if (np != nullptr) {
     strcpy(np, message);
     messages.push_back(np);

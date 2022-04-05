@@ -77,7 +77,7 @@ void LSLSymbolTable::set_mangled_names() {
         if (sym->get_symbol_type() == SYM_EVENT || sym->get_sub_type() == SYM_BUILTIN)
           continue;
 
-        char *mangled_id = gAllocationManager->alloc(30);
+        char *mangled_id = context->allocator->alloc(30);
         while (true) {
           snprintf(mangled_id, 30, "_%x", seq++);
           // Make sure this name isn't already in use

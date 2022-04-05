@@ -23,7 +23,7 @@ public:
 
     // disconnect the left and right expr nodes from the original parent
     // and attach them to the new expression
-    auto *new_expr = gAllocationManager->new_tracked<LSLBinaryExpression>(
+    auto *new_expr = expr->context->allocator->new_tracked<LSLBinaryExpression>(
         (LSLExpression*)expr->take_child(0),
         '-',
         (LSLExpression*)expr->take_child(1)
@@ -64,13 +64,14 @@ public:
     PrettyPrintVisitor pretty_visitor(PrettyPrintOpts {});
     expr->visit(&pretty_visitor);
 
-    char *new_str = gAllocationManager->copy_str(pretty_visitor.stream.str().c_str());
+    auto *allocator = expr->context->allocator;
+    char *new_str = allocator->copy_str(pretty_visitor.stream.str().c_str());
 
     // replace all addition with a stringified version of the addition expression
-    auto new_expr = gAllocationManager->new_tracked<LSLFunctionExpression>(
-        gAllocationManager->new_tracked<LSLIdentifier>(LSLType::get(LST_INTEGER), "whatever"),
-        gAllocationManager->new_tracked<LSLConstantExpression>(
-            gAllocationManager->new_tracked<LSLStringConstant>(new_str)
+    auto new_expr = allocator->new_tracked<LSLFunctionExpression>(
+        allocator->new_tracked<LSLIdentifier>(LSLType::get(LST_INTEGER), "whatever"),
+        allocator->new_tracked<LSLConstantExpression>(
+            allocator->new_tracked<LSLStringConstant>(new_str)
         )
     );
     // swap the old expression out with the new one
@@ -88,10 +89,11 @@ TEST_CASE("fancy_expr_replacement.lsl") {
   checkPrettyPrintOutput("fancy_expr_replacement.lsl", ctx, pretty_ctx, [](LSLScript* script) {
     // pretend we have a builtin called "whatever()" that takes a string and returns an int
     auto *symbol_table = script->get_symbol_table();
-    auto func_dec = gAllocationManager->new_tracked<LSLFunctionDec>(
-        gAllocationManager->new_tracked<LSLIdentifier>(LSLType::get(LST_STRING), "foobar")
+    auto *allocator = script->context->allocator;
+    auto func_dec = allocator->new_tracked<LSLFunctionDec>(
+        allocator->new_tracked<LSLIdentifier>(LSLType::get(LST_STRING), "foobar")
     );
-    symbol_table->define(gAllocationManager->new_tracked<LSLSymbol>(
+    symbol_table->define(allocator->new_tracked<LSLSymbol>(
         "whatever", LSLType::get(LST_INTEGER), SYM_FUNCTION, SYM_BUILTIN, func_dec
     ));
     FancyAddReplacementVisitor visitor;

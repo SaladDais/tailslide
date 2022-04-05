@@ -72,9 +72,9 @@ class ASTVisitor;
 
 class LSLASTNode : public TrackableObject {
   public:
-    LSLASTNode();
-    LSLASTNode( YYLTYPE *loc, int num, ... )
-      : LSLASTNode() {
+    explicit LSLASTNode(ScriptContext *ctx);
+    LSLASTNode( ScriptContext *ctx, YYLTYPE *loc, int num, ... )
+      : LSLASTNode(ctx) {
       lloc = *loc;
       va_list ap;
       va_start(ap, num);
@@ -82,7 +82,7 @@ class LSLASTNode : public TrackableObject {
       va_end(ap);
     }
 
-    explicit LSLASTNode( int num, ... ) : LSLASTNode() {
+    explicit LSLASTNode( ScriptContext *ctx, int num, ... ) : LSLASTNode(ctx) {
       va_list ap;
       va_start(ap, num);
       add_children( num, ap );
@@ -162,7 +162,6 @@ class LSLASTNode : public TrackableObject {
 
 
     YYLTYPE     *get_lloc()     { return &lloc; };
-    static void set_glloc(YYLTYPE *yylloc) { glloc = *yylloc; };
     void set_lloc(YYLTYPE *yylloc) { lloc = *yylloc; };
 
 
@@ -200,8 +199,7 @@ class LSLASTNode : public TrackableObject {
     bool                        constant_precluded = false;
 
   private:
-    YYLTYPE                      lloc;
-    thread_local static YYLTYPE               glloc;
+    YYLTYPE                      lloc {0};
 
     LSLASTNode *children;
     LSLASTNode *parent;
@@ -215,6 +213,7 @@ class LSLASTNode : public TrackableObject {
 
 class LSLASTNullNode : public LSLASTNode {
   public:
+    LSLASTNullNode(ScriptContext *ctx): LSLASTNode(ctx) {};
     virtual const char *get_node_name() { return "null"; };
     virtual LSLNodeType get_node_type() { return NODE_NULL; };
 };

@@ -155,13 +155,13 @@ bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {
           assert(v);
           switch (member[0]) {
             case 'x':
-              constant_value = gAllocationManager->new_tracked<LSLFloatConstant>(v->x);
+              constant_value = node->context->allocator->new_tracked<LSLFloatConstant>(v->x);
               break;
             case 'y':
-              constant_value = gAllocationManager->new_tracked<LSLFloatConstant>(v->y);
+              constant_value = node->context->allocator->new_tracked<LSLFloatConstant>(v->y);
               break;
             case 'z':
-              constant_value = gAllocationManager->new_tracked<LSLFloatConstant>(v->z);
+              constant_value = node->context->allocator->new_tracked<LSLFloatConstant>(v->z);
               break;
             default:
               constant_value = nullptr;
@@ -174,16 +174,16 @@ bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {
           assert(v);
           switch (member[0]) {
             case 'x':
-              constant_value = gAllocationManager->new_tracked<LSLFloatConstant>(v->x);
+              constant_value = node->context->allocator->new_tracked<LSLFloatConstant>(v->x);
               break;
             case 'y':
-              constant_value = gAllocationManager->new_tracked<LSLFloatConstant>(v->y);
+              constant_value = node->context->allocator->new_tracked<LSLFloatConstant>(v->y);
               break;
             case 'z':
-              constant_value = gAllocationManager->new_tracked<LSLFloatConstant>(v->z);
+              constant_value = node->context->allocator->new_tracked<LSLFloatConstant>(v->z);
               break;
             case 's':
-              constant_value = gAllocationManager->new_tracked<LSLFloatConstant>(v->s);
+              constant_value = node->context->allocator->new_tracked<LSLFloatConstant>(v->s);
               break;
             default:
               constant_value = nullptr;
@@ -217,15 +217,15 @@ bool ConstantDeterminingVisitor::visit(LSLListExpression *node) {
     // create assignables for them
     for (child = node->get_children(); child; child = child->get_next()) {
       if (new_child == nullptr) {
-        new_child = child->get_constant_value()->copy();
+        new_child = child->get_constant_value()->copy(node->context->allocator);
       } else {
-        new_child->add_next_sibling(child->get_constant_value()->copy());
+        new_child->add_next_sibling(child->get_constant_value()->copy(node->context->allocator));
       }
     }
   }
 
   // create constant value
-  node->set_constant_value(gAllocationManager->new_tracked<LSLListConstant>(new_child));
+  node->set_constant_value(node->context->allocator->new_tracked<LSLListConstant>(new_child));
   return true;
 }
 
@@ -263,7 +263,7 @@ bool ConstantDeterminingVisitor::visit(LSLVectorExpression *node) {
     return true;
 
   // create constant value
-  node->set_constant_value(gAllocationManager->new_tracked<LSLVectorConstant>(v[0], v[1], v[2]));
+  node->set_constant_value(node->context->allocator->new_tracked<LSLVectorConstant>(v[0], v[1], v[2]));
   return true;
 }
 
@@ -302,7 +302,7 @@ bool ConstantDeterminingVisitor::visit(LSLQuaternionExpression *node) {
     return true;
 
   // create constant value
-  node->set_constant_value(gAllocationManager->new_tracked<LSLQuaternionConstant>(v[0], v[1], v[2], v[3]));
+  node->set_constant_value(node->context->allocator->new_tracked<LSLQuaternionConstant>(v[0], v[1], v[2], v[3]));
   return true;
 }
 

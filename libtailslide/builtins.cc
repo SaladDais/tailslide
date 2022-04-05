@@ -10,7 +10,10 @@ namespace Tailslide {
 extern char *builtins_txt[];
 
 static ScriptAllocationManager gStaticAllocator {};
-static LSLSymbolTable gGlobalSymbolTable {};
+static LSLSymbolTable gGlobalSymbolTable {nullptr};
+ScriptContext gStaticScriptContext = {
+    .allocator = &gStaticAllocator,
+};
 
 struct LSLTypeMap {
     const char *name;
@@ -39,7 +42,7 @@ LSLType *str_to_type(const char *str) {
 
 // called once at startup, not thread-safe.
 void tailslide_init_builtins(const char *builtins_file) {
-  assert(gAllocationManager == nullptr);
+  gStaticAllocator.set_context(&gStaticScriptContext);
   LSLFunctionDec *dec = nullptr;
   FILE *fp = nullptr;
   char buf[1024];
@@ -60,7 +63,6 @@ void tailslide_init_builtins(const char *builtins_file) {
     }
   }
 
-  gAllocationManager = &gStaticAllocator;
   while (true) {
     if (fp) {
       if (fgets(buf, 1024, fp) == nullptr)
@@ -168,7 +170,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
             _CONST_PARSE_FAIL();
           }
           auto const_built = gStaticAllocator.new_tracked<LSLStringConstant>(
-              parse_string(value)
+              parse_string(&gStaticAllocator, value)
           );
           const_built->mark_static();
           sym->set_constant_value(const_built);
@@ -227,8 +229,6 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
       ));
     }
   }
-  // stop using the static allocator as the general allocator
-  gAllocationManager = nullptr;
 }
 
 LSLSymbol *LSLScript::lookup_symbol(const char *name, LSLSymbolType sym_type, LSLASTNode *start_node) {

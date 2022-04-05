@@ -27,7 +27,7 @@ class GlobalSymbolResolutionVisitor: public ExprSymbolResolutionVisitor {
       visit_children(node);
 
       auto *identifier = (LSLIdentifier *) node->get_children();
-      identifier->set_symbol(gAllocationManager->new_tracked<LSLSymbol>(
+      identifier->set_symbol(node->context->allocator->new_tracked<LSLSymbol>(
           identifier->get_name(), identifier->get_type(), SYM_VARIABLE, SYM_GLOBAL, node->get_lloc(), nullptr, node->get_parent()
       ));
       node->define_symbol(identifier->get_symbol());
@@ -38,7 +38,7 @@ class GlobalSymbolResolutionVisitor: public ExprSymbolResolutionVisitor {
       auto *identifier = (LSLIdentifier *) node->get_child(0);
 
       // define function in parent scope since functions have their own scope
-      identifier->set_symbol(gAllocationManager->new_tracked<LSLSymbol>(
+      identifier->set_symbol(node->context->allocator->new_tracked<LSLSymbol>(
           identifier->get_name(),
           identifier->get_type(),
           SYM_FUNCTION,
@@ -59,7 +59,7 @@ class GlobalSymbolResolutionVisitor: public ExprSymbolResolutionVisitor {
         return false;
 
       identifier = (LSLIdentifier *) maybe_id;
-      identifier->set_symbol(gAllocationManager->new_tracked<LSLSymbol>(
+      identifier->set_symbol(node->context->allocator->new_tracked<LSLSymbol>(
           identifier->get_name(), identifier->get_type(), SYM_STATE, SYM_GLOBAL, identifier->get_lloc()
       ));
       node->get_parent()->define_symbol(identifier->get_symbol());
@@ -84,7 +84,7 @@ bool SymbolResolutionVisitor::visit(LSLDeclaration *node) {
     rvalue->visit(this);
 
   auto *identifier = (LSLIdentifier *) node->get_child(0);
-  identifier->set_symbol(gAllocationManager->new_tracked<LSLSymbol>(
+  identifier->set_symbol(node->context->allocator->new_tracked<LSLSymbol>(
       identifier->get_name(), identifier->get_type(), SYM_VARIABLE, SYM_LOCAL, node->get_lloc(), nullptr, node
   ));
   node->define_symbol(identifier->get_symbol());
@@ -99,7 +99,7 @@ static void register_func_param_symbols(LSLASTNode *proto, bool is_event) {
   LSLASTNode *child = proto->get_children();
   while (child) {
     auto *identifier = (LSLIdentifier *) child;
-    identifier->set_symbol(gAllocationManager->new_tracked<LSLSymbol>(
+    identifier->set_symbol(proto->context->allocator->new_tracked<LSLSymbol>(
         identifier->get_name(),
         identifier->get_type(),
         SYM_VARIABLE,
@@ -133,7 +133,7 @@ bool SymbolResolutionVisitor::visit(LSLEventHandler *node) {
   // look for a prototype for this event in the builtin namespace
   auto *sym = node->get_root()->lookup_symbol(id->get_name(), SYM_EVENT);
   if (sym) {
-    id->set_symbol(gAllocationManager->new_tracked<LSLSymbol>(
+    id->set_symbol(node->context->allocator->new_tracked<LSLSymbol>(
         id->get_name(), id->get_type(), SYM_EVENT, SYM_BUILTIN, node->get_lloc(), sym->get_function_decl()
     ));
     node->get_parent()->define_symbol(id->get_symbol());
@@ -154,7 +154,7 @@ bool SymbolResolutionVisitor::visit(LSLEventDec *node) {
 
 bool SymbolResolutionVisitor::visit(LSLLabel *node) {
   auto *identifier = (LSLIdentifier *) node->get_child(0);
-  identifier->set_symbol(gAllocationManager->new_tracked<LSLSymbol>(
+  identifier->set_symbol(node->context->allocator->new_tracked<LSLSymbol>(
       identifier->get_name(), identifier->get_type(), SYM_LABEL, SYM_LOCAL, node->get_lloc()
   ));
   node->define_symbol(identifier->get_symbol());

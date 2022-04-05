@@ -5,8 +5,8 @@
 
 namespace Tailslide {
 
-char *parse_string(char *input) {
-  char *str = gAllocationManager->alloc((strlen(input) * 2) + 1);
+char *parse_string(ScriptAllocationManager *allocator, char *input) {
+  char *str = allocator->alloc((strlen(input) * 2) + 1);
   char *yp = input + 1;
   char *sp = str;
   int end = 0;

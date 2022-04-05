@@ -8,9 +8,13 @@
 
 namespace Tailslide {
 
+struct ScriptContext;
+
 class TrackableObject {
 public:
+  explicit TrackableObject(ScriptContext *ctx) {context = ctx;};
   virtual ~TrackableObject() = default;
+  ScriptContext *context = nullptr;
 };
 
 class ScriptAllocationManager {
@@ -18,10 +22,12 @@ public:
     ScriptAllocationManager();
     virtual ~ScriptAllocationManager();
 
-    template<typename T, typename... Args>
-    inline T* new_tracked(Args&&... args) {
-      static_assert(std::is_base_of<TrackableObject, T>::value, "Must be based on LLTrackableObject");
-      T* val = new T(std::forward<Args>(args)...);
+    void set_context(ScriptContext *context) {_context = context;};
+
+    template<typename TClazz, typename... Args>
+    inline TClazz * new_tracked(Args&&... args) {
+      static_assert(std::is_base_of<TrackableObject, TClazz>::value, "Must be based on LLTrackableObject");
+      auto* val = new TClazz(_context, std::forward<Args>(args)...);
       _tracked_objects.emplace_back(val);
       return val;
     }
@@ -45,6 +51,7 @@ public:
 private:
     std::vector<TrackableObject *> _tracked_objects {};
     std::vector<void *> _mallocs {};
+    ScriptContext *_context = nullptr;
 };
 
 extern thread_local ScriptAllocationManager *gAllocationManager;

@@ -79,7 +79,7 @@ bool TreeSimplifyingVisitor::visit(LSLExpression* node) {
 
   // We're going to change its parent / sibling connections,
   // so we need a copy.
-  auto *new_expr = gAllocationManager->new_tracked<LSLConstantExpression>(cv);
+  auto *new_expr = node->context->allocator->new_tracked<LSLConstantExpression>(cv);
   new_expr->set_lloc(node->get_lloc());
   LSLASTNode::replace_node(node, new_expr);
   ++folded_total;
@@ -104,7 +104,7 @@ bool TreeSimplifyingVisitor::visit(LSLLValueExpression *node) {
       return false;
     LSLConstant *cv = node->get_constant_value();
     if (cv && !cv->contains_nan()) {
-      auto *new_expr = gAllocationManager->new_tracked<LSLConstantExpression>(cv);
+      auto *new_expr = node->context->allocator->new_tracked<LSLConstantExpression>(cv);
       new_expr->set_lloc(node->get_lloc());
       LSLASTNode::replace_node(
           node,

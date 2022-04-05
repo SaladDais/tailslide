@@ -20,12 +20,18 @@ namespace Tailslide {
 typedef int   S32;
 typedef float F32;
 
-extern thread_local class LSLScript *gScript;
-extern thread_local bool gFatalError;
+struct ScriptContext {
+  LSLScript *script = nullptr;
+  ScriptAllocationManager *allocator = nullptr;
+  Logger *logger = nullptr;
+  bool ast_sane = true;
+  Tailslide::TAILSLIDE_LTYPE glloc {0};
+};
 
 class Vector3: public TrackableObject {
   public:
-    Vector3(float x, float y, float z) : x(x), y(y), z(z) {};
+    Vector3(ScriptContext *ctx, float x, float y, float z) : TrackableObject(ctx), x(x), y(y), z(z) {};
+    Vector3(float x, float y, float z): Vector3(nullptr, x, y, z) {};
     float x, y, z;
 
     bool operator==(const class Vector3 &other) {
@@ -38,7 +44,8 @@ class Vector3: public TrackableObject {
 
 class Quaternion: public TrackableObject {
   public:
-    Quaternion(float x, float y, float z, float s) : x(x), y(y), z(z), s(s) {};
+    Quaternion(ScriptContext *ctx, float x, float y, float z, float s) : TrackableObject(ctx), x(x), y(y), z(z), s(s) {};
+    Quaternion(float x, float y, float z, float s): Quaternion(nullptr, x, y, z, s) {};
     float x, y, z, s;
 
     bool operator==(const class Quaternion &other) {
@@ -52,9 +59,9 @@ class Quaternion: public TrackableObject {
 
 class LSLScript : public LSLASTNode {
   public:
-    LSLScript( class LSLGlobalStorage *globals, class LSLState *states )
-      : LSLASTNode( 2, globals, states ) {
-        symbol_table = gAllocationManager->new_tracked<LSLSymbolTable>();
+    LSLScript( ScriptContext *ctx, class LSLGlobalStorage *globals, class LSLState *states )
+      : LSLASTNode( ctx, 2, globals, states ) {
+        symbol_table = ctx->allocator->new_tracked<LSLSymbolTable>();
     };
 
     virtual const char *get_node_name() { return "script"; };
@@ -68,18 +75,18 @@ class LSLScript : public LSLASTNode {
 
 class LSLGlobalStorage : public LSLASTNode {
   public:
-    LSLGlobalStorage( class LSLGlobalVariable *variables, class LSLGlobalFunction *functions )
-      : LSLASTNode( 2, variables, functions ) {};
+    LSLGlobalStorage( ScriptContext *ctx, class LSLGlobalVariable *variables, class LSLGlobalFunction *functions )
+      : LSLASTNode( ctx, 2, variables, functions ) {};
     virtual const char *get_node_name() { return "global storage"; }
     virtual LSLNodeType get_node_type() { return NODE_GLOBAL_STORAGE; };
 };
 
 class LSLIdentifier : public LSLASTNode {
   public:
-    LSLIdentifier( const char *name ) : LSLASTNode(0), symbol(NULL), name(name) {};
-    LSLIdentifier( class LSLType *_type, const char *name ) : LSLASTNode(0), symbol(NULL), name(name) { type = _type; };
-    LSLIdentifier( class LSLType *_type, const char *name, YYLTYPE *lloc ) : LSLASTNode( lloc, 0), symbol(NULL), name(name) { type = _type; };
-    LSLIdentifier( LSLIdentifier *other ) : LSLASTNode(0), symbol(NULL), name(other->get_name()) {};
+    LSLIdentifier( ScriptContext *ctx, const char *name ) : LSLASTNode(ctx), symbol(NULL), name(name) {};
+    LSLIdentifier( ScriptContext *ctx, class LSLType *_type, const char *name ) : LSLASTNode(ctx), symbol(NULL), name(name) { type = _type; };
+    LSLIdentifier( ScriptContext *ctx, class LSLType *_type, const char *name, YYLTYPE *lloc ) : LSLASTNode( ctx, lloc, 0), symbol(NULL), name(name) { type = _type; };
+    LSLIdentifier( ScriptContext *ctx, LSLIdentifier *other ) : LSLASTNode(ctx), symbol(NULL), name(other->get_name()) {};
 
     const char    *get_name() { return name; }
 
@@ -102,8 +109,8 @@ class LSLIdentifier : public LSLASTNode {
 
 class LSLGlobalVariable : public LSLASTNode {
   public:
-    LSLGlobalVariable( class LSLIdentifier *identifier, class LSLExpression *value )
-      : LSLASTNode(2, identifier, value) { DEBUG( LOG_DEBUG_SPAM, NULL, "made a global var\n"); };
+    LSLGlobalVariable( ScriptContext *ctx, class LSLIdentifier *identifier, class LSLExpression *value )
+      : LSLASTNode(ctx, 2, identifier, value) { DEBUG( LOG_DEBUG_SPAM, NULL, "made a global var\n"); };
     virtual const char *get_node_name() { return "global var"; }
     virtual LSLNodeType get_node_type() { return NODE_GLOBAL_VARIABLE; };
 
@@ -114,11 +121,11 @@ class LSLGlobalVariable : public LSLASTNode {
 
 class LSLConstant : public LSLASTNode {
   public:
-    LSLConstant() : LSLASTNode(0) { constant_value = this; }
+    LSLConstant(ScriptContext *ctx) : LSLASTNode(ctx) { constant_value = this; }
     virtual const char *get_node_name() { return "unknown constant"; }
     virtual LSLNodeType get_node_type() { return NODE_CONSTANT; };
     // make a shallow copy of the constant
-    virtual LSLConstant* copy() = 0;
+    virtual LSLConstant* copy(ScriptAllocationManager *allocator) = 0;
     virtual bool contains_nan() { return false; };
 };
 
@@ -127,7 +134,7 @@ class LSLConstant : public LSLASTNode {
 
 class LSLIntegerConstant : public LSLConstant {
   public:
-    LSLIntegerConstant( int v ) : LSLConstant(), value(v) { type = TYPE(LST_INTEGER); }
+    LSLIntegerConstant( ScriptContext *ctx, int v ) : LSLConstant(ctx), value(v) { type = TYPE(LST_INTEGER); }
 
     virtual const char *get_node_name() {
       static thread_local char buf[256];
@@ -139,8 +146,8 @@ class LSLIntegerConstant : public LSLConstant {
 
     int get_value() { return value; }
     void set_value(int val) { value = val; }
-    virtual LSLConstant* copy() {
-      auto* new_const = gAllocationManager->new_tracked<LSLIntegerConstant>(value);
+    virtual LSLConstant* copy(ScriptAllocationManager *allocator) {
+      auto* new_const = allocator->new_tracked<LSLIntegerConstant>(value);
       new_const->constant_value = new_const;
       return new_const;
     };
@@ -155,7 +162,7 @@ class LSLIntegerConstant : public LSLConstant {
 
 class LSLFloatConstant : public LSLConstant {
   public:
-    LSLFloatConstant( float v ) : LSLConstant(), value(v) { type = TYPE(LST_FLOATINGPOINT); }
+    LSLFloatConstant( ScriptContext *ctx, float v ) : LSLConstant(ctx), value(v) { type = TYPE(LST_FLOATINGPOINT); }
 
     virtual const char *get_node_name() {
       static thread_local char buf[256];
@@ -168,8 +175,8 @@ class LSLFloatConstant : public LSLConstant {
     float get_value() { return value; }
     void set_value(float val) { value = val; }
     virtual bool contains_nan();
-    virtual LSLConstant* copy() {
-      auto* new_const = gAllocationManager->new_tracked<LSLFloatConstant>(value);
+    virtual LSLConstant* copy(ScriptAllocationManager *allocator) {
+      auto* new_const = allocator->new_tracked<LSLFloatConstant>(value);
       new_const->constant_value = new_const;
       return new_const;
     };
@@ -184,7 +191,7 @@ class LSLFloatConstant : public LSLConstant {
 
 class LSLStringConstant : public LSLConstant {
   public:
-    LSLStringConstant( char *v ) : LSLConstant(), value(v) { type = TYPE(LST_STRING); }
+    LSLStringConstant( ScriptContext *ctx, char *v ) : LSLConstant(ctx), value(v) { type = TYPE(LST_STRING); }
 
     virtual const char *get_node_name() {
       static thread_local char buf[256];
@@ -196,8 +203,8 @@ class LSLStringConstant : public LSLConstant {
 
     char *get_value() { return value; }
     void set_value(char *val) { value = val; }
-    virtual LSLConstant* copy() {
-      auto* new_const = gAllocationManager->new_tracked<LSLStringConstant>(value);
+    virtual LSLConstant* copy(ScriptAllocationManager *allocator) {
+      auto* new_const = allocator->new_tracked<LSLStringConstant>(value);
       new_const->constant_value = new_const;
       return new_const;
     };
@@ -212,7 +219,7 @@ class LSLStringConstant : public LSLConstant {
 
 class LSLListConstant : public LSLConstant {
   public:
-    LSLListConstant( class LSLConstant *v ) : LSLConstant() {
+    LSLListConstant( ScriptContext *ctx, class LSLConstant *v ) : LSLConstant(ctx) {
       type = TYPE(LST_LIST);
       // so we can do symbol resolution inside the list constant
       push_child(v);
@@ -240,8 +247,10 @@ class LSLListConstant : public LSLConstant {
       return i;
     }
 
-    virtual LSLConstant* copy() {
-      auto* new_const = gAllocationManager->new_tracked<LSLListConstant>(*this);
+    virtual LSLConstant* copy(ScriptAllocationManager *allocator) {
+      // TODO: probably actually have to copy all of the elements.
+      //  since it will reparent the child values.
+      auto* new_const = allocator->new_tracked<LSLListConstant>(get_value());
       new_const->constant_value = new_const;
       return new_const;
     };
@@ -252,8 +261,8 @@ class LSLListConstant : public LSLConstant {
 
 class LSLVectorConstant : public LSLConstant {
   public:
-    LSLVectorConstant( float v1, float v2, float v3 ) {
-      value = gAllocationManager->new_tracked<Vector3>(v1, v2, v3 );
+    LSLVectorConstant( ScriptContext *ctx, float v1, float v2, float v3 ): LSLConstant(ctx) {
+      value = ctx->allocator->new_tracked<Vector3>(v1, v2, v3 );
       type = TYPE(LST_VECTOR);
     };
 
@@ -272,8 +281,8 @@ class LSLVectorConstant : public LSLConstant {
     void set_value(Vector3 *val) { value = val; }
     virtual bool contains_nan();
 
-    virtual LSLConstant* copy() {
-      auto* new_const = gAllocationManager->new_tracked<LSLVectorConstant>(value->x, value->y, value->z);
+    virtual LSLConstant* copy(ScriptAllocationManager *allocator) {
+      auto* new_const = allocator->new_tracked<LSLVectorConstant>(value->x, value->y, value->z);
       new_const->constant_value = new_const;
       return new_const;
     };
@@ -288,8 +297,8 @@ class LSLVectorConstant : public LSLConstant {
 
 class LSLQuaternionConstant : public LSLConstant {
   public:
-    LSLQuaternionConstant( float v1, float v2, float v3, float v4 ) {
-      value = gAllocationManager->new_tracked<Quaternion>(v1, v2, v3, v4 );
+    LSLQuaternionConstant( ScriptContext *ctx, float v1, float v2, float v3, float v4 ): LSLConstant(ctx) {
+      value = ctx->allocator->new_tracked<Quaternion>(v1, v2, v3, v4 );
       type = TYPE(LST_QUATERNION);
     };
 
@@ -308,8 +317,8 @@ class LSLQuaternionConstant : public LSLConstant {
     void set_value(class Quaternion *val) { value = val; }
     virtual bool contains_nan();
 
-    virtual LSLConstant* copy() {
-      auto* new_const = gAllocationManager->new_tracked<LSLQuaternionConstant>(value->x, value->y, value->z, value->s);
+    virtual LSLConstant* copy(ScriptAllocationManager *allocator) {
+      auto* new_const = allocator->new_tracked<LSLQuaternionConstant>(value->x, value->y, value->z, value->s);
       new_const->constant_value = new_const;
       return new_const;
     };
@@ -321,9 +330,9 @@ class LSLQuaternionConstant : public LSLConstant {
 
 class LSLGlobalFunction : public LSLASTNode {
   public:
-    LSLGlobalFunction( class LSLIdentifier *identifier, class LSLFunctionDec *decl, class LSLStatement *statement )
-      : LSLASTNode( 3, identifier, decl, statement ) {
-        symbol_table = gAllocationManager->new_tracked<LSLSymbolTable>();
+    LSLGlobalFunction( ScriptContext *ctx, class LSLIdentifier *identifier, class LSLFunctionDec *decl, class LSLStatement *statement )
+      : LSLASTNode( ctx, 3, identifier, decl, statement ) {
+        symbol_table = ctx->allocator->new_tracked<LSLSymbolTable>();
     };
     virtual const char *get_node_name() { return "global func"; }
     virtual LSLNodeType get_node_type() { return NODE_GLOBAL_FUNCTION; };
@@ -331,31 +340,31 @@ class LSLGlobalFunction : public LSLASTNode {
 
 class LSLParamList : public LSLASTNode {
   public:
-    LSLParamList() : LSLASTNode(0) {};
-    LSLParamList( class LSLIdentifier *identifier ) : LSLASTNode(1, identifier) {};
+    LSLParamList( ScriptContext *ctx ) : LSLASTNode(ctx, 0) {};
+    LSLParamList( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLASTNode(ctx, 1, identifier) {};
 };
 
 class LSLFunctionDec : public LSLParamList {
   public:
-    LSLFunctionDec() : LSLParamList() {};
-    LSLFunctionDec( class LSLIdentifier *identifier ) : LSLParamList(identifier) {};
+    LSLFunctionDec(ScriptContext *ctx) : LSLParamList(ctx) {};
+    LSLFunctionDec( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLParamList(ctx, identifier) {};
     virtual const char *get_node_name() { return "function decl"; }
     virtual LSLNodeType get_node_type() { return NODE_FUNCTION_DEC; };
 };
 
 class LSLEventDec : public LSLParamList {
   public:
-    LSLEventDec() : LSLParamList() {};
-    LSLEventDec( class LSLIdentifier *identifier ) : LSLParamList(identifier) {};
+    LSLEventDec(ScriptContext *ctx) : LSLParamList(ctx) {};
+    LSLEventDec( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLParamList(ctx, identifier) {};
     virtual const char *get_node_name() { return "event decl"; }
     virtual LSLNodeType get_node_type() { return NODE_EVENT_DEC; };
 };
 
 class LSLState : public LSLASTNode {
   public:
-    LSLState( class LSLIdentifier *identifier, class LSLEventHandler *state_body )
-        : LSLASTNode( 2, identifier, state_body ) {
-      symbol_table = gAllocationManager->new_tracked<LSLSymbolTable>();
+    LSLState( ScriptContext *ctx, class LSLIdentifier *identifier, class LSLEventHandler *state_body )
+        : LSLASTNode( ctx, 2, identifier, state_body ) {
+      symbol_table = ctx->allocator->new_tracked<LSLSymbolTable>();
     };
     virtual const char *get_node_name() { return "state"; }
     virtual LSLNodeType get_node_type() { return NODE_STATE; };
@@ -363,9 +372,9 @@ class LSLState : public LSLASTNode {
 
 class LSLEventHandler : public LSLASTNode {
   public:
-    LSLEventHandler( class LSLIdentifier *identifier, class LSLEventDec *decl, class LSLStatement *body )
-      : LSLASTNode(3, identifier, decl, body) {
-        symbol_table = gAllocationManager->new_tracked<LSLSymbolTable>();
+    LSLEventHandler( ScriptContext *ctx, class LSLIdentifier *identifier, class LSLEventDec *decl, class LSLStatement *body )
+      : LSLASTNode(ctx, 3, identifier, decl, body) {
+        symbol_table = ctx->allocator->new_tracked<LSLSymbolTable>();
     };
     virtual const char *get_node_name() { return "event handler"; }
     virtual LSLNodeType get_node_type() { return NODE_EVENT_HANDLER; };
@@ -373,21 +382,21 @@ class LSLEventHandler : public LSLASTNode {
 
 class LSLStatement : public LSLASTNode {
   public:
-    LSLStatement( int num, ... ) {
+    LSLStatement( ScriptContext *ctx, int num, ... ): LSLASTNode(ctx) {
       va_list ap;
       va_start(ap, num);
       add_children(num, ap);
       va_end(ap);
     };
-    LSLStatement( class LSLExpression *expression ) : LSLASTNode(1, expression) {};
+    LSLStatement( ScriptContext *ctx, class LSLExpression *expression ) : LSLASTNode(ctx, 1, expression) {};
     virtual const char *get_node_name() { return "statement"; }
     virtual LSLNodeType get_node_type() { return NODE_STATEMENT; };
 };
 
 class LSLCompoundStatement : public LSLStatement {
   public:
-    LSLCompoundStatement( class LSLStatement *body ) : LSLStatement(1, body) {
-      symbol_table = gAllocationManager->new_tracked<LSLSymbolTable>();
+    LSLCompoundStatement( ScriptContext *ctx, class LSLStatement *body ) : LSLStatement(ctx, 1, body) {
+      symbol_table = ctx->allocator->new_tracked<LSLSymbolTable>();
     }
     virtual const char *get_node_name() { return "compound statement"; };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_COMPOUND_STATEMENT; };
@@ -395,70 +404,70 @@ class LSLCompoundStatement : public LSLStatement {
 
 class LSLStateStatement : public LSLStatement {
   public:
-    LSLStateStatement( ) : LSLStatement(0) {};
-    LSLStateStatement( class LSLIdentifier *identifier ) : LSLStatement(1, identifier) {};
+    LSLStateStatement(ScriptContext *ctx) : LSLStatement(ctx, 0) {};
+    LSLStateStatement( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLStatement(ctx, 1, identifier) {};
     virtual const char *get_node_name() { return "setstate"; };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_STATE_STATEMENT; };
 };
 
 class LSLJumpStatement : public LSLStatement {
   public:
-    LSLJumpStatement( class LSLIdentifier *identifier ) : LSLStatement(1, identifier) {};
+    LSLJumpStatement( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLStatement(ctx, 1, identifier) {};
     virtual const char *get_node_name() { return "jump"; };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_JUMP_STATEMENT; };
 };
 
 class LSLLabel : public LSLStatement {
   public:
-    LSLLabel( class LSLIdentifier *identifier ) : LSLStatement(1, identifier) {};
+    LSLLabel( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLStatement(ctx, 1, identifier) {};
     virtual const char *get_node_name() { return "label"; };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_LABEL; };
 };
 
 class LSLReturnStatement : public LSLStatement {
   public:
-    LSLReturnStatement( class LSLExpression *expression ) : LSLStatement(1, expression) {};
+    LSLReturnStatement( ScriptContext *ctx, class LSLExpression *expression ) : LSLStatement(ctx, 1, expression) {};
     virtual const char *get_node_name() { return "return"; };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_RETURN_STATEMENT; };
 };
 
 class LSLIfStatement : public LSLStatement {
   public:
-    LSLIfStatement( class LSLExpression *expression, class LSLStatement *true_branch, class LSLStatement *false_branch)
-      : LSLStatement( 3, expression, true_branch, false_branch ) {};
+    LSLIfStatement( ScriptContext *ctx, class LSLExpression *expression, class LSLStatement *true_branch, class LSLStatement *false_branch)
+      : LSLStatement( ctx, 3, expression, true_branch, false_branch ) {};
     virtual const char *get_node_name() { return "if"; };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_IF_STATEMENT; };
 };
 
 class LSLForStatement : public LSLStatement {
   public:
-    LSLForStatement( class LSLForExpressionList *init, class LSLExpression *condition,
+    LSLForStatement( ScriptContext *ctx, class LSLForExpressionList *init, class LSLExpression *condition,
         class LSLForExpressionList *cont, class LSLStatement *body)
-      : LSLStatement( 4, init, condition, cont, body ) {};
+      : LSLStatement( ctx, 4, init, condition, cont, body ) {};
     virtual const char *get_node_name() { return "for"; };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_FOR_STATEMENT; };
 };
 
 class LSLForExpressionList : public LSLASTNode {
   public:
-    LSLForExpressionList() : LSLASTNode(0) {};
-    LSLForExpressionList( class LSLExpression *expr ) : LSLASTNode(1, expr) {};
+    LSLForExpressionList(ScriptContext *ctx) : LSLASTNode(ctx, 0) {};
+    LSLForExpressionList( ScriptContext *ctx, class LSLExpression *expr ) : LSLASTNode(ctx, 1, expr) {};
     virtual const char *get_node_name() { return "for expr list"; }
     virtual LSLNodeType get_node_type() { return NODE_FOR_EXPRESSION_LIST; };
 };
 
 class LSLDoStatement : public LSLStatement {
   public:
-    LSLDoStatement( class LSLStatement *body, class LSLExpression *condition )
-      : LSLStatement(2, body, condition) {};
+    LSLDoStatement( ScriptContext *ctx, class LSLStatement *body, class LSLExpression *condition )
+      : LSLStatement(ctx, 2, body, condition) {};
     virtual const char *get_node_name() { return "do"; };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_DO_STATEMENT; };
 };
 
 class LSLWhileStatement : public LSLStatement {
   public:
-    LSLWhileStatement( class LSLExpression *condition, class LSLStatement *body )
-      : LSLStatement(2, condition, body) {};
+    LSLWhileStatement( ScriptContext *ctx, class LSLExpression *condition, class LSLStatement *body )
+      : LSLStatement(ctx, 2, condition, body) {};
     virtual const char *get_node_name() { return "while"; };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_WHILE_STATEMENT; };
 };
@@ -466,8 +475,8 @@ class LSLWhileStatement : public LSLStatement {
 
 class LSLDeclaration : public LSLStatement {
   public:
-    LSLDeclaration(class LSLIdentifier *identifier, class LSLExpression *value)
-      : LSLStatement(2, identifier, value) { };
+    LSLDeclaration(ScriptContext *ctx, class LSLIdentifier *identifier, class LSLExpression *value)
+      : LSLStatement(ctx, 2, identifier, value) { };
     virtual const char *get_node_name() { return "declaration"; };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_DECLARATION; };
 
@@ -476,8 +485,8 @@ class LSLDeclaration : public LSLStatement {
 
 class LSLExpression : public LSLASTNode {
 public:
-    LSLExpression() : LSLASTNode(0), operation(0) {};
-    LSLExpression(int num, ...): operation(0) {
+    LSLExpression(ScriptContext *ctx) : LSLASTNode(ctx, 0), operation(0) {};
+    LSLExpression(ScriptContext *ctx, int num, ...): LSLASTNode(ctx), operation(0) {
       va_list ap;
       va_start(ap, num);
       add_children(num, ap);
@@ -498,11 +507,11 @@ public:
 
 class LSLConstantExpression: public LSLExpression {
 public:
-    LSLConstantExpression( LSLConstant* constant )
-      : LSLExpression() {
+    LSLConstantExpression( ScriptContext *ctx, LSLConstant* constant )
+      : LSLExpression(ctx) {
       assert(constant);
       if (constant->is_static())
-        constant = constant->copy();
+        constant = constant->copy(ctx->allocator);
       push_child(constant);
       constant_value = constant;
     };
@@ -516,8 +525,8 @@ public:
 
 class LSLParenthesisExpression: public LSLExpression {
 public:
-    LSLParenthesisExpression( LSLExpression* expr )
-      : LSLExpression(1, expr) { operation = '('; };
+    LSLParenthesisExpression( ScriptContext *ctx, LSLExpression* expr )
+      : LSLExpression(ctx, 1, expr) { operation = '('; };
 
     virtual const char *get_node_name() {
       return "parenthesis expression";
@@ -528,8 +537,8 @@ public:
 
 class LSLBinaryExpression : public LSLExpression {
 public:
-    LSLBinaryExpression( LSLExpression *lvalue, int oper, LSLExpression *rvalue )
-    : LSLExpression(2, lvalue, rvalue) { operation = oper; };
+    LSLBinaryExpression( ScriptContext *ctx, LSLExpression *lvalue, int oper, LSLExpression *rvalue )
+    : LSLExpression(ctx, 2, lvalue, rvalue) { operation = oper; };
 
     virtual const char *get_node_name() {
       static thread_local char buf[256];
@@ -541,8 +550,8 @@ public:
 
 class LSLUnaryExpression : public LSLExpression {
 public:
-    LSLUnaryExpression( LSLExpression *lvalue, int oper )
-            : LSLExpression(1, lvalue) { operation = oper; };
+    LSLUnaryExpression( ScriptContext *ctx, LSLExpression *lvalue, int oper )
+            : LSLExpression(ctx, 1, lvalue) { operation = oper; };
 
     virtual const char *get_node_name() {
       static thread_local char buf[256];
@@ -556,8 +565,8 @@ public:
 
 class LSLTypecastExpression : public LSLExpression {
   public:
-    LSLTypecastExpression( LSLType *_type, LSLExpression *expression )
-      : LSLExpression(1, expression) {type = _type;};
+    LSLTypecastExpression( ScriptContext *ctx, LSLType *_type, LSLExpression *expression )
+      : LSLExpression(ctx, 1, expression) {type = _type;};
 
     virtual const char *get_node_name() { return "typecast expression"; }
     virtual LSLNodeSubType get_node_sub_type() { return NODE_TYPECAST_EXPRESSION; };
@@ -565,18 +574,18 @@ class LSLTypecastExpression : public LSLExpression {
 
 class LSLPrintExpression : public LSLExpression {
   public:
-    LSLPrintExpression( LSLExpression *expression )
-      : LSLExpression( 1, expression ) {type = TYPE(LST_NULL); };
+    LSLPrintExpression( ScriptContext *ctx, LSLExpression *expression )
+      : LSLExpression( ctx, 1, expression ) {type = TYPE(LST_NULL); };
     virtual const char *get_node_name() { return "print() call"; }
     virtual LSLNodeSubType get_node_sub_type() { return NODE_PRINT_EXPRESSION; };
 };
 
 class LSLFunctionExpression : public LSLExpression {
   public:
-    LSLFunctionExpression( LSLIdentifier *identifier )
-      : LSLExpression( 1, identifier ) {};
-    LSLFunctionExpression( LSLIdentifier *identifier, LSLExpression *arguments )
-      : LSLExpression( 2, identifier, arguments) {};
+    LSLFunctionExpression( ScriptContext *ctx, LSLIdentifier *identifier )
+      : LSLExpression( ctx, 1, identifier ) {};
+    LSLFunctionExpression( ScriptContext *ctx, LSLIdentifier *identifier, LSLExpression *arguments )
+      : LSLExpression( ctx, 2, identifier, arguments) {};
     virtual const char *get_node_name() { return "function call"; }
     virtual LSLNodeSubType get_node_sub_type() { return NODE_FUNCTION_EXPRESSION; };
 
@@ -585,10 +594,10 @@ class LSLFunctionExpression : public LSLExpression {
 
 class LSLVectorExpression : public LSLExpression {
   public:
-    LSLVectorExpression( LSLExpression *v1, LSLExpression *v2, LSLExpression *v3 )
-      : LSLExpression(3, v1, v2, v3) { type = TYPE(LST_VECTOR); }
-    LSLVectorExpression( ) : LSLExpression(0) {
-      constant_value = gAllocationManager->new_tracked<LSLVectorConstant>(0.0f,0.0f,0.0f);
+    LSLVectorExpression( ScriptContext *ctx, LSLExpression *v1, LSLExpression *v2, LSLExpression *v3 )
+      : LSLExpression(ctx, 3, v1, v2, v3) { type = TYPE(LST_VECTOR); }
+    LSLVectorExpression(ScriptContext *ctx) : LSLExpression(ctx,0) {
+      constant_value = ctx->allocator->new_tracked<LSLVectorConstant>(0.0f,0.0f,0.0f);
       type = TYPE(LST_VECTOR);
     }
     virtual const char *get_node_name() { return "vector expression"; }
@@ -597,10 +606,10 @@ class LSLVectorExpression : public LSLExpression {
 
 class LSLQuaternionExpression : public LSLExpression {
   public:
-    LSLQuaternionExpression( LSLExpression *v1, LSLExpression *v2, LSLExpression *v3, LSLExpression *v4 )
-      : LSLExpression(4, v1, v2, v3, v4) { type = TYPE(LST_QUATERNION); };
-    LSLQuaternionExpression( ) : LSLExpression(0) {
-      constant_value = gAllocationManager->new_tracked<LSLQuaternionConstant>(0.0f, 0.0f, 0.0f, 0.0f);
+    LSLQuaternionExpression( ScriptContext *ctx, LSLExpression *v1, LSLExpression *v2, LSLExpression *v3, LSLExpression *v4 )
+      : LSLExpression(ctx, 4, v1, v2, v3, v4) { type = TYPE(LST_QUATERNION); };
+    LSLQuaternionExpression(ScriptContext *ctx) : LSLExpression(ctx,0) {
+      constant_value = ctx->allocator->new_tracked<LSLQuaternionConstant>(0.0f, 0.0f, 0.0f, 0.0f);
       type = TYPE(LST_QUATERNION);
     };
     virtual const char *get_node_name() { return "quaternion expression"; };
@@ -609,7 +618,7 @@ class LSLQuaternionExpression : public LSLExpression {
 
 class LSLListExpression : public LSLExpression {
   public:
-    LSLListExpression( LSLExpression *c ) : LSLExpression( 1, c ) { type = TYPE(LST_LIST); };
+    LSLListExpression( ScriptContext *ctx, LSLExpression *c ) : LSLExpression( ctx, 1, c ) { type = TYPE(LST_LIST); };
 
     virtual const char *get_node_name() { return "list expression"; };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_LIST_EXPRESSION; }
@@ -617,10 +626,10 @@ class LSLListExpression : public LSLExpression {
 
 class LSLLValueExpression : public LSLExpression {
   public:
-    LSLLValueExpression( LSLIdentifier *identifier )
-      : LSLExpression(1, identifier), is_foldable(false) {};
-    LSLLValueExpression( LSLIdentifier *identifier, LSLIdentifier *member )
-        : LSLExpression(2, identifier, member), is_foldable(false) {};
+    LSLLValueExpression( ScriptContext *ctx, LSLIdentifier *identifier )
+      : LSLExpression(ctx, 1, identifier), is_foldable(false) {};
+    LSLLValueExpression( ScriptContext *ctx, LSLIdentifier *identifier, LSLIdentifier *member )
+        : LSLExpression(ctx, 2, identifier, member), is_foldable(false) {};
     virtual const char *get_node_name() {
       static thread_local char buf[256];
       snprintf(buf, 256, "lvalue expression {%sfoldable}", is_foldable ? "" : "not ");

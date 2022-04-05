@@ -14,6 +14,8 @@
 using namespace Tailslide;
 
 #define YYSTYPE TAILSLIDE_STYPE
+#define YY_EXTRA_TYPE ScriptContext *
+#define ALLOCATOR tailslide_get_extra(yyscanner)->allocator
 
 #ifdef WIN32
 #include <io.h>
@@ -27,7 +29,7 @@ using namespace Tailslide;
 #define YY_USER_INIT    LLOC_RESET()
 
 namespace Tailslide {
-    char *parse_string(char *input);
+    char *parse_string(ScriptAllocationManager *allocator, char *input);
 }
 
 %}
@@ -72,7 +74,7 @@ FS            (f|F)
 "rotation"          { return(QUATERNION); }
 "list"              { return(LIST); }
 
-"default"               { yylval->sval = gAllocationManager->alloc(strlen(yytext) + 1); strcpy(yylval->sval, yytext); return(STATE_DEFAULT); }
+"default"               { yylval->sval = ALLOCATOR->alloc(strlen(yytext) + 1); strcpy(yylval->sval, yytext); return(STATE_DEFAULT); }
 "state"                 { return(STATE); }
 "event"                 { return(EVENT); }
 "jump"                  { return(JUMP); }
@@ -90,13 +92,13 @@ FS            (f|F)
 0[xX]{H}+               { yylval->ival = strtoul(yytext, NULL, 0);  return(INTEGER_CONSTANT); }
 {N}+                    { yylval->ival = strtoul(yytext, NULL, 10); return(INTEGER_CONSTANT); }
 
-{L}({L}|{N})*           { yylval->sval = gAllocationManager->alloc(strlen(yytext) + 1); strcpy(yylval->sval, yytext); return(IDENTIFIER); }
+{L}({L}|{N})*           { yylval->sval = ALLOCATOR->alloc(strlen(yytext) + 1); strcpy(yylval->sval, yytext); return(IDENTIFIER); }
 
 {N}+{E}                 { yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
 {N}*"."{N}+({E})?{FS}?  { yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
 {N}+"."{N}*({E})?{FS}?  { yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
 
-L?\"(\\.|[^\\"])*\"     { yylval->sval = Tailslide::parse_string(yytext); return(STRING_CONSTANT); }
+L?\"(\\.|[^\\"])*\"     { yylval->sval = Tailslide::parse_string(ALLOCATOR, yytext); return(STRING_CONSTANT); }
 
 "++"                    { return(INC_OP); }
 "--"                    { return(DEC_OP); }
