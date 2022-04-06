@@ -114,6 +114,11 @@ ADD_FLEX_BISON_DEPENDENCY(LSLMiniScanner LSLMiniParser)
 
 target_include_directories(libtailslide PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
+install(TARGETS libtailslide DESTINATION lib)
+install(DIRECTORY libtailslide/ DESTINATION include/tailslide FILES_MATCHING PATTERN "*.hh")
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lslmini.tab.hh DESTINATION include/tailslide)
+
+
 if (TAILSLIDE_BUILD_CLI)
   add_executable(tailslide_cli)
   target_sources(tailslide_cli PRIVATE
