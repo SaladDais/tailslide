@@ -9,7 +9,7 @@ namespace Tailslide {
 
 extern char *builtins_txt[];
 
-static ScriptAllocationManager gStaticAllocator {};
+static ScriptAllocator gStaticAllocator {};
 static LSLSymbolTable gGlobalSymbolTable {nullptr};
 ScriptContext gStaticScriptContext = {
     .allocator = &gStaticAllocator,

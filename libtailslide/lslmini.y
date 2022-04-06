@@ -19,7 +19,7 @@
     #define LSLINT_STACK_OVERFLOW_AT 10000
     inline int _yylex( TAILSLIDE_STYPE * yylval, YYLTYPE *yylloc, void *yyscanner, int stack ) {
         if ( stack == LSLINT_STACK_OVERFLOW_AT ) {
-            ERROR( yylloc, E_PARSER_STACK_DEPTH );
+            tailslide_get_extra(yyscanner)->logger->error( yylloc, E_PARSER_STACK_DEPTH );
             return 0;
         }
         return tailslide_lex( yylval, yylloc, yyscanner );
@@ -464,7 +464,7 @@ default
     }
     | STATE_DEFAULT '{' '}'
     {
-        ERROR( &@1, E_NO_EVENT_HANDLERS );
+        tailslide_get_extra(scanner)->logger->error( &@1, E_NO_EVENT_HANDLERS );
         $$ = ALLOCATOR->new_tracked<LSLState>( nullptr, nullptr );
     }
     ;
@@ -476,7 +476,7 @@ state
     }
     | STATE IDENTIFIER '{' '}'
     {
-        ERROR( &@1, E_NO_EVENT_HANDLERS );
+        tailslide_get_extra(scanner)->logger->error( &@1, E_NO_EVENT_HANDLERS );
         $$ = ALLOCATOR->new_tracked<LSLState>( nullptr, nullptr );
     }
     ;
@@ -952,7 +952,7 @@ lvalue
 %%
 
 int yyerror( YYLTYPE *lloc, void *scanner, const char *message ) {
-    ERROR( lloc, E_SYNTAX_ERROR, message );
+    tailslide_get_extra(scanner)->logger->error( lloc, E_SYNTAX_ERROR, message );
     tailslide_get_extra(scanner)->ast_sane = false;
     return 0;
 }

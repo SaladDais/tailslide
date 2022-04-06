@@ -11,7 +11,7 @@ TEST_SUITE_BEGIN("Lint");
 TEST_CASE("bad_globals.lsl") {
   auto parser = runConformance("bad_globals.lsl", true);
   // syntax error due to bad tokens
-  CHECK(Logger::get()->get_errors() == 2);
+  CHECK(parser->logger.get_errors() == 2);
 }
 SIMPLE_LINT_TEST_CASE("camera_demo.lsl")
 SIMPLE_LINT_TEST_CASE("color-change.lsl")
@@ -44,13 +44,13 @@ TEST_CASE("parserstackdepth3.lsl") {
   auto parser = runConformance("parserstackdepth3.lsl", true);
   CHECK(parser->script == nullptr);
   // error about stack depth, then syntax error due to unexpected end.
-  CHECK(Logger::get()->get_errors() == 2);
+  CHECK(parser->logger.get_errors() == 2);
 }
 SIMPLE_LINT_TEST_CASE("print_expression.lsl")
 TEST_CASE("print_no_shadowing.lsl") {
   auto parser = runConformance("print_no_shadowing.lsl", true);
   // syntax error due to unexpected keyword
-  CHECK(Logger::get()->get_errors() == 2);
+  CHECK(parser->logger.get_errors() == 2);
 }
 SIMPLE_LINT_TEST_CASE("scope1.lsl")
 SIMPLE_LINT_TEST_CASE("scope2.lsl")
@@ -96,9 +96,9 @@ SIMPLE_LINT_TEST_CASE("tltp/server.lsl")
 
 TEST_CASE("type_error_no_assert.lsl") {
   auto parser = runConformance("type_error_no_assert.lsl");
-  Logger::get()->set_check_assertions(false);
-  Logger::get()->finalize();
-  CHECK(Logger::get()->get_errors() == 1);
+  parser->logger.set_check_assertions(false);
+  parser->logger.finalize();
+  CHECK(parser->logger.get_errors() == 1);
 }
 
 TEST_SUITE_END();

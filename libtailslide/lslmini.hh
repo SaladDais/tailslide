@@ -22,7 +22,7 @@ typedef float F32;
 
 struct ScriptContext {
   LSLScript *script = nullptr;
-  ScriptAllocationManager *allocator = nullptr;
+  ScriptAllocator *allocator = nullptr;
   Logger *logger = nullptr;
   bool ast_sane = true;
   Tailslide::TAILSLIDE_LTYPE glloc {0};
@@ -125,7 +125,7 @@ class LSLConstant : public LSLASTNode {
     virtual const char *get_node_name() { return "unknown constant"; }
     virtual LSLNodeType get_node_type() { return NODE_CONSTANT; };
     // make a shallow copy of the constant
-    virtual LSLConstant* copy(ScriptAllocationManager *allocator) = 0;
+    virtual LSLConstant* copy(ScriptAllocator *allocator) = 0;
     virtual bool contains_nan() { return false; };
 };
 
@@ -146,7 +146,7 @@ class LSLIntegerConstant : public LSLConstant {
 
     int get_value() { return value; }
     void set_value(int val) { value = val; }
-    virtual LSLConstant* copy(ScriptAllocationManager *allocator) {
+    virtual LSLConstant* copy(ScriptAllocator *allocator) {
       auto* new_const = allocator->new_tracked<LSLIntegerConstant>(value);
       new_const->constant_value = new_const;
       return new_const;
@@ -175,7 +175,7 @@ class LSLFloatConstant : public LSLConstant {
     float get_value() { return value; }
     void set_value(float val) { value = val; }
     virtual bool contains_nan();
-    virtual LSLConstant* copy(ScriptAllocationManager *allocator) {
+    virtual LSLConstant* copy(ScriptAllocator *allocator) {
       auto* new_const = allocator->new_tracked<LSLFloatConstant>(value);
       new_const->constant_value = new_const;
       return new_const;
@@ -203,7 +203,7 @@ class LSLStringConstant : public LSLConstant {
 
     char *get_value() { return value; }
     void set_value(char *val) { value = val; }
-    virtual LSLConstant* copy(ScriptAllocationManager *allocator) {
+    virtual LSLConstant* copy(ScriptAllocator *allocator) {
       auto* new_const = allocator->new_tracked<LSLStringConstant>(value);
       new_const->constant_value = new_const;
       return new_const;
@@ -247,7 +247,7 @@ class LSLListConstant : public LSLConstant {
       return i;
     }
 
-    virtual LSLConstant* copy(ScriptAllocationManager *allocator) {
+    virtual LSLConstant* copy(ScriptAllocator *allocator) {
       // TODO: probably actually have to copy all of the elements.
       //  since it will reparent the child values.
       auto* new_const = allocator->new_tracked<LSLListConstant>(get_value());
@@ -281,7 +281,7 @@ class LSLVectorConstant : public LSLConstant {
     void set_value(Vector3 *val) { value = val; }
     virtual bool contains_nan();
 
-    virtual LSLConstant* copy(ScriptAllocationManager *allocator) {
+    virtual LSLConstant* copy(ScriptAllocator *allocator) {
       auto* new_const = allocator->new_tracked<LSLVectorConstant>(value->x, value->y, value->z);
       new_const->constant_value = new_const;
       return new_const;
@@ -317,7 +317,7 @@ class LSLQuaternionConstant : public LSLConstant {
     void set_value(class Quaternion *val) { value = val; }
     virtual bool contains_nan();
 
-    virtual LSLConstant* copy(ScriptAllocationManager *allocator) {
+    virtual LSLConstant* copy(ScriptAllocator *allocator) {
       auto* new_const = allocator->new_tracked<LSLQuaternionConstant>(value->x, value->y, value->z, value->s);
       new_const->constant_value = new_const;
       return new_const;

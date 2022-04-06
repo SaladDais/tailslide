@@ -39,7 +39,7 @@ bool BestPracticesVisitor::visit(LSLGlobalFunction* node) {
     LSLType *tipe = id->get_symbol()->get_type();
 
     if (tipe->get_itype() != LST_NULL && !allret(statement)) {
-      ERROR(IN(node->get_child(0)), E_NOT_ALL_PATHS_RETURN);
+      NODE_ERROR(node->get_child(0), E_NOT_ALL_PATHS_RETURN);
     }
   }
   return true;
@@ -54,9 +54,9 @@ bool BestPracticesVisitor::visit(LSLIfStatement *node) {
     // `if (key_foo) {}` is the fastest way to validate UUIDs in LSL.
     if (cond->get_constant_value()->get_node_sub_type() == NODE_INTEGER_CONSTANT) {
       if (((LSLIntegerConstant *) cond->get_constant_value())->get_value()) {
-        ERROR(IN(cond), W_CONDITION_ALWAYS_TRUE);
+        NODE_ERROR(cond, W_CONDITION_ALWAYS_TRUE);
       } else {
-        ERROR(IN(cond), W_CONDITION_ALWAYS_FALSE);
+        NODE_ERROR(cond, W_CONDITION_ALWAYS_FALSE);
       }
     }
   }
@@ -65,7 +65,7 @@ bool BestPracticesVisitor::visit(LSLIfStatement *node) {
   if (cond->get_node_type() == NODE_EXPRESSION) {
     auto *expr = (LSLExpression *) cond;
     if (expr->get_operation() == '=') {
-      ERROR(IN(expr), W_ASSIGNMENT_IN_COMPARISON);
+      NODE_ERROR(expr, W_ASSIGNMENT_IN_COMPARISON);
     }
   }
   return true;
@@ -90,7 +90,7 @@ bool BestPracticesVisitor::visit(LSLBinaryExpression *node) {
       // warn on list == list unless it's against an empty list constant,
       // integer len = (list_val != []) is a common pattern for getting the length of a list.
       if (left_lcv->get_length() != 0 && right_lcv->get_length() != 0) {
-        ERROR(IN(node), W_LIST_COMPARE);
+        NODE_ERROR(node, W_LIST_COMPARE);
       }
     }
   }

@@ -90,7 +90,7 @@ bool SymbolResolutionVisitor::visit(LSLDeclaration *node) {
   node->define_symbol(identifier->get_symbol());
 
   if (!node->get_declaration_allowed()) {
-    ERROR(IN(node), E_DECLARATION_INVALID_HERE, identifier->get_symbol()->get_name());
+    NODE_ERROR(node, E_DECLARATION_INVALID_HERE, identifier->get_symbol()->get_name());
   }
   return false;
 }
@@ -138,7 +138,7 @@ bool SymbolResolutionVisitor::visit(LSLEventHandler *node) {
     ));
     node->get_parent()->define_symbol(id->get_symbol());
   } else {
-    ERROR(IN(node), E_INVALID_EVENT, id->get_name());
+    NODE_ERROR(node, E_INVALID_EVENT, id->get_name());
   }
 
   assert(_pending_jumps.empty());
@@ -206,7 +206,7 @@ void SymbolResolutionVisitor::_resolve_pending_jumps() {
       // This jump specifically will jump to a label other than the one you might expect,
       // so warn on that along with the general warning for duplicate label names.
       if (new_sym != orig_sym) {
-        ERROR(IN(id), W_JUMP_TO_WRONG_LABEL, orig_sym->get_name());
+        NODE_ERROR(id, W_JUMP_TO_WRONG_LABEL, orig_sym->get_name());
       }
       id->set_symbol(new_sym);
     }
@@ -216,7 +216,7 @@ void SymbolResolutionVisitor::_resolve_pending_jumps() {
   std::set<std::string> label_names;
   for (auto &label_id : _collected_labels) {
     if (label_names.find(label_id->get_name()) != label_names.end()) {
-      ERROR(IN(label_id), W_DUPLICATE_LABEL_NAME, label_id->get_name());
+      NODE_ERROR(label_id, W_DUPLICATE_LABEL_NAME, label_id->get_name());
     } else {
       label_names.insert(label_id->get_name());
     }

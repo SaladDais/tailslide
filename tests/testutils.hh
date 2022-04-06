@@ -17,14 +17,14 @@
 
 #define SIMPLE_LINT_TEST_CASE(name) TEST_CASE(name) { \
   auto parser = runConformance(name);                 \
-  assertNoLintErrors(name);     \
+  assertNoLintErrors(&parser->logger, name);     \
 }
 
-using ParserRef = std::unique_ptr<Tailslide::ScopedTailslideParser>;
+using ParserRef = std::unique_ptr<Tailslide::ScoperScriptParser>;
 
 ParserRef runConformance(const char* name, bool allow_syntax_errors=false);
 
-void assertNoLintErrors(const std::string& name);
+void assertNoLintErrors(Tailslide::Logger *logger, const std::string& name);
 
 void checkPrettyPrintOutput(
         const char* name,

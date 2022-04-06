@@ -6,17 +6,7 @@
 
 namespace Tailslide {
 
-thread_local Logger Logger::instance = Logger();
-
 #define LOG_BUF_LEFT (1024 - (bp - buf))
-
-Logger *Logger::get() {
-  return &instance;
-}
-
-Logger::~Logger() {
-  reset();
-}
 
 void Logger::reset() {
   messages.clear();
@@ -153,7 +143,7 @@ void Logger::logv(LogLevel level, YYLTYPE *yylloc, const char *fmt, va_list args
   }
   bp += vsnprintf(bp, LOG_BUF_LEFT, fmt, args);
 
-  last_message = gAllocationManager->new_tracked<LogMessage>(level, yylloc, buf, (ErrorCode)error);
+  last_message = _allocator->new_tracked<LogMessage>(level, yylloc, buf, (ErrorCode)error);
   //  fprintf(stderr, "%p\n", last_message);
   messages.push_back(last_message);
 }
@@ -190,7 +180,7 @@ void Logger::filter_assert_errors() {
       }
     }
     if (i == messages.end())
-      LOG(LOG_ERROR, nullptr, "Assertion failed: error %d on line %d.", (ai)->second, (ai)->first);
+      log(LOG_ERROR, nullptr, "Assertion failed: error %d on line %d.", (ai)->second, (ai)->first);
   }
 }
 
@@ -214,7 +204,8 @@ void Logger::report() {
   fprintf(stderr, "TOTAL:: Errors: %d  Warnings: %d\n", errors, warnings);
 }
 
-LogMessage::LogMessage(ScriptContext *ctx, LogLevel type, YYLTYPE *loc, char *message, ErrorCode error) : TrackableObject(ctx), type(type), error(error) {
+LogMessage::LogMessage(ScriptContext *ctx, LogLevel type, YYLTYPE *loc, char *message, ErrorCode error)
+    : TrackableObject(ctx), type(type), error(error) {
   char *np = context->allocator->alloc(strlen(message) + 1);
   if (loc) this->loc = *loc;
   if (np != nullptr) {

@@ -17,10 +17,10 @@ public:
   ScriptContext *context = nullptr;
 };
 
-class ScriptAllocationManager {
+class ScriptAllocator {
 public:
-    ScriptAllocationManager();
-    virtual ~ScriptAllocationManager();
+    ScriptAllocator();
+    virtual ~ScriptAllocator();
 
     void set_context(ScriptContext *context) {_context = context;};
 
@@ -53,8 +53,6 @@ private:
     std::vector<void *> _mallocs {};
     ScriptContext *_context = nullptr;
 };
-
-extern thread_local ScriptAllocationManager *gAllocationManager;
 
 }
 

@@ -12,32 +12,26 @@ int tailslide_parse(void *);
 
 namespace Tailslide {
 
-ScopedTailslideParser::ScopedTailslideParser() {
-  if (gAllocationManager != nullptr)
-    throw "Already have a live allocation manager!";
-  gAllocationManager = &_allocation_manager;
-  Logger::get()->reset();
-  context.logger = Logger::get();
-  context.allocator = &_allocation_manager;
-  context.script = nullptr;
-  context.ast_sane = true;
-  _allocation_manager.set_context(&context);
-}
 
-LSLScript *ScopedTailslideParser::parse(const std::string &filename) {
-  assert(context.script == nullptr);
+LSLScript *ScoperScriptParser::parse_lsl(const std::string &filename) {
+  // can only be used to parse a single script.
+  assert(!script);
   FILE *yyin = fopen(filename.c_str(), "rb");
   if (yyin == nullptr) {
     throw "couldn't open file";
   }
-  parse(yyin);
+  auto result = parse_lsl(yyin);
   fclose(yyin);
-  return script;
+  return result;
 }
 
-LSLScript *ScopedTailslideParser::parse(FILE *yyin) {
-  assert(context.script == nullptr);
+LSLScript *ScoperScriptParser::parse_lsl(FILE *yyin) {
+  assert(!script);
   void *scanner;
+  // ScopedScriptParser owns the allocator and context instance because we can't
+  // reasonably re-use Allocator instances with our current model of having
+  // it magically pass along the current script context.
+  allocator.set_context(&context);
 
   // initialize flex
   tailslide_lex_init_extra(&context, &scanner);
@@ -50,7 +44,9 @@ LSLScript *ScopedTailslideParser::parse(FILE *yyin) {
 
   // clean up flex
   tailslide_lex_destroy(scanner);
+  ast_sane = context.ast_sane;
   script = context.script;
+
   return script;
 }
 

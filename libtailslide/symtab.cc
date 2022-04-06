@@ -34,7 +34,7 @@ void LSLSymbolTable::check_symbols() {
     LSLSymbol *sym = symbol.second;
     if (sym->get_sub_type() != SYM_BUILTIN && sym->get_sub_type() != SYM_EVENT_PARAMETER &&
         sym->get_references() <= 1) {
-      ERROR(IN(sym), W_DECLARED_BUT_NOT_USED, LSLSymbol::get_type_name(sym->get_symbol_type()), sym->get_name());
+      NODE_ERROR(sym, W_DECLARED_BUT_NOT_USED, LSLSymbol::get_type_name(sym->get_symbol_type()), sym->get_name());
     }
   }
 }

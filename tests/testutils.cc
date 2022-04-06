@@ -9,16 +9,17 @@ ParserRef runConformance(const char* name, bool allow_syntax_errors)
   path += "/scripts/";
   path += name;
 
-  ParserRef parser(new ScopedTailslideParser());
-  Logger::get()->set_check_assertions(true);
-  parser->parse(path);
+  ParserRef parser(new ScoperScriptParser());
+  Logger *logger = &parser->logger;
+  logger->set_check_assertions(true);
+  parser->parse_lsl(path);
   LSLScript *script = parser->script;
 
   if (script == nullptr)
   {
     if (!allow_syntax_errors) {
       std::string message = "script " + path + " completely failed to parse!";
-      Logger::get()->report();
+      logger->report();
       FAIL(message);
     }
   } else {
@@ -35,12 +36,11 @@ ParserRef runConformance(const char* name, bool allow_syntax_errors)
   return parser;
 }
 
-void assertNoLintErrors(const std::string& name) {
-  // need to get the heinous global state out of here eventually.
-  Logger::get()->finalize();
-  int num_errors = Logger::get()->get_errors();
+void assertNoLintErrors(Logger* logger, const std::string& name) {
+  logger->finalize();
+  int num_errors = logger->get_errors();
   if (num_errors) {
-    Logger::get()->report();
+    logger->report();
     std::string message = "script " + name + " encountered " + std::to_string(num_errors) + " errors during parse!";
     FAIL(message);
   }
@@ -80,14 +80,15 @@ static void checkStringOutput(
     const ScriptFormatter& formatter
 ) {
   ParserRef parser = runConformance(name);
-  Logger::get()->finalize();
-  CHECK(Logger::get()->get_errors() == 0);
-  if (Logger::get()->get_errors()) {
-    Logger::get()->report();
+  Logger *logger = &parser->logger;
+  logger->finalize();
+  CHECK(logger->get_errors() == 0);
+  if (logger->get_errors()) {
+    logger->report();
     // If there are errors at this stage then the AST isn't even guaranteed to be sane.
     return;
   }
-  Logger::get()->reset();
+  logger->reset();
 
   if (massager != nullptr)
     massager(parser->script);

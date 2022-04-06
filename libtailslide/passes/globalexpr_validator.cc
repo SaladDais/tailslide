@@ -21,7 +21,7 @@ bool GlobalExprValidatingVisitor::visit(LSLGlobalVariable *node) {
 
   if (!valid_rvalue) {
     assert(rvalue);
-    ERROR(IN(rvalue), E_GLOBAL_INITIALIZER_NOT_CONSTANT);
+    NODE_ERROR(rvalue, E_GLOBAL_INITIALIZER_NOT_CONSTANT);
   }
 
   return false;

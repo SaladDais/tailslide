@@ -29,7 +29,7 @@ using namespace Tailslide;
 #define YY_USER_INIT    LLOC_RESET()
 
 namespace Tailslide {
-    char *parse_string(ScriptAllocationManager *allocator, char *input);
+    char *parse_string(ScriptAllocator *allocator, char *input);
 }
 
 %}
@@ -54,8 +54,8 @@ FS            (f|F)
 "//"                { BEGIN COMMENT; }
 <COMMENT>"$[E"{N}{5}"]" {
     ErrorCode e = (ErrorCode) strtoul( yytext+3, NULL, 10 );
-    LOG( LOG_INFO, yylloc, "Adding assertion for E%d.", (int)e );
-    Logger::get()->add_assertion( yylloc->first_line, e );
+    // LOG( LOG_INFO, yylloc, "Adding assertion for E%d.", (int)e );
+    tailslide_get_extra(yyscanner)->logger->add_assertion( yylloc->first_line, e );
 }
 <COMMENT>.          { /* eat comments */ }
 <COMMENT>\n         { BEGIN 0; LLOC_LINES(1); LLOC_STEP(); } 

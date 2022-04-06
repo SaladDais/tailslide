@@ -14,7 +14,7 @@ namespace Tailslide {
 enum LogLevel {
   LOG_ERROR,            // errors
   LOG_WARN,             // warnings
-  LOG_INTERAL_ERROR,    // internal errors
+  LOG_INTERNAL_ERROR,   // internal errors
   LOG_INFO,             // what we're up to
   LOG_DEBUG,            // base debug messages
   LOG_DEBUG_MINOR,      // minor debug messages
@@ -88,19 +88,16 @@ enum ErrorCode {
 };
 
 #ifndef HIDE_TAILSLIDE_INTERNALS
-#define LOG         Logger::get()->log
-#define IN(v)       (v)->get_lloc()
 #define LINECOL(l)  (l)->first_line, (l)->first_column
-#define ERROR       Logger::get()->error
+#define NODE_ERROR(node, ...) do {(node)->context->logger->error((node)->get_lloc(), __VA_ARGS__);} while(0)
 #endif
 
-// Logger for a script. Singleton
 class Logger {
   public:
-    // get current instance
-    static Logger* get();
-    ~Logger();
-
+    explicit Logger(ScriptAllocator *allocator) :
+               errors(0), warnings(0), show_end(false), show_info(false), sort(true),
+               show_error_codes(true), check_assertions(false), last_message(NULL),
+               file(stderr), finalized(false), _allocator(allocator) {};
     void log(LogLevel type, YYLTYPE *loc, const char *fmt, ...);
     void logv(LogLevel type, YYLTYPE *loc, const char *fmt, va_list args, int error=0);
     void error( YYLTYPE *loc, int error, ... );
@@ -122,7 +119,6 @@ class Logger {
     }
 
   protected:
-    Logger() : errors(0), warnings(0), show_end(false), show_info(false), sort(true), show_error_codes(true), check_assertions(false), last_message(NULL), file(stderr), finalized(false) {};
     int     errors;
     int     warnings;
     bool    show_end;
@@ -132,6 +128,7 @@ class Logger {
     bool    check_assertions;
     bool    finalized;
     class LogMessage *last_message;
+    ScriptAllocator *_allocator;
 
   private:
     static thread_local Logger instance;
@@ -146,7 +143,7 @@ class Logger {
 inline void DEBUG(LogLevel level, YYLTYPE *yylloc, const char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  Logger::get()->logv(level, yylloc, fmt, args);
+  //Logger::get()->logv(level, yylloc, fmt, args);
   va_end(args);
 }
 
@@ -176,4 +173,4 @@ class LogMessage: public TrackableObject {
 
 }
 
-#endif /* not LOGGER_HH */
+#endif

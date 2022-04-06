@@ -95,11 +95,11 @@ void LSLASTNode::define_symbol(LSLSymbol *symbol) {
     if (shadow) {
       if (shadow->get_symbol_type() == SYM_EVENT)
         if (symbol->get_symbol_type() == SYM_EVENT)
-          ERROR(IN(symbol), E_MULTIPLE_EVENT_HANDLERS, symbol->get_name());
+          NODE_ERROR(symbol, E_MULTIPLE_EVENT_HANDLERS, symbol->get_name());
         else
-          ERROR(IN(symbol), E_EVENT_AS_IDENTIFIER, symbol->get_name());
+          NODE_ERROR(symbol, E_EVENT_AS_IDENTIFIER, symbol->get_name());
       else
-        ERROR(IN(symbol), E_DUPLICATE_DECLARATION, symbol->get_name(), shadow->get_lloc()->first_line, shadow->get_lloc()->first_column);
+        NODE_ERROR(symbol, E_DUPLICATE_DECLARATION, symbol->get_name(), shadow->get_lloc()->first_line, shadow->get_lloc()->first_column);
     } else {
       // Check for shadowed declarations
       if (get_parent())
@@ -119,14 +119,14 @@ void LSLASTNode::define_symbol(LSLSymbol *symbol) {
         if (shadow->get_sub_type() == SYM_BUILTIN) {
           // you're never allowed to shadow event names
           if (shadow->get_symbol_type() == SYM_EVENT)
-            ERROR(IN(symbol), E_EVENT_AS_IDENTIFIER, symbol->get_name());
+            NODE_ERROR(symbol, E_EVENT_AS_IDENTIFIER, symbol->get_name());
           else if (shadow->get_symbol_type() != SYM_FUNCTION || symbol->get_symbol_type() == SYM_FUNCTION)
-            ERROR(IN(symbol), E_SHADOW_CONSTANT, symbol->get_name());
+            NODE_ERROR(symbol, E_SHADOW_CONSTANT, symbol->get_name());
         } else {
           // nothing in a local scope can ever shadow a function, both
           // can be referenced simultaneously. Anything other than a function _will_ be shadowed.
           if (shadow->get_symbol_type() != SYM_FUNCTION || symbol->get_symbol_type() == SYM_FUNCTION)
-            ERROR(IN(symbol), W_SHADOW_DECLARATION, symbol->get_name(), LINECOL(shadow->get_lloc()));
+            NODE_ERROR(symbol, W_SHADOW_DECLARATION, symbol->get_name(), LINECOL(shadow->get_lloc()));
         }
       }
     }
@@ -169,9 +169,9 @@ void LSLIdentifier::resolve_symbol(LSLSymbolType symbol_type) {
     for (i = 0; DEPRECATED_FUNCTIONS[i][0]; ++i) {
       if (!strcmp(name, DEPRECATED_FUNCTIONS[i][0])) {
         if (DEPRECATED_FUNCTIONS[i][1] == nullptr) {
-          ERROR(IN(this), E_DEPRECATED, name);
+          NODE_ERROR(this, E_DEPRECATED, name);
         } else {
-          ERROR(IN(this), E_DEPRECATED_WITH_REPLACEMENT, name, DEPRECATED_FUNCTIONS[i][1]);
+          NODE_ERROR(this, E_DEPRECATED_WITH_REPLACEMENT, name, DEPRECATED_FUNCTIONS[i][1]);
         }
         symbol = nullptr;
         type = TYPE(LST_ERROR);
@@ -186,7 +186,7 @@ void LSLIdentifier::resolve_symbol(LSLSymbolType symbol_type) {
   if (symbol == nullptr) {                       // no symbol of the right type
     symbol = lookup_symbol(name, SYM_ANY);    // so try the wrong one, so we can have a more descriptive error message in that case.
     if (symbol != nullptr && symbol->get_symbol_type() != symbol_type) {
-      ERROR(IN(this), E_WRONG_TYPE, name,
+      NODE_ERROR(this, E_WRONG_TYPE, name,
             LSLSymbol::get_type_name(symbol_type),
             LSLSymbol::get_type_name(symbol->get_symbol_type())
       );
@@ -194,7 +194,7 @@ void LSLIdentifier::resolve_symbol(LSLSymbolType symbol_type) {
       /* Name suggestion was here */
       if (type != TYPE(LST_ERROR)) {
         // don't re-warn about undeclared if we already know we're broken.
-        ERROR(IN(this), E_UNDECLARED, name);
+        NODE_ERROR(this, E_UNDECLARED, name);
       }
     }
 
@@ -287,7 +287,7 @@ class NodeReferenceUpdatingVisitor : public ASTVisitor {
           auto *id = (LSLIdentifier *) child->get_child(0);
           if (id->get_symbol()) {
             if (id->get_symbol()->get_sub_type() == SYM_BUILTIN) {
-              ERROR(IN(node), E_BUILTIN_LVALUE, id->get_symbol()->get_name());
+              NODE_ERROR(node, E_BUILTIN_LVALUE, id->get_symbol()->get_name());
               // make sure we don't muck with the assignment count on a builtin symbol!
               return true;
             }

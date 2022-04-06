@@ -136,15 +136,15 @@ int main(int argc, char **argv) {
   }
   tailslide_init_builtins(nullptr);
   // set up the allocator and logger
-  ScopedTailslideParser tailslide_parser;
+  ScoperScriptParser parser;
+  Logger *logger = &parser.logger;
 
   if (check_assertions)
-    Logger::get()->set_check_assertions(true);
+    logger->set_check_assertions(true);
 
-  tailslide_parser.parse(yyin);
+  auto script = parser.parse_lsl(yyin);
   if (yyin != nullptr)
     fclose(yyin);
-  LSLScript* script = tailslide_parser.script;
 
   if (script) {
     script->collect_symbols();
@@ -155,11 +155,11 @@ int main(int argc, char **argv) {
     script->check_best_practices();
 
     if (check_assertions) {
-      Logger::get()->filter_assert_errors();
-      Logger::get()->set_check_assertions(false);
+      logger->filter_assert_errors();
+      logger->set_check_assertions(false);
     }
     // Don't try to optimize if we have a possibly broken tree
-    if (!Logger::get()->get_errors()) {
+    if (!logger->get_errors()) {
       script->optimize(optim_ctx);
 
       // do these last since symbol usage and expressions may change
@@ -177,7 +177,7 @@ int main(int argc, char **argv) {
       script->validate_globals(true);
       script->check_symbols();
     }
-    Logger::get()->report();
+    logger->report();
     if (show_tree) {
       std::cout << "Tree:" << std::endl;
       TreePrintingVisitor visitor;
@@ -185,8 +185,8 @@ int main(int argc, char **argv) {
       std::cout << visitor.stream.str();
     }
   } else {
-    Logger::get()->report();
+    logger->report();
   }
 
-  return Logger::get()->get_errors();
+  return logger->get_errors();
 }

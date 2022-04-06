@@ -280,7 +280,7 @@ class LSLType *LSLType::get_result_type(int op, LSLType *right, LSLASTNode *node
       // For now let's just warn and pretend it returns a float, because it sort of does in LSO.
       if (get_itype() == LST_INTEGER && right && right->get_itype() == LST_FLOATINGPOINT && op == '*') {
         if (node) {
-          ERROR(IN(node), W_INT_FLOAT_MUL_ASSIGN);
+          NODE_ERROR(node, W_INT_FLOAT_MUL_ASSIGN);
         }
         return TYPE(LST_FLOATINGPOINT);
       }

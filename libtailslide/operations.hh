@@ -26,7 +26,7 @@ class AOperationBehavior {
 // runtime operation behavior!
 class TailslideOperationBehavior : public AOperationBehavior {
   public:
-    TailslideOperationBehavior(ScriptAllocationManager *allocator) {_allocator = allocator;};
+    TailslideOperationBehavior(ScriptAllocator *allocator) { _allocator = allocator;};
     // dispatch method
     LSLConstant *operation(
         int operation, LSLConstant *cv, LSLConstant *other_cv, YYLTYPE *lloc) override;
@@ -57,7 +57,7 @@ class TailslideOperationBehavior : public AOperationBehavior {
       strcat(ns, right);
       return ns;
     }
-    ScriptAllocationManager *_allocator;
+    ScriptAllocator *_allocator;
 };
 
 }

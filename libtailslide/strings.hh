@@ -2,9 +2,9 @@
 #define LSLINT_STRINGS_HH
 
 namespace Tailslide {
-class ScriptAllocationManager;
+class ScriptAllocator;
 
-char *parse_string(ScriptAllocationManager *allocator, char *input);
+char *parse_string(ScriptAllocator *allocator, char *input);
 std::string escape_string(const char *str);
 }
 

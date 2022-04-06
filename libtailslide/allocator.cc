@@ -2,10 +2,8 @@
 
 namespace Tailslide {
 
-thread_local ScriptAllocationManager *gAllocationManager = nullptr;
-
-ScriptAllocationManager::ScriptAllocationManager() {}
-ScriptAllocationManager::~ScriptAllocationManager() {
+ScriptAllocator::ScriptAllocator() {}
+ScriptAllocator::~ScriptAllocator() {
   for(auto &obj_ptr : _tracked_objects) {
     delete obj_ptr;
   }

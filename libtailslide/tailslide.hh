@@ -13,22 +13,21 @@
 
 namespace Tailslide {
 
-class ScopedTailslideParser {
-public:
-    explicit ScopedTailslideParser();
-    ScopedTailslideParser(const ScopedTailslideParser&) = delete;
-    ~ScopedTailslideParser() {
-      assert(&_allocation_manager == gAllocationManager);
-      gAllocationManager = nullptr;
-      Logger::get()->reset();
+class ScoperScriptParser {
+  public:
+    ScoperScriptParser(): allocator(), logger(&allocator) {
+      context.allocator = &allocator;
+      context.logger = &logger;
     };
-
-    LSLScript *parse(FILE *yyin);
-    LSLScript *parse(const std::string &filename);
+    ScriptAllocator allocator;
+    Logger logger;
     LSLScript *script = nullptr;
-private:
-    ScriptAllocationManager _allocation_manager {};
-    ScriptContext context {};
+    bool ast_sane = false;
+
+    LSLScript *parse_lsl(FILE *yyin);
+    LSLScript *parse_lsl(const std::string &filename);
+  protected:
+    ScriptContext context;
 };
 
 }
