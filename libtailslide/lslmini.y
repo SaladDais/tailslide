@@ -850,13 +850,6 @@ typecast
     {
         $$ = ALLOCATOR->new_tracked<LSLTypecastExpression>($2, $4);
     }
-    | '(' typename ')' constant
-    {
-        $$ = ALLOCATOR->new_tracked<LSLTypecastExpression>(
-            $2,
-            ALLOCATOR->new_tracked<LSLConstantExpression>($4)
-        );
-    }
     | '(' typename ')' unarypostfixexpression
     {
         $$ = ALLOCATOR->new_tracked<LSLTypecastExpression>($2, $4);
