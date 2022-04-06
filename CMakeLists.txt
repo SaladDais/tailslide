@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.6)
 project(Tailslide LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -59,28 +59,7 @@ if (TAILSLIDE_COVERAGE)
   add_link_options("-fprofile-instr-generate")
 endif()
 
-add_library(libtailslide STATIC)
-target_sources(libtailslide PRIVATE
-        libtailslide/allocator.hh
-        libtailslide/ast.hh
-        libtailslide/loctype.hh
-        libtailslide/logger.hh
-        libtailslide/lslmini.hh
-        libtailslide/operations.hh
-        libtailslide/strings.hh
-        libtailslide/symtab.hh
-        libtailslide/types.hh
-        libtailslide/visitor.hh
-        libtailslide/passes/globalexpr_validator.hh
-        libtailslide/passes/best_practices.hh
-        libtailslide/passes/pretty_print.hh
-        libtailslide/passes/symbol_resolution.hh
-        libtailslide/passes/tree_simplifier.hh
-        libtailslide/passes/tree_print.hh
-        libtailslide/passes/type_checking.hh
-        libtailslide/passes/values.hh
-        libtailslide/tailslide.hh
-
+add_library(libtailslide STATIC
         libtailslide/allocator.cc
         libtailslide/ast.cc
         libtailslide/builtins.cc
@@ -101,6 +80,27 @@ target_sources(libtailslide PRIVATE
         libtailslide/passes/tree_simplifier.cc
         libtailslide/passes/values.cc
         libtailslide/tailslide.cc
+        )
+target_sources(libtailslide PRIVATE
+        libtailslide/allocator.hh
+        libtailslide/ast.hh
+        libtailslide/loctype.hh
+        libtailslide/logger.hh
+        libtailslide/lslmini.hh
+        libtailslide/operations.hh
+        libtailslide/strings.hh
+        libtailslide/symtab.hh
+        libtailslide/types.hh
+        libtailslide/visitor.hh
+        libtailslide/passes/globalexpr_validator.hh
+        libtailslide/passes/best_practices.hh
+        libtailslide/passes/pretty_print.hh
+        libtailslide/passes/symbol_resolution.hh
+        libtailslide/passes/tree_simplifier.hh
+        libtailslide/passes/tree_print.hh
+        libtailslide/passes/type_checking.hh
+        libtailslide/passes/values.hh
+        libtailslide/tailslide.hh
 )
 
 string(TIMESTAMP BUILD_DATE "%Y-%m-%d")
@@ -120,11 +120,9 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lslmini.tab.hh DESTINATION include/tai
 
 
 if (TAILSLIDE_BUILD_CLI)
-  add_executable(tailslide_cli)
+  add_executable(tailslide_cli tailslide_cli/main.cc)
   target_sources(tailslide_cli PRIVATE
           extern/cxxopt.hh
-
-          tailslide_cli/main.cc
   )
   target_include_directories(tailslide_cli PUBLIC ${CMAKE_CURRENT_BINARY_DIR} libtailslide extern)
   target_link_libraries(tailslide_cli PUBLIC ${EXTRA_LIBS} libtailslide)
@@ -132,15 +130,15 @@ if (TAILSLIDE_BUILD_CLI)
 endif()
 
 if (TAILSLIDE_BUILD_TESTS)
-  add_executable(tailslide_test)
+  add_executable(tailslide_test
+          tests/conformance.cc
+          tests/ast_rewriting.cc
+          tests/testutils.cc
+          tests/main.cc
+  )
   target_sources(tailslide_test PRIVATE
     extern/doctest.hh
     tests/testutils.hh
-
-    tests/conformance.cc
-    tests/ast_rewriting.cc
-    tests/testutils.cc
-    tests/main.cc
   )
   target_include_directories(tailslide_test PUBLIC ${CMAKE_CURRENT_BINARY_DIR} libtailslide extern)
   target_link_libraries(tailslide_test PUBLIC ${EXTRA_LIBS} libtailslide)

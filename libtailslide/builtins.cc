@@ -12,6 +12,7 @@ extern char *builtins_txt[];
 static ScriptAllocator gStaticAllocator {};
 static LSLSymbolTable gGlobalSymbolTable {nullptr};
 ScriptContext gStaticScriptContext = {
+    .script = nullptr,
     .allocator = &gStaticAllocator,
 };
 
