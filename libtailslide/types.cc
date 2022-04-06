@@ -380,6 +380,21 @@ const char *operation_str(int operation) {
   }
 }
 
+const char *operation_repr_str(int operation) {
+  switch(operation) {
+    case INC_POST_OP:
+      return "++ (post)";
+    case INC_PRE_OP:
+      return "++ (pre)";
+    case DEC_POST_OP:
+      return "-- (post)";
+    case DEC_PRE_OP:
+      return "-- (pre)";
+    default:
+      return operation_str(operation);
+  }
+}
+
 bool is_cast_legal(LST_TYPE from, LST_TYPE to) {
   return legal_cast_table[from][to] == 1;
 }

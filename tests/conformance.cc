@@ -52,6 +52,7 @@ TEST_CASE("print_no_shadowing.lsl") {
   // syntax error due to unexpected keyword
   CHECK(parser->logger.get_errors() == 2);
 }
+SIMPLE_LINT_TEST_CASE("pathological_expression.lsl")
 SIMPLE_LINT_TEST_CASE("scope1.lsl")
 SIMPLE_LINT_TEST_CASE("scope2.lsl")
 SIMPLE_LINT_TEST_CASE("scope3.lsl")
@@ -260,6 +261,10 @@ TEST_CASE("error1.lsl") {
 
 TEST_CASE("tltp/exporter.lsl") {
   checkTreeDumpOutput("tltp/exporter.lsl", OptimizationContext{});
+}
+
+TEST_CASE("pathological_expression.lsl") {
+  checkTreeDumpOutput("pathological_expression.lsl", OptimizationContext{});
 }
 
 TEST_SUITE_END();

@@ -542,7 +542,7 @@ public:
 
     virtual const char *get_node_name() {
       static thread_local char buf[256];
-      snprintf( buf, 256, "binary expression: '%s'", operation_str(operation) );
+      snprintf( buf, 256, "binary expression: '%s'", operation_repr_str(operation) );
       return buf;
     };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_BINARY_EXPRESSION; };
@@ -555,7 +555,7 @@ public:
 
     virtual const char *get_node_name() {
       static thread_local char buf[256];
-      snprintf( buf, 256, "unary expression: '%s'", operation_str(operation) );
+      snprintf( buf, 256, "unary expression: '%s'", operation_repr_str(operation) );
       return buf;
     };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_UNARY_EXPRESSION; };

@@ -58,6 +58,7 @@ inline LSLType *TYPE(LST_TYPE type) {
 
 bool operation_mutates(int operation);
 const char* operation_str(int operation);
+const char* operation_repr_str(int operation);
 bool is_cast_legal(LST_TYPE from, LST_TYPE to);
 }
 
