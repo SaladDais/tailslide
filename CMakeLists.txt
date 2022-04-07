@@ -9,8 +9,14 @@ set(_IGNORED "${CMAKE_C_COMPILER}")
 
 option(TAILSLIDE_BUILD_CLI "Build CLI" ON)
 option(TAILSLIDE_BUILD_TESTS "Build Tests" ON)
+option(TAILSLIDE_BUILD_FUZZER "Build Fuzzer" OFF)
 option(TAILSLIDE_SANITIZE "Use ASAN" OFF)
 option(TAILSLIDE_COVERAGE "Track coverage data in tests" OFF)
+
+
+if (TAILSLIDE_BUILD_FUZZER)
+  set(TAILSLIDE_SANITIZE ON)
+endif ()
 
 # On macOS, search Homebrew for keg-only versions of Bison and Flex. Xcode does
 # not provide new enough versions for us to use.
@@ -47,7 +53,13 @@ if(UNIX AND NOT APPLE)
 endif()
 
 if (TAILSLIDE_SANITIZE)
-  add_compile_options("-fsanitize=address" "-O1")
+  if (TAILSLIDE_BUILD_FUZZER)
+    # Everything needs to be compiled with the tracing info for the coverage-based fuzzer
+    add_compile_options("-fsanitize=address,fuzzer" "-O1")
+  else()
+    add_compile_options("-fsanitize=address" "-O1")
+  endif()
+  # Only the fuzzer harnesses gets linked with -fsanitize=fuzzer, though
   add_link_options("-fsanitize=address")
 endif()
 
@@ -113,6 +125,10 @@ BISON_TARGET(LSLMiniParser libtailslide/lslmini.y ${CMAKE_CURRENT_BINARY_DIR}/ls
 ADD_FLEX_BISON_DEPENDENCY(LSLMiniScanner LSLMiniParser)
 
 target_include_directories(libtailslide PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(libtailslide PUBLIC libtailslide)
+target_sources(libtailslide PRIVATE ${FLEX_LSLMiniScanner_OUTPUTS} ${BISON_LSLMiniParser_OUTPUTS})
+set_target_properties(libtailslide PROPERTIES OUTPUT_NAME tailslide)
+
 
 install(TARGETS libtailslide DESTINATION lib)
 install(DIRECTORY libtailslide/ DESTINATION include/tailslide FILES_MATCHING PATTERN "*.hh")
@@ -128,6 +144,7 @@ if (TAILSLIDE_BUILD_CLI)
   target_link_libraries(tailslide_cli PUBLIC ${EXTRA_LIBS} libtailslide)
   set_target_properties(tailslide_cli PROPERTIES OUTPUT_NAME tailslide)
 endif()
+
 
 if (TAILSLIDE_BUILD_TESTS)
   add_executable(tailslide_test
@@ -145,6 +162,22 @@ if (TAILSLIDE_BUILD_TESTS)
   set_target_properties(tailslide_test PROPERTIES OUTPUT_NAME tailslide-test)
 endif()
 
-target_include_directories(libtailslide PUBLIC libtailslide)
-target_sources(libtailslide PRIVATE ${FLEX_LSLMiniScanner_OUTPUTS} ${BISON_LSLMiniParser_OUTPUTS})
-set_target_properties(libtailslide PROPERTIES OUTPUT_NAME tailslide)
+
+if (TAILSLIDE_BUILD_FUZZER)
+  if ( NOT (${CMAKE_SYSTEM_NAME} STREQUAL "Linux") )
+    message(FATAL_ERROR "The libFuzzer harness is only supported under Linux!")
+  endif()
+  if ( NOT (CMAKE_CXX_COMPILER_ID MATCHES "Clang") )
+    message(FATAL_ERROR "The libFuzzer harness is only supported under Clang, not ${CMAKE_CXX_COMPILER_ID}")
+  endif()
+
+  add_executable(tailslide_fuzzer
+    fuzz/fuzz.cc
+  )
+  target_sources(tailslide_fuzzer PRIVATE
+    fuzz/fuzz_utils.hh
+  )
+  target_include_directories(tailslide_fuzzer PUBLIC ${CMAKE_CURRENT_BINARY_DIR} libtailslide)
+  target_link_libraries(tailslide_fuzzer PUBLIC ${EXTRA_LIBS} libtailslide "-fsanitize=fuzzer,address")
+  set_target_properties(tailslide_fuzzer PROPERTIES OUTPUT_NAME tailslide-fuzzer)
+endif()
