@@ -177,8 +177,8 @@
 %type <statement>         declaration
 %type <statement>         ';'
 %type <statement>         '@'
-%type <for_expr>          forexpressions
-%type <for_expr>          forexpression
+%type <expression>        nextforexpressionlist
+%type <for_expr>          forexpressionlist
 %type <expression>        nextfuncexpressionlist
 %type <expression>        funcexpressionlist
 %type <expression>        nextlistexpressionlist
@@ -588,7 +588,7 @@ statement
         $5->set_declaration_allowed(false);
         $7->set_declaration_allowed(false);
     }
-    | FOR '(' forexpressions ';' expression ';' forexpressions ')' statement
+    | FOR '(' forexpressionlist ';' expression ';' forexpressionlist ')' statement
     {
         $$ = ALLOCATOR->new_tracked<LSLForStatement>($3, $5, $7, $9);
         $9->set_declaration_allowed(false);
@@ -621,32 +621,31 @@ declaration
     }
     ;
 
-forexpressions
+
+forexpressionlist
     : /* empty */
     {
-        //$$ = ALLOCATOR->new_tracked<LSLExpression>(0);
         $$ = nullptr;
     }
-    | forexpression
+    | nextforexpressionlist
+    {
+        $$ = ALLOCATOR->new_tracked<LSLForExpressionList>($1);
+    }
+    ;
+
+nextforexpressionlist
+    : expression
     {
         $$ = $1;
     }
-    | forexpression ',' forexpressions
+    | expression ',' nextforexpressionlist
     {
         if ( $1 ) {
-            $1->push_child($3->get_children());
-            // delete $3;
+            $1->add_next_sibling($3);
             $$ = $1;
         } else {
             $$ = $3;
         }
-    }
-    ;
-
-forexpression
-    : expression
-    {
-        $$ = ALLOCATOR->new_tracked<LSLForExpressionList>( $1 );
     }
     ;
 
