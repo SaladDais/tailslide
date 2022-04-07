@@ -27,11 +27,8 @@ bool ConstantDeterminingVisitor::before_descend(LSLASTNode *node) {
 bool ConstantDeterminingVisitor::visit(LSLScript *node) {
   // need to iterate over global vars FIRST since expressions in
   // global functions may make use of them.
-  LSLASTNode *child = node->get_children();
+  LSLASTNode *child = node->get_child(0)->get_children();
   while (child != nullptr) {
-    // passed the end of the list of globals
-    if (child->get_node_type() != NODE_GLOBAL_STORAGE)
-      break;
     if (LSLASTNode *gs_child = child->get_child(0)) {
       if (gs_child->get_node_type() == NODE_GLOBAL_VARIABLE)
         gs_child->visit(this);

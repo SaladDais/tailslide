@@ -59,7 +59,7 @@ class Quaternion: public TrackableObject {
 
 class LSLScript : public LSLASTNode {
   public:
-    LSLScript( ScriptContext *ctx, class LSLGlobalStorage *globals, class LSLState *states )
+    LSLScript( ScriptContext *ctx, class LSLASTNodeList *globals, class LSLASTNodeList *states )
       : LSLASTNode( ctx, 2, globals, states ) {
         symbol_table = ctx->allocator->new_tracked<LSLSymbolTable>();
     };
@@ -441,19 +441,11 @@ class LSLIfStatement : public LSLStatement {
 
 class LSLForStatement : public LSLStatement {
   public:
-    LSLForStatement( ScriptContext *ctx, class LSLForExpressionList *init, class LSLExpression *condition,
-        class LSLForExpressionList *cont, class LSLStatement *body)
+    LSLForStatement(ScriptContext *ctx, class LSLASTNodeList *init, class LSLExpression *condition,
+                    class LSLASTNodeList *cont, class LSLStatement *body)
       : LSLStatement( ctx, 4, init, condition, cont, body ) {};
     virtual const char *get_node_name() { return "for"; };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_FOR_STATEMENT; };
-};
-
-class LSLForExpressionList : public LSLASTNode {
-  public:
-    LSLForExpressionList(ScriptContext *ctx) : LSLASTNode(ctx, 0) {};
-    LSLForExpressionList( ScriptContext *ctx, class LSLExpression *expr ) : LSLASTNode(ctx, 1, expr) {};
-    virtual const char *get_node_name() { return "for expr list"; }
-    virtual LSLNodeType get_node_type() { return NODE_FOR_EXPRESSION_LIST; };
 };
 
 class LSLDoStatement : public LSLStatement {

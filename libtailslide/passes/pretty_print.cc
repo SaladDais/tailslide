@@ -351,11 +351,11 @@ bool PrettyPrintVisitor::visit(LSLDoStatement *node) {
 bool PrettyPrintVisitor::visit(LSLForStatement *node) {
   do_tabs();
   stream << "for (";
-  node->get_child(0)->visit(this);
+  prettify_siblings_sep(node->get_child(0)->get_children(), ", ");
   stream << "; ";
   node->get_child(1)->visit(this);
   stream << "; ";
-  node->get_child(2)->visit(this);
+  prettify_siblings_sep(node->get_child(2)->get_children(), ", ");
   stream << ")\n";
 
   LSLASTNode *body = node->get_child(3);
@@ -363,11 +363,6 @@ bool PrettyPrintVisitor::visit(LSLForStatement *node) {
     ScopedTabSetter setter(this, tabs + is_braceless(body));
     body->visit(this);
   }
-  return false;
-}
-
-bool PrettyPrintVisitor::visit(LSLForExpressionList *node) {
-  prettify_siblings_sep(node->get_children(), ", ");
   return false;
 }
 

@@ -15,6 +15,7 @@ enum LSLNodeType {
 
   NODE_NODE,
   NODE_NULL,
+  NODE_AST_NODE_LIST,
   NODE_SCRIPT,
   NODE_GLOBAL_STORAGE,
   NODE_IDENTIFIER,
@@ -23,7 +24,6 @@ enum LSLNodeType {
   NODE_GLOBAL_FUNCTION,
   NODE_FUNCTION_DEC,
   NODE_EVENT_DEC,
-  NODE_FOR_EXPRESSION_LIST,
   NODE_STATE,
   NODE_EVENT_HANDLER,
   NODE_STATEMENT,
@@ -213,9 +213,17 @@ class LSLASTNode : public TrackableObject {
 
 class LSLASTNullNode : public LSLASTNode {
   public:
-    LSLASTNullNode(ScriptContext *ctx): LSLASTNode(ctx) {};
+    explicit LSLASTNullNode(ScriptContext *ctx): LSLASTNode(ctx) {};
     virtual const char *get_node_name() { return "null"; };
     virtual LSLNodeType get_node_type() { return NODE_NULL; };
+};
+
+class LSLASTNodeList : public LSLASTNode {
+  public:
+    explicit LSLASTNodeList(ScriptContext *ctx) : LSLASTNode(ctx, 0) {};
+    LSLASTNodeList(ScriptContext *ctx, class LSLASTNode *nodes ) : LSLASTNode(ctx, 1, nodes) {};
+    virtual const char *get_node_name() { return "ast node list"; }
+    virtual LSLNodeType get_node_type() { return NODE_AST_NODE_LIST; };
 };
 
 }

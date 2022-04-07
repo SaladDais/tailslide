@@ -37,7 +37,6 @@ public:
     virtual bool visit(LSLQuaternionConstant *node);
     virtual bool visit(LSLGlobalFunction *node);
     virtual bool visit(LSLParamList *node);
-    virtual bool visit(LSLForExpressionList *node);
     virtual bool visit(LSLState *node);
     virtual bool visit(LSLEventHandler *node);
     virtual bool visit(LSLStatement *node);

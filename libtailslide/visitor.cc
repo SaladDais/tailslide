@@ -10,6 +10,8 @@ bool ASTVisitor::visit_specific(LSLASTNode *node) {
       return visit(node);
     case NODE_NULL:
       return visit((LSLASTNullNode *)node);
+    case NODE_AST_NODE_LIST:
+      return visit((LSLASTNodeList *)node);
     case NODE_SCRIPT:
       return visit((LSLScript *)node);
     case NODE_GLOBAL_STORAGE:
@@ -42,8 +44,6 @@ bool ASTVisitor::visit_specific(LSLASTNode *node) {
       return visit((LSLFunctionDec *)node);
     case NODE_EVENT_DEC:
       return visit((LSLEventDec *)node);
-    case NODE_FOR_EXPRESSION_LIST:
-      return visit((LSLForExpressionList *)node);
     case NODE_STATE:
       return visit((LSLState *)node);
     case NODE_EVENT_HANDLER:

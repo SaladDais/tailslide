@@ -65,7 +65,7 @@
         class LSLGlobalFunction;
         class LSLFunctionDec;
         class LSLEventDec;
-        class LSLForExpressionList;
+        class LSLASTNodeList;
         class LSLState;
         class LSLGlobalStorage;
         class LSLScript;
@@ -88,7 +88,7 @@
     class Tailslide::LSLGlobalFunction    *global_funcs;
     class Tailslide::LSLFunctionDec       *global_decl;
     class Tailslide::LSLEventDec          *global_event_decl;
-    class Tailslide::LSLForExpressionList *for_expr;
+    class Tailslide::LSLASTNodeList       *node_list;
     class Tailslide::LSLState             *state;
     class Tailslide::LSLGlobalStorage     *global_store;
     class Tailslide::LSLScript            *script;
@@ -178,7 +178,7 @@
 %type <statement>         ';'
 %type <statement>         '@'
 %type <expression>        nextforexpressionlist
-%type <for_expr>          forexpressionlist
+%type <node_list>         forexpressionlist
 %type <expression>        nextfuncexpressionlist
 %type <expression>        funcexpressionlist
 %type <expression>        nextlistexpressionlist
@@ -242,11 +242,17 @@
 lscript_program
     : globals states
     {
-        tailslide_get_extra(scanner)->script = ALLOCATOR->new_tracked<LSLScript>($1, $2);
+        tailslide_get_extra(scanner)->script = ALLOCATOR->new_tracked<LSLScript>(
+            ALLOCATOR->new_tracked<LSLASTNodeList>($1),
+            ALLOCATOR->new_tracked<LSLASTNodeList>($2)
+        );
     }
     | states
     {
-        tailslide_get_extra(scanner)->script = ALLOCATOR->new_tracked<LSLScript>(nullptr, $1);
+        tailslide_get_extra(scanner)->script = ALLOCATOR->new_tracked<LSLScript>(
+            ALLOCATOR->new_tracked<LSLASTNodeList>(),
+            ALLOCATOR->new_tracked<LSLASTNodeList>($1)
+        );
     }
     ;
 
@@ -629,7 +635,7 @@ forexpressionlist
     }
     | nextforexpressionlist
     {
-        $$ = ALLOCATOR->new_tracked<LSLForExpressionList>($1);
+        $$ = ALLOCATOR->new_tracked<LSLASTNodeList>($1);
     }
     ;
 

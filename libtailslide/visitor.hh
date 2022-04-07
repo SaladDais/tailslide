@@ -9,6 +9,7 @@ class ASTVisitor {
   public:
     virtual bool visit(LSLASTNode *node) { return true; }
     virtual bool visit(LSLASTNullNode *node) { return false; }
+    virtual bool visit(LSLASTNodeList *node) { return true; };
     virtual bool visit(LSLScript *node) {
       return visit((LSLASTNode *)node);
     };
@@ -53,9 +54,6 @@ class ASTVisitor {
     };
     virtual bool visit(LSLEventDec *node) {
       return visit((LSLParamList *)node);
-    };
-    virtual bool visit(LSLForExpressionList *node) {
-      return visit((LSLASTNode *)node);
     };
     virtual bool visit(LSLState *node) {
       return visit((LSLASTNode *)node);
