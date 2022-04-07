@@ -141,7 +141,7 @@ void LSLASTNode::define_symbol(LSLSymbol *symbol) {
 
 // Define any symbols we have, and ask our children to
 void LSLASTNode::collect_symbols() {
-  SymbolResolutionVisitor visitor;
+  SymbolResolutionVisitor visitor(true);
   this->visit(&visitor);
 }
 

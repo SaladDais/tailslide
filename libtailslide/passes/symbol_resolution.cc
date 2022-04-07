@@ -179,15 +179,23 @@ bool SymbolResolutionVisitor::visit(LSLStateStatement *node) {
 
 void SymbolResolutionVisitor::_resolve_pending_jumps() {
   for (auto *id : _pending_jumps) {
-    // Labels are weird in that they pretend they're lexically scoped but they really
-    // aren't in either LSO or Mono. The label you're jumping to _must_
+    // First do the lookup by lexical scope, triggering an error if it fails.
+    id->resolve_symbol(SYM_LABEL);
+
+    // That's all we have to do unless we want to match SL exactly.
+    if (!_linden_jump_semantics)
+      continue;
+
+    // Labels in SL are weird in that they pretend they're lexically scoped but they
+    // really aren't in either LSO or Mono. The label you're jumping to _must_
     // be in the lexical scope of your `jump`, but it will actually jump to the
     // last occurrence of a label with a given name within the function body,
     // crossing lexical scope boundaries. This was likely a mistake, but we have
-    // to deal with it. Gnarly.
+    // to deal with it if we want the same `jump` semantics as LSO. Gnarly.
 
-    // First do the lookup by lexical scope, triggering an error if it fails.
-    id->resolve_symbol(SYM_LABEL);
+    // Note that Mono will actually fail to compile correctly on duplicated labels.
+    // because they're included in the CIL verbatim.
+
     if (auto *orig_sym = id->get_symbol()) {
       LSLSymbol *new_sym = nullptr;
       // Now get the label this will jump to in SL, iterate in reverse so the last
@@ -212,15 +220,18 @@ void SymbolResolutionVisitor::_resolve_pending_jumps() {
     }
   }
 
-  // Walk the list of collected labels and warn on any duplicated names
-  std::set<std::string> label_names;
-  for (auto &label_id : _collected_labels) {
-    if (label_names.find(label_id->get_name()) != label_names.end()) {
-      NODE_ERROR(label_id, W_DUPLICATE_LABEL_NAME, label_id->get_name());
-    } else {
-      label_names.insert(label_id->get_name());
+  if (_linden_jump_semantics) {
+    // Walk the list of collected labels and warn on any duplicated names
+    std::set<std::string> label_names;
+    for (auto &label_id: _collected_labels) {
+      if (label_names.find(label_id->get_name()) != label_names.end()) {
+        NODE_ERROR(label_id, W_DUPLICATE_LABEL_NAME, label_id->get_name());
+      } else {
+        label_names.insert(label_id->get_name());
+      }
     }
   }
+
   _pending_jumps.clear();
   _collected_labels.clear();
 }

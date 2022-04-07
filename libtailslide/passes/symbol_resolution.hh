@@ -14,6 +14,10 @@ class ExprSymbolResolutionVisitor : public ASTVisitor {
 };
 
 class SymbolResolutionVisitor : public ExprSymbolResolutionVisitor {
+  public:
+    SymbolResolutionVisitor(bool linden_jump_semantics) : _linden_jump_semantics(linden_jump_semantics) {};
+
+  protected:
     virtual bool visit(LSLDeclaration *node);
     virtual bool visit(LSLGlobalVariable *node);
     virtual bool visit(LSLGlobalFunction *node);
@@ -28,6 +32,7 @@ class SymbolResolutionVisitor : public ExprSymbolResolutionVisitor {
     void _resolve_pending_jumps();
     std::vector<LSLIdentifier*> _pending_jumps;
     std::vector<LSLIdentifier*> _collected_labels;
+    bool _linden_jump_semantics;
 };
 
 }
