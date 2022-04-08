@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.6)
 project(Tailslide LANGUAGES CXX)
-set(CMAKE_CXX_STANDARD 17)
+if (MSVC)
+  # MSVC requires C++20 be enabled to allow designated initializers
+  set(CMAKE_CXX_STANDARD 20)
+else()
+  set(CMAKE_CXX_STANDARD 17)
+endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
