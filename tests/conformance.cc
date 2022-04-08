@@ -14,6 +14,7 @@ TEST_CASE("bad_globals.lsl") {
   CHECK(parser->logger.get_errors() == 2);
 }
 SIMPLE_LINT_TEST_CASE("camera_demo.lsl")
+SIMPLE_LINT_TEST_CASE("check_all_return.lsl")
 SIMPLE_LINT_TEST_CASE("color-change.lsl")
 SIMPLE_LINT_TEST_CASE("compound_assignment.lsl")
 SIMPLE_LINT_TEST_CASE("constants.lsl")

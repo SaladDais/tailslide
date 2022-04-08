@@ -2,43 +2,50 @@
 
 namespace Tailslide {
 
+class AllPathsReturnVisitor: public ASTVisitor {
+  protected:
+    virtual bool visit(LSLCompoundStatement *node) {
+      all_return = false;
+      return true;
+    };
+    virtual bool visit(LSLStatement *node) {
+      all_return = false;
+      return false;
+    };
+    virtual bool visit(LSLReturnStatement *node) {
+      all_return = true;
+      return false;
+    };
+    virtual bool visit(LSLIfStatement *node) {
+      auto* true_branch = node->get_child(1);
+      auto* false_branch = node->get_child(2);
 
-static bool allret(LSLASTNode *p) {
-  bool ret = false;
-  if (p->get_node_type() == NODE_STATEMENT && p->get_node_sub_type() == NODE_RETURN_STATEMENT) {
-    // TODO check next value here for unreachable code
-    return true;
-  } else if (p->get_node_type() == NODE_STATEMENT && p->get_node_sub_type() == NODE_IF_STATEMENT) {
-    bool true_branch = p->get_child(1) && allret(p->get_child(1));
-    bool false_branch = p->get_child(2) && allret(p->get_child(2));
+      // no false path, so all paths within `if` _couldn't_ return.
+      if (false_branch->get_node_type() == NODE_NULL) {
+        all_return = false;
+        return false;
+      }
 
-    return (true_branch && false_branch);
-  } else if (p->get_node_type() == NODE_STATEMENT && p->get_node_sub_type() == NODE_COMPOUND_STATEMENT) {
-    for (LSLASTNode *q = p->get_children(); q; q = q->get_next()) {
-      ret |= allret(q);
+      true_branch->visit(this);
+      bool true_ret = all_return;
+      false_branch->visit(this);
+      bool false_ret = all_return;
+      all_return = true_ret && false_ret;
+      return false;
     }
-  } else {
-#if 0
-    if (p->get_next()) {
-       ret |= allret(p->get_next());
-    }
-    if (p->get_children()) {
-       ret |= allret(p->get_children());
-    }
-#endif
-  }
-  return ret;
-}
+  public:
+    bool all_return = false;
+};
 
 bool BestPracticesVisitor::visit(LSLGlobalFunction* node) {
   auto *id = (LSLIdentifier *) node->get_child(0);
-  //LSLFunctionDec *decl = (LSLFunctionDec *) get_child(1);
   auto *statement = (LSLStatement *) node->get_child(2);
 
-  if (id->get_symbol() != nullptr) {
-    LSLType *tipe = id->get_symbol()->get_type();
-
-    if (tipe->get_itype() != LST_NULL && !allret(statement)) {
+  // this function has a non-null return type
+  if (id->get_symbol() && id->get_symbol()->get_type() != TYPE(LST_NULL)) {
+    AllPathsReturnVisitor visitor;
+    statement->visit(&visitor);
+    if (!visitor.all_return) {
       NODE_ERROR(node->get_child(0), E_NOT_ALL_PATHS_RETURN);
     }
   }
