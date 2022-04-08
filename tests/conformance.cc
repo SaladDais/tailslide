@@ -39,8 +39,11 @@ SIMPLE_LINT_TEST_CASE("lsl_conformance.lsl")
 SIMPLE_LINT_TEST_CASE("mms_player.lsl")
 SIMPLE_LINT_TEST_CASE("nested_lists.lsl")
 SIMPLE_LINT_TEST_CASE("parser_abuse.lsl")
+
+#ifndef _WIN32
 SIMPLE_LINT_TEST_CASE("parserstackdepth2.lsl")
-SIMPLE_LINT_TEST_CASE("parserstackdepth2.lsl")
+#endif
+
 TEST_CASE("parserstackdepth3.lsl") {
   auto parser = runConformance("parserstackdepth3.lsl", true);
   CHECK(parser->script == nullptr);
@@ -167,11 +170,13 @@ TEST_CASE("mms_player.lsl") {
   checkPrettyPrintOutput("mms_player.lsl", ctx, pretty_ctx);
 }
 
+#ifndef _WIN32
 TEST_CASE("parserstackdepth2.lsl") {
   OptimizationContext ctx{};
   PrettyPrintOpts pretty_ctx {};
   checkPrettyPrintOutput("parserstackdepth2.lsl", ctx, pretty_ctx);
 }
+#endif
 
 TEST_CASE("forloops.lsl") {
   OptimizationContext ctx{};

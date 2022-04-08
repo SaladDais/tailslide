@@ -13,10 +13,17 @@
 %{
     int yyerror( YYLTYPE*, void *, const char * );
     #define MAKEID(type,id,pos) ALLOCATOR->new_tracked<LSLIdentifier>(TYPE(type), (id), &(pos))
+    // Anything larger is liable to make MSVC explode with the default compile options
+    #ifndef LSLINT_STACK_OVERFLOW_AT
+    #  ifdef _WIN32
+    #    define LSLINT_STACK_OVERFLOW_AT 1000
+    #  else
+    #    define LSLINT_STACK_OVERFLOW_AT 10000
+    #  endif
+    #endif
     // slightly higher so we can still have assert comments that check for stack depth
-    #define YYMAXDEPTH 10020
-    #define YYINITDEPTH 10020
-    #define LSLINT_STACK_OVERFLOW_AT 10000
+    #define YYMAXDEPTH LSLINT_STACK_OVERFLOW_AT + 20
+    #define YYINITDEPTH YYMAXDEPTH
     inline int _yylex( TAILSLIDE_STYPE * yylval, YYLTYPE *yylloc, void *yyscanner, int stack ) {
         if ( stack == LSLINT_STACK_OVERFLOW_AT ) {
             tailslide_get_extra(yyscanner)->logger->error( yylloc, E_PARSER_STACK_DEPTH );
