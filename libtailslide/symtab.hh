@@ -76,11 +76,9 @@ class LSLSymbol: public TrackableObject {
 
 
 // based on Java string hashing algo, assumes null-terminated
-struct chash
-  : std::unary_function<const char *, std::size_t>
-{
-  std::size_t operator()(const char *x) const
-  {
+template <class T = const char *>
+struct chash {
+  constexpr std::size_t operator()(T x) const {
     size_t result = 0;
     const size_t prime = 31;
     for(size_t i=0; x[i] != '\0'; ++i)
@@ -89,11 +87,9 @@ struct chash
   }
 };
 
-struct cstr_equal_to
-    : std::binary_function<const char *, const char *, bool>
-{
-  bool operator()(const char *x, const char *y) const
-  {
+template <class T = const char *>
+struct cstr_equal_to {
+  constexpr bool operator()(T x, T y) const {
     return strcmp(x, y) == 0;
   }
 };
@@ -111,7 +107,12 @@ class LSLSymbolTable: public TrackableObject {
     void            set_mangled_names();
 
   private:
-    typedef std::unordered_multimap<const char *, LSLSymbol *, chash, cstr_equal_to> SensitiveSymbolMap;
+    typedef std::unordered_multimap<
+        const char *,
+        LSLSymbol *,
+        chash<const char *>,
+        cstr_equal_to<const char *>
+      > SensitiveSymbolMap;
 
     // Vector to hold our symbolsa
     SensitiveSymbolMap symbols;
