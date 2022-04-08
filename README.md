@@ -38,7 +38,20 @@ make
 
 # Windows
 
-Not tested, may be compilable in an [MSYS2](https://www.msys2.org/) environment.
+Not well-supported, but possible:
+
+* Install [CMake](https://cmake.org/download/)
+* Install [Flex and Bison](https://github.com/lexxmark/winflexbison/releases) somewhere in your `PATH`
+* Install [MSVC for C++ 2022](https://visualstudio.microsoft.com/downloads/)
+
+inside the cloned repo:
+
+```batch
+mkdir build
+cd build
+cmake -G"Visual Studio 17 2022" ..
+cmake --build .
+```
 
 # Tech Overview
 
