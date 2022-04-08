@@ -39,9 +39,11 @@ public:
     }
 
     char *copy_str(const char* old_str) {
-      char *new_str = strdup(old_str);
-      if (new_str)
+      char *new_str = (char *)malloc(strlen(old_str) + 1);
+      if (new_str) {
+        strcpy(new_str, old_str);
         track_malloc(new_str);
+      }
       return new_str;
     }
 
