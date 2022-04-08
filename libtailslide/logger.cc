@@ -168,19 +168,23 @@ struct LogMessageSort {
 };
 
 void Logger::filter_assert_errors() {
-  std::vector<LogMessage *>::iterator i;
   std::vector<std::pair<int, ErrorCode>>::iterator ai;
+  std::vector<std::pair<int, ErrorCode>> failed_asserts;
   for (ai = assertions.begin(); ai != assertions.end(); ++ai) {
-    for (i = messages.begin(); i != messages.end(); ++i) {
+    bool suppressed_by_assert = false;
+    for (auto i = messages.begin(); i != messages.end(); ++i) {
       if ((ai)->first == (*i)->get_loc()->first_line && (ai)->second == (*i)->get_error()) {
         --errors; // when check assertions, warnings are treated as errors.
         messages.erase(i);
-        i = messages.end() + 1; // HACK?: ensure that i isn't messages.end()
+        suppressed_by_assert = true;
         break;
       }
     }
-    if (i == messages.end())
-      log(LOG_ERROR, nullptr, "Assertion failed: error %d on line %d.", (ai)->second, (ai)->first);
+    if (!suppressed_by_assert)
+      failed_asserts.push_back(*ai);
+  }
+  for (auto failed_assert : failed_asserts) {
+      log(LOG_ERROR, nullptr, "Assertion failed: error %d on line %d.", failed_assert.second, failed_assert.first);
   }
 }
 
