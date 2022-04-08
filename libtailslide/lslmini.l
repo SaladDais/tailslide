@@ -3,7 +3,8 @@
 %option reentrant
 %option noyywrap
 %option nounput
-%option always-interactive
+%option never-interactive
+%option nounistd
 %option prefix="tailslide_"
 
 %{
@@ -20,6 +21,7 @@ using namespace Tailslide;
 #ifdef WIN32
 #include <io.h>
 #define isatty _isatty
+#define YY_NO_UNISTD_H
 #endif /* WIN32 */
 
 #define LLOC_RESET()    yylloc->first_column = yylloc->first_line = yylloc->last_column = yylloc->last_line = 1;
