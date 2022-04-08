@@ -555,7 +555,7 @@ LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLFloatConstant
       else if (f_as_str == "-inf")
         f_as_str = "-Infinity";
         // Only one kind of NaN in LSL!
-      else if (f_as_str == "nan" || f_as_str == "-nan")
+      else if (f_as_str == "nan" || f_as_str == "-nan" || f_as_str == "-nan(ind)" || f_as_str == "nan(ind)")
         f_as_str = "NaN";
 
       return _allocator->new_tracked<LSLStringConstant>(
