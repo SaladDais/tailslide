@@ -41,6 +41,37 @@ LSLType *str_to_type(const char *str) {
   return LSLType::get(LST_ERROR);
 }
 
+/*
+ * adapted from public domain tailslide_strtok_r() by Charlie Gordon
+ *
+ *   from comp.lang.c  9/14/2007
+ *
+ *      http://groups.google.com/group/comp.lang.c/msg/2ab1ecbb86646684
+ *
+ *     (Declaration that it's public domain):
+ *      http://groups.google.com/group/comp.lang.c/msg/7c7b39328fefab9c
+ */
+
+static char* tailslide_strtok_r(char *str, const char *delim, char **nextp)
+{
+  if (!str)
+    str = *nextp;
+  str += strspn(str, delim);
+
+  if (!*str)
+    return NULL;
+
+  char *ret = str;
+
+  str += strcspn(str, delim);
+
+  if (*str)
+    *str++ = '\0';
+
+  *nextp = str;
+  return ret;
+}
+
 // called once at startup, not thread-safe.
 void tailslide_init_builtins(const char *builtins_file) {
   gStaticAllocator.set_context(&gStaticScriptContext);
@@ -81,7 +112,7 @@ void tailslide_init_builtins(const char *builtins_file) {
 
     strcpy(original, buf);
 
-    ret_type = strtok_r(buf, " (),", &tokptr);
+    ret_type = tailslide_strtok_r(buf, " (),", &tokptr);
 
     if (ret_type == nullptr) {
       fprintf(stderr, "error parsing %s: %s\n", builtins_file, original);
@@ -90,9 +121,9 @@ void tailslide_init_builtins(const char *builtins_file) {
     }
 
     if (!strcmp(ret_type, "const")) {
-      ret_type = strtok_r(nullptr, " =(),", &tokptr);
-      name = strtok_r(nullptr, " =(),", &tokptr);
-      value = strtok_r(nullptr, "=", &tokptr);
+      ret_type = tailslide_strtok_r(nullptr, " =(),", &tokptr);
+      name = tailslide_strtok_r(nullptr, " =(),", &tokptr);
+      value = tailslide_strtok_r(nullptr, "=", &tokptr);
 
 
       if (ret_type == nullptr || name == nullptr || value == nullptr) {
@@ -187,7 +218,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
       gGlobalSymbolTable.define(sym);
 
     } else if (!strcmp(ret_type, "event")) {
-      name = strtok_r(nullptr, " (),", &tokptr);
+      name = tailslide_strtok_r(nullptr, " (),", &tokptr);
 
       if (name == nullptr) {
         fprintf(stderr, "error parsing %s: %s\n", builtins_file, original);
@@ -196,8 +227,8 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
       }
 
       dec = gStaticAllocator.new_tracked<LSLFunctionDec>();
-      while ((ptype = strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
-        if ((pname = strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
+      while ((ptype = tailslide_strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
+        if ((pname = tailslide_strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
           dec->push_child(gStaticAllocator.new_tracked<LSLIdentifier>(
             str_to_type(ptype), gStaticAllocator.copy_str(pname))
           );
@@ -208,7 +239,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
         gStaticAllocator.copy_str(name), str_to_type("void"), SYM_EVENT, SYM_BUILTIN, dec
       ));
     } else {
-      name = strtok_r(nullptr, " (),", &tokptr);
+      name = tailslide_strtok_r(nullptr, " (),", &tokptr);
 
       if (name == nullptr) {
         fprintf(stderr, "error parsing %s: %s\n", builtins_file, original);
@@ -217,8 +248,8 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
       }
 
       dec = gStaticAllocator.new_tracked<LSLFunctionDec>();
-      while ((ptype = strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
-        if ((pname = strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
+      while ((ptype = tailslide_strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
+        if ((pname = tailslide_strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
           dec->push_child(gStaticAllocator.new_tracked<LSLIdentifier>(
             str_to_type(ptype), gStaticAllocator.copy_str(pname)
           ));
