@@ -18,15 +18,15 @@ const static int coercion_table[][2] = {
 
 // from->to allowed lookup table
 const static int legal_cast_table[LST_MAX][LST_MAX] = {
-    /* ERROR  */ {0},
     /* NULL   */ {0},
-    /* INT    */ {0, 0, 1, 1, 1, 0, 0, 0, 1},
-    /* FLOAT  */ {0, 0, 1, 1, 1, 0, 0, 0, 1},
-    /* STRING */ {0, 0, 1, 1, 1, 1, 1, 1, 1},
-    /* KEY    */ {0, 0, 0, 0, 1, 1, 0, 0, 1},
-    /* VECTOR */ {0, 0, 0, 0, 1, 0, 1, 0, 1},
-    /* QUAT   */ {0, 0, 0, 0, 1, 0, 0, 1, 1},
-    /* LIST   */ {0, 0, 0, 0, 1, 0, 0, 0, 1},
+    /* INT    */ {0, 1, 1, 1, 0, 0, 0, 1, 0},
+    /* FLOAT  */ {0, 1, 1, 1, 0, 0, 0, 1, 0},
+    /* STRING */ {0, 1, 1, 1, 1, 1, 1, 1, 0},
+    /* KEY    */ {0, 0, 0, 1, 1, 0, 0, 1, 0},
+    /* VECTOR */ {0, 0, 0, 1, 0, 1, 0, 1, 0},
+    /* QUAT   */ {0, 0, 0, 1, 0, 0, 1, 1, 0},
+    /* LIST   */ {0, 0, 0, 1, 0, 0, 0, 1, 0},
+    /* ERROR  */ {0},
 };
 
 const static int operator_result_table[][4] = {
@@ -182,7 +182,6 @@ const static int operator_result_table[][4] = {
 };
 
 LSLType LSLType::types[LST_MAX] = {
-        LSLType(LST_ERROR, true),
         LSLType(LST_NULL, true),
         LSLType(LST_INTEGER, true),
         LSLType(LST_FLOATINGPOINT, true),
@@ -191,6 +190,7 @@ LSLType LSLType::types[LST_MAX] = {
         LSLType(LST_VECTOR, true),
         LSLType(LST_QUATERNION, true),
         LSLType(LST_LIST, true),
+        LSLType(LST_ERROR, true),
 };
 
 bool LSLType::can_coerce(LSLType *to) {

@@ -5,21 +5,21 @@
 
 namespace Tailslide {
 enum LST_TYPE {
-  LST_ERROR         = 0,   // special value so processing can continue without throwing bogus errors
-  LST_NULL          = 1,
-  LST_INTEGER       = 2,
-  LST_FLOATINGPOINT = 3,
-  LST_STRING        = 4,
-  LST_KEY           = 5,
-  LST_VECTOR        = 6,
-  LST_QUATERNION    = 7,
-  LST_LIST          = 8,    // ??
+  LST_NULL          = 0,
+  LST_INTEGER       = 1,
+  LST_FLOATINGPOINT = 2,
+  LST_STRING        = 3,
+  LST_KEY           = 4,
+  LST_VECTOR        = 5,
+  LST_QUATERNION    = 6,
+  LST_LIST          = 7,
+  LST_ERROR         = 8,   // special value so processing can continue without throwing bogus errors
   LST_MAX           = 9,
 };
 
 class LSLType : public LSLASTNode {
   public:
-    explicit LSLType(LST_TYPE type, bool static_def=false) : LSLASTNode(0), itype(type) {
+    explicit LSLType(LST_TYPE type, bool static_def=false) : LSLASTNode(nullptr), itype(type) {
       // Parenting the global LSLType instances to a specific script's tree is illegal
       if (static_def)
         mark_static();
