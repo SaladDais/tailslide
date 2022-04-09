@@ -1,15 +1,18 @@
 #include <cstring>
 #include <string>
 
+#include "strings.hh"
 #include "allocator.hh"
 
 namespace Tailslide {
 
-char *parse_string(ScriptAllocator *allocator, char *input) {
+char *parse_string(ScriptAllocator *allocator, char *input, YYLTYPE* lloc) {
   char *str = allocator->alloc((strlen(input) * 2) + 1);
   char *yp = input + 1;
   char *sp = str;
   int end = 0;
+  const char *last_nl = nullptr;
+  int num_nls = 0;
 #define _APPEND_CHAR(_x) do {*sp++ = (_x); ++end; } while(0)
   // The first `"` after an `L"` string opener is part of the string value itself
   // due to lscript's broken parser.
@@ -48,10 +51,22 @@ char *parse_string(ScriptAllocator *allocator, char *input) {
     } else if (*yp == '"') {
       break;
     } else {
+      if (*yp == '\n') {
+        ++num_nls;
+        // yp always > input
+        last_nl = yp;
+      }
       _APPEND_CHAR(*yp++);
     }
   }
 #undef _APPEND_CHAR
+  if (lloc) {
+    if (num_nls) {
+      lloc->last_line += num_nls;
+      // the line starts at the last newline, add one to account for terminating quote.
+      lloc->last_column = (int)(yp - last_nl + 1);
+    }
+  }
   str[end] = '\0';
   return str;
 }

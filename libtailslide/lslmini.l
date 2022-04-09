@@ -100,7 +100,7 @@ FS            (f|F)
 {N}*"."{N}+({E})?{FS}?  { yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
 {N}+"."{N}*({E})?{FS}?  { yylval->fval = (F32)atof(yytext); return(FP_CONSTANT); }
 
-L?\"(\\.|[^\\"])*\"     { yylval->sval = Tailslide::parse_string(ALLOCATOR, yytext); return(STRING_CONSTANT); }
+L?\"(\\.|[^\\"])*\"     { yylval->sval = Tailslide::parse_string(ALLOCATOR, yytext, yylloc); return(STRING_CONSTANT); }
 
 "++"                    { return(INC_OP); }
 "--"                    { return(DEC_OP); }
