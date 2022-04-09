@@ -1,10 +1,12 @@
 string foo = "foobar";
 
+integer llOwnerSay = 1; // globals may not shadow builtin functions $[E10026] $[E20009]
+
 default
 {
     state_entry()
     {
-        integer llOwnerSay = 1; // $[E20009] allowed, but unused.
+        integer llOwnerSay = 1; // $[E20009] $[E20001] allowed, but unused.
         // this should fail
         integer foo; // $[E20001] shadow
         {
@@ -24,4 +26,8 @@ default
         // this is fine
         integer foo; // $[E20009] unused $[E20001] shadow
     }
+}
+
+state llSay { // globals may not shadow builtin functions $[E10026] $[E20009]
+    state_entry(){}
 }

@@ -120,7 +120,11 @@ void LSLASTNode::define_symbol(LSLSymbol *symbol) {
           // you're never allowed to shadow event names
           if (shadow->get_symbol_type() == SYM_EVENT)
             NODE_ERROR(symbol, E_EVENT_AS_IDENTIFIER, symbol->get_name());
-          else if (shadow->get_symbol_type() != SYM_FUNCTION || symbol->get_symbol_type() == SYM_FUNCTION)
+          // builtin function names may be shadowed, but only by locals, not globals.
+          else if (shadow->get_symbol_type() == SYM_FUNCTION && symbol->get_sub_type() != SYM_GLOBAL)
+            return;
+          else
+            // anything else is an error
             NODE_ERROR(symbol, E_SHADOW_CONSTANT, symbol->get_name());
         } else {
           // nothing in a local scope can ever shadow a function, both
