@@ -8,10 +8,18 @@ void tailslide_set_in(FILE *, void *);
 
 int tailslide_lex_destroy(void *);
 
-int tailslide_parse(void *);
-
 namespace Tailslide {
 
+extern LSLSymbolTable gGlobalSymbolTable;
+
+ScopedScriptParser::ScopedScriptParser(LSLSymbolTable *builtins) : allocator(), logger(&allocator) {
+  context.allocator = &allocator;
+  context.logger = &logger;
+  if (builtins)
+    context.builtins = builtins;
+  else
+    context.builtins = &gGlobalSymbolTable;
+}
 
 LSLScript *ScopedScriptParser::parse_lsl(const std::string &filename) {
   // can only be used to parse a single script.

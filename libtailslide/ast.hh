@@ -156,7 +156,7 @@ class LSLASTNode : public TrackableObject {
     void check_symbols(); // look for unused symbols, etc
 
     /// symbol functions        ///
-    virtual LSLSymbol *lookup_symbol( const char *name, LSLSymbolType type = SYM_ANY, LSLASTNode *start_node = nullptr );
+    virtual LSLSymbol *lookup_symbol( const char *name, LSLSymbolType type );
     void            define_symbol( LSLSymbol *symbol );
     LSLSymbolTable *get_symbol_table() { return symbol_table; }
 

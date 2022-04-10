@@ -15,10 +15,7 @@ namespace Tailslide {
 
 class ScopedScriptParser {
   public:
-    ScopedScriptParser(): allocator(), logger(&allocator) {
-      context.allocator = &allocator;
-      context.logger = &logger;
-    };
+    explicit ScopedScriptParser(LSLSymbolTable *builtins);
     ScriptAllocator allocator;
     Logger logger;
     LSLScript *script = nullptr;

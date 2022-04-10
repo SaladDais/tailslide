@@ -67,7 +67,7 @@ void LSLASTNode::link_symbol_tables(bool unlink) {
 }
 
 // Lookup a symbol, propagating up the tree until it is found.
-LSLSymbol *LSLASTNode::lookup_symbol(const char *name, LSLSymbolType sym_type, LSLASTNode *start_node) {
+LSLSymbol *LSLASTNode::lookup_symbol(const char *name, LSLSymbolType sym_type) {
   LSLSymbol *sym = nullptr;
 
   // If we have a symbol table of our own, look for it there
@@ -76,9 +76,16 @@ LSLSymbol *LSLASTNode::lookup_symbol(const char *name, LSLSymbolType sym_type, L
 
   // If we have no symbol table, or it wasn't in it, but we have a parent, ask them
   if (sym == nullptr && get_parent())
-    sym = get_parent()->lookup_symbol(name, sym_type, start_node != nullptr ? start_node : this);
+    sym = get_parent()->lookup_symbol(name, sym_type);
 
   return sym;
+}
+
+LSLSymbol *LSLScript::lookup_symbol(const char *name, LSLSymbolType sym_type) {
+  auto *sym = context->builtins->lookup(name, sym_type);
+  if (sym != nullptr)
+    return sym;
+  return LSLASTNode::lookup_symbol(name, sym_type);
 }
 
 // Define a symbol, propagating up the tree to the nearest scope level.
@@ -107,7 +114,7 @@ void LSLASTNode::define_symbol(LSLSymbol *symbol) {
       // If we still didn't find anything, look in the root scope for _any_ kind of symbol,
       // shadowing certain kinds of builtins can be problematic.
       if (shadow == nullptr && get_root())
-        shadow = get_root()->lookup_symbol(symbol->get_name());
+        shadow = get_root()->lookup_symbol(symbol->get_name(), SYM_ANY);
 
       // define it for now even if it shadows so that we have something to work with.
       symbol_table->define(symbol);

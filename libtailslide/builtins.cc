@@ -13,7 +13,7 @@ extern const char *builtins_txt[];
 static ScriptAllocator gStaticAllocator {};
 
 // holds the symbols for the default builtins
-static LSLSymbolTable gGlobalSymbolTable {nullptr};
+LSLSymbolTable gGlobalSymbolTable {nullptr};
 
 struct LSLTypeMap {
     const char *name;
@@ -257,13 +257,6 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
       ));
     }
   }
-}
-
-LSLSymbol *LSLScript::lookup_symbol(const char *name, LSLSymbolType sym_type, LSLASTNode *start_node) {
-  auto *sym = gGlobalSymbolTable.lookup(name, sym_type);
-  if (sym != nullptr)
-    return sym;
-  return LSLASTNode::lookup_symbol(name, sym_type, start_node);
 }
 
 }

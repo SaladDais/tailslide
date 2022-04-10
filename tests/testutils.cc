@@ -9,7 +9,7 @@ ParserRef runConformance(const char* name, bool allow_syntax_errors)
   path += "/scripts/";
   path += name;
 
-  ParserRef parser(new ScopedScriptParser());
+  ParserRef parser(new ScopedScriptParser(nullptr));
   Logger *logger = &parser->logger;
   logger->set_check_assertions(true);
   parser->parse_lsl(path);

@@ -24,6 +24,7 @@ struct ScriptContext {
   LSLScript *script = nullptr;
   ScriptAllocator *allocator = nullptr;
   Logger *logger = nullptr;
+  LSLSymbolTable *builtins = nullptr;
   bool ast_sane = true;
   Tailslide::TAILSLIDE_LTYPE glloc {0};
 };
@@ -64,7 +65,7 @@ class LSLScript : public LSLASTNode {
 
     virtual const char *get_node_name() { return "script"; };
     virtual LSLNodeType get_node_type() { return NODE_SCRIPT; };
-    virtual LSLSymbol *lookup_symbol(const char *name, LSLSymbolType sym_type, LSLASTNode *start_node);
+    virtual LSLSymbol *lookup_symbol(const char *name, LSLSymbolType sym_type);
 
     void optimize(const OptimizationContext &ctx);
     void recalculate_reference_data();
