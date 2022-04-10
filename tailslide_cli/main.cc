@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
   }
   tailslide_init_builtins(nullptr);
   // set up the allocator and logger
-  ScoperScriptParser parser;
+  ScopedScriptParser parser;
   Logger *logger = &parser.logger;
 
   if (check_assertions)

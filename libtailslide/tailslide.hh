@@ -13,9 +13,9 @@
 
 namespace Tailslide {
 
-class ScoperScriptParser {
+class ScopedScriptParser {
   public:
-    ScoperScriptParser(): allocator(), logger(&allocator) {
+    ScopedScriptParser(): allocator(), logger(&allocator) {
       context.allocator = &allocator;
       context.logger = &logger;
     };

@@ -20,7 +20,7 @@
   assertNoLintErrors(&parser->logger, name);     \
 }
 
-using ParserRef = std::unique_ptr<Tailslide::ScoperScriptParser>;
+using ParserRef = std::unique_ptr<Tailslide::ScopedScriptParser>;
 
 ParserRef runConformance(const char* name, bool allow_syntax_errors=false);
 

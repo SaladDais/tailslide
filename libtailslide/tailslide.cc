@@ -13,7 +13,7 @@ int tailslide_parse(void *);
 namespace Tailslide {
 
 
-LSLScript *ScoperScriptParser::parse_lsl(const std::string &filename) {
+LSLScript *ScopedScriptParser::parse_lsl(const std::string &filename) {
   // can only be used to parse a single script.
   assert(!script);
   FILE *yyin = fopen(filename.c_str(), "rb");
@@ -25,7 +25,7 @@ LSLScript *ScoperScriptParser::parse_lsl(const std::string &filename) {
   return result;
 }
 
-LSLScript *ScoperScriptParser::parse_lsl(FILE *yyin) {
+LSLScript *ScopedScriptParser::parse_lsl(FILE *yyin) {
   assert(!script);
   void *scanner;
   // ScopedScriptParser owns the allocator and context instance because we can't
