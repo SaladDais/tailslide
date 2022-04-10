@@ -29,11 +29,11 @@ enum LSLSymbolSubType    { SYM_LOCAL, SYM_GLOBAL, SYM_BUILTIN, SYM_FUNCTION_PARA
 
 class LSLSymbol: public TrackableObject {
   public:
-    LSLSymbol( ScriptContext *ctx, const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, YYLTYPE *lloc, class LSLFunctionDec *function_decl = NULL, class LSLASTNode *var_decl = NULL )
+    LSLSymbol( ScriptContext *ctx, const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, YYLTYPE *lloc, class LSLParamList *function_decl = NULL, class LSLASTNode *var_decl = NULL )
       : name(name), type(type), symbol_type(symbol_type), sub_type(sub_type), lloc(*lloc), function_decl(function_decl), var_decl(var_decl),
       constant_value(NULL), references(0), assignments(0), mangled_name(NULL), TrackableObject(ctx) {};
 
-    LSLSymbol( ScriptContext *ctx, const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, class LSLFunctionDec *function_decl = NULL, class LSLASTNode *var_decl = NULL )
+    LSLSymbol( ScriptContext *ctx, const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, class LSLParamList *function_decl = NULL, class LSLASTNode *var_decl = NULL )
       : name(name), type(type), symbol_type(symbol_type), sub_type(sub_type), function_decl(function_decl), var_decl(var_decl),
       constant_value(NULL), references(0), assignments(0), mangled_name(NULL), TrackableObject(ctx) {};
 
@@ -61,7 +61,7 @@ class LSLSymbol: public TrackableObject {
     }
 
     YYLTYPE             *get_lloc()         { return &lloc; }
-    class LSLFunctionDec *get_function_decl() { return function_decl; }
+    class LSLParamList *get_function_decl() { return function_decl; }
     class LSLASTNode        *get_var_decl() { return var_decl; }
 
     class LSLConstant *get_constant_value()                            { return constant_value;    };
@@ -80,7 +80,7 @@ class LSLSymbol: public TrackableObject {
     LSLSymbolType         symbol_type;
     LSLSymbolSubType      sub_type;
     YYLTYPE              lloc;
-    class LSLFunctionDec *function_decl;
+    class LSLParamList *function_decl;
     class LSLASTNode     *var_decl;
     class LSLConstant *constant_value;
     bool constant_precluded = false;

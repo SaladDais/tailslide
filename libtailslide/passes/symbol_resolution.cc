@@ -134,7 +134,7 @@ bool SymbolResolutionVisitor::visit(LSLEventHandler *node) {
   auto *sym = node->get_root()->lookup_symbol(id->get_name(), SYM_EVENT);
   if (sym) {
     id->set_symbol(node->context->allocator->new_tracked<LSLSymbol>(
-        id->get_name(), id->get_type(), SYM_EVENT, SYM_BUILTIN, node->get_lloc(), sym->get_function_decl()
+        id->get_name(), id->get_type(), SYM_EVENT, SYM_BUILTIN, node->get_lloc(), (LSLParamList*)node->get_child(1)
     ));
     node->get_parent()->define_symbol(id->get_symbol());
   } else {

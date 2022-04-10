@@ -223,16 +223,15 @@ bool TypeCheckVisitor::visit(LSLListExpression *node) {
 static bool validate_func_arg_spec(
     LSLIdentifier *id,
     LSLASTNode *node,
-    LSLIdentifier *params
+    LSLIdentifier *params,
+    LSLParamList *function_decl
 ) {
   bool is_event_handler = node->get_node_type() == NODE_EVENT_HANDLER;
 
-  LSLFunctionDec *function_decl;
   LSLIdentifier *declared_param_id;
   LSLIdentifier *passed_param_id;
   int param_num = 1;
 
-  function_decl = id->get_symbol()->get_function_decl();
   declared_param_id = (LSLIdentifier *) function_decl->get_children();
   passed_param_id = params;
 
@@ -278,7 +277,7 @@ bool TypeCheckVisitor::visit(LSLFunctionExpression *node) {
     return true;
   }
 
-  validate_func_arg_spec(id, node, (LSLIdentifier *) node->get_child(1));
+  validate_func_arg_spec(id, node, (LSLIdentifier *) node->get_child(1), id->get_symbol()->get_function_decl());
   return true;
 }
 
@@ -289,7 +288,9 @@ bool TypeCheckVisitor::visit(LSLEventHandler *node) {
   if (id->get_symbol() == nullptr)
     return true;
 
-  validate_func_arg_spec(id, node, (LSLIdentifier *) node->get_child(1)->get_children());
+  // get the expected event handler prototype from the builtins
+  auto *function_decl = node->context->builtins->lookup(id->get_name(), SYM_EVENT)->get_function_decl();
+  validate_func_arg_spec(id, node, (LSLIdentifier *) node->get_child(1)->get_children(), function_decl);
   return true;
 }
 

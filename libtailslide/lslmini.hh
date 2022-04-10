@@ -347,7 +347,7 @@ class LSLFunctionDec : public LSLParamList {
 
 class LSLEventDec : public LSLParamList {
   public:
-    LSLEventDec(ScriptContext *ctx) : LSLParamList(ctx) {};
+    explicit LSLEventDec(ScriptContext *ctx) : LSLParamList(ctx) {};
     LSLEventDec( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLParamList(ctx, identifier) {};
     virtual const char *get_node_name() { return "event decl"; }
     virtual LSLNodeType get_node_type() { return NODE_EVENT_DEC; };
