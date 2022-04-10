@@ -114,12 +114,15 @@ class LSLSymbolTable: public TrackableObject {
         cstr_equal_to<const char *>
       > SensitiveSymbolMap;
 
-    // Vector to hold our symbolsa
     SensitiveSymbolMap symbols;
 
-    // The root tables contains pointers to all of the tables
+    // The root table contains pointers to all of the tables
     // below it. This should be empty for anything else.
+    // TODO: This symbol table parenting logic sucks. replace it.
     std::vector<LSLSymbolTable *>  desc_tables;
+
+  public:
+    SensitiveSymbolMap &get_map() {return symbols;}
 };
 
 }
