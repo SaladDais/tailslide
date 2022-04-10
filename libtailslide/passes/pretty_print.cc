@@ -113,8 +113,8 @@ bool PrettyPrintVisitor::visit(LSLIdentifier *node) {
 
 bool PrettyPrintVisitor::visit(LSLState *node) {
   do_tabs();
-  LSLASTNode *state_id = node->get_child(0);
-  if (state_id->get_node_type() == NODE_NULL)
+  auto *state_id = (LSLIdentifier*)node->get_child(0);
+  if (!strcmp("default", state_id->get_name()))
     stream << "default";
   else {
     stream << "state ";
@@ -245,10 +245,7 @@ bool PrettyPrintVisitor::visit(LSLDeclaration *node) {
 bool PrettyPrintVisitor::visit(LSLStateStatement *node) {
   do_tabs();
   stream << "state ";
-  if (node->get_child(0) == nullptr || node->get_child(0)->get_node_type() == NODE_NULL)
-    stream << "default";
-  else
-    visit_children(node);
+  visit_children(node);
   stream << ";\n";
   return false;
 }

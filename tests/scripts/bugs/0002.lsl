@@ -6,5 +6,5 @@
 default {               // $[E10023]
 } 
 
-state other {           // $[E10023]
+state other {           // $[E10023] $[E20009]
 }

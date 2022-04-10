@@ -34,6 +34,9 @@ void LSLSymbolTable::check_symbols() {
     LSLSymbol *sym = symbol.second;
     if (sym->get_sub_type() != SYM_BUILTIN && sym->get_sub_type() != SYM_EVENT_PARAMETER &&
         sym->get_references() <= 1) {
+      // We don't really care if the default state never gets explicitly referenced.
+      if (sym->get_symbol_type() == SYM_STATE && !strcmp("default", sym->get_name()))
+        continue;
       NODE_ERROR(sym, W_DECLARED_BUT_NOT_USED, LSLSymbol::get_type_name(sym->get_symbol_type()), sym->get_name());
     }
   }
@@ -75,6 +78,9 @@ void LSLSymbolTable::set_mangled_names() {
         LSLSymbol *sym = symbol->second;
         // can't rename events or builtin names, obviously!
         if (sym->get_symbol_type() == SYM_EVENT || sym->get_sub_type() == SYM_BUILTIN)
+          continue;
+        // default state _must_ be named default, can't mangle the name.
+        if (sym->get_symbol_type() == SYM_STATE && !strcmp("default", sym->get_name()))
           continue;
 
         char *mangled_id = context->allocator->alloc(30);

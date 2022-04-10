@@ -473,12 +473,12 @@ other_states
 default
     : STATE_DEFAULT '{' state_body '}'
     {
-        $$ = ALLOCATOR->new_tracked<LSLState>( nullptr, $3 );
+        $$ = ALLOCATOR->new_tracked<LSLState>( MAKEID(LST_NULL, $1, @1), $3 );
     }
     | STATE_DEFAULT '{' '}'
     {
         tailslide_get_extra(scanner)->logger->error( &@1, E_NO_EVENT_HANDLERS );
-        $$ = ALLOCATOR->new_tracked<LSLState>( nullptr, nullptr );
+        $$ = ALLOCATOR->new_tracked<LSLState>( MAKEID(LST_NULL, $1, @1), nullptr );
     }
     ;
 
@@ -490,7 +490,7 @@ state
     | STATE IDENTIFIER '{' '}'
     {
         tailslide_get_extra(scanner)->logger->error( &@1, E_NO_EVENT_HANDLERS );
-        $$ = ALLOCATOR->new_tracked<LSLState>( nullptr, nullptr );
+        $$ = ALLOCATOR->new_tracked<LSLState>( MAKEID(LST_NULL, $2, @2), nullptr );
     }
     ;
 
@@ -560,7 +560,7 @@ statement
     }
     | STATE STATE_DEFAULT ';'
     {
-        $$ = ALLOCATOR->new_tracked<LSLStateStatement>();
+        $$ = ALLOCATOR->new_tracked<LSLStateStatement>(MAKEID(LST_NULL, $2, @2));
     }
     | JUMP IDENTIFIER ';'
     {

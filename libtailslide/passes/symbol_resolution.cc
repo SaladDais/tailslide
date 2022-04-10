@@ -172,8 +172,7 @@ bool SymbolResolutionVisitor::visit(LSLJumpStatement *node) {
 }
 
 bool SymbolResolutionVisitor::visit(LSLStateStatement *node) {
-  if (auto *id = (LSLIdentifier *) node->get_child(0))
-    id->resolve_symbol(SYM_STATE);
+  ((LSLIdentifier *) node->get_child(0))->resolve_symbol(SYM_STATE);
   return true;
 }
 

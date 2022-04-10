@@ -52,20 +52,10 @@ bool TypeCheckVisitor::visit(LSLStateStatement *node) {
         break;
       case NODE_STATE:
         // we're in a state, see if it's the same one we're calling
-        if (
-          // in default and calling state default
-            (ancestor->get_child(0)->get_node_type() == NODE_NULL && id == nullptr) ||
-            (
-                // make sure neither current nor target is default
-                (id != nullptr && ancestor->get_child(0)->get_node_type() ==
-                                  NODE_IDENTIFIER) &&
-                // in state x calling state x
-                !strcmp(((LSLIdentifier *) ancestor->get_child(0))->get_name(),
-                        id->get_name())
-            )
-            ) {
+        if (!strcmp(((LSLIdentifier *) ancestor->get_child(0))->get_name(), id->get_name())) {
           NODE_ERROR(node, W_CHANGE_TO_CURRENT_STATE);
         }
+        // if we've hit a state there's no sense ascending further
         return true;
       case NODE_GLOBAL_FUNCTION:
         if (is_in_if) {
@@ -82,6 +72,7 @@ bool TypeCheckVisitor::visit(LSLStateStatement *node) {
         } else {
           NODE_ERROR(node, E_CHANGE_STATE_IN_FUNCTION);
         }
+        // if we've hit a function there's no sense ascending further
         return true;
       default:
         break;
