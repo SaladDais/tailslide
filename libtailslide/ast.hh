@@ -105,6 +105,17 @@ class LSLASTNode : public TrackableObject {
       return c;
     }
 
+    size_t get_num_children() const {
+      LSLASTNode *c = children;
+      size_t num = 0;
+      // empty children (NODE_NULL) are still considered valid.
+      while (c) {
+        c = c->get_next();
+        ++num;
+      }
+      return num;
+    };
+
     // Get the topmost node in the tree
     LSLASTNode *get_root() {
       LSLASTNode *last_node = this;
