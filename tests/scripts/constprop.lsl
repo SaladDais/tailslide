@@ -2,6 +2,7 @@
 
 integer s = 2;
 float minus_pi = -PI;
+rotation uninit_r;
 
 default {
     state_entry() {
@@ -48,6 +49,13 @@ default {
         if ( (float)"inf" == (float)"inf" ) return; // $[E20012]
         // SL doesn't ever do -NaN
         if ( "NaN" == (string)(((float)"inf") * 0.0) ) return; // $[E20012]
+        // uninitialized rotation is <0, 0, 0, 1>, not <0, 0, 0, 0>!
+        // however, we don't currently infer constant values for declarations
+        // with no rvalue due to some weird semantics around uninitialized heap
+        // type lvalue refs in globals under LSO. Not folded.
+        // TODO: Allow inferring a default value for non-heap types without labels
+        //  between declaration and use.
+        if ( uninit_r == <0, 0, 0, 1> ) return;
 
         llFrand(r.z);
         llFrand((float)"inf");
