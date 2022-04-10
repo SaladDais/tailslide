@@ -28,30 +28,28 @@ struct ScriptContext {
   Tailslide::TAILSLIDE_LTYPE glloc {0};
 };
 
-class Vector3: public TrackableObject {
+class Vector3 {
   public:
-    Vector3(ScriptContext *ctx, float x, float y, float z) : TrackableObject(ctx), x(x), y(y), z(z) {};
-    Vector3(float x, float y, float z): Vector3(nullptr, x, y, z) {};
+    Vector3(float x, float y, float z) : x(x), y(y), z(z) {};
     float x, y, z;
 
-    bool operator==(const class Vector3 &other) {
+    bool operator==(const class Vector3 &other) const {
       return (x == other.x) && (y == other.y) && (z == other.z);
     };
-    bool operator!=(const class Vector3 &other) {
+    bool operator!=(const class Vector3 &other) const {
       return !(*this == other);
     };
 };
 
-class Quaternion: public TrackableObject {
+class Quaternion {
   public:
-    Quaternion(ScriptContext *ctx, float x, float y, float z, float s) : TrackableObject(ctx), x(x), y(y), z(z), s(s) {};
-    Quaternion(float x, float y, float z, float s): Quaternion(nullptr, x, y, z, s) {};
+    Quaternion(float x, float y, float z, float s): x(x), y(y), z(z), s(s) {};
     float x, y, z, s;
 
-    bool operator==(const class Quaternion &other) {
+    bool operator==(const class Quaternion &other) const {
       return (x == other.x) && (y == other.y) && (z == other.z) && (s == other.s);
     };
-    bool operator!=(const class Quaternion &other) {
+    bool operator!=(const class Quaternion &other) const {
       return !(*this == other);
     };
 };
@@ -261,34 +259,30 @@ class LSLListConstant : public LSLConstant {
 
 class LSLVectorConstant : public LSLConstant {
   public:
-    LSLVectorConstant( ScriptContext *ctx, float v1, float v2, float v3 ): LSLConstant(ctx) {
-      value = ctx->allocator->new_tracked<Vector3>(v1, v2, v3 );
+    LSLVectorConstant( ScriptContext *ctx, float v1, float v2, float v3 ): LSLConstant(ctx), value({v1, v2, v3}) {
       type = TYPE(LST_VECTOR);
     };
 
     virtual const char *get_node_name() {
       static thread_local char buf[256];
-      if ( value )
-        snprintf(buf, 256, "vector constant: <%g, %g, %g>", value->x, value->y, value->z);
-      else
-        snprintf(buf, 256, "vector constant: unknown value?" );
+      snprintf(buf, 256, "vector constant: <%g, %g, %g>", value.x, value.y, value.z);
       return buf;
     }
 
     virtual LSLNodeSubType get_node_sub_type() { return NODE_VECTOR_CONSTANT; }
 
-    Vector3 *get_value() { return value; }
-    void set_value(Vector3 *val) { value = val; }
+    Vector3 *get_value() { return &value; }
+    void set_value(Vector3 *val) { value = *val; }
     virtual bool contains_nan();
 
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
-      auto* new_const = allocator->new_tracked<LSLVectorConstant>(value->x, value->y, value->z);
+      auto* new_const = allocator->new_tracked<LSLVectorConstant>(value.x, value.y, value.z);
       new_const->constant_value = new_const;
       return new_const;
     };
 
   private:
-    Vector3 *value;
+    Vector3 value;
 };
 
 
@@ -297,34 +291,31 @@ class LSLVectorConstant : public LSLConstant {
 
 class LSLQuaternionConstant : public LSLConstant {
   public:
-    LSLQuaternionConstant( ScriptContext *ctx, float v1, float v2, float v3, float v4 ): LSLConstant(ctx) {
-      value = ctx->allocator->new_tracked<Quaternion>(v1, v2, v3, v4 );
+    LSLQuaternionConstant( ScriptContext *ctx, float v1, float v2, float v3, float v4 ): LSLConstant(ctx), value({v1, v2, v3, v4}) {
+      value = {v1, v2, v3, v4};
       type = TYPE(LST_QUATERNION);
     };
 
     virtual const char *get_node_name() {
       static thread_local char buf[256];
-      if (value)
-        snprintf(buf, 256, "quaternion constant: <%g, %g, %g, %g>", value->x, value->y, value->z, value->s);
-      else
-        snprintf(buf, 256, "quaternion constant: unknown value?" );
+      snprintf(buf, 256, "quaternion constant: <%g, %g, %g, %g>", value.x, value.y, value.z, value.s);
       return buf;
     }
 
     virtual LSLNodeSubType get_node_sub_type() { return NODE_QUATERNION_CONSTANT; }
 
-    Quaternion *get_value() { return value; }
-    void set_value(class Quaternion *val) { value = val; }
+    Quaternion *get_value() { return &value; }
+    void set_value(class Quaternion *val) { value = *val; }
     virtual bool contains_nan();
 
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
-      auto* new_const = allocator->new_tracked<LSLQuaternionConstant>(value->x, value->y, value->z, value->s);
+      auto* new_const = allocator->new_tracked<LSLQuaternionConstant>(value.x, value.y, value.z, value.s);
       new_const->constant_value = new_const;
       return new_const;
     };
 
   private:
-    Quaternion *value;
+    Quaternion value;
 };
 
 

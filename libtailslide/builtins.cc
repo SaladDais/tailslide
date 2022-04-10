@@ -9,12 +9,11 @@ namespace Tailslide {
 
 extern const char *builtins_txt[];
 
+// Keep builtins alive as long as the library is loaded
 static ScriptAllocator gStaticAllocator {};
+
+// holds the symbols for the default builtins
 static LSLSymbolTable gGlobalSymbolTable {nullptr};
-ScriptContext gStaticScriptContext = {
-    .script = nullptr,
-    .allocator = &gStaticAllocator,
-};
 
 struct LSLTypeMap {
     const char *name;
@@ -42,7 +41,7 @@ LSLType *str_to_type(const char *str) {
 }
 
 /*
- * adapted from public domain tailslide_strtok_r() by Charlie Gordon
+ * adapted from public domain strtok_r() by Charlie Gordon
  *
  *   from comp.lang.c  9/14/2007
  *
@@ -52,8 +51,7 @@ LSLType *str_to_type(const char *str) {
  *      http://groups.google.com/group/comp.lang.c/msg/7c7b39328fefab9c
  */
 
-static char* tailslide_strtok_r(char *str, const char *delim, char **nextp)
-{
+static char* tailslide_strtok_r(char *str, const char *delim, char **nextp) {
   if (!str)
     str = *nextp;
   str += strspn(str, delim);
@@ -74,7 +72,6 @@ static char* tailslide_strtok_r(char *str, const char *delim, char **nextp)
 
 // called once at startup, not thread-safe.
 void tailslide_init_builtins(const char *builtins_file) {
-  gStaticAllocator.set_context(&gStaticScriptContext);
   LSLFunctionDec *dec = nullptr;
   FILE *fp = nullptr;
   char buf[1024];
@@ -83,9 +80,8 @@ void tailslide_init_builtins(const char *builtins_file) {
   char *name = nullptr;
   char *ptype = nullptr, *pname = nullptr, *tokptr = nullptr, *value = nullptr;
   int line = 0;
-  bool user_builtins = (builtins_file != nullptr);
 
-  if (user_builtins) {
+  if (builtins_file) {
     fp = fopen(builtins_file, "r");
 
     if (fp == nullptr) {
