@@ -138,6 +138,8 @@ class LSLASTNode : public TrackableObject {
 
     void                set_type(LSLType *_type) { type = _type;   }
     class LSLType *get_type()                    { return type;    }
+    LST_TYPE get_itype();
+
 
     void mark_static() { static_node = true;}
     bool is_static() {return static_node;}
@@ -191,6 +193,7 @@ class LSLASTNode : public TrackableObject {
     bool get_constant_precluded() { return constant_precluded; };
     virtual bool node_allows_folding() { return false; };
     bool            is_constant()           { return get_constant_value() != nullptr; };
+    virtual LSLSymbol *get_symbol() { return nullptr; }
 
   protected:
     class LSLType          *type;

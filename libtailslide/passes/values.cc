@@ -144,7 +144,7 @@ bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {
   if (symbol->get_assignments() == 0) {
     constant_value = symbol->get_constant_value();
     if (constant_value != nullptr && member != nullptr) { // getting a member
-      LST_TYPE c_type = constant_value->get_type()->get_itype();
+      LST_TYPE c_type = constant_value->get_itype();
       switch (c_type) {
         case LST_VECTOR: {
           auto *c = (LSLVectorConstant *) constant_value;
@@ -242,7 +242,7 @@ bool ConstantDeterminingVisitor::visit(LSLVectorExpression *node) {
     }
 
     // all children must be float/int constants - get their val or bail if they're wrong
-    switch (child->get_constant_value()->get_type()->get_itype()) {
+    switch (child->get_constant_value()->get_itype()) {
       case LST_FLOATINGPOINT:
         v[cv++] = ((LSLFloatConstant *) child->get_constant_value())->get_value();
         break;
@@ -281,7 +281,7 @@ bool ConstantDeterminingVisitor::visit(LSLQuaternionExpression *node) {
     }
 
     // all children must be float/int constants - get their val or bail if they're wrong
-    switch (child->get_constant_value()->get_type()->get_itype()) {
+    switch (child->get_constant_value()->get_itype()) {
       case LST_FLOATINGPOINT:
         v[cv++] = ((LSLFloatConstant *) child->get_constant_value())->get_value();
         break;

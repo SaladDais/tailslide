@@ -63,7 +63,7 @@ bool TreeSimplifyingVisitor::visit(LSLExpression* node) {
   LSLConstant *cv = node->get_constant_value();
   if(!cv)
     return true;
-  auto c_type = cv->get_type()->get_itype();
+  auto c_type = cv->get_itype();
   // this expression results in a list, don't fold the result in.
   if (c_type == LST_LIST)
     return true;

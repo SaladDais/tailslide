@@ -4,18 +4,6 @@
 #include <vector>
 
 namespace Tailslide {
-enum LST_TYPE {
-  LST_NULL          = 0,
-  LST_INTEGER       = 1,
-  LST_FLOATINGPOINT = 2,
-  LST_STRING        = 3,
-  LST_KEY           = 4,
-  LST_VECTOR        = 5,
-  LST_QUATERNION    = 6,
-  LST_LIST          = 7,
-  LST_ERROR         = 8,   // special value so processing can continue without throwing bogus errors
-  LST_MAX           = 9,
-};
 
 class LSLType : public LSLASTNode {
   public:

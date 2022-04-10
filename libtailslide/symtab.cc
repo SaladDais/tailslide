@@ -112,4 +112,9 @@ void LSLSymbolTable::unregister_subtable(LSLSymbolTable *table) {
   if (found != desc_tables.end())
     desc_tables.erase(found);
 }
+
+LST_TYPE LSLSymbol::get_itype() {
+  return type->get_itype();
+}
+
 }

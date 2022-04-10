@@ -15,6 +15,10 @@ LSLASTNode::LSLASTNode(ScriptContext *ctx) : type(nullptr), symbol_table(nullptr
     lloc = ctx->glloc;
 }
 
+LST_TYPE LSLASTNode::get_itype() {
+  return type->get_itype();
+}
+
 void LSLASTNode::add_children(int num, va_list ap) {
   LSLASTNode *node;
   for (; num--;) {

@@ -11,7 +11,7 @@ public:
       return true;
 
     // can only do this for types that allow `-` expressions
-    switch (expr->get_type()->get_itype()) {
+    switch (expr->get_itype()) {
       case LST_INTEGER:
       case LST_FLOATINGPOINT:
       case LST_VECTOR:
@@ -54,7 +54,7 @@ public:
 
     // our injected `whatever()` returns an integer, so we can only replace `+` in
     // integer and floating point contexts
-    switch (expr->get_type()->get_itype()) {
+    switch (expr->get_itype()) {
       case LST_INTEGER:
       case LST_FLOATINGPOINT:
         break;

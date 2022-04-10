@@ -168,7 +168,7 @@ bool PrettyPrintVisitor::visit(LSLGlobalVariable *node) {
 bool PrettyPrintVisitor::visit(LSLGlobalFunction *node) {
   do_tabs();
   // print the return type if we have one
-  if (node->get_child(0)->get_type()->get_itype() != LST_NULL) {
+  if (node->get_child(0)->get_itype() != LST_NULL) {
     node->get_child(0)->get_type()->visit(this);
     stream << ' ';
   }

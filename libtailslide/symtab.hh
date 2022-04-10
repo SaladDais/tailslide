@@ -10,6 +10,20 @@
 #include "allocator.hh"
 
 namespace Tailslide {
+
+enum LST_TYPE {
+  LST_NULL          = 0,
+  LST_INTEGER       = 1,
+  LST_FLOATINGPOINT = 2,
+  LST_STRING        = 3,
+  LST_KEY           = 4,
+  LST_VECTOR        = 5,
+  LST_QUATERNION    = 6,
+  LST_LIST          = 7,
+  LST_ERROR         = 8,   // special value so processing can continue without throwing bogus errors
+  LST_MAX           = 9,
+};
+
 enum LSLSymbolType       { SYM_ANY = -1, SYM_VARIABLE, SYM_FUNCTION, SYM_STATE, SYM_LABEL, SYM_EVENT };
 enum LSLSymbolSubType    { SYM_LOCAL, SYM_GLOBAL, SYM_BUILTIN, SYM_FUNCTION_PARAMETER, SYM_EVENT_PARAMETER };
 
@@ -25,6 +39,7 @@ class LSLSymbol: public TrackableObject {
 
     const char          *get_name()         { return name; }
     class LSLType  *get_type()         { return type; }
+    LST_TYPE get_itype();
 
     int                  get_references()   { return references; }
     int                  add_reference()    { return ++references; }

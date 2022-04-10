@@ -60,7 +60,7 @@ bool TypeCheckVisitor::visit(LSLStateStatement *node) {
       case NODE_GLOBAL_FUNCTION:
         if (is_in_if) {
           // see what kind of function it is
-          switch (ancestor->get_child(0)->get_type()->get_itype()) {
+          switch (ancestor->get_child(0)->get_itype()) {
             case LST_LIST:
             case LST_STRING:
               NODE_ERROR(node, W_CHANGE_STATE_HACK_CORRUPT);
@@ -334,7 +334,7 @@ bool TypeCheckVisitor::visit(LSLLValueExpression *node) {
       }
 
       // Make sure it's a vector or quaternion.
-      switch (symbol->get_type()->get_itype()) {
+      switch (symbol->get_itype()) {
         case LST_QUATERNION:
           if (member[0] == 's') {
             node->set_type(TYPE(LST_FLOATINGPOINT));

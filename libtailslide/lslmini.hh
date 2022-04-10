@@ -91,7 +91,7 @@ class LSLIdentifier : public LSLASTNode {
 
     void resolve_symbol(LSLSymbolType symbol_type);
     void set_symbol( LSLSymbol *_symbol ) { symbol = _symbol; };
-    LSLSymbol *get_symbol() { return symbol; };
+    virtual LSLSymbol *get_symbol() { return symbol; };
 
     virtual const char *get_node_name() {
       static thread_local char buf[256];
@@ -114,7 +114,7 @@ class LSLGlobalVariable : public LSLASTNode {
     virtual LSLNodeType get_node_type() { return NODE_GLOBAL_VARIABLE; };
 
     virtual LSLConstant* get_constant_value();
-
+    virtual LSLSymbol *get_symbol() {return ((LSLIdentifier *)get_child(0))->get_symbol(); }
 };
 
 
@@ -328,6 +328,7 @@ class LSLGlobalFunction : public LSLASTNode {
     };
     virtual const char *get_node_name() { return "global func"; }
     virtual LSLNodeType get_node_type() { return NODE_GLOBAL_FUNCTION; };
+    virtual LSLSymbol *get_symbol() {return ((LSLIdentifier *)get_child(0))->get_symbol(); }
 };
 
 class LSLParamList : public LSLASTNode {
@@ -360,6 +361,7 @@ class LSLState : public LSLASTNode {
     };
     virtual const char *get_node_name() { return "state"; }
     virtual LSLNodeType get_node_type() { return NODE_STATE; };
+    virtual LSLSymbol *get_symbol() {return ((LSLIdentifier *)get_child(0))->get_symbol(); }
 };
 
 class LSLEventHandler : public LSLASTNode {
@@ -370,6 +372,7 @@ class LSLEventHandler : public LSLASTNode {
     };
     virtual const char *get_node_name() { return "event handler"; }
     virtual LSLNodeType get_node_type() { return NODE_EVENT_HANDLER; };
+    virtual LSLSymbol *get_symbol() {return ((LSLIdentifier *)get_child(0))->get_symbol(); }
 };
 
 class LSLStatement : public LSLASTNode {
@@ -400,6 +403,7 @@ class LSLStateStatement : public LSLStatement {
     LSLStateStatement( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLStatement(ctx, 1, identifier) {};
     virtual const char *get_node_name() { return "setstate"; };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_STATE_STATEMENT; };
+    virtual LSLSymbol *get_symbol() {return ((LSLIdentifier *)get_child(0))->get_symbol(); }
 };
 
 class LSLJumpStatement : public LSLStatement {
@@ -407,6 +411,7 @@ class LSLJumpStatement : public LSLStatement {
     LSLJumpStatement( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLStatement(ctx, 1, identifier) {};
     virtual const char *get_node_name() { return "jump"; };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_JUMP_STATEMENT; };
+    virtual LSLSymbol *get_symbol() {return ((LSLIdentifier *)get_child(0))->get_symbol(); }
 };
 
 class LSLLabel : public LSLStatement {
@@ -414,6 +419,7 @@ class LSLLabel : public LSLStatement {
     LSLLabel( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLStatement(ctx, 1, identifier) {};
     virtual const char *get_node_name() { return "label"; };
     virtual LSLNodeSubType get_node_sub_type() { return NODE_LABEL; };
+    virtual LSLSymbol *get_symbol() {return ((LSLIdentifier *)get_child(0))->get_symbol(); }
 };
 
 class LSLReturnStatement : public LSLStatement {
@@ -465,6 +471,7 @@ class LSLDeclaration : public LSLStatement {
     virtual LSLNodeSubType get_node_sub_type() { return NODE_DECLARATION; };
 
     virtual LSLConstant* get_constant_value();
+    virtual LSLSymbol *get_symbol() {return ((LSLIdentifier *)get_child(0))->get_symbol(); }
 };
 
 class LSLExpression : public LSLASTNode {
@@ -574,6 +581,7 @@ class LSLFunctionExpression : public LSLExpression {
     virtual LSLNodeSubType get_node_sub_type() { return NODE_FUNCTION_EXPRESSION; };
 
     virtual bool node_allows_folding() { return false; };
+    virtual LSLSymbol *get_symbol() {return ((LSLIdentifier *)get_child(0))->get_symbol(); }
 };
 
 class LSLVectorExpression : public LSLExpression {

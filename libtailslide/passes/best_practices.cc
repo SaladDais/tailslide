@@ -42,7 +42,7 @@ bool BestPracticesVisitor::visit(LSLGlobalFunction* node) {
   auto *statement = (LSLStatement *) node->get_child(2);
 
   // this function has a non-null return type
-  if (id->get_symbol() && id->get_symbol()->get_type() != TYPE(LST_NULL)) {
+  if (id->get_itype() != LST_NULL) {
     AllPathsReturnVisitor visitor;
     statement->visit(&visitor);
     if (!visitor.all_return) {
