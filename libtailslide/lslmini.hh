@@ -144,7 +144,6 @@ class LSLIntegerConstant : public LSLConstant {
     virtual LSLNodeSubType get_node_sub_type() { return NODE_INTEGER_CONSTANT; }
 
     int get_value() { return value; }
-    void set_value(int val) { value = val; }
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
       auto* new_const = allocator->new_tracked<LSLIntegerConstant>(value);
       new_const->constant_value = new_const;
@@ -172,7 +171,6 @@ class LSLFloatConstant : public LSLConstant {
     virtual LSLNodeSubType get_node_sub_type() { return NODE_FLOAT_CONSTANT; }
 
     float get_value() { return value; }
-    void set_value(float val) { value = val; }
     virtual bool contains_nan();
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
       auto* new_const = allocator->new_tracked<LSLFloatConstant>(value);
@@ -201,7 +199,6 @@ class LSLStringConstant : public LSLConstant {
     virtual LSLNodeSubType get_node_sub_type() { return NODE_STRING_CONSTANT; }
 
     char *get_value() { return value; }
-    void set_value(char *val) { value = val; }
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
       auto* new_const = allocator->new_tracked<LSLStringConstant>(value);
       new_const->constant_value = new_const;
@@ -226,25 +223,15 @@ class LSLListConstant : public LSLConstant {
 
     virtual const char *get_node_name() {
       static thread_local char buf[256];
-      int len = 0;
-      if (get_children())
-        len = get_length();
-      snprintf(buf, 256, "list constant: %d entries", len);
+      snprintf(buf, 256, "list constant: %d entries", get_length());
       return buf;
     }
 
     virtual LSLNodeSubType get_node_sub_type() { return NODE_LIST_CONSTANT; }
 
     class LSLConstant *get_value() { return (LSLConstant*)get_children(); }
-    void set_value(class LSLConstant *val) {  }
 
-    int get_length() {
-      LSLASTNode *node = get_children();
-      int i = 0;
-      for ( ; node; node = node->get_next() )
-        ++i;
-      return i;
-    }
+    int get_length() { return (int)get_num_children(); }
 
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
       // TODO: probably actually have to copy all of the elements.
@@ -273,7 +260,6 @@ class LSLVectorConstant : public LSLConstant {
     virtual LSLNodeSubType get_node_sub_type() { return NODE_VECTOR_CONSTANT; }
 
     Vector3 *get_value() { return &value; }
-    void set_value(Vector3 *val) { value = *val; }
     virtual bool contains_nan();
 
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
@@ -293,7 +279,6 @@ class LSLVectorConstant : public LSLConstant {
 class LSLQuaternionConstant : public LSLConstant {
   public:
     LSLQuaternionConstant( ScriptContext *ctx, float v1, float v2, float v3, float v4 ): LSLConstant(ctx), value({v1, v2, v3, v4}) {
-      value = {v1, v2, v3, v4};
       type = TYPE(LST_QUATERNION);
     };
 
@@ -306,7 +291,6 @@ class LSLQuaternionConstant : public LSLConstant {
     virtual LSLNodeSubType get_node_sub_type() { return NODE_QUATERNION_CONSTANT; }
 
     Quaternion *get_value() { return &value; }
-    void set_value(class Quaternion *val) { value = *val; }
     virtual bool contains_nan();
 
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
