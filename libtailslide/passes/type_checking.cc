@@ -38,8 +38,9 @@ bool TypeCheckVisitor::visit(LSLDeclaration *node) {
 
 
 bool TypeCheckVisitor::visit(LSLStateStatement *node) {
+  // TODO: probably makes more sense in the best practices visitor?
+  //  not really related to type-checking.
   auto *id = (LSLIdentifier *) node->get_child(0);
-  node->set_type(TYPE(LST_NULL));
 
   // see if we're in a state or function, and if we're inside of an if
   bool is_in_if = false;
@@ -134,7 +135,6 @@ bool TypeCheckVisitor::visit(LSLIfStatement *node) {
 }
 
 bool TypeCheckVisitor::visit(LSLForStatement *node) {
-  node->set_type(TYPE(LST_NULL));
   if (is_branch_empty(node->get_child(3))) {
     NODE_ERROR(node, W_EMPTY_LOOP);
   }
@@ -142,7 +142,6 @@ bool TypeCheckVisitor::visit(LSLForStatement *node) {
 }
 
 bool TypeCheckVisitor::visit(LSLDoStatement *node) {
-  node->set_type(TYPE(LST_NULL));
   if (is_branch_empty(node->get_child(0))) {
     NODE_ERROR(node, W_EMPTY_LOOP);
   }
@@ -150,7 +149,6 @@ bool TypeCheckVisitor::visit(LSLDoStatement *node) {
 }
 
 bool TypeCheckVisitor::visit(LSLWhileStatement *node) {
-  node->set_type(TYPE(LST_NULL));
   if (is_branch_empty(node->get_child(1))) {
     NODE_ERROR(node, W_EMPTY_LOOP);
   }
@@ -191,8 +189,6 @@ bool TypeCheckVisitor::visit(LSLExpression *node) {
 }
 
 bool TypeCheckVisitor::visit(LSLListConstant *node) {
-  node->set_type(TYPE(LST_LIST));
-
   LSLASTNode *val_c = node->get_value();
   while (val_c != nullptr) {
     if (val_c->get_type() == TYPE(LST_LIST)) {
@@ -205,8 +201,6 @@ bool TypeCheckVisitor::visit(LSLListConstant *node) {
 }
 
 bool TypeCheckVisitor::visit(LSLListExpression *node) {
-  node->set_type(TYPE(LST_LIST));
-
   LSLASTNode *val_c = node->get_children();
   while (val_c != nullptr) {
     if (val_c->get_type() == TYPE(LST_LIST)) {
@@ -283,7 +277,6 @@ bool TypeCheckVisitor::visit(LSLFunctionExpression *node) {
 
 bool TypeCheckVisitor::visit(LSLEventHandler *node) {
   auto *id = (LSLIdentifier *) node->get_child(0);
-  node->set_type(TYPE(LST_NULL));
   // can't check arg spec if event handler isn't valid
   if (id->get_symbol() == nullptr)
     return true;
@@ -412,7 +405,6 @@ bool TypeCheckVisitor::visit(LSLTypecastExpression *node) {
 }
 
 bool TypeCheckVisitor::visit(LSLVectorExpression *node) {
-  node->set_type(TYPE(LST_VECTOR));
   LSLASTNode *child = node->get_children();
   for (; child; child = child->get_next()) {
     if (!child->get_type()->can_coerce(TYPE(LST_FLOATINGPOINT))) {
@@ -424,13 +416,7 @@ bool TypeCheckVisitor::visit(LSLVectorExpression *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LSLVectorConstant *node) {
-  node->set_type(TYPE(LST_VECTOR));
-  return true;
-}
-
 bool TypeCheckVisitor::visit(LSLQuaternionExpression *node) {
-  node->set_type(TYPE(LST_QUATERNION));
   LSLASTNode *child = node->get_children();
   for (; child; child = child->get_next()) {
     if (!child->get_type()->can_coerce(TYPE(LST_FLOATINGPOINT))) {
@@ -441,11 +427,5 @@ bool TypeCheckVisitor::visit(LSLQuaternionExpression *node) {
   }
   return true;
 }
-
-bool TypeCheckVisitor::visit(LSLQuaternionConstant *node) {
-  node->set_type(TYPE(LST_QUATERNION));
-  return true;
-}
-
 
 }
