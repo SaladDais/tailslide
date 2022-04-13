@@ -125,6 +125,9 @@ class LSLASTNode : public TrackableObject {
       return last_node;
     }
 
+    /// Get our position within our parents' children
+    int get_parent_slot();
+
     LSLASTNode *new_null_node();
 
     /* Set our parent, and make sure all our siblings do too. */

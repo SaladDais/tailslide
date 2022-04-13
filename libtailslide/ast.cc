@@ -19,6 +19,20 @@ LST_TYPE LSLASTNode::get_itype() {
   return type->get_itype();
 }
 
+int LSLASTNode::get_parent_slot() {
+  if (!parent)
+    return -1;
+  auto *child = parent->get_children();
+  int idx = 0;
+  while(child != nullptr) {
+    if (child == this)
+      return idx;
+    child = child->get_next();
+    ++idx;
+  }
+  return -1;
+}
+
 void LSLASTNode::add_children(int num, va_list ap) {
   LSLASTNode *node;
   for (; num--;) {

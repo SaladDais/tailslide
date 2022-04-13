@@ -157,6 +157,7 @@ if (TAILSLIDE_BUILD_TESTS)
           tests/ast_rewriting.cc
           tests/testutils.cc
           tests/main.cc
+          tests/unit_tests.cc
   )
   target_sources(tailslide_test PRIVATE
     extern/doctest.hh
