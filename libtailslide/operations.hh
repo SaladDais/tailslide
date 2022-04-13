@@ -51,7 +51,7 @@ class TailslideOperationBehavior : public AOperationBehavior {
     LSLConstant *cast(LSLType *to_type, LSLQuaternionConstant *cv) { return nullptr; };
 
   protected:
-    inline char *join_string(char *left, char *right) {
+    inline char *join_string(const char *left, const char *right) {
       char *ns = _allocator->alloc(strlen(left) + strlen(right) + 1);
       strcpy(ns, left);
       strcat(ns, right);

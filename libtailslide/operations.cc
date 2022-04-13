@@ -271,7 +271,7 @@ LSLConstant *TailslideOperationBehavior::operation(
 
 LSLConstant *TailslideOperationBehavior::operation(
     int operation, LSLStringConstant *cv, LSLConstant *other_const) {
-  char *value = cv->get_value();
+  const char *value = cv->get_value();
   // unary op
   if (other_const == nullptr) {
     return nullptr;
@@ -280,7 +280,7 @@ LSLConstant *TailslideOperationBehavior::operation(
   // binary op
   switch (other_const->get_node_sub_type()) {
     case NODE_STRING_CONSTANT: {
-      char *ov = ((LSLStringConstant *) other_const)->get_value();
+      const char *ov = ((LSLStringConstant *) other_const)->get_value();
       switch (operation) {
         case '+':
           return _allocator->new_tracked<LSLStringConstant>(join_string(value, ov));

@@ -134,3 +134,6 @@ since it's better to take advantage of strings already in the constant pool.
 # License
 MIT, scripts used for test data (barring those added by me and those in `bugs/`) are
 property of their respective owners
+
+Serialization code based on Kai Mast's [BitStream library](https://github.com/kaimast/BitStream/blob/master/include/BitStream.h)
+is included in BitStream.hh, and is licensed under the BSD 3-clause license.

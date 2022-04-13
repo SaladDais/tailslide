@@ -32,6 +32,7 @@ struct ScriptContext {
 class Vector3 {
   public:
     Vector3(float x, float y, float z) : x(x), y(y), z(z) {};
+    Vector3(): Vector3(0, 0, 0) {};
     float x, y, z;
 
     bool operator==(const class Vector3 &other) const {
@@ -45,6 +46,7 @@ class Vector3 {
 class Quaternion {
   public:
     Quaternion(float x, float y, float z, float s): x(x), y(y), z(z), s(s) {};
+    Quaternion(): Quaternion(0, 0, 0, 1) {};
     float x, y, z, s;
 
     bool operator==(const class Quaternion &other) const {
@@ -188,7 +190,7 @@ class LSLFloatConstant : public LSLConstant {
 
 class LSLStringConstant : public LSLConstant {
   public:
-    LSLStringConstant( ScriptContext *ctx, char *v ) : LSLConstant(ctx), value(v) { type = TYPE(LST_STRING); }
+    LSLStringConstant( ScriptContext *ctx, const char *v ) : LSLConstant(ctx), value(v) { type = TYPE(LST_STRING); }
 
     virtual const char *get_node_name() {
       static thread_local char buf[256];
@@ -198,7 +200,7 @@ class LSLStringConstant : public LSLConstant {
 
     virtual LSLNodeSubType get_node_sub_type() { return NODE_STRING_CONSTANT; }
 
-    char *get_value() { return value; }
+    const char *get_value() { return value; }
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
       auto* new_const = allocator->new_tracked<LSLStringConstant>(value);
       new_const->constant_value = new_const;
@@ -206,7 +208,7 @@ class LSLStringConstant : public LSLConstant {
     };
 
   private:
-    char *value;
+    const char *value;
 };
 
 

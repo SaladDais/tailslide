@@ -11,7 +11,7 @@
 
 namespace Tailslide {
 
-enum LST_TYPE {
+enum LST_TYPE : uint8_t {
   LST_NULL          = 0,
   LST_INTEGER       = 1,
   LST_FLOATINGPOINT = 2,

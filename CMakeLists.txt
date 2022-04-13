@@ -96,15 +96,19 @@ add_library(libtailslide STATIC
         libtailslide/passes/tree_print.cc
         libtailslide/passes/tree_simplifier.cc
         libtailslide/passes/values.cc
+        libtailslide/passes/lso/lso_compiler.cc
+        libtailslide/passes/lso/resource_collector.cc
         libtailslide/tailslide.cc
         )
 target_sources(libtailslide PRIVATE
         libtailslide/allocator.hh
         libtailslide/ast.hh
+        libtailslide/bitstream.hh
         libtailslide/loctype.hh
         libtailslide/logger.hh
         libtailslide/lslmini.hh
         libtailslide/operations.hh
+        libtailslide/portable_endian.hh
         libtailslide/strings.hh
         libtailslide/symtab.hh
         libtailslide/types.hh
@@ -117,6 +121,9 @@ target_sources(libtailslide PRIVATE
         libtailslide/passes/tree_print.hh
         libtailslide/passes/type_checking.hh
         libtailslide/passes/values.hh
+        libtailslide/passes/lso/bytecode_format.hh
+        libtailslide/passes/lso/lso_compiler.hh
+        libtailslide/passes/lso/resource_collector.hh
         libtailslide/tailslide.hh
 )
 
@@ -155,6 +162,7 @@ if (TAILSLIDE_BUILD_TESTS)
   add_executable(tailslide_test
           tests/conformance.cc
           tests/ast_rewriting.cc
+          tests/lso_compilation.cc
           tests/testutils.cc
           tests/main.cc
           tests/unit_tests.cc

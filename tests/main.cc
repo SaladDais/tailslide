@@ -7,15 +7,15 @@
 #include "lslmini.hh"
 
 #ifdef _WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <Windows.h> // IsDebuggerPresent
+# ifndef WIN32_LEAN_AND_MEAN
+#   define WIN32_LEAN_AND_MEAN
+# endif
+# include <Windows.h> // IsDebuggerPresent
 #endif
 
 #ifdef __APPLE__
-#include <sys/types.h>
-#include <sys/sysctl.h>
+# include <sys/types.h>
+# include <sys/sysctl.h>
 #endif
 
 #include <cassert>
