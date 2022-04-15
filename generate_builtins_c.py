@@ -1,10 +1,7 @@
 import os.path
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
-SYNTAX_PATH = os.path.join(SCRIPT_PATH, "builtins.txt")
-CONST_TEMPLATE = 'const %(const_type)s %(name)s = %(val)s'
-FUNC_TEMPLATE = '%(func_type)s %(name)s( %(args)s )'
-EVENT_TEMPLATE = 'event %(name)s( %(args)s )'
+BUILTINS_PATH = os.path.join(SCRIPT_PATH, "builtins.txt")
 
 
 def _escape_cstr_char(char: str):
@@ -18,8 +15,8 @@ def _escape_cstr_char(char: str):
 
 
 def main():
-    with open(SYNTAX_PATH) as f:
-        all_code = tuple(f.readlines())
+    with open(BUILTINS_PATH) as f:
+        builtins_lines = tuple(f.readlines())
 
     with open('libtailslide/builtins_txt.cc', 'w') as f:
         f.write("""#ifdef _WIN32
@@ -28,7 +25,7 @@ def main():
 namespace Tailslide {
 const char *builtins_txt[] = {
 """)
-        for line in all_code:
+        for line in builtins_lines:
             line = line.strip()
             if not line:
                 continue
