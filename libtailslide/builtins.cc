@@ -7,17 +7,17 @@
 
 namespace Tailslide {
 
-extern const char *builtins_txt[];
+extern const char *BUILTINS_TXT[];
 
 // Keep builtins alive as long as the library is loaded
 static ScriptAllocator gStaticAllocator {};
 
 // holds the symbols for the default builtins
-LSLSymbolTable gGlobalSymbolTable {nullptr};
+LSLSymbolTable gGlobalSymbolTable {nullptr}; // NOLINT(cert-err58-cpp)
 
 struct LSLTypeMap {
     const char *name;
-    LST_TYPE type;
+    LSLIType type;
 } types[] = {
         {"void",     LST_NULL},
         {"integer",  LST_INTEGER},
@@ -96,9 +96,9 @@ void tailslide_init_builtins(const char *builtins_file) {
       if (fgets(buf, 1024, fp) == nullptr)
         break;
     } else {
-      if (builtins_txt[line] == nullptr)
+      if (BUILTINS_TXT[line] == nullptr)
         break;
-      strncpy(buf, builtins_txt[line], 1024);
+      strncpy(buf, BUILTINS_TXT[line], 1024);
       ++line;
     }
 
@@ -135,8 +135,8 @@ void tailslide_init_builtins(const char *builtins_file) {
       } else {
         const_type = str_to_type(ret_type);
       }
-      auto *sym = gStaticAllocator.new_tracked<LSLSymbol>(
-        gStaticAllocator.copy_str(name), const_type, SYM_VARIABLE, SYM_BUILTIN
+      auto *sym = gStaticAllocator.newTracked<LSLSymbol>(
+          gStaticAllocator.copyStr(name), const_type, SYM_VARIABLE, SYM_BUILTIN
       );
 
       while (*value == ' ') {
@@ -144,17 +144,17 @@ void tailslide_init_builtins(const char *builtins_file) {
       }
 
 
-#define _CONST_PARSE_FAIL() fprintf(stderr, "couldn't parse value for '%s'\n", name); exit(EXIT_FAILURE)
+#define CONST_PARSE_FAIL() fprintf(stderr, "couldn't parse value for '%s'\n", name); exit(EXIT_FAILURE)
 
-#define _CONST_SSCANF(num, fmt, ...) \
+#define CONST_SSCANF(num, fmt, ...) \
 if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
-   _CONST_PARSE_FAIL(); \
+   CONST_PARSE_FAIL(); \
 }; do { } while(0)
 
-      switch (const_type->get_itype()) {
+      switch (const_type->getIType()) {
         case LST_INTEGER: {
           int const_val;
-          _CONST_SSCANF(1, "%d", &const_val);
+          CONST_SSCANF(1, "%d", &const_val);
           // We might be reading the `0x` portion of `0xF00`, double-check.
           // Normally you'd just use %D, but LSL doesn't have octal.
           if (const_val == 0) {
@@ -163,53 +163,53 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
               const_val = const_val_hex;
             }
           }
-          auto const_built = gStaticAllocator.new_tracked<LSLIntegerConstant>(const_val);
-          const_built->mark_static();
-          sym->set_constant_value(const_built);
-        }
+          auto const_built = gStaticAllocator.newTracked<LSLIntegerConstant>(const_val);
+          const_built->markStatic();
+          sym->setConstantValue(const_built);
           break;
+        }
         case LST_FLOATINGPOINT: {
           float const_val;
-          _CONST_SSCANF(1, "%f", &const_val);
-          auto const_built = gStaticAllocator.new_tracked<LSLFloatConstant>(const_val);
-          const_built->mark_static();
-          sym->set_constant_value(const_built);
-        }
+          CONST_SSCANF(1, "%f", &const_val);
+          auto const_built = gStaticAllocator.newTracked<LSLFloatConstant>(const_val);
+          const_built->markStatic();
+          sym->setConstantValue(const_built);
           break;
+        }
         case LST_VECTOR: {
           float x, y, z;
-          _CONST_SSCANF(3, "<%f, %f, %f>", &x, &y, &z);
-          auto const_built = gStaticAllocator.new_tracked<LSLVectorConstant>(x, y, z);
-          const_built->mark_static();
-          sym->set_constant_value(const_built);
-        }
+          CONST_SSCANF(3, "<%f, %f, %f>", &x, &y, &z);
+          auto const_built = gStaticAllocator.newTracked<LSLVectorConstant>(x, y, z);
+          const_built->markStatic();
+          sym->setConstantValue(const_built);
           break;
+        }
         case LST_QUATERNION: {
           float x, y, z, s;
-          _CONST_SSCANF(4, "<%f, %f, %f, %f>", &x, &y, &z, &s);
-          auto const_built = gStaticAllocator.new_tracked<LSLQuaternionConstant>(x, y, z, s);
-          const_built->mark_static();
-          sym->set_constant_value(const_built);
-        }
+          CONST_SSCANF(4, "<%f, %f, %f, %f>", &x, &y, &z, &s);
+          auto const_built = gStaticAllocator.newTracked<LSLQuaternionConstant>(x, y, z, s);
+          const_built->markStatic();
+          sym->setConstantValue(const_built);
           break;
+        }
         case LST_STRING:
         case LST_KEY: {
           if (value[0] != '"') {
-            _CONST_PARSE_FAIL();
+            CONST_PARSE_FAIL();
           }
-          auto const_built = gStaticAllocator.new_tracked<LSLStringConstant>(
+          auto const_built = gStaticAllocator.newTracked<LSLStringConstant>(
               parse_string(&gStaticAllocator, value)
           );
-          const_built->mark_static();
-          sym->set_constant_value(const_built);
-        }
+          const_built->markStatic();
+          sym->setConstantValue(const_built);
           break;
+        }
         default:
           break;
       }
 
-#undef _CONST_PARSE_FAIL
-#undef _CONST_SSCANF
+#undef CONST_PARSE_FAIL
+#undef CONST_SSCANF
 
       gGlobalSymbolTable.define(sym);
 
@@ -222,17 +222,17 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
         return;
       }
 
-      dec = gStaticAllocator.new_tracked<LSLFunctionDec>();
+      dec = gStaticAllocator.newTracked<LSLFunctionDec>();
       while ((ptype = tailslide_strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
         if ((pname = tailslide_strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
-          dec->push_child(gStaticAllocator.new_tracked<LSLIdentifier>(
-            str_to_type(ptype), gStaticAllocator.copy_str(pname))
+          dec->pushChild(gStaticAllocator.newTracked<LSLIdentifier>(
+              str_to_type(ptype), gStaticAllocator.copyStr(pname))
           );
         }
       }
 
-      gGlobalSymbolTable.define(gStaticAllocator.new_tracked<LSLSymbol>(
-        gStaticAllocator.copy_str(name), str_to_type("void"), SYM_EVENT, SYM_BUILTIN, dec
+      gGlobalSymbolTable.define(gStaticAllocator.newTracked<LSLSymbol>(
+          gStaticAllocator.copyStr(name), str_to_type("void"), SYM_EVENT, SYM_BUILTIN, dec
       ));
     } else {
       name = tailslide_strtok_r(nullptr, " (),", &tokptr);
@@ -243,17 +243,17 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
         return;
       }
 
-      dec = gStaticAllocator.new_tracked<LSLFunctionDec>();
+      dec = gStaticAllocator.newTracked<LSLFunctionDec>();
       while ((ptype = tailslide_strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
         if ((pname = tailslide_strtok_r(nullptr, " (),", &tokptr)) != nullptr) {
-          dec->push_child(gStaticAllocator.new_tracked<LSLIdentifier>(
-            str_to_type(ptype), gStaticAllocator.copy_str(pname)
+          dec->pushChild(gStaticAllocator.newTracked<LSLIdentifier>(
+              str_to_type(ptype), gStaticAllocator.copyStr(pname)
           ));
         }
       }
 
-      gGlobalSymbolTable.define(gStaticAllocator.new_tracked<LSLSymbol>(
-        gStaticAllocator.copy_str(name), str_to_type(ret_type), SYM_FUNCTION, SYM_BUILTIN, dec
+      gGlobalSymbolTable.define(gStaticAllocator.newTracked<LSLSymbol>(
+          gStaticAllocator.copyStr(name), str_to_type(ret_type), SYM_FUNCTION, SYM_BUILTIN, dec
       ));
     }
   }

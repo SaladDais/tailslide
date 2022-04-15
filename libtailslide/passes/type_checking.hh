@@ -7,9 +7,6 @@ namespace Tailslide {
 class TypeCheckVisitor: public DepthFirstASTVisitor {
   protected:
     virtual bool visit(LSLASTNode *node);
-
-    void handle_declaration(LSLASTNode *node);
-
     virtual bool visit(LSLGlobalVariable *node);
     virtual bool visit(LSLDeclaration *node);
     virtual bool visit(LSLStateStatement *node);
@@ -27,5 +24,7 @@ class TypeCheckVisitor: public DepthFirstASTVisitor {
     virtual bool visit(LSLQuaternionExpression *node);
     virtual bool visit(LSLListConstant *node);
     virtual bool visit(LSLListExpression *node);
+    
+    void handleDeclaration(LSLASTNode *node);
 };
 }

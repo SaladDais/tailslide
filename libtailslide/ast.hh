@@ -1,5 +1,5 @@
-#ifndef AST_HH
-#define AST_HH 1
+#ifndef TAILSLIDE_AST_HH
+#define TAILSLIDE_AST_HH
 #include <cassert>
 #include <cstdlib> // nullptr
 #include <cstdarg> // va_arg
@@ -67,7 +67,7 @@ enum LSLNodeSubType {
   NODE_CONSTANT_EXPRESSION,
 };
 
-class OptimizationContext;
+class OptimizationOptions;
 class ASTVisitor;
 
 class LSLASTNode : public TrackableObject {
@@ -75,174 +75,174 @@ class LSLASTNode : public TrackableObject {
     explicit LSLASTNode(ScriptContext *ctx);
     LSLASTNode( ScriptContext *ctx, YYLTYPE *loc, int num, ... )
       : LSLASTNode(ctx) {
-      lloc = *loc;
+      _mLoc = *loc;
       va_list ap;
       va_start(ap, num);
-      add_children( num, ap );
+      addChildren(num, ap);
       va_end(ap);
     }
 
     explicit LSLASTNode( ScriptContext *ctx, int num, ... ) : LSLASTNode(ctx) {
       va_list ap;
       va_start(ap, num);
-      add_children( num, ap );
+      addChildren(num, ap);
       va_end(ap);
     }
 
     ~LSLASTNode() override = default;
 
-    void add_children(int num, va_list ap);
+    void addChildren(int num, va_list ap);
 
-    LSLASTNode *get_next() { return next; }
-    LSLASTNode *get_prev() { return prev; }
-    LSLASTNode *get_children() { return children; }
-    LSLASTNode *get_parent() { return parent; }
+    LSLASTNode *getNext() { return _mNext; }
+    LSLASTNode *getPrev() { return _mPrev; }
+    LSLASTNode *getChildren() { return _mChildren; }
+    LSLASTNode *getParent() { return _mParent; }
 
-    LSLASTNode *get_child(int i) {
-      LSLASTNode *c = children;
+    LSLASTNode *getChild(int i) {
+      LSLASTNode *c = _mChildren;
       while (i-- && c)
-        c = c->get_next();
+        c = c->getNext();
       return c;
     }
 
-    size_t get_num_children() const {
-      LSLASTNode *c = children;
+    size_t getNumChildren() const {
+      LSLASTNode *c = _mChildren;
       size_t num = 0;
       // empty children (NODE_NULL) are still considered valid.
       while (c) {
-        c = c->get_next();
+        c = c->getNext();
         ++num;
       }
       return num;
     };
 
     // Get the topmost node in the tree
-    LSLASTNode *get_root() {
+    LSLASTNode *getRoot() {
       LSLASTNode *last_node = this;
       LSLASTNode *test_root;
-      while ((test_root = last_node->get_parent()) != nullptr)
+      while ((test_root = last_node->getParent()) != nullptr)
         last_node = test_root;
       return last_node;
     }
 
     /// Get our position within our parents' children
-    int get_parent_slot();
+    int getParentSlot();
 
-    LSLASTNode *new_null_node();
+    LSLASTNode *newNullNode();
 
     /* Set our parent, and make sure all our siblings do too. */
-    void set_parent( LSLASTNode *newparent );
+    void setParent(LSLASTNode *newparent );
     // Add child to end of list.
-    void push_child(LSLASTNode *child);
+    void pushChild(LSLASTNode *child);
     /* Set our next sibling, and ensure it links back to us. */
-    void set_next(LSLASTNode *newnext);
+    void setNext(LSLASTNode *newnext);
     /* Set our previous sibling, and ensure it links back to us. */
-    void set_prev(LSLASTNode *newprev);
-    void add_next_sibling(LSLASTNode *sibling);
-    void add_prev_sibling(LSLASTNode *sibling);
+    void setPrev(LSLASTNode *newprev);
+    void addNextSibling(LSLASTNode *sibling);
+    void addPrevSibling(LSLASTNode *sibling);
     /* remove a child from the list of nodes, shifting other children up */
-    void remove_child(LSLASTNode *child);
+    void removeChild(LSLASTNode *child);
     /* replace a node from the list of children with null, returning it */
-    LSLASTNode *take_child(int child_num);
+    LSLASTNode *takeChild(int child_num);
 
     // replace an arbitrary node with another, setting
     // prev, next and parent as appropriate
-    static void replace_node(LSLASTNode *old_node, LSLASTNode *replacement);
+    static void replaceNode(LSLASTNode *old_node, LSLASTNode *replacement);
 
 
-    void                set_type(LSLType *_type) { type = _type;   }
-    class LSLType *get_type()                    { return type;    }
-    LST_TYPE get_itype();
+    void                setType(LSLType *type) { _mType = type;   }
+    class LSLType *getType()                    { return _mType;    }
+    LSLIType getIType();
 
 
-    void mark_static() { static_node = true;}
-    bool is_static() {return static_node;}
+    void markStatic() { _mStaticNode = true;}
+    bool isStatic() const {return _mStaticNode;}
 
-    void link_symbol_tables (bool unlink=false);
+    void linkSymbolTables (bool unlink=false);
 
     /// passes                  ///
     // generic visitor functions
     void visit(ASTVisitor *visitor);
 
     // Convenience methods for common visitor uses
-    void collect_symbols();
-    void determine_types();
-    void propagate_values();
-    void check_best_practices();
-    void check_symbols(); // look for unused symbols, etc
+    void collectSymbols();
+    void determineTypes();
+    void propagateValues();
+    void checkBestPractices();
+    void checkSymbols(); // look for unused symbols, etc
 
     /// symbol functions        ///
-    virtual LSLSymbol *lookup_symbol( const char *name, LSLSymbolType type );
-    void            define_symbol( LSLSymbol *symbol );
-    LSLSymbolTable *get_symbol_table() { return symbol_table; }
+    virtual LSLSymbol *lookupSymbol(const char *name, LSLSymbolType type );
+    void            defineSymbol(LSLSymbol *symbol );
+    LSLSymbolTable *getSymbolTable() { return _mSymbolTable; }
 
 
-    YYLTYPE     *get_lloc()     { return &lloc; };
-    void set_lloc(YYLTYPE *yylloc) { lloc = *yylloc; };
+    YYLTYPE     *getLoc()     { return &_mLoc; };
+    void setLoc(YYLTYPE *yylloc) { _mLoc = *yylloc; };
 
 
     // Set whether this node is allowed to be a declaration,
     // usually due to occurring in a conditional statement without a new scope.
-    void set_declaration_allowed(bool allowed) { declaration_allowed = allowed; };
-    bool get_declaration_allowed() { return declaration_allowed; };
+    void setDeclarationAllowed(bool allowed) { _mDeclarationAllowed = allowed; };
+    bool getDeclarationAllowed() const { return _mDeclarationAllowed; };
 
     // bad hacks for figuring out if something is _really_ in scope
-    class LSLASTNode* find_previous_in_scope(std::function<bool (class LSLASTNode *)> const &checker);
-    class LSLASTNode* find_desc_in_scope(std::function<bool (class LSLASTNode *)> const &checker);
+    class LSLASTNode* findPreviousInScope(std::function<bool (class LSLASTNode *)> const &checker);
+    class LSLASTNode* findDescInScope(std::function<bool (class LSLASTNode *)> const &checker);
 
 
     /// identification          ///
-    virtual const char  *get_node_name() { return "node";    };
-    virtual LSLNodeType  get_node_type() { return NODE_NODE; };
-    virtual LSLNodeSubType get_node_sub_type() { return NODE_NO_SUB_TYPE; }
+    virtual const char  *getNodeName() { return "node";    };
+    virtual LSLNodeType  getNodeType() { return NODE_NODE; };
+    virtual LSLNodeSubType getNodeSubType() { return NODE_NO_SUB_TYPE; }
 
     /// constants ///
-    virtual class LSLConstant  *get_constant_value()    { return constant_value; };
-    void set_constant_value(class LSLConstant *cv) {
+    virtual class LSLConstant  *getConstantValue()    { return _mConstantValue; };
+    void setConstantValue(class LSLConstant *cv) {
       if (cv)
-        constant_precluded = false;
-      constant_value = cv;
+        _mConstantPrecluded = false;
+      _mConstantValue = cv;
     };
-    void set_constant_precluded(bool precluded) { constant_precluded = precluded; };
-    bool get_constant_precluded() { return constant_precluded; };
-    virtual bool node_allows_folding() { return false; };
-    bool            is_constant()           { return get_constant_value() != nullptr; };
-    virtual LSLSymbol *get_symbol() { return nullptr; }
+    bool            isConstant()           { return getConstantValue() != nullptr; };
+    void setConstantPrecluded(bool precluded) { _mConstantPrecluded = precluded; };
+    bool getConstantPrecluded() const { return _mConstantPrecluded; };
+    virtual bool nodeAllowsFolding() { return false; };
+    virtual LSLSymbol *getSymbol() { return nullptr; }
 
   protected:
-    class LSLType          *type;
-    LSLSymbolTable         *symbol_table;
-    class LSLConstant      *constant_value;
-    bool                        constant_precluded = false;
+    class LSLType          *_mType;
+    LSLSymbolTable         *_mSymbolTable;
+    class LSLConstant      *_mConstantValue;
+    bool                   _mConstantPrecluded = false;
 
   private:
-    YYLTYPE                      lloc {0};
+    YYLTYPE                      _mLoc {0};
 
-    LSLASTNode *children;
-    LSLASTNode *parent;
-    LSLASTNode *next;
-    LSLASTNode *prev;
+    LSLASTNode *_mChildren;
+    LSLASTNode *_mParent;
+    LSLASTNode *_mNext;
+    LSLASTNode *_mPrev;
 
   protected:
-    bool                        declaration_allowed;
-    bool                        static_node = false;
+    bool                        _mDeclarationAllowed;
+    bool                        _mStaticNode = false;
 };
 
 class LSLASTNullNode : public LSLASTNode {
   public:
     explicit LSLASTNullNode(ScriptContext *ctx): LSLASTNode(ctx) {};
-    virtual const char *get_node_name() { return "null"; };
-    virtual LSLNodeType get_node_type() { return NODE_NULL; };
+    virtual const char *getNodeName() { return "null"; };
+    virtual LSLNodeType getNodeType() { return NODE_NULL; };
 };
 
 class LSLASTNodeList : public LSLASTNode {
   public:
     explicit LSLASTNodeList(ScriptContext *ctx) : LSLASTNode(ctx, 0) {};
     LSLASTNodeList(ScriptContext *ctx, class LSLASTNode *nodes ) : LSLASTNode(ctx, 1, nodes) {};
-    virtual const char *get_node_name() { return "ast node list"; }
-    virtual LSLNodeType get_node_type() { return NODE_AST_NODE_LIST; };
+    virtual const char *getNodeName() { return "ast node list"; }
+    virtual LSLNodeType getNodeType() { return NODE_AST_NODE_LIST; };
 };
 
 }
 
-#endif /* not AST_HH */
+#endif

@@ -2,12 +2,11 @@
 
 namespace Tailslide {
 
-ScriptAllocator::ScriptAllocator() {}
 ScriptAllocator::~ScriptAllocator() {
-  for(auto &obj_ptr : _tracked_objects) {
+  for(auto &obj_ptr : _mTrackedObjects) {
     delete obj_ptr;
   }
-  for(auto &obj_ptr : _mallocs) {
+  for(auto &obj_ptr : _mMallocs) {
     free(obj_ptr);
   }
 }

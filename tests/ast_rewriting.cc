@@ -7,11 +7,11 @@ TEST_SUITE_BEGIN("AST Rewriting");
 class AddSubbingVisitor: public ASTVisitor {
 public:
   bool visit(LSLBinaryExpression *expr) override {
-    if(expr->get_operation() != '+')
+    if(expr->getOperation() != '+')
       return true;
 
     // can only do this for types that allow `-` expressions
-    switch (expr->get_itype()) {
+    switch (expr->getIType()) {
       case LST_INTEGER:
       case LST_FLOATINGPOINT:
       case LST_VECTOR:
@@ -23,38 +23,38 @@ public:
 
     // disconnect the left and right expr nodes from the original parent
     // and attach them to the new expression
-    auto *new_expr = expr->context->allocator->new_tracked<LSLBinaryExpression>(
-        (LSLExpression*)expr->take_child(0),
+    auto *new_expr = expr->mContext->allocator->newTracked<LSLBinaryExpression>(
+        (LSLExpression *) expr->takeChild(0),
         '-',
-        (LSLExpression*)expr->take_child(1)
+        (LSLExpression *) expr->takeChild(1)
     );
     // swap the old expression out with the new one
-    LSLASTNode::replace_node(expr, new_expr);
+    LSLASTNode::replaceNode(expr, new_expr);
     new_expr->visit(this);
     return false;
   };
 };
 
 TEST_CASE("simple_expr_replacement.lsl") {
-  OptimizationContext ctx{.fold_constants=true};
+  OptimizationOptions ctx{.fold_constants=true};
   PrettyPrintOpts pretty_ctx {};
   checkPrettyPrintOutput("simple_expr_replacement.lsl", ctx, pretty_ctx, [](LSLScript* script) {
     AddSubbingVisitor visitor;
     script->visit(&visitor);
     // all existing constant values are now potentially dirty, recalculate.
-    script->propagate_values();
+    script->propagateValues();
   });
 }
 
 class FancyAddReplacementVisitor: public ASTVisitor {
 public:
   bool visit(LSLBinaryExpression *expr) override {
-    if(expr->get_operation() != '+')
+    if(expr->getOperation() != '+')
       return true;
 
     // our injected `whatever()` returns an integer, so we can only replace `+` in
     // integer and floating point contexts
-    switch (expr->get_itype()) {
+    switch (expr->getIType()) {
       case LST_INTEGER:
       case LST_FLOATINGPOINT:
         break;
@@ -64,42 +64,42 @@ public:
     PrettyPrintVisitor pretty_visitor(PrettyPrintOpts {});
     expr->visit(&pretty_visitor);
 
-    auto *allocator = expr->context->allocator;
-    char *new_str = allocator->copy_str(pretty_visitor.stream.str().c_str());
+    auto *allocator = expr->mContext->allocator;
+    char *new_str = allocator->copyStr(pretty_visitor.mStream.str().c_str());
 
     // replace all addition with a stringified version of the addition expression
-    auto new_expr = allocator->new_tracked<LSLFunctionExpression>(
-        allocator->new_tracked<LSLIdentifier>(LSLType::get(LST_INTEGER), "whatever"),
-        allocator->new_tracked<LSLConstantExpression>(
-            allocator->new_tracked<LSLStringConstant>(new_str)
+    auto new_expr = allocator->newTracked<LSLFunctionExpression>(
+        allocator->newTracked<LSLIdentifier>(LSLType::get(LST_INTEGER), "whatever"),
+        allocator->newTracked<LSLConstantExpression>(
+            allocator->newTracked<LSLStringConstant>(new_str)
         )
     );
     // swap the old expression out with the new one
-    LSLASTNode::replace_node(expr, new_expr);
+    LSLASTNode::replaceNode(expr, new_expr);
     // make sure all the newly added nodes have correct type information
-    new_expr->determine_types();
+    new_expr->determineTypes();
     new_expr->visit(this);
     return false;
   };
 };
 
 TEST_CASE("fancy_expr_replacement.lsl") {
-  OptimizationContext ctx{false};
+  OptimizationOptions ctx{false};
   PrettyPrintOpts pretty_ctx {};
   checkPrettyPrintOutput("fancy_expr_replacement.lsl", ctx, pretty_ctx, [](LSLScript* script) {
     // pretend we have a builtin called "whatever()" that takes a string and returns an int
-    auto *symbol_table = script->get_symbol_table();
-    auto *allocator = script->context->allocator;
-    auto func_dec = allocator->new_tracked<LSLFunctionDec>(
-        allocator->new_tracked<LSLIdentifier>(LSLType::get(LST_STRING), "foobar")
+    auto *symbol_table = script->getSymbolTable();
+    auto *allocator = script->mContext->allocator;
+    auto func_dec = allocator->newTracked<LSLFunctionDec>(
+        allocator->newTracked<LSLIdentifier>(LSLType::get(LST_STRING), "foobar")
     );
-    symbol_table->define(allocator->new_tracked<LSLSymbol>(
+    symbol_table->define(allocator->newTracked<LSLSymbol>(
         "whatever", LSLType::get(LST_INTEGER), SYM_FUNCTION, SYM_BUILTIN, func_dec
     ));
     FancyAddReplacementVisitor visitor;
     script->visit(&visitor);
     // all existing constant values are now potentially dirty, recalculate.
-    script->propagate_values();
+    script->propagateValues();
   });
 }
 

@@ -154,7 +154,7 @@ const uint32_t LSOTypeDataSize[LST_MAX] = {
 };
 
 /// pack two types into a single byte (common for LSO)
-inline uint8_t pack_lso_types(LST_TYPE left, LST_TYPE right) {
+inline uint8_t pack_lso_types(LSLIType left, LSLIType right) {
   return right | (left << 4);
 }
 

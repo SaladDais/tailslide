@@ -11,7 +11,7 @@ TEST_SUITE_BEGIN("Lint");
 TEST_CASE("bad_globals.lsl") {
   auto parser = runConformance("bad_globals.lsl", true);
   // syntax error due to bad tokens
-  CHECK(parser->logger.get_errors() == 2);
+  CHECK(parser->logger.getErrors() == 2);
 }
 SIMPLE_LINT_TEST_CASE("camera_demo.lsl")
 SIMPLE_LINT_TEST_CASE("check_all_return.lsl")
@@ -48,13 +48,13 @@ TEST_CASE("parserstackdepth3.lsl") {
   auto parser = runConformance("parserstackdepth3.lsl", true);
   CHECK(parser->script == nullptr);
   // error about stack depth, then syntax error due to unexpected end.
-  CHECK(parser->logger.get_errors() == 2);
+  CHECK(parser->logger.getErrors() == 2);
 }
 SIMPLE_LINT_TEST_CASE("print_expression.lsl")
 TEST_CASE("print_no_shadowing.lsl") {
   auto parser = runConformance("print_no_shadowing.lsl", true);
   // syntax error due to unexpected keyword
-  CHECK(parser->logger.get_errors() == 2);
+  CHECK(parser->logger.getErrors() == 2);
 }
 SIMPLE_LINT_TEST_CASE("pathological_expression.lsl")
 SIMPLE_LINT_TEST_CASE("scope1.lsl")
@@ -101,9 +101,9 @@ SIMPLE_LINT_TEST_CASE("tltp/server.lsl")
 
 TEST_CASE("type_error_no_assert.lsl") {
   auto parser = runConformance("type_error_no_assert.lsl");
-  parser->logger.set_check_assertions(false);
+  parser->logger.setCheckAssertions(false);
   parser->logger.finalize();
-  CHECK(parser->logger.get_errors() == 1);
+  CHECK(parser->logger.getErrors() == 1);
 }
 
 TEST_SUITE_END();
@@ -112,7 +112,7 @@ TEST_SUITE_BEGIN("Optimization");
 
 
 TEST_CASE("xytext1.2.lsl") {
-  OptimizationContext ctx {
+  OptimizationOptions ctx {
       .fold_constants = true,
       .prune_unused_locals = true,
       .prune_unused_globals = true,
@@ -123,7 +123,7 @@ TEST_CASE("xytext1.2.lsl") {
 }
 
 TEST_CASE("irc-4.lsl") {
-  OptimizationContext ctx {
+  OptimizationOptions ctx {
       .fold_constants = true,
       .prune_unused_locals = true,
       .prune_unused_globals = true,
@@ -134,7 +134,7 @@ TEST_CASE("irc-4.lsl") {
 }
 
 TEST_CASE("parser_abuse.lsl") {
-  OptimizationContext ctx {
+  OptimizationOptions ctx {
       .fold_constants = true,
       .prune_unused_locals = true,
       .prune_unused_globals = true,
@@ -145,7 +145,7 @@ TEST_CASE("parser_abuse.lsl") {
 }
 
 TEST_CASE("scope3.lsl") {
-  OptimizationContext ctx {
+  OptimizationOptions ctx {
       .fold_constants = true,
       .prune_unused_locals = true,
       .prune_unused_globals = true,
@@ -156,7 +156,7 @@ TEST_CASE("scope3.lsl") {
 }
 
 TEST_CASE("mms_player.lsl") {
-  OptimizationContext ctx {
+  OptimizationOptions ctx {
       .fold_constants = true,
       .prune_unused_locals = true,
       .prune_unused_globals = true,
@@ -172,20 +172,20 @@ TEST_CASE("mms_player.lsl") {
 
 #ifndef _WIN32
 TEST_CASE("parserstackdepth2.lsl") {
-  OptimizationContext ctx{};
+  OptimizationOptions ctx{};
   PrettyPrintOpts pretty_ctx {};
   checkPrettyPrintOutput("parserstackdepth2.lsl", ctx, pretty_ctx);
 }
 #endif
 
 TEST_CASE("forloops.lsl") {
-  OptimizationContext ctx{};
+  OptimizationOptions ctx{};
   PrettyPrintOpts pretty_ctx {};
   checkPrettyPrintOutput("forloops.lsl", ctx, pretty_ctx);
 }
 
 TEST_CASE("constprop.lsl") {
-  OptimizationContext ctx {
+  OptimizationOptions ctx {
     .fold_constants = true,
     .prune_unused_locals = true,
     .prune_unused_globals = true,
@@ -196,7 +196,7 @@ TEST_CASE("constprop.lsl") {
 }
 
 TEST_CASE("tltp/browser.lsl") {
-  OptimizationContext ctx {
+  OptimizationOptions ctx {
       .fold_constants = true,
       .prune_unused_locals = true,
       .prune_unused_globals = true,
@@ -207,7 +207,7 @@ TEST_CASE("tltp/browser.lsl") {
 }
 
 TEST_CASE("tltp/exporter.lsl") {
-  OptimizationContext ctx {
+  OptimizationOptions ctx {
       .fold_constants = true,
       .prune_unused_locals = true,
       .prune_unused_globals = true,
@@ -218,7 +218,7 @@ TEST_CASE("tltp/exporter.lsl") {
 }
 
 TEST_CASE("tltp/server.lsl") {
-  OptimizationContext ctx {
+  OptimizationOptions ctx {
       .fold_constants = true,
       .prune_unused_locals = true,
       .prune_unused_globals = true,
@@ -229,7 +229,7 @@ TEST_CASE("tltp/server.lsl") {
 }
 
 TEST_CASE("fpinc.lsl") {
-  OptimizationContext ctx {
+  OptimizationOptions ctx {
       .fold_constants = true,
       .prune_unused_locals = true,
       .prune_unused_globals = true,
@@ -240,19 +240,19 @@ TEST_CASE("fpinc.lsl") {
 }
 
 TEST_CASE("num_literals.lsl") {
-  OptimizationContext ctx {};
+  OptimizationOptions ctx {};
   PrettyPrintOpts pretty_ctx {};
   checkPrettyPrintOutput("num_literals.lsl", ctx, pretty_ctx);
 }
 
 TEST_CASE("vector_ambiguity.lsl") {
-  OptimizationContext ctx {};
+  OptimizationOptions ctx {};
   PrettyPrintOpts pretty_ctx {};
   checkPrettyPrintOutput("vector_ambiguity.lsl", ctx, pretty_ctx);
 }
 
 TEST_CASE("infinity_repr.lsl") {
-  OptimizationContext ctx {};
+  OptimizationOptions ctx {};
   PrettyPrintOpts pretty_ctx {};
   checkPrettyPrintOutput("infinity_repr.lsl", ctx, pretty_ctx);
 }
@@ -262,15 +262,15 @@ TEST_SUITE_END();
 TEST_SUITE_BEGIN("Tree Printer");
 
 TEST_CASE("error1.lsl") {
-  checkTreeDumpOutput("error1.lsl", OptimizationContext{});
+  checkTreeDumpOutput("error1.lsl", OptimizationOptions{});
 }
 
 TEST_CASE("tltp/exporter.lsl") {
-  checkTreeDumpOutput("tltp/exporter.lsl", OptimizationContext{});
+  checkTreeDumpOutput("tltp/exporter.lsl", OptimizationOptions{});
 }
 
 TEST_CASE("pathological_expression.lsl") {
-  checkTreeDumpOutput("pathological_expression.lsl", OptimizationContext{});
+  checkTreeDumpOutput("pathological_expression.lsl", OptimizationOptions{});
 }
 
 TEST_SUITE_END();

@@ -52,20 +52,20 @@ inline LSOBitStream& operator>>(LSOBitStream &bs, Quaternion &v) {
 class LSOHeapManager {
   public:
     uint32_t writeConstant(LSLConstant *constant);
-    LSOBitStream heap_bs {ENDIAN_BIG};
+    LSOBitStream mHeapBS {ENDIAN_BIG};
   protected:
-    void writeHeader(uint32_t size, LST_TYPE type);
+    void writeHeader(uint32_t size, LSLIType type);
 };
 
 class LSOCompilerVisitor : public ASTVisitor {
   public:
-    LSOBitStream script_bs {ENDIAN_BIG};
+    LSOBitStream mScriptBS {ENDIAN_BIG};
   protected:
     virtual bool visit(LSLScript *node);
-    LSOBitStream globals_bs {ENDIAN_BIG};
-    LSOBitStream functions_bs {ENDIAN_BIG};
-    LSOBitStream states_bs {ENDIAN_BIG};
-    LSOHeapManager heap_manager;
+    LSOBitStream _mGlobalsBS {ENDIAN_BIG};
+    LSOBitStream _mFunctionsBS {ENDIAN_BIG};
+    LSOBitStream _mStatesBS {ENDIAN_BIG};
+    LSOHeapManager _mHeapManager;
 };
 
 }

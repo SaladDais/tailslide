@@ -26,7 +26,7 @@ class AOperationBehavior {
 // runtime operation behavior!
 class TailslideOperationBehavior : public AOperationBehavior {
   public:
-    TailslideOperationBehavior(ScriptAllocator *allocator) { _allocator = allocator;};
+    TailslideOperationBehavior(ScriptAllocator *allocator) { _mAllocator = allocator;};
     // dispatch method
     LSLConstant *operation(
         int operation, LSLConstant *cv, LSLConstant *other_cv, YYLTYPE *lloc) override;
@@ -51,13 +51,13 @@ class TailslideOperationBehavior : public AOperationBehavior {
     LSLConstant *cast(LSLType *to_type, LSLQuaternionConstant *cv) { return nullptr; };
 
   protected:
-    inline char *join_string(const char *left, const char *right) {
-      char *ns = _allocator->alloc(strlen(left) + strlen(right) + 1);
+    inline char *joinString(const char *left, const char *right) {
+      char *ns = _mAllocator->alloc(strlen(left) + strlen(right) + 1);
       strcpy(ns, left);
       strcat(ns, right);
       return ns;
     }
-    ScriptAllocator *_allocator;
+    ScriptAllocator *_mAllocator;
 };
 
 }

@@ -9,13 +9,18 @@
 namespace Tailslide {
 
 class ExprSymbolResolutionVisitor : public ASTVisitor {
+  public:
+    explicit ExprSymbolResolutionVisitor(ScriptAllocator *allocator): _mAllocator(allocator) {};
+  protected:
     virtual bool visit(LSLLValueExpression *node);
     virtual bool visit(LSLFunctionExpression *node);
+    ScriptAllocator *_mAllocator;
 };
 
 class SymbolResolutionVisitor : public ExprSymbolResolutionVisitor {
   public:
-    SymbolResolutionVisitor(bool linden_jump_semantics) : _linden_jump_semantics(linden_jump_semantics) {};
+    SymbolResolutionVisitor(bool linden_jump_semantics, ScriptAllocator *allocator)
+      : _mLindenJumpSemantics(linden_jump_semantics), ExprSymbolResolutionVisitor(allocator) {}
 
   protected:
     virtual bool visit(LSLDeclaration *node);
@@ -29,10 +34,10 @@ class SymbolResolutionVisitor : public ExprSymbolResolutionVisitor {
     virtual bool visit(LSLJumpStatement *node);
     virtual bool visit(LSLStateStatement *node);
 
-    void _resolve_pending_jumps();
-    std::vector<LSLIdentifier*> _pending_jumps;
-    std::vector<LSLIdentifier*> _collected_labels;
-    bool _linden_jump_semantics;
+    void resolvePendingJumps();
+    std::vector<LSLIdentifier*> _mPendingJumps;
+    std::vector<LSLIdentifier*> _mCollectedLabels;
+    bool _mLindenJumpSemantics;
 };
 
 }

@@ -12,10 +12,10 @@ namespace Tailslide {
 LSLConstant *TailslideOperationBehavior::operation(
     int oper, LSLConstant *cv, LSLConstant *other_cv, YYLTYPE *lloc) {
 
-  auto *left_type = cv->get_type();
+  auto *left_type = cv->getType();
   LSLConstant *new_cv = nullptr;
 
-  switch (left_type->get_itype()) {
+  switch (left_type->getIType()) {
     case LST_STRING:
       new_cv = operation(oper, (LSLStringConstant*)cv, other_cv);
       break;
@@ -41,7 +41,7 @@ LSLConstant *TailslideOperationBehavior::operation(
       return nullptr;
   }
   if (new_cv)
-    new_cv->set_lloc(lloc);
+    new_cv->setLoc(lloc);
   return new_cv;
 }
 
@@ -49,7 +49,7 @@ LSLConstant *TailslideOperationBehavior::operation(
 // Integer Constants
 LSLConstant *TailslideOperationBehavior::operation(
     int operation, LSLIntegerConstant *cv, LSLConstant *other_const) {
-  S32 value = cv->get_value();
+  S32 value = cv->getValue();
   // unary op
   if (other_const == nullptr) {
     int nv;
@@ -66,13 +66,13 @@ LSLConstant *TailslideOperationBehavior::operation(
       default:
         return nullptr;
     }
-    return _allocator->new_tracked<LSLIntegerConstant>(nv);
+    return _mAllocator->newTracked<LSLIntegerConstant>(nv);
   }
 
   // binary op
-  switch (other_const->get_node_sub_type()) {
+  switch (other_const->getNodeSubType()) {
     case NODE_INTEGER_CONSTANT: {
-      int ov = ((LSLIntegerConstant *) other_const)->get_value();
+      int ov = ((LSLIntegerConstant *) other_const)->getValue();
       int nv;
       switch (operation) {
         case '+':
@@ -137,10 +137,10 @@ LSLConstant *TailslideOperationBehavior::operation(
         default:
           return nullptr;
       }
-      return _allocator->new_tracked<LSLIntegerConstant>(nv);
+      return _mAllocator->newTracked<LSLIntegerConstant>(nv);
     }
     case NODE_FLOAT_CONSTANT: {
-      float ov = ((LSLFloatConstant *) other_const)->get_value();
+      float ov = ((LSLFloatConstant *) other_const)->getValue();
       float nv;
       switch (operation) {
         case '+':
@@ -158,17 +158,17 @@ LSLConstant *TailslideOperationBehavior::operation(
           nv = (float)value / ov;
           break;
         case '>':
-          return _allocator->new_tracked<LSLIntegerConstant>((float)value > ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>((float) value > ov);
         case '<':
-          return _allocator->new_tracked<LSLIntegerConstant>((float)value < ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>((float) value < ov);
         case EQ:
-          return _allocator->new_tracked<LSLIntegerConstant>((float)value == ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>((float) value == ov);
         case NEQ:
-          return _allocator->new_tracked<LSLIntegerConstant>((float)value != ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>((float) value != ov);
         default:
           return nullptr;
       }
-      return _allocator->new_tracked<LSLFloatConstant>(nv);
+      return _mAllocator->newTracked<LSLFloatConstant>(nv);
     }
     default:
       return nullptr;
@@ -179,18 +179,18 @@ LSLConstant *TailslideOperationBehavior::operation(
 // Float Constants
 LSLConstant *TailslideOperationBehavior::operation(
     int operation, LSLFloatConstant *cv, LSLConstant *other_const) {
-  float value = cv->get_value();
+  float value = cv->getValue();
   // unary op
   if (other_const == nullptr) {
     if (operation == '-')
-      return _allocator->new_tracked<LSLFloatConstant>(-value);
+      return _mAllocator->newTracked<LSLFloatConstant>(-value);
     return nullptr;
   }
 
   // binary op
-  switch (other_const->get_node_sub_type()) {
+  switch (other_const->getNodeSubType()) {
     case NODE_INTEGER_CONSTANT: {
-      int ov = ((LSLIntegerConstant *) other_const)->get_value();
+      int ov = ((LSLIntegerConstant *) other_const)->getValue();
       float nv;
       switch (operation) {
         case '+':
@@ -207,28 +207,28 @@ LSLConstant *TailslideOperationBehavior::operation(
           nv = value / (float)ov;
           break;
         case '>':
-          return _allocator->new_tracked<LSLIntegerConstant>(value > (float)ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value > (float) ov);
         case '<':
-          return _allocator->new_tracked<LSLIntegerConstant>(value < (float)ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value < (float) ov);
         case GEQ:
-          return _allocator->new_tracked<LSLIntegerConstant>(value >= (float)ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value >= (float) ov);
         case LEQ:
-          return _allocator->new_tracked<LSLIntegerConstant>(value <= (float)ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value <= (float) ov);
         case BOOLEAN_AND:
-          return _allocator->new_tracked<LSLIntegerConstant>(value != 0.0 && ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value != 0.0 && ov);
         case BOOLEAN_OR:
-          return _allocator->new_tracked<LSLIntegerConstant>(value != 0.0 || ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value != 0.0 || ov);
         case EQ:
-          return _allocator->new_tracked<LSLIntegerConstant>(value == (float)ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value == (float) ov);
         case NEQ:
-          return _allocator->new_tracked<LSLIntegerConstant>(value != (float)ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value != (float) ov);
         default:
           return nullptr;
       }
-      return _allocator->new_tracked<LSLFloatConstant>(nv);
+      return _mAllocator->newTracked<LSLFloatConstant>(nv);
     }
     case NODE_FLOAT_CONSTANT: {
-      float ov = ((LSLFloatConstant *) other_const)->get_value();
+      float ov = ((LSLFloatConstant *) other_const)->getValue();
       float nv;
       switch (operation) {
         case '+':
@@ -245,21 +245,21 @@ LSLConstant *TailslideOperationBehavior::operation(
           nv = value / ov;
           break;
         case '>':
-          return _allocator->new_tracked<LSLIntegerConstant>(value > ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value > ov);
         case '<':
-          return _allocator->new_tracked<LSLIntegerConstant>(value < ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value < ov);
         case GEQ:
-          return _allocator->new_tracked<LSLIntegerConstant>(value >= ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value >= ov);
         case LEQ:
-          return _allocator->new_tracked<LSLIntegerConstant>(value <= ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value <= ov);
         case EQ:
-          return _allocator->new_tracked<LSLIntegerConstant>(value == ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value == ov);
         case NEQ:
-          return _allocator->new_tracked<LSLIntegerConstant>(value != ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value != ov);
         default:
           return nullptr;
       }
-      return _allocator->new_tracked<LSLFloatConstant>(nv);
+      return _mAllocator->newTracked<LSLFloatConstant>(nv);
     }
     default:
       return nullptr;
@@ -271,24 +271,24 @@ LSLConstant *TailslideOperationBehavior::operation(
 
 LSLConstant *TailslideOperationBehavior::operation(
     int operation, LSLStringConstant *cv, LSLConstant *other_const) {
-  const char *value = cv->get_value();
+  const char *value = cv->getValue();
   // unary op
   if (other_const == nullptr) {
     return nullptr;
   }
 
   // binary op
-  switch (other_const->get_node_sub_type()) {
+  switch (other_const->getNodeSubType()) {
     case NODE_STRING_CONSTANT: {
-      const char *ov = ((LSLStringConstant *) other_const)->get_value();
+      const char *ov = ((LSLStringConstant *) other_const)->getValue();
       switch (operation) {
         case '+':
-          return _allocator->new_tracked<LSLStringConstant>(join_string(value, ov));
+          return _mAllocator->newTracked<LSLStringConstant>(joinString(value, ov));
         case EQ:
-          return _allocator->new_tracked<LSLIntegerConstant>(!strcmp(value, ov));
+          return _mAllocator->newTracked<LSLIntegerConstant>(!strcmp(value, ov));
           // If you want LSO's behaviour, remove the `!= 0`.
         case NEQ:
-          return _allocator->new_tracked<LSLIntegerConstant>(strcmp(value, ov) != 0);
+          return _mAllocator->newTracked<LSLIntegerConstant>(strcmp(value, ov) != 0);
         default:
           return nullptr;
       }
@@ -308,18 +308,18 @@ LSLConstant *TailslideOperationBehavior::operation(
   }
 
   // binary op
-  switch (other_const->get_node_sub_type()) {
+  switch (other_const->getNodeSubType()) {
     case NODE_LIST_CONSTANT: {
       LSLListConstant *other = ((LSLListConstant *) other_const);
       switch (operation) {
         case EQ:
-          return _allocator->new_tracked<LSLIntegerConstant>(
-            cv->get_length() == other->get_length()
+          return _mAllocator->newTracked<LSLIntegerConstant>(
+              cv->getLength() == other->getLength()
           );
         case NEQ:
           // Yes, really.
-          return _allocator->new_tracked<LSLIntegerConstant>(
-            cv->get_length() - other->get_length()
+          return _mAllocator->newTracked<LSLIntegerConstant>(
+              cv->getLength() - other->getLength()
           );
         default:
           return nullptr;
@@ -335,7 +335,7 @@ LSLConstant *TailslideOperationBehavior::operation(
 // Vector Constants
 LSLConstant *TailslideOperationBehavior::operation(
     int operation, LSLVectorConstant *cv, LSLConstant *other_const) {
-  Vector3 *value = cv->get_value();
+  Vector3 *value = cv->getValue();
   // Make sure we have a value
   if (value == nullptr)
     return nullptr;
@@ -343,15 +343,15 @@ LSLConstant *TailslideOperationBehavior::operation(
   // unary op
   if (other_const == nullptr) {
     if (operation == '-')
-      return _allocator->new_tracked<LSLVectorConstant>(-value->x, -value->y, -value->z);
+      return _mAllocator->newTracked<LSLVectorConstant>(-value->x, -value->y, -value->z);
     else
       return nullptr;
   }
 
   // binary op
-  switch (other_const->get_node_sub_type()) {
+  switch (other_const->getNodeSubType()) {
     case NODE_INTEGER_CONSTANT: {
-      int ov = ((LSLIntegerConstant *) other_const)->get_value();
+      int ov = ((LSLIntegerConstant *) other_const)->getValue();
       float nv[3];
       switch (operation) {
         case '*':
@@ -368,10 +368,10 @@ LSLConstant *TailslideOperationBehavior::operation(
         default:
           return nullptr;
       }
-      return _allocator->new_tracked<LSLVectorConstant>(nv[0], nv[1], nv[2]);
+      return _mAllocator->newTracked<LSLVectorConstant>(nv[0], nv[1], nv[2]);
     }
     case NODE_FLOAT_CONSTANT: {
-      float ov = ((LSLFloatConstant *) other_const)->get_value();
+      float ov = ((LSLFloatConstant *) other_const)->getValue();
       float nv[3];
       switch (operation) {
         case '*':
@@ -388,10 +388,10 @@ LSLConstant *TailslideOperationBehavior::operation(
         default:
           return nullptr;
       }
-      return _allocator->new_tracked<LSLVectorConstant>(nv[0], nv[1], nv[2]);
+      return _mAllocator->newTracked<LSLVectorConstant>(nv[0], nv[1], nv[2]);
     }
     case NODE_VECTOR_CONSTANT: {
-      Vector3 *ov = ((LSLVectorConstant *) other_const)->get_value();
+      Vector3 *ov = ((LSLVectorConstant *) other_const)->getValue();
       if (ov == nullptr)
         return nullptr;
       float nv[3];
@@ -407,20 +407,20 @@ LSLConstant *TailslideOperationBehavior::operation(
           nv[2] = value->z - ov->z;
           break;
         case '*':
-          return _allocator->new_tracked<LSLFloatConstant>((value->x * ov->z) + (value->y * ov->y) + (value->z * ov->x));
+          return _mAllocator->newTracked<LSLFloatConstant>((value->x * ov->z) + (value->y * ov->y) + (value->z * ov->x));
         case '%':           // cross product
           nv[0] = (value->y * ov->z) - (value->z * ov->y);
           nv[1] = (value->z * ov->x) - (value->x * ov->z);
           nv[2] = (value->x * ov->y) - (value->y * ov->x);
           break;
         case EQ:
-          return _allocator->new_tracked<LSLIntegerConstant>(*value == *ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(*value == *ov);
         case NEQ:
-          return _allocator->new_tracked<LSLIntegerConstant>(*value != *ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(*value != *ov);
         default:
           return nullptr;
       }
-      return _allocator->new_tracked<LSLVectorConstant>(nv[0], nv[1], nv[2]);
+      return _mAllocator->newTracked<LSLVectorConstant>(nv[0], nv[1], nv[2]);
     }
     default:
       return nullptr;
@@ -431,31 +431,32 @@ LSLConstant *TailslideOperationBehavior::operation(
 // Quaternion Constants
 LSLConstant *TailslideOperationBehavior::operation(
     int operation, LSLQuaternionConstant *cv, LSLConstant *other_const) {
-  Quaternion *value = cv->get_value();
+  Quaternion *value = cv->getValue();
   if (value == nullptr)
     return nullptr;
 
   // unary op
   if (other_const == nullptr) {
     if (operation == '-')
-      return _allocator->new_tracked<LSLQuaternionConstant>(-value->x, -value->y, -value->z, -value->s);
+      return _mAllocator->newTracked<LSLQuaternionConstant>(-value->x, -value->y, -value->z, -value->s);
     else
       return nullptr;
   }
 
   // binary op
-  switch (other_const->get_node_sub_type()) {
+  switch (other_const->getNodeSubType()) {
     case NODE_QUATERNION_CONSTANT: {
-      Quaternion *ov = ((LSLQuaternionConstant *) other_const)->get_value();
+      Quaternion *ov = ((LSLQuaternionConstant *) other_const)->getValue();
       if (ov == nullptr)
         return nullptr;
       switch (operation) {
         case EQ:
-          return _allocator->new_tracked<LSLIntegerConstant>(*value == *ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(*value == *ov);
         case NEQ:
-          return _allocator->new_tracked<LSLIntegerConstant>(*value != *ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(*value != *ov);
         case '-':
-          return _allocator->new_tracked<LSLQuaternionConstant>(value->x - ov->x, value->y - ov->y, value->z - ov->z, value->s - ov->s);
+          return _mAllocator->newTracked<LSLQuaternionConstant>(value->x - ov->x, value->y - ov->y, value->z - ov->z,
+                                                               value->s - ov->s);
         default:
           return nullptr;
       }
@@ -473,14 +474,14 @@ LSLConstant *TailslideOperationBehavior::operation(
 
 LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLConstant *cv, YYLTYPE *lloc) {
 
-  auto *orig_type = cv->get_type();
+  auto *orig_type = cv->getType();
   if (orig_type == to_type) {
     // no-op case
     return cv;
   }
 
   LSLConstant *new_cv = nullptr;
-  switch (orig_type->get_itype()) {
+  switch (orig_type->getIType()) {
     case LST_STRING:
       new_cv = cast(to_type, (LSLStringConstant *)cv);
       break;
@@ -506,15 +507,15 @@ LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLConstant *cv,
       return nullptr;
   }
   if (new_cv)
-    new_cv->set_lloc(lloc);
+    new_cv->setLoc(lloc);
   return new_cv;
 }
 
 
 
 LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLStringConstant *cv) {
-  auto *v = cv->get_value();
-  switch(to_type->get_itype()) {
+  auto *v = cv->getValue();
+  switch(to_type->getIType()) {
     case LST_INTEGER: {
       int base = 10;
       // Need to explicitly determine what the base should be, we only support
@@ -522,10 +523,10 @@ LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLStringConstan
       // This check is safe because `cv` must be a null terminated string.
       if (v[0] == '0' && (v[1] == 'x' || v[2] == 'X'))
         base = 16;
-      return _allocator->new_tracked<LSLIntegerConstant>((S32)strtoul(v, nullptr, base));
+      return _mAllocator->newTracked<LSLIntegerConstant>((S32) strtoul(v, nullptr, base));
     }
     case LST_FLOATINGPOINT: {
-      return _allocator->new_tracked<LSLFloatConstant>((F32)strtod(v, nullptr));
+      return _mAllocator->newTracked<LSLFloatConstant>((F32) strtod(v, nullptr));
     }
     default:
       return nullptr;
@@ -533,11 +534,11 @@ LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLStringConstan
 }
 
 LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLIntegerConstant *cv) {
-  auto v = cv->get_value();
-  switch(to_type->get_itype()) {
+  auto v = cv->getValue();
+  switch(to_type->getIType()) {
     case LST_STRING: {
-      return _allocator->new_tracked<LSLStringConstant>(
-          _allocator->copy_str(std::to_string(v).c_str())
+      return _mAllocator->newTracked<LSLStringConstant>(
+          _mAllocator->copyStr(std::to_string(v).c_str())
       );
     }
     default:
@@ -546,8 +547,8 @@ LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLIntegerConsta
 }
 
 LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLFloatConstant *cv) {
-  auto v = cv->get_value();
-  switch(to_type->get_itype()) {
+  auto v = cv->getValue();
+  switch(to_type->getIType()) {
     case LST_STRING: {
       std::string f_as_str {std::to_string(v)};
       if (f_as_str == "inf")
@@ -558,8 +559,8 @@ LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLFloatConstant
       else if (f_as_str == "nan" || f_as_str == "-nan" || f_as_str == "-nan(ind)" || f_as_str == "nan(ind)")
         f_as_str = "NaN";
 
-      return _allocator->new_tracked<LSLStringConstant>(
-          _allocator->copy_str(f_as_str.c_str())
+      return _mAllocator->newTracked<LSLStringConstant>(
+          _mAllocator->copyStr(f_as_str.c_str())
       );
     }
     default:

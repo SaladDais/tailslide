@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
   FILE *yyin = nullptr;
   bool show_tree = false;
   bool pretty_print = true;
-  OptimizationContext optim_ctx {};
+  OptimizationOptions optim_ctx {};
   PrettyPrintOpts pretty_opts {};
 
   cxxopts::Options options("tailslide", "");
@@ -140,53 +140,53 @@ int main(int argc, char **argv) {
   Logger *logger = &parser.logger;
 
   if (check_assertions)
-    logger->set_check_assertions(true);
+    logger->setCheckAssertions(true);
 
-  auto script = parser.parse_lsl(yyin);
+  auto script = parser.parseLSL(yyin);
   if (yyin != nullptr)
     fclose(yyin);
 
   if (script) {
-    script->collect_symbols();
-    script->link_symbol_tables();
-    script->determine_types();
-    script->recalculate_reference_data();
-    script->propagate_values();
-    script->check_best_practices();
+    script->collectSymbols();
+    script->linkSymbolTables();
+    script->determineTypes();
+    script->recalculateReferenceData();
+    script->propagateValues();
+    script->checkBestPractices();
 
     if (check_assertions) {
-      logger->filter_assert_errors();
-      logger->set_check_assertions(false);
+      logger->filterAssertErrors();
+      logger->setCheckAssertions(false);
     }
     // Don't try to optimize if we have a possibly broken tree
-    if (!logger->get_errors()) {
+    if (!logger->getErrors()) {
       script->optimize(optim_ctx);
 
       // do these last since symbol usage and expressions may change
       // when rewriting the tree
-      script->validate_globals(true);
-      script->check_symbols();
+      script->validateGlobals(true);
+      script->checkSymbols();
       if (pretty_print) {
-        script->get_symbol_table()->set_mangled_names();
+        script->getSymbolTable()->setMangledNames();
 
         PrettyPrintVisitor print_visitor(pretty_opts);
         script->visit(&print_visitor);
-        std::cout << print_visitor.stream.str() << "\n";
+        std::cout << print_visitor.mStream.str() << "\n";
       }
     } else {
-      script->validate_globals(true);
-      script->check_symbols();
+      script->validateGlobals(true);
+      script->checkSymbols();
     }
     logger->report();
     if (show_tree) {
       std::cout << "Tree:" << std::endl;
       TreePrintingVisitor visitor;
       script->visit(&visitor);
-      std::cout << visitor.stream.str();
+      std::cout << visitor.mStream.str();
     }
   } else {
     logger->report();
   }
 
-  return logger->get_errors();
+  return logger->getErrors();
 }

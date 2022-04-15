@@ -5,8 +5,7 @@
 
 namespace Tailslide {
 
-class OptimizationContext {
-  public:
+struct OptimizationOptions {
     bool fold_constants = false;
     bool prune_unused_locals = false;
     bool prune_unused_globals = false;
@@ -19,9 +18,9 @@ class OptimizationContext {
 
 class TreeSimplifyingVisitor: public ASTVisitor {
   public:
-    explicit TreeSimplifyingVisitor(const OptimizationContext &ctx): ctx(ctx) {};
-    OptimizationContext ctx;
-    int folded_total = 0;
+    explicit TreeSimplifyingVisitor(const OptimizationOptions &opts): mOpts(opts) {};
+    OptimizationOptions mOpts;
+    int mFoldedLevel = 0;
 
     virtual bool visit(LSLDeclaration* node);
     virtual bool visit(LSLGlobalStorage* node);

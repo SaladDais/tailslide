@@ -38,26 +38,26 @@ const char *DEPRECATED_FUNCTIONS[][2] = {
 class SymbolLinkageVisitor: public ASTVisitor {
 public:
     SymbolLinkageVisitor(bool unlink, LSLSymbolTable* root_table):
-            unlink(unlink), root_table(root_table) {};
+        _mUnlink(unlink), _mRootTable(root_table) {};
 
     bool visit(LSLASTNode *node) override {
-      LSLSymbolTable *our_table = node->get_symbol_table();
+      LSLSymbolTable *our_table = node->getSymbolTable();
       if (our_table != nullptr) {
-        if (unlink)
-          root_table->unregister_subtable(our_table);
+        if (_mUnlink)
+          _mRootTable->unregisterSubtable(our_table);
         else
-          root_table->register_subtable(our_table);
+          _mRootTable->registerSubtable(our_table);
       }
       return true;
     }
 private:
-    bool unlink;
-    LSLSymbolTable *root_table;
+    bool _mUnlink;
+    LSLSymbolTable *_mRootTable;
 };
 
-void LSLASTNode::link_symbol_tables(bool unlink) {
-  LSLASTNode *root = get_root();
-  LSLSymbolTable *root_table = root ? root->get_symbol_table() : nullptr;
+void LSLASTNode::linkSymbolTables(bool unlink) {
+  LSLASTNode *root = getRoot();
+  LSLSymbolTable *root_table = root ? root->getSymbolTable() : nullptr;
   if (root_table == nullptr)
     return;
   // NB: if setting parent to a node in another tree,
@@ -67,83 +67,83 @@ void LSLASTNode::link_symbol_tables(bool unlink) {
 }
 
 // Lookup a symbol, propagating up the tree until it is found.
-LSLSymbol *LSLASTNode::lookup_symbol(const char *name, LSLSymbolType sym_type) {
+LSLSymbol *LSLASTNode::lookupSymbol(const char *name, LSLSymbolType type) {
   LSLSymbol *sym = nullptr;
 
   // If we have a symbol table of our own, look for it there
-  if (symbol_table)
-    sym = symbol_table->lookup(name, sym_type);
+  if (_mSymbolTable)
+    sym = _mSymbolTable->lookup(name, type);
 
   // If we have no symbol table, or it wasn't in it, but we have a parent, ask them
-  if (sym == nullptr && get_parent())
-    sym = get_parent()->lookup_symbol(name, sym_type);
+  if (sym == nullptr && getParent())
+    sym = getParent()->lookupSymbol(name, type);
 
   return sym;
 }
 
-LSLSymbol *LSLScript::lookup_symbol(const char *name, LSLSymbolType sym_type) {
-  auto *sym = context->builtins->lookup(name, sym_type);
+LSLSymbol *LSLScript::lookupSymbol(const char *name, LSLSymbolType sym_type) {
+  auto *sym = mContext->builtins->lookup(name, sym_type);
   if (sym != nullptr)
     return sym;
-  return LSLASTNode::lookup_symbol(name, sym_type);
+  return LSLASTNode::lookupSymbol(name, sym_type);
 }
 
 // Define a symbol, propagating up the tree to the nearest scope level.
-void LSLASTNode::define_symbol(LSLSymbol *symbol) {
+void LSLASTNode::defineSymbol(LSLSymbol *symbol) {
 
   // If we have a symbol table, define it there
-  if (symbol_table) {
+  if (_mSymbolTable) {
     LSLSymbol *shadow;
 
-    DEBUG(LOG_DEBUG_SPAM, nullptr, "symbol definition caught in %s\n", get_node_name());
+    DEBUG(LOG_DEBUG_SPAM, nullptr, "symbol definition caught in %s\n", getNodeName());
 
     // Check if already defined, if it exists in the current scope then shadowing is never allowed!
-    shadow = symbol_table->lookup(symbol->get_name());
+    shadow = _mSymbolTable->lookup(symbol->getName());
     if (shadow) {
-      if (shadow->get_symbol_type() == SYM_EVENT)
-        if (symbol->get_symbol_type() == SYM_EVENT)
-          NODE_ERROR(symbol, E_MULTIPLE_EVENT_HANDLERS, symbol->get_name());
+      if (shadow->getSymbolType() == SYM_EVENT)
+        if (symbol->getSymbolType() == SYM_EVENT)
+          NODE_ERROR(symbol, E_MULTIPLE_EVENT_HANDLERS, symbol->getName());
         else
-          NODE_ERROR(symbol, E_EVENT_AS_IDENTIFIER, symbol->get_name());
+          NODE_ERROR(symbol, E_EVENT_AS_IDENTIFIER, symbol->getName());
       else
-        NODE_ERROR(symbol, E_DUPLICATE_DECLARATION, symbol->get_name(), shadow->get_lloc()->first_line, shadow->get_lloc()->first_column);
+        NODE_ERROR(symbol, E_DUPLICATE_DECLARATION, symbol->getName(), shadow->getLoc()->first_line, shadow->getLoc()->first_column);
     } else {
       // Check for shadowed declarations
-      if (get_parent())
-        shadow = get_parent()->lookup_symbol(symbol->get_name(), symbol->get_symbol_type());
+      if (getParent())
+        shadow = getParent()->lookupSymbol(symbol->getName(), symbol->getSymbolType());
       // If we still didn't find anything, look in the root scope for _any_ kind of symbol,
       // shadowing certain kinds of builtins can be problematic.
-      if (shadow == nullptr && get_root())
-        shadow = get_root()->lookup_symbol(symbol->get_name(), SYM_ANY);
+      if (shadow == nullptr && getRoot())
+        shadow = getRoot()->lookupSymbol(symbol->getName(), SYM_ANY);
 
       // define it for now even if it shadows so that we have something to work with.
-      symbol_table->define(symbol);
+      _mSymbolTable->define(symbol);
 
       if (shadow != nullptr) {
         // events are _expected_ to "shadow" the event prototype declaration from the outer scope.
-        if (shadow->get_symbol_type() == SYM_EVENT && symbol->get_symbol_type() == SYM_EVENT)
+        if (shadow->getSymbolType() == SYM_EVENT && symbol->getSymbolType() == SYM_EVENT)
           return;
-        if (shadow->get_sub_type() == SYM_BUILTIN) {
+        if (shadow->getSubType() == SYM_BUILTIN) {
           // you're never allowed to shadow event names
-          if (shadow->get_symbol_type() == SYM_EVENT)
-            NODE_ERROR(symbol, E_EVENT_AS_IDENTIFIER, symbol->get_name());
+          if (shadow->getSymbolType() == SYM_EVENT)
+            NODE_ERROR(symbol, E_EVENT_AS_IDENTIFIER, symbol->getName());
           // builtin function names may be shadowed, but only by locals, not globals.
-          else if (shadow->get_symbol_type() == SYM_FUNCTION && symbol->get_sub_type() != SYM_GLOBAL)
+          else if (shadow->getSymbolType() == SYM_FUNCTION && symbol->getSubType() != SYM_GLOBAL)
             return;
           else
             // anything else is an error
-            NODE_ERROR(symbol, E_SHADOW_CONSTANT, symbol->get_name());
+            NODE_ERROR(symbol, E_SHADOW_CONSTANT, symbol->getName());
         } else {
           // nothing in a local scope can ever shadow a function, both
           // can be referenced simultaneously. Anything other than a function _will_ be shadowed.
-          if (shadow->get_symbol_type() != SYM_FUNCTION || symbol->get_symbol_type() == SYM_FUNCTION)
-            NODE_ERROR(symbol, W_SHADOW_DECLARATION, symbol->get_name(), LINECOL(shadow->get_lloc()));
+          if (shadow->getSymbolType() != SYM_FUNCTION || symbol->getSymbolType() == SYM_FUNCTION)
+            NODE_ERROR(symbol, W_SHADOW_DECLARATION, symbol->getName(), LINECOL(shadow->getLoc()));
         }
       }
     }
-  } else if (get_parent()) {
+  } else if (getParent()) {
     // Otherwise, ask our parent to define it
-    get_parent()->define_symbol(symbol);
+    getParent()->defineSymbol(symbol);
   } else {
     // .. but if we don't have a parent, we're in trouble.
     throw "nowhere to define symbol!";
@@ -151,8 +151,8 @@ void LSLASTNode::define_symbol(LSLSymbol *symbol) {
 }
 
 // Define any symbols we have, and ask our children to
-void LSLASTNode::collect_symbols() {
-  SymbolResolutionVisitor visitor(true);
+void LSLASTNode::collectSymbols() {
+  SymbolResolutionVisitor visitor(true, mContext->allocator);
   this->visit(&visitor);
 }
 
@@ -166,11 +166,11 @@ void LSLASTNode::collect_symbols() {
 //    }
 //  But if "test" looked itself up, it would think it is an integer. It's parent function
 //  expression node can tell it what it needs to be before determining it's own type.
-void LSLIdentifier::resolve_symbol(LSLSymbolType symbol_type) {
+void LSLIdentifier::resolveSymbol(LSLSymbolType symbol_type) {
 
   // If we already have a symbol, we don't need to look it up.
-  if (symbol != nullptr) {
-    type = symbol->get_type();
+  if (_mSymbol != nullptr) {
+    _mType = _mSymbol->getType();
     return;
   }
 
@@ -178,54 +178,54 @@ void LSLIdentifier::resolve_symbol(LSLSymbolType symbol_type) {
   if (symbol_type == SYM_FUNCTION) {
     int i;
     for (i = 0; DEPRECATED_FUNCTIONS[i][0]; ++i) {
-      if (!strcmp(name, DEPRECATED_FUNCTIONS[i][0])) {
+      if (!strcmp(_mName, DEPRECATED_FUNCTIONS[i][0])) {
         if (DEPRECATED_FUNCTIONS[i][1] == nullptr) {
-          NODE_ERROR(this, E_DEPRECATED, name);
+          NODE_ERROR(this, E_DEPRECATED, _mName);
         } else {
-          NODE_ERROR(this, E_DEPRECATED_WITH_REPLACEMENT, name, DEPRECATED_FUNCTIONS[i][1]);
+          NODE_ERROR(this, E_DEPRECATED_WITH_REPLACEMENT, _mName, DEPRECATED_FUNCTIONS[i][1]);
         }
-        symbol = nullptr;
-        type = TYPE(LST_ERROR);
+        _mSymbol = nullptr;
+        _mType = TYPE(LST_ERROR);
         return;
       }
     }
   }
 
   // Look up the symbol with the requested type
-  symbol = lookup_symbol(name, symbol_type);
+  _mSymbol = lookupSymbol(_mName, symbol_type);
 
-  if (symbol == nullptr) {                       // no symbol of the right type
-    symbol = lookup_symbol(name, SYM_ANY);    // so try the wrong one, so we can have a more descriptive error message in that case.
-    if (symbol != nullptr && symbol->get_symbol_type() != symbol_type) {
-      NODE_ERROR(this, E_WRONG_TYPE, name,
-            LSLSymbol::get_type_name(symbol_type),
-            LSLSymbol::get_type_name(symbol->get_symbol_type())
+  if (_mSymbol == nullptr) {                       // no symbol of the right type
+    _mSymbol = lookupSymbol(_mName, SYM_ANY);    // so try the wrong one, so we can have a more descriptive error message in that case.
+    if (_mSymbol != nullptr && _mSymbol->getSymbolType() != symbol_type) {
+      NODE_ERROR(this, E_WRONG_TYPE, _mName,
+                 LSLSymbol::getTypeName(symbol_type),
+                 LSLSymbol::getTypeName(_mSymbol->getSymbolType())
       );
     } else {
       /* Name suggestion was here */
-      if (type != TYPE(LST_ERROR)) {
+      if (_mType != TYPE(LST_ERROR)) {
         // don't re-warn about undeclared if we already know we're broken.
-        NODE_ERROR(this, E_UNDECLARED, name);
+        NODE_ERROR(this, E_UNDECLARED, _mName);
       }
     }
 
     // Set our symbol to null and type to error since we don't know what they should be.
-    symbol = nullptr;
-    type = TYPE(LST_ERROR);
+    _mSymbol = nullptr;
+    _mType = TYPE(LST_ERROR);
     return;
   }
 
   // Set our type to our symbol's type.
-  type = symbol->get_type();
+  _mType = _mSymbol->getType();
 }
 
-LSLASTNode *LSLASTNode::find_previous_in_scope(std::function<bool(LSLASTNode *)> const &checker) {
+LSLASTNode *LSLASTNode::findPreviousInScope(std::function<bool(LSLASTNode *)> const &checker) {
   LSLASTNode *last_node = this;
   for (;;) {
-    LSLASTNode *node = last_node->get_prev();
+    LSLASTNode *node = last_node->getPrev();
     // No previous statements, walk up a level
     if (node == nullptr) {
-      node = last_node->get_parent();
+      node = last_node->getParent();
       // nothing up here either, bail out
       if (node == nullptr) {
         return nullptr;
@@ -237,7 +237,7 @@ LSLASTNode *LSLASTNode::find_previous_in_scope(std::function<bool(LSLASTNode *)>
     // in conditionals that don't create new scopes :/. ex:
     // `jump lsl_sucks; llOwnerSay("Surprise!"); if(0) @lsl_sucks;`
     bool check_sub_tree = false;
-    switch (node->get_node_sub_type()) {
+    switch (node->getNodeSubType()) {
       case NODE_IF_STATEMENT:
       case NODE_WHILE_STATEMENT:
       case NODE_FOR_STATEMENT:
@@ -248,7 +248,7 @@ LSLASTNode *LSLASTNode::find_previous_in_scope(std::function<bool(LSLASTNode *)>
     }
 
     if (check_sub_tree) {
-      LSLASTNode *found_node = node->find_desc_in_scope(checker);
+      LSLASTNode *found_node = node->findDescInScope(checker);
       // one of our descendants matched the check, return it.
       if (found_node != nullptr)
         return found_node;
@@ -261,48 +261,48 @@ LSLASTNode *LSLASTNode::find_previous_in_scope(std::function<bool(LSLASTNode *)>
 }
 
 // find statements under this node that are still in the same scope
-LSLASTNode *LSLASTNode::find_desc_in_scope(std::function<bool(LSLASTNode *)> const &checker) {
-  LSLASTNode *child = get_children();
+LSLASTNode *LSLASTNode::findDescInScope(std::function<bool(LSLASTNode *)> const &checker) {
+  LSLASTNode *child = getChildren();
   if (checker(this))
     return this;
   while (child) {
     // don't descend into statements that make new scopes
-    if (child->get_node_sub_type() != NODE_COMPOUND_STATEMENT) {
-      LSLASTNode *found_node = child->find_desc_in_scope(checker);
+    if (child->getNodeSubType() != NODE_COMPOUND_STATEMENT) {
+      LSLASTNode *found_node = child->findDescInScope(checker);
       if (found_node != nullptr)
         return found_node;
     }
-    child = child->get_next();
+    child = child->getNext();
   }
   return nullptr;
 }
 
-void LSLASTNode::check_symbols() {
+void LSLASTNode::checkSymbols() {
   LSLASTNode *node;
-  if (get_symbol_table() != nullptr)
-    get_symbol_table()->check_symbols();
+  if (getSymbolTable() != nullptr)
+    getSymbolTable()->checkSymbols();
 
-  for (node = get_children(); node; node = node->get_next())
-    node->check_symbols();
+  for (node = getChildren(); node; node = node->getNext())
+    node->checkSymbols();
 }
 
 
 class NodeReferenceUpdatingVisitor : public ASTVisitor {
   public:
     virtual bool visit(LSLExpression *node) {
-      if (operation_mutates(node->get_operation())) {
-        LSLASTNode *child = node->get_child(0);
+      if (operation_mutates(node->getOperation())) {
+        LSLASTNode *child = node->getChild(0);
         // add assignment
-        if (child->get_node_sub_type() == NODE_LVALUE_EXPRESSION &&
-            child->get_child(0)->get_node_type() == NODE_IDENTIFIER) {
-          auto *id = (LSLIdentifier *) child->get_child(0);
-          if (id->get_symbol()) {
-            if (id->get_symbol()->get_sub_type() == SYM_BUILTIN) {
-              NODE_ERROR(node, E_BUILTIN_LVALUE, id->get_symbol()->get_name());
+        if (child->getNodeSubType() == NODE_LVALUE_EXPRESSION &&
+            child->getChild(0)->getNodeType() == NODE_IDENTIFIER) {
+          auto *id = (LSLIdentifier *) child->getChild(0);
+          if (id->getSymbol()) {
+            if (id->getSymbol()->getSubType() == SYM_BUILTIN) {
+              NODE_ERROR(node, E_BUILTIN_LVALUE, id->getSymbol()->getName());
               // make sure we don't muck with the assignment count on a builtin symbol!
               return true;
             }
-            id->get_symbol()->add_assignment();
+            id->getSymbol()->addAssignment();
           }
         }
       }
@@ -310,46 +310,46 @@ class NodeReferenceUpdatingVisitor : public ASTVisitor {
     };
 
     virtual bool visit(LSLIdentifier *node) {
-      LSLASTNode *upper_node = node->get_parent();
-      while (upper_node != nullptr && upper_node->get_node_type() != NODE_GLOBAL_STORAGE) {
+      LSLASTNode *upper_node = node->getParent();
+      while (upper_node != nullptr && upper_node->getNodeType() != NODE_GLOBAL_STORAGE) {
         // HACK: recursive calls don't count as a reference, won't handle mutual recursion!
-        if (upper_node->get_node_type() == NODE_GLOBAL_FUNCTION) {
-          auto *ident = (LSLIdentifier *) upper_node->get_child(0);
-          if (ident != node && (ident)->get_symbol() == node->get_symbol())
+        if (upper_node->getNodeType() == NODE_GLOBAL_FUNCTION) {
+          auto *ident = (LSLIdentifier *) upper_node->getChild(0);
+          if (ident != node && (ident)->getSymbol() == node->getSymbol())
             return false;
         }
-        upper_node = upper_node->get_parent();
+        upper_node = upper_node->getParent();
       }
-      if (auto *symbol = node->get_symbol())
-        symbol->add_reference();
+      if (auto *symbol = node->getSymbol())
+        symbol->addReference();
       return false;
     };
 };
 
-void LSLScript::recalculate_reference_data() {
+void LSLScript::recalculateReferenceData() {
 // get updated mutation / reference counts
-  get_symbol_table()->reset_reference_data();
+  getSymbolTable()->resetReferenceData();
   auto visitor = NodeReferenceUpdatingVisitor();
   visit(&visitor);
 }
 
-void LSLScript::optimize(const OptimizationContext &ctx) {
+void LSLScript::optimize(const OptimizationOptions &ctx) {
   int optimized;
   // make sure we have updated reference data before we start folding any constants
-  recalculate_reference_data();
+  recalculateReferenceData();
   do {
     TreeSimplifyingVisitor folding_visitor(ctx);
     visit(&folding_visitor);
-    optimized = folding_visitor.folded_total;
+    optimized = folding_visitor.mFoldedLevel;
 
     // reference data may have changed since we folded constants
     if (optimized)
-      recalculate_reference_data();
+      recalculateReferenceData();
   } while (optimized);
 }
 
 
-void LSLScript::validate_globals(bool sl_strict) {
+void LSLScript::validateGlobals(bool sl_strict) {
   if (sl_strict) {
     SimpleAssignableValidatingVisitor visitor;
     visit(&visitor);
@@ -360,72 +360,72 @@ void LSLScript::validate_globals(bool sl_strict) {
 }
 
 
-LSLConstant *LSLIdentifier::get_constant_value() {
-  if (symbol && symbol->get_assignments() == 0)
-    return symbol->get_constant_value();
+LSLConstant *LSLIdentifier::getConstantValue() {
+  if (_mSymbol && _mSymbol->getAssignments() == 0)
+    return _mSymbol->getConstantValue();
   return nullptr;
 }
 
 
-LSLConstant *LSLGlobalVariable::get_constant_value() {
+LSLConstant *LSLGlobalVariable::getConstantValue() {
   // It's not really constant if it gets mutated more than once, is it?
   // note that initialization during declaration doesn't count.
-  auto *id = (LSLIdentifier *) get_child(0);
-  if (id->get_symbol()->get_assignments() == 0) {
-    return constant_value;
+  auto *id = (LSLIdentifier *) getChild(0);
+  if (id->getSymbol()->getAssignments() == 0) {
+    return _mConstantValue;
   }
   return nullptr;
 }
 
-LSLConstant *LSLDeclaration::get_constant_value() {
-  auto *id = (LSLIdentifier *) get_child(0);
-  if (id->get_symbol()->get_assignments() == 0) {
-    return constant_value;
+LSLConstant *LSLDeclaration::getConstantValue() {
+  auto *id = (LSLIdentifier *) getChild(0);
+  if (id->getSymbol()->getAssignments() == 0) {
+    return _mConstantValue;
   }
   return nullptr;
 }
 
-LSLConstant *LSLExpression::get_constant_value() {
+LSLConstant *LSLExpression::getConstantValue() {
   // replacing `foo = "bar"` with `"bar"` == no
-  if (!operation_mutates(operation)) {
-    return constant_value;
+  if (!operation_mutates(_mOperation)) {
+    return _mConstantValue;
   }
   return nullptr;
 }
 
 
-LSLConstant *LSLLValueExpression::get_constant_value() {
-  if (is_foldable) {
+LSLConstant *LSLLValueExpression::getConstantValue() {
+  if (_mIsFoldable) {
     // We have to be careful about folding lists
-    if (this->type == TYPE(LST_LIST)) {
+    if (this->_mType == TYPE(LST_LIST)) {
       LSLASTNode *top_foldable = this;
       LSLASTNode *current_node = this;
 
       // Don't fold this in if it's a list expression at the foldable level
-      while (current_node != nullptr && current_node->node_allows_folding()) {
+      while (current_node != nullptr && current_node->nodeAllowsFolding()) {
         top_foldable = current_node;
-        current_node = current_node->get_parent();
+        current_node = current_node->getParent();
       }
-      if (top_foldable->get_type() == TYPE(LST_LIST))
+      if (top_foldable->getType() == TYPE(LST_LIST))
         return nullptr;
     }
 
-    return constant_value;
+    return _mConstantValue;
   }
   return nullptr;
 }
 
-bool LSLFloatConstant::contains_nan() {
-  return std::isnan(get_value());
+bool LSLFloatConstant::containsNaN() {
+  return std::isnan(getValue());
 }
 
-bool LSLVectorConstant::contains_nan() {
-  Vector3 *v = get_value();
+bool LSLVectorConstant::containsNaN() {
+  Vector3 *v = getValue();
   return std::isnan(v->x) || std::isnan(v->y) || std::isnan(v->z);
 }
 
-bool LSLQuaternionConstant::contains_nan() {
-  Quaternion *v = get_value();
+bool LSLQuaternionConstant::containsNaN() {
+  Quaternion *v = getValue();
   return std::isnan(v->x) || std::isnan(v->y) || std::isnan(v->z) || std::isnan(v->s);
 }
 

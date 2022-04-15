@@ -57,7 +57,7 @@ FS            (f|F)
 <COMMENT>"$[E"{N}{5}"]" {
     ErrorCode e = (ErrorCode) strtoul( yytext+3, NULL, 10 );
     // LOG( LOG_INFO, yylloc, "Adding assertion for E%d.", (int)e );
-    tailslide_get_extra(yyscanner)->logger->add_assertion( yylloc->first_line, e );
+    tailslide_get_extra(yyscanner)->logger->addAssertion( yylloc->first_line, e );
 }
 <COMMENT>.          { /* eat comments */ }
 <COMMENT>\n         { BEGIN 0; LLOC_LINES(1); LLOC_STEP(); } 

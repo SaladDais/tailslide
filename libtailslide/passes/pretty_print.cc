@@ -10,11 +10,11 @@ namespace Tailslide {
 
 class ScopedTabSetter {
 public:
-  ScopedTabSetter(PrettyPrintVisitor *visitor, int tabs): visitor(visitor), old_tabs(visitor->tabs) {
-    visitor->tabs = tabs;
+  ScopedTabSetter(PrettyPrintVisitor *visitor, int tabs): visitor(visitor), old_tabs(visitor->mTabs) {
+    visitor->mTabs = tabs;
   };
   ~ScopedTabSetter() {
-    visitor->tabs = old_tabs;
+    visitor->mTabs = old_tabs;
   }
 private:
   int old_tabs;
@@ -22,14 +22,14 @@ private:
 };
 
 static bool cast_requires_parens(LSLTypecastExpression* node) {
-  switch (node->get_child(0)->get_node_type()) {
+  switch (node->getChild(0)->getNodeType()) {
     case NODE_CONSTANT:
     case NODE_IDENTIFIER:
       return false;
     default:;
   }
 
-  switch (node->get_child(0)->get_node_sub_type()) {
+  switch (node->getChild(0)->getNodeSubType()) {
     case NODE_PRINT_EXPRESSION:
     case NODE_LVALUE_EXPRESSION:
     case NODE_FUNCTION_EXPRESSION:
@@ -45,61 +45,61 @@ static bool cast_requires_parens(LSLTypecastExpression* node) {
 
 // Check if this if/for/while/etc. body has braces
 static int is_braceless(LSLASTNode *node) {
-  return (node->get_node_sub_type() != NODE_COMPOUND_STATEMENT);
+  return (node->getNodeSubType() != NODE_COMPOUND_STATEMENT);
 }
 
-void PrettyPrintVisitor::prettify_siblings_sep(LSLASTNode* node, const char* separator) {
+void PrettyPrintVisitor::prettifySiblingsSep(LSLASTNode* node, const char* separator) {
   while ( node != nullptr ) {
     node->visit(this);
-    node = node->get_next();
+    node = node->getNext();
     if (node)
-      stream << separator;
+      mStream << separator;
   }
 }
 
 // special-case for vectors and quaternions so we don't accidentally output
 // expressions in the members in a context where the brackets could be interpreted
 // as shift operators
-void PrettyPrintVisitor::prettify_coordinate_members(LSLASTNode *node) {
-  std::stringstream orig_stream(std::move(stream));
-  stream = std::stringstream();
-  prettify_siblings_sep(node, ", ");
-  std::string innards {stream.str()};
-  stream = std::move(orig_stream);
+void PrettyPrintVisitor::prettifyCoordinateMembers(LSLASTNode *node) {
+  std::stringstream orig_stream(std::move(mStream));
+  mStream = std::stringstream();
+  prettifySiblingsSep(node, ", ");
+  std::string innards {mStream.str()};
+  mStream = std::move(orig_stream);
   if (innards.front() == '<')
-    stream << ' ';
-  stream << innards;
+    mStream << ' ';
+  mStream << innards;
   if (innards.back() == '>')
-    stream << ' ';
+    mStream << ' ';
 }
 
 bool PrettyPrintVisitor::visit(LSLASTNode *node) {
   std::stringstream descriptor_sstr;
-  descriptor_sstr << "UNKNOWN NODE \"" << node->get_node_name() << "\" @ " << (void *)this << "> */";
+  descriptor_sstr << "UNKNOWN NODE \"" << node->getNodeName() << "\" @ " << (void *)this << "> */";
   std::string node_descriptor = descriptor_sstr.str();
 
-  do_tabs();
-  stream << "/* <" << node_descriptor << "\n";
-  visit_children(node);
-  do_tabs();
-  stream << "/* </" << node_descriptor << "\n";
+  doTabs();
+  mStream << "/* <" << node_descriptor << "\n";
+  visitChildren(node);
+  doTabs();
+  mStream << "/* </" << node_descriptor << "\n";
 
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLIdentifier *node) {
-  LSLSymbol *sym = node->get_symbol();
-  const char *name = node->get_name();
-  if (sym != nullptr && sym->get_mangled_name()
-      && ((opts.mangle_local_names && sym->get_sub_type() == SYM_LOCAL)
-          || (opts.mangle_global_names && sym->get_sub_type() != SYM_LOCAL && sym->get_symbol_type() != SYM_FUNCTION)
-          || (opts.mangle_func_names && sym->get_symbol_type() == SYM_FUNCTION))) {
-    if (opts.show_unmangled) {
-      stream << "/*" << name << "*/";
+  LSLSymbol *sym = node->getSymbol();
+  const char *name = node->getName();
+  if (sym != nullptr && sym->getMangledName()
+      && ((_mOpts.mangle_local_names && sym->getSubType() == SYM_LOCAL)
+          || (_mOpts.mangle_global_names && sym->getSubType() != SYM_LOCAL && sym->getSymbolType() != SYM_FUNCTION)
+          || (_mOpts.mangle_func_names && sym->getSymbolType() == SYM_FUNCTION))) {
+    if (_mOpts.show_unmangled) {
+      mStream << "/*" << name << "*/";
     }
-    stream << sym->get_mangled_name();
+    mStream << sym->getMangledName();
   } else {
-    stream << name;
+    mStream << name;
   }
   return false;
 }
@@ -112,85 +112,85 @@ bool PrettyPrintVisitor::visit(LSLIdentifier *node) {
 //
 
 bool PrettyPrintVisitor::visit(LSLState *node) {
-  do_tabs();
-  auto *state_id = (LSLIdentifier*)node->get_child(0);
-  if (!strcmp("default", state_id->get_name()))
-    stream << "default";
+  doTabs();
+  auto *state_id = (LSLIdentifier*) node->getChild(0);
+  if (!strcmp("default", state_id->getName()))
+    mStream << "default";
   else {
-    stream << "state ";
+    mStream << "state ";
     state_id->visit(this);
   }
 
-  stream << "\n{\n";
+  mStream << "\n{\n";
 
   // Ick. Seems like these should all be under one node.
   // All children from this point on are event handlers.
   {
-    ScopedTabSetter setter(this, tabs + 1);
-    prettify_siblings_sep(node->get_child(1), "\n");
+    ScopedTabSetter setter(this, mTabs + 1);
+    prettifySiblingsSep(node->getChild(1), "\n");
   }
-  do_tabs();
-  stream << "}\n";
+  doTabs();
+  mStream << "}\n";
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLEventHandler *node) {
-  do_tabs();
+  doTabs();
 
   // event name
-  node->get_child(0)->visit(this);
+  node->getChild(0)->visit(this);
   // params
-  stream << '(';
-  node->get_child(1)->visit(this);
-  stream << ")\n";
+  mStream << '(';
+  node->getChild(1)->visit(this);
+  mStream << ")\n";
   // body
-  node->get_child(2)->visit(this);
+  node->getChild(2)->visit(this);
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLGlobalVariable *node) {
-  do_tabs();
+  doTabs();
 
-  LSLASTNode* id = node->get_child(0);
-  id->get_type()->visit(this);
-  stream << ' ';
+  LSLASTNode* id = node->getChild(0);
+  id->getType()->visit(this);
+  mStream << ' ';
   id->visit(this);
 
-  LSLASTNode* assignable = node->get_child(1);
-  if (assignable->get_node_type() != NODE_NULL) {
-    stream << " = ";
+  LSLASTNode* assignable = node->getChild(1);
+  if (assignable->getNodeType() != NODE_NULL) {
+    mStream << " = ";
     assignable->visit(this);
   }
-  stream << ";\n";
+  mStream << ";\n";
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLGlobalFunction *node) {
-  do_tabs();
+  doTabs();
   // print the return type if we have one
-  if (node->get_child(0)->get_itype() != LST_NULL) {
-    node->get_child(0)->get_type()->visit(this);
-    stream << ' ';
+  if (node->getChild(0)->getIType() != LST_NULL) {
+    node->getChild(0)->getType()->visit(this);
+    mStream << ' ';
   }
 
-  node->get_child(0)->visit(this);
-  stream << '(';
-  node->get_child(1)->visit(this);
-  stream << ")\n";
-  node->get_child(2)->visit(this);
-  stream << '\n';
+  node->getChild(0)->visit(this);
+  mStream << '(';
+  node->getChild(1)->visit(this);
+  mStream << ")\n";
+  node->getChild(2)->visit(this);
+  mStream << '\n';
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLParamList *node) {
-  LSLASTNode *child_node = node->get_children();
-  while (child_node && child_node->get_node_type() != NODE_NULL ) {
-    child_node->get_type()->visit(this);
-    stream << ' ';
+  LSLASTNode *child_node = node->getChildren();
+  while (child_node && child_node->getNodeType() != NODE_NULL ) {
+    child_node->getType()->visit(this);
+    mStream << ' ';
     child_node->visit(this);
-    child_node = child_node->get_next();
+    child_node = child_node->getNext();
     if (child_node)
-      stream << ", ";
+      mStream << ", ";
   }
   return false;
 }
@@ -204,113 +204,113 @@ bool PrettyPrintVisitor::visit(LSLParamList *node) {
 //
 
 bool PrettyPrintVisitor::visit(LSLStatement *node) {
-  do_tabs();
+  doTabs();
   // Not sure about the separator, but looks like that's what lscript does?
-  prettify_siblings_sep(node->get_children(), ", ");
-  stream << ";\n";
+  prettifySiblingsSep(node->getChildren(), ", ");
+  mStream << ";\n";
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLCompoundStatement *node) {
-  do_tabs();
-  stream << "{\n";
+  doTabs();
+  mStream << "{\n";
 
   {
-    ScopedTabSetter setter(this, tabs + 1);
-    visit_children(node);
+    ScopedTabSetter setter(this, mTabs + 1);
+    visitChildren(node);
   }
 
-  do_tabs();
-  stream << "}\n";
+  doTabs();
+  mStream << "}\n";
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLDeclaration *node) {
-  do_tabs();
+  doTabs();
 
-  LSLASTNode* id = node->get_child(0);
-  id->get_type()->visit(this);
-  stream << ' ';
+  LSLASTNode* id = node->getChild(0);
+  id->getType()->visit(this);
+  mStream << ' ';
   id->visit(this);
 
-  LSLASTNode* assignable = node->get_child(1);
-  if (assignable->get_node_type() != NODE_NULL) {
-    stream << " = ";
+  LSLASTNode* assignable = node->getChild(1);
+  if (assignable->getNodeType() != NODE_NULL) {
+    mStream << " = ";
     assignable->visit(this);
   }
-  stream << ";\n";
+  mStream << ";\n";
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLStateStatement *node) {
-  do_tabs();
-  stream << "state ";
-  visit_children(node);
-  stream << ";\n";
+  doTabs();
+  mStream << "state ";
+  visitChildren(node);
+  mStream << ";\n";
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLLabel *node) {
-  do_tabs();
-  stream << '@';
-  visit_children(node);
-  stream << ";\n";
+  doTabs();
+  mStream << '@';
+  visitChildren(node);
+  mStream << ";\n";
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLJumpStatement *node) {
-  do_tabs();
-  stream << "jump ";
-  visit_children(node);
-  stream << ";\n";
+  doTabs();
+  mStream << "jump ";
+  visitChildren(node);
+  mStream << ";\n";
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLReturnStatement *node) {
-  do_tabs();
-  stream << "return";
-  if (node->get_child(0) != nullptr && node->get_child(0)->get_node_type() != NODE_NULL) {
-    stream << ' ';
-    visit_children(node);
+  doTabs();
+  mStream << "return";
+  if (node->getChild(0) != nullptr && node->getChild(0)->getNodeType() != NODE_NULL) {
+    mStream << ' ';
+    visitChildren(node);
   }
-  stream << ";\n";
+  mStream << ";\n";
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLIfStatement *node) {
-  LSLASTNode* expr = node->get_child(0);
-  LSLASTNode* true_branch = node->get_child(1);
-  LSLASTNode* false_branch = node->get_child(2);
+  LSLASTNode* expr = node->getChild(0);
+  LSLASTNode* true_branch = node->getChild(1);
+  LSLASTNode* false_branch = node->getChild(2);
 
   // Don't indent the "if" in "else if", but _do_ invent if we're in the true branch.
   // Basically, perverse things like:
   // if (foo)
   //     if (bar)
   //         baz();
-  LSLASTNode * parent = node->get_parent();
-  if (parent->get_node_sub_type() != NODE_IF_STATEMENT || parent->get_child(1) == node)
-    do_tabs();
+  LSLASTNode * parent = node->getParent();
+  if (parent->getNodeSubType() != NODE_IF_STATEMENT || parent->getChild(1) == node)
+    doTabs();
 
-  stream << "if (";
+  mStream << "if (";
   expr->visit(this);
-  stream << ")\n";
+  mStream << ")\n";
   // Only increase indentation of the child if this is a braceless `if` branch
   {
-    ScopedTabSetter setter(this, tabs + is_braceless(true_branch));
+    ScopedTabSetter setter(this, mTabs + is_braceless(true_branch));
     true_branch->visit(this);
   }
 
-  if (false_branch->get_node_type() != NODE_NULL) {
-    do_tabs();
-    stream << "else";
-    bool chained_if = false_branch->get_node_sub_type() == NODE_IF_STATEMENT;
+  if (false_branch->getNodeType() != NODE_NULL) {
+    doTabs();
+    mStream << "else";
+    bool chained_if = false_branch->getNodeSubType() == NODE_IF_STATEMENT;
     if (chained_if)
-      stream << ' ';
+      mStream << ' ';
     else
-      stream << '\n';
+      mStream << '\n';
 
     {
-      ScopedTabSetter setter(this, tabs + (is_braceless(false_branch) && !chained_if));
+      ScopedTabSetter setter(this, mTabs + (is_braceless(false_branch) && !chained_if));
       false_branch->visit(this);
     }
   }
@@ -318,46 +318,46 @@ bool PrettyPrintVisitor::visit(LSLIfStatement *node) {
 }
 
 bool PrettyPrintVisitor::visit(LSLWhileStatement *node) {
-  do_tabs();
-  stream << "while (";
-  node->get_child(0)->visit(this);
-  stream << ")\n";
-  LSLASTNode* body = node->get_child(1);
+  doTabs();
+  mStream << "while (";
+  node->getChild(0)->visit(this);
+  mStream << ")\n";
+  LSLASTNode* body = node->getChild(1);
   {
-    ScopedTabSetter setter(this, tabs + is_braceless(body));
+    ScopedTabSetter setter(this, mTabs + is_braceless(body));
     body->visit(this);
   }
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLDoStatement *node) {
-  do_tabs();
-  stream << "do\n";
-  LSLASTNode* body = node->get_child(0);
+  doTabs();
+  mStream << "do\n";
+  LSLASTNode* body = node->getChild(0);
   {
-    ScopedTabSetter setter(this, tabs + is_braceless(body));
+    ScopedTabSetter setter(this, mTabs + is_braceless(body));
     body->visit(this);
   }
-  do_tabs();
-  stream << "while(";
-  node->get_child(1)->visit(this);
-  stream << ");\n";
+  doTabs();
+  mStream << "while(";
+  node->getChild(1)->visit(this);
+  mStream << ");\n";
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLForStatement *node) {
-  do_tabs();
-  stream << "for (";
-  prettify_siblings_sep(node->get_child(0)->get_children(), ", ");
-  stream << "; ";
-  node->get_child(1)->visit(this);
-  stream << "; ";
-  prettify_siblings_sep(node->get_child(2)->get_children(), ", ");
-  stream << ")\n";
+  doTabs();
+  mStream << "for (";
+  prettifySiblingsSep(node->getChild(0)->getChildren(), ", ");
+  mStream << "; ";
+  node->getChild(1)->visit(this);
+  mStream << "; ";
+  prettifySiblingsSep(node->getChild(2)->getChildren(), ", ");
+  mStream << ")\n";
 
-  LSLASTNode *body = node->get_child(3);
+  LSLASTNode *body = node->getChild(3);
   {
-    ScopedTabSetter setter(this, tabs + is_braceless(body));
+    ScopedTabSetter setter(this, mTabs + is_braceless(body));
     body->visit(this);
   }
   return false;
@@ -370,39 +370,39 @@ bool PrettyPrintVisitor::visit(LSLForStatement *node) {
 //
 
 bool PrettyPrintVisitor::visit(LSLExpression *node) {
-  LSLASTNode *left = node->get_child(0);
-  LSLASTNode *right = node->get_child(1);
-  int operation = node->get_operation();
+  LSLASTNode *left = node->getChild(0);
+  LSLASTNode *right = node->getChild(1);
+  int operation = node->getOperation();
 
   if (!operation) {
     left->visit(this);
   } else if (right) {
     left->visit(this);
-    stream << ' ' << operation_str(operation) << ' ';
+    mStream << ' ' << operation_str(operation) << ' ';
     right->visit(this);
   } else {
     if (operation == INC_POST_OP || operation == DEC_POST_OP) {
       left->visit(this);
-      stream << operation_str(operation);
+      mStream << operation_str(operation);
     } else if (operation == '(') {
-      stream << '(';
+      mStream << '(';
       left->visit(this);
-      stream << ')';
+      mStream << ')';
 
     // Make sure we don't end up with `--2147483648` on underflow...
     } else if (operation == '-') {
-      stream << '-';
+      mStream << '-';
       bool need_parens = false;
-      if (left->get_child(0)->get_node_sub_type() == NODE_INTEGER_CONSTANT) {
-        need_parens = ((LSLIntegerConstant*)left->get_child(0))->get_value() < 0;
+      if (left->getChild(0)->getNodeSubType() == NODE_INTEGER_CONSTANT) {
+        need_parens = ((LSLIntegerConstant *) left->getChild(0))->getValue() < 0;
       }
       if (need_parens)
-        stream << '(';
+        mStream << '(';
       left->visit(this);
       if (need_parens)
-        stream << ')';
+        mStream << ')';
     } else {
-      stream << operation_str(operation);
+      mStream << operation_str(operation);
       left->visit(this);
     }
   }
@@ -410,47 +410,47 @@ bool PrettyPrintVisitor::visit(LSLExpression *node) {
 }
 
 bool PrettyPrintVisitor::visit(LSLLValueExpression *node) {
-  node->get_child(0)->visit(this);
-  LSLASTNode *member = node->get_child(1);
-  if (member && member->get_node_type() != NODE_NULL) {
-    stream << '.';
+  node->getChild(0)->visit(this);
+  LSLASTNode *member = node->getChild(1);
+  if (member && member->getNodeType() != NODE_NULL) {
+    mStream << '.';
     member->visit(this);
   }
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLFunctionExpression *node) {
-  node->get_child(0)->visit(this);
-  stream << '(';
-  prettify_siblings_sep(node->get_child(1), ", ");
-  stream << ')';
+  node->getChild(0)->visit(this);
+  mStream << '(';
+  prettifySiblingsSep(node->getChild(1), ", ");
+  mStream << ')';
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLTypecastExpression *node) {
-  stream << '(';
-  node->get_type()->visit(this);
-  stream << ')';
+  mStream << '(';
+  node->getType()->visit(this);
+  mStream << ')';
   bool need_parens = cast_requires_parens(node);
   if (need_parens)
-    stream << '(';
-  visit_children(node);
+    mStream << '(';
+  visitChildren(node);
   if (need_parens)
-    stream << ')';
+    mStream << ')';
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLVectorExpression *node) {
-  stream << '<';
-  prettify_coordinate_members(node->get_children());
-  stream << '>';
+  mStream << '<';
+  prettifyCoordinateMembers(node->getChildren());
+  mStream << '>';
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLQuaternionExpression *node) {
-  stream << '<';
-  prettify_coordinate_members(node->get_children());
-  stream << '>';
+  mStream << '<';
+  prettifyCoordinateMembers(node->getChildren());
+  mStream << '>';
   return false;
 }
 
@@ -477,72 +477,72 @@ static std::string format_float(float v) {
 }
 
 bool PrettyPrintVisitor::visit(LSLVectorConstant *node) {
-  Vector3 *v = node->get_value();
+  Vector3 *v = node->getValue();
   assert (v != nullptr);
-  stream << '<';
-  stream << format_float(v->x);
-  stream << ", ";
-  stream << format_float(v->y);
-  stream << ", ";
-  stream << format_float(v->z);
-  stream << ">";
+  mStream << '<';
+  mStream << format_float(v->x);
+  mStream << ", ";
+  mStream << format_float(v->y);
+  mStream << ", ";
+  mStream << format_float(v->z);
+  mStream << ">";
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLQuaternionConstant *node) {
-  Quaternion *v = node->get_value();
+  Quaternion *v = node->getValue();
   assert (v != nullptr);
-  stream << '<';
-  stream << format_float(v->x);
-  stream << ", ";
-  stream << format_float(v->y);
-  stream << ", ";
-  stream << format_float(v->z);
-  stream << ", ";
-  stream << format_float(v->s);
-  stream << ">";
+  mStream << '<';
+  mStream << format_float(v->x);
+  mStream << ", ";
+  mStream << format_float(v->y);
+  mStream << ", ";
+  mStream << format_float(v->z);
+  mStream << ", ";
+  mStream << format_float(v->s);
+  mStream << ">";
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLListExpression *node) {
-  stream << '[';
-  prettify_siblings_sep(node->get_children(), ", ");
-  stream << ']';
+  mStream << '[';
+  prettifySiblingsSep(node->getChildren(), ", ");
+  mStream << ']';
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLListConstant *node) {
-  stream << '[';
-  prettify_siblings_sep(node->get_value(), ", ");
-  stream << ']';
+  mStream << '[';
+  prettifySiblingsSep(node->getValue(), ", ");
+  mStream << ']';
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLIntegerConstant *node) {
-  stream << node->get_value();
+  mStream << node->getValue();
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLFloatConstant *node) {
-  stream << format_float(node->get_value());
+  mStream << format_float(node->getValue());
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLStringConstant *node) {
-  stream << '"' << escape_string(node->get_value()) << '"';
+  mStream << '"' << escape_string(node->getValue()) << '"';
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLPrintExpression *node) {
-  stream << "print(";
-  visit_children(node);
-  stream << ')';
+  mStream << "print(";
+  visitChildren(node);
+  mStream << ')';
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLType* node) {
-  if (node->get_itype() != LST_NULL) {
-    stream << node->get_node_name();
+  if (node->getIType() != LST_NULL) {
+    mStream << node->getNodeName();
   }
   return false;
 }
@@ -555,9 +555,9 @@ bool PrettyPrintVisitor::visit(LSLScript *node) {
   return true;
 }
 
-void PrettyPrintVisitor::do_tabs() {
-  for(int i=0; i<tabs; ++i) {
-    stream << "    ";
+void PrettyPrintVisitor::doTabs() {
+  for(int i=0; i < mTabs; ++i) {
+    mStream << "    ";
   }
 }
 

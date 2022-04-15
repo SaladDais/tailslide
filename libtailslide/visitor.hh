@@ -134,15 +134,15 @@ class ASTVisitor {
       return visit((LSLASTNode*)node);
     }
 
-    virtual bool visit_specific(LSLASTNode *node);
-    void visit_children(LSLASTNode *node);
+    virtual bool visitSpecific(LSLASTNode *node);
+    void visitChildren(LSLASTNode *node);
     // only used for depth-first visitors
-    virtual bool before_descend(LSLASTNode *node) {return true;}
-    virtual bool is_depth_first() {return false;}
+    virtual bool beforeDescend(LSLASTNode *node) {return true;}
+    virtual bool isDepthFirst() {return false;}
 };
 
 class DepthFirstASTVisitor: public ASTVisitor {
-    virtual bool is_depth_first() {return true;}
+    virtual bool isDepthFirst() {return true;}
 };
 
 }

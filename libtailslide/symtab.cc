@@ -9,60 +9,60 @@
 namespace Tailslide {
 
 void LSLSymbolTable::define(LSLSymbol *symbol) {
-  symbols.insert(SensitiveSymbolMap::value_type(symbol->get_name(), symbol));
+  _mSymbols.insert(SensitiveSymbolMap::value_type(symbol->getName(), symbol));
   DEBUG(
     LOG_DEBUG_SPAM,
     NULL,
     "defined symbol: %d %s %s\n",
-    symbol->get_symbol_type(),
-    symbol->get_type() ? symbol->get_type()->get_node_name() : "!!!NULL!!!",
-    symbol->get_name()
+    symbol->getSymbolType(),
+    symbol->getType() ? symbol->getType()->getNodeName() : "!!!NULL!!!",
+    symbol->getName()
   );
 }
 
 LSLSymbol *LSLSymbolTable::lookup(const char *name, LSLSymbolType type) {
-  auto sym_range = symbols.equal_range(name);
+  auto sym_range = _mSymbols.equal_range(name);
   for (auto it = sym_range.first; it != sym_range.second; ++it) {
-    if (type == SYM_ANY || type == it->second->get_symbol_type())
+    if (type == SYM_ANY || type == it->second->getSymbolType())
       return it->second;
   }
   return nullptr;
 }
 
-void LSLSymbolTable::check_symbols() {
-  for (auto &symbol: symbols) {
+void LSLSymbolTable::checkSymbols() {
+  for (auto &symbol: _mSymbols) {
     LSLSymbol *sym = symbol.second;
-    if (sym->get_sub_type() != SYM_BUILTIN && sym->get_sub_type() != SYM_EVENT_PARAMETER &&
-        sym->get_references() <= 1) {
+    if (sym->getSubType() != SYM_BUILTIN && sym->getSubType() != SYM_EVENT_PARAMETER &&
+        sym->getReferences() <= 1) {
       // We don't really care if the default state never gets explicitly referenced.
-      if (sym->get_symbol_type() == SYM_STATE && !strcmp("default", sym->get_name()))
+      if (sym->getSymbolType() == SYM_STATE && !strcmp("default", sym->getName()))
         continue;
-      NODE_ERROR(sym, W_DECLARED_BUT_NOT_USED, LSLSymbol::get_type_name(sym->get_symbol_type()), sym->get_name());
+      NODE_ERROR(sym, W_DECLARED_BUT_NOT_USED, LSLSymbol::getTypeName(sym->getSymbolType()), sym->getName());
     }
   }
 }
 
 bool LSLSymbolTable::remove(LSLSymbol *symbol) {
-  for (auto iter = symbols.begin(); iter != symbols.end(); ++iter) {
+  for (auto iter = _mSymbols.begin(); iter != _mSymbols.end(); ++iter) {
     if (iter->second == symbol) {
-      symbols.erase(iter);
+      _mSymbols.erase(iter);
       return true;
     }
   }
   return false;
 }
 
-void LSLSymbolTable::reset_reference_data() {
-  for (auto &symbol: symbols) {
-    symbol.second->reset_tracking();
+void LSLSymbolTable::resetReferenceData() {
+  for (auto &symbol: _mSymbols) {
+    symbol.second->resetTracking();
   }
-  for (auto &desc_table: desc_tables) {
-    desc_table->reset_reference_data();
+  for (auto &desc_table: _mDescTables) {
+    desc_table->resetReferenceData();
   }
 }
 
 /* Oddly enough, using shorter names in globals saves bytecode space. */
-void LSLSymbolTable::set_mangled_names() {
+void LSLSymbolTable::setMangledNames() {
   int seq = 0;
   auto table_mangler = [seq, this](SensitiveSymbolMap &node_symbols) mutable {
     // We want mangled symbol name to be consistent across STL implementations,
@@ -77,18 +77,18 @@ void LSLSymbolTable::set_mangled_names() {
       for (auto &symbol = range.first; symbol != range.second; ++symbol) {
         LSLSymbol *sym = symbol->second;
         // can't rename events or builtin names, obviously!
-        if (sym->get_symbol_type() == SYM_EVENT || sym->get_sub_type() == SYM_BUILTIN)
+        if (sym->getSymbolType() == SYM_EVENT || sym->getSubType() == SYM_BUILTIN)
           continue;
         // default state _must_ be named default, can't mangle the name.
-        if (sym->get_symbol_type() == SYM_STATE && !strcmp("default", sym->get_name()))
+        if (sym->getSymbolType() == SYM_STATE && !strcmp("default", sym->getName()))
           continue;
 
-        char *mangled_id = context->allocator->alloc(30);
+        char *mangled_id = mContext->allocator->alloc(30);
         while (true) {
           snprintf(mangled_id, 30, "_%x", seq++);
           // Make sure this name isn't already in use
           if (!this->lookup(mangled_id, SYM_ANY)) {
-            sym->set_mangled_name(mangled_id);
+            sym->setMangledName(mangled_id);
             break;
           }
         }
@@ -96,25 +96,25 @@ void LSLSymbolTable::set_mangled_names() {
     }
   };
 
-  table_mangler(symbols);
-  for (auto &desc_table: desc_tables) {
-    table_mangler(desc_table->symbols);
+  table_mangler(_mSymbols);
+  for (auto &desc_table: _mDescTables) {
+    table_mangler(desc_table->_mSymbols);
   }
 }
 
-void LSLSymbolTable::register_subtable(LSLSymbolTable *table) {
+void LSLSymbolTable::registerSubtable(LSLSymbolTable *table) {
   if (table != this)
-    desc_tables.push_back(table);
+    _mDescTables.push_back(table);
 }
 
-void LSLSymbolTable::unregister_subtable(LSLSymbolTable *table) {
-  auto found = std::find(desc_tables.begin(), desc_tables.end(), table);
-  if (found != desc_tables.end())
-    desc_tables.erase(found);
+void LSLSymbolTable::unregisterSubtable(LSLSymbolTable *table) {
+  auto found = std::find(_mDescTables.begin(), _mDescTables.end(), table);
+  if (found != _mDescTables.end())
+    _mDescTables.erase(found);
 }
 
-LST_TYPE LSLSymbol::get_itype() {
-  return type->get_itype();
+LSLIType LSLSymbol::getIType() {
+  return _mType->getIType();
 }
 
 }

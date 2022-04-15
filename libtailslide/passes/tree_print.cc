@@ -5,21 +5,21 @@ namespace Tailslide {
 
 
 bool TreePrintingVisitor::visit(LSLASTNode* node) {
-  auto lloc = node->get_lloc();
-  auto type = node->get_type();
-  auto constant_value = node->get_constant_value();
+  auto lloc = node->getLoc();
+  auto type = node->getType();
+  auto constant_value = node->getConstantValue();
   int i;
-  for (i = 0; i < walklevel; i++) {
-    stream << "  ";
+  for (i = 0; i < mWalkLevel; i++) {
+    mStream << "  ";
   }
-  stream << node->get_node_name()
-         << " [" << (type ? type->get_node_name() : "") << "] "
-         << "(cv=" << (constant_value ? constant_value->get_node_name() : "") << ") "
+  mStream << node->getNodeName()
+          << " [" << (type ? type->getNodeName() : "") << "] "
+          << "(cv=" << (constant_value ? constant_value->getNodeName() : "") << ") "
          << '(' << lloc->first_line << ',' << lloc->first_column << ")\n";
 
-  ++walklevel;
-  visit_children(node);
-  --walklevel;
+  ++mWalkLevel;
+  visitChildren(node);
+  --mWalkLevel;
   return false;
 }
 

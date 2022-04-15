@@ -28,14 +28,14 @@ void assertNoLintErrors(Tailslide::Logger *logger, const std::string& name);
 
 void checkPrettyPrintOutput(
         const char* name,
-        const Tailslide::OptimizationContext &ctx,
+        const Tailslide::OptimizationOptions &ctx,
         const Tailslide::PrettyPrintOpts &pretty_opts,
         void (*massager)(Tailslide::LSLScript* script) = nullptr
 );
 
 void checkTreeDumpOutput(
     const char* name,
-    const Tailslide::OptimizationContext &ctx,
+    const Tailslide::OptimizationOptions &ctx,
     void (*massager)(Tailslide::LSLScript* script) = nullptr
 );
 

@@ -9,13 +9,13 @@ namespace Tailslide {
 #define LOG_BUF_LEFT (1024 - (bp - buf))
 
 void Logger::reset() {
-  messages.clear();
-  assertions.clear();
-  errors_seen.clear();
-  errors = 0;
-  warnings = 0;
-  finalized = false;
-  check_assertions = false;
+  _mMessages.clear();
+  _mAssertions.clear();
+  _mErrorsSeen.clear();
+  _mErrors = 0;
+  _mWarnings = 0;
+  _mFinalized = false;
+  _mCheckAssertions = false;
 }
 
 void Logger::log(LogLevel level, YYLTYPE *yylloc, const char *fmt, ...) {
@@ -38,12 +38,12 @@ void Logger::error(YYLTYPE *yylloc, int error, ...) {
   *bp = 0;
 
   if (level == LOG_ERROR) {
-    fmt = error_messages[(int) (error - E_ERROR)];
+    fmt = _sErrorMessages[(int) (error - E_ERROR)];
   } else {
-    fmt = warning_messages[(int) (error - W_WARNING)];
+    fmt = _sWarningMessages[(int) (error - W_WARNING)];
   }
 
-  if (check_assertions) {
+  if (_mCheckAssertions) {
     // if we're checking assertions, messages will be removed by matching assertions,
     // so we just add "Unexpected" to all of them.
     bp += snprintf(bp, LOG_BUF_LEFT, level == LOG_ERROR ? "Unexpected error: " : "Unexpected warning: ");
@@ -55,15 +55,15 @@ void Logger::error(YYLTYPE *yylloc, int error, ...) {
 
 
   // see if we've seen this error code before
-  if (std::find(errors_seen.begin(), errors_seen.end(), error) != errors_seen.end()) {
+  if (std::find(_mErrorsSeen.begin(), _mErrorsSeen.end(), error) != _mErrorsSeen.end()) {
     seen_before = true;
   } else {
     seen_before = false;
-    errors_seen.push_back((ErrorCode)error);
+    _mErrorsSeen.push_back((ErrorCode)error);
   }
 
 
-  if (show_error_codes) {
+  if (_mShowErrorCodes) {
     bp += snprintf(bp, LOG_BUF_LEFT, "[E%d] ", (int) error);
   }
 
@@ -103,14 +103,14 @@ void Logger::logv(LogLevel level, YYLTYPE *yylloc, const char *fmt, va_list args
   switch (level) {
     case LOG_ERROR:
       type = "ERROR";
-      ++errors;
+      ++_mErrors;
       break;
     case LOG_WARN:
       type = "WARN";
-      ++warnings;
+      ++_mWarnings;
       break;
     case LOG_INFO:
-      if (!show_info) return;
+      if (!_mShowInfo) return;
       type = "INFO";
       break;
     case LOG_DEBUG:
@@ -125,8 +125,8 @@ void Logger::logv(LogLevel level, YYLTYPE *yylloc, const char *fmt, va_list args
       break;
     case LOG_CONTINUE:
       vsnprintf(bp, LOG_BUF_LEFT, fmt, args);
-      if (last_message)
-        last_message->cont(buf);
+      if (_mLastMessage)
+        _mLastMessage->cont(buf);
 
       return;
     default:
@@ -137,45 +137,45 @@ void Logger::logv(LogLevel level, YYLTYPE *yylloc, const char *fmt, va_list args
   bp += snprintf(bp, LOG_BUF_LEFT, "%5s:: ", type);
   if (yylloc != nullptr) {
     bp += snprintf(bp, LOG_BUF_LEFT, "(%3d,%3d)", yylloc->first_line, yylloc->first_column);
-    if (show_end)
+    if (_mShowEnd)
       bp += snprintf(bp, LOG_BUF_LEFT, "-(%3d,%3d)", yylloc->last_line, yylloc->last_column);
     bp += snprintf(bp, LOG_BUF_LEFT, ": ");
   }
   bp += vsnprintf(bp, LOG_BUF_LEFT, fmt, args);
 
-  last_message = _allocator->new_tracked<LogMessage>(level, yylloc, buf, (ErrorCode)error);
-  //  fprintf(stderr, "%p\n", last_message);
-  messages.push_back(last_message);
+  _mLastMessage = _mAllocator->newTracked<LogMessage>(level, yylloc, buf, (ErrorCode) error);
+  //  fprintf(stderr, "%p\n", _mLastMessage);
+  _mMessages.push_back(_mLastMessage);
 }
 
 struct LogMessageSort {
     bool operator()(LogMessage *const &left, LogMessage *const &right) {
-      if (left->get_type() < right->get_type())
+      if (left->getType() < right->getType())
         return true;
-      else if (left->get_type() > right->get_type())
+      else if (left->getType() > right->getType())
         return false;
 
-      if (left->get_loc()->first_line < right->get_loc()->first_line)
+      if (left->getLoc()->first_line < right->getLoc()->first_line)
         return true;
-      else if (left->get_loc()->first_line > right->get_loc()->first_line)
+      else if (left->getLoc()->first_line > right->getLoc()->first_line)
         return false;
 
-      if (left->get_loc()->first_column < right->get_loc()->first_column)
+      if (left->getLoc()->first_column < right->getLoc()->first_column)
         return true;
 
       return false;
     }
 };
 
-void Logger::filter_assert_errors() {
+void Logger::filterAssertErrors() {
   std::vector<std::pair<int, ErrorCode>>::iterator ai;
   std::vector<std::pair<int, ErrorCode>> failed_asserts;
-  for (ai = assertions.begin(); ai != assertions.end(); ++ai) {
+  for (ai = _mAssertions.begin(); ai != _mAssertions.end(); ++ai) {
     bool suppressed_by_assert = false;
-    for (auto i = messages.begin(); i != messages.end(); ++i) {
-      if ((ai)->first == (*i)->get_loc()->first_line && (ai)->second == (*i)->get_error()) {
-        --errors; // when check assertions, warnings are treated as errors.
-        messages.erase(i);
+    for (auto i = _mMessages.begin(); i != _mMessages.end(); ++i) {
+      if ((ai)->first == (*i)->getLoc()->first_line && (ai)->second == (*i)->getError()) {
+        --_mErrors; // when check assertions, warnings are treated as errors.
+        _mMessages.erase(i);
         suppressed_by_assert = true;
         break;
       }
@@ -189,48 +189,48 @@ void Logger::filter_assert_errors() {
 }
 
 void Logger::finalize() {
-  if (finalized)
+  if (_mFinalized)
     return;
-  finalized = true;
-  if (check_assertions)
-    filter_assert_errors();
+  _mFinalized = true;
+  if (_mCheckAssertions)
+    filterAssertErrors();
 }
 
 void Logger::report() {
   finalize();
-  if (sort)
-    std::sort(messages.begin(), messages.end(), LogMessageSort());
+  if (_mSort)
+    std::sort(_mMessages.begin(), _mMessages.end(), LogMessageSort());
 
   std::vector<LogMessage *>::iterator i;
-  for (i = messages.begin(); i != messages.end(); ++i)
+  for (i = _mMessages.begin(); i != _mMessages.end(); ++i)
     (*i)->print(stderr);
 
-  fprintf(stderr, "TOTAL:: Errors: %d  Warnings: %d\n", errors, warnings);
+  fprintf(stderr, "TOTAL:: Errors: %d  Warnings: %d\n", _mErrors, _mWarnings);
 }
 
 LogMessage::LogMessage(ScriptContext *ctx, LogLevel type, YYLTYPE *loc, char *message, ErrorCode error)
-    : TrackableObject(ctx), type(type), error(error) {
-  char *np = context->allocator->alloc(strlen(message) + 1);
-  if (loc) this->loc = *loc;
+    : TrackableObject(ctx), _mLogType(type), _mErrorCode(error), _mLoc({}) {
+  char *np = mContext->allocator->alloc(strlen(message) + 1);
+  if (loc) _mLoc = *loc;
   if (np != nullptr) {
     strcpy(np, message);
-    messages.push_back(np);
+    _mMessages.push_back(np);
   }
 }
 
 void LogMessage::cont(char *message) {
-  char *np = context->allocator->alloc(strlen(message) + 1);
+  char *np = mContext->allocator->alloc(strlen(message) + 1);
   if (np != nullptr) {
     strcpy(np, message);
-    messages.push_back(np);
+    _mMessages.push_back(np);
   }
 }
 
 
 void LogMessage::print(FILE *fp) {
   std::vector<char *>::const_iterator i;
-  for (i = messages.begin(); i != messages.end(); ++i) {
-    if (i != messages.begin())
+  for (i = _mMessages.begin(); i != _mMessages.end(); ++i) {
+    if (i != _mMessages.begin())
       fprintf(fp, "%20s", "");
     fprintf(fp, "%s\n", *i);
   }
@@ -239,7 +239,7 @@ void LogMessage::print(FILE *fp) {
 
 /// ERROR MESSAGE
 
-const char *Logger::error_messages[] = {
+const char *Logger::_sErrorMessages[] = {
         "ERROR",
         "Duplicate declaration of `%s'; previously declared at (%d, %d).",
         "Invalid operator: %s %s %s.",
@@ -280,7 +280,7 @@ const char *Logger::error_messages[] = {
         "May not cast %s to %s",
 };
 
-const char *Logger::warning_messages[] = {
+const char *Logger::_sWarningMessages[] = {
         "WARN",
         "Declaration of `%s' in this scope shadows previous declaration at (%d, %d)",
         "Suggest parentheses around assignment used as truth value.",

@@ -1,5 +1,5 @@
-#ifndef LSLINT_PRETTY_PRINT_HH
-#define LSLINT_PRETTY_PRINT_HH
+#ifndef TAILSLIDE_PRETTY_PRINT_HH
+#define TAILSLIDE_PRETTY_PRINT_HH
 
 #include <sstream>
 #include "lslmini.hh"
@@ -7,8 +7,7 @@
 
 namespace Tailslide {
 
-class PrettyPrintOpts {
-public:
+struct PrettyPrintOpts {
     bool minify_whitespace;
     bool mangle_local_names;
     bool mangle_func_names;
@@ -20,10 +19,10 @@ public:
 class PrettyPrintVisitor: public ASTVisitor {
 public:
     explicit PrettyPrintVisitor(const PrettyPrintOpts& ctx)
-    : opts(ctx), tabs(0)
+    : _mOpts(ctx), mTabs(0)
     {}
 
-    int tabs;
+    int mTabs;
 
     virtual bool visit(LSLASTNode *node);
     virtual bool visit(LSLIdentifier *node);
@@ -61,14 +60,14 @@ public:
     virtual bool visit(LSLGlobalStorage *node);
     virtual bool visit(LSLScript *node);
 
-    void prettify_siblings_sep(LSLASTNode *node, const char *separator);
-    void prettify_coordinate_members(LSLASTNode *node);
-    void do_tabs();
-    std::stringstream stream {};
+    void prettifySiblingsSep(LSLASTNode *node, const char *separator);
+    void prettifyCoordinateMembers(LSLASTNode *node);
+    void doTabs();
+    std::stringstream mStream {};
 protected:
-    const PrettyPrintOpts &opts;
+    const PrettyPrintOpts &_mOpts;
 };
 
 }
 
-#endif //LSLINT_PRETTY_PRINT_HH
+#endif //TAILSLIDE_PRETTY_PRINT_HH

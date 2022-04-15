@@ -15,9 +15,9 @@ struct LSOSymbolSizeData {
   // only really meaningful for states, functions and locals. index starting from 0
   uint64_t count = 0;
   // all locals (if this symbol is a function or event handler)
-  std::vector<LST_TYPE> locals{};
+  std::vector<LSLIType> locals{};
   // all arguments (if this symbol is a function or event handler)
-  std::vector<LST_TYPE> function_args{};
+  std::vector<LSLIType> function_args{};
 };
 
 typedef std::map<Tailslide::LSLSymbol *, LSOSymbolSizeData> LSOSymbolSizeDataMap;
@@ -36,8 +36,8 @@ class LSOResourceVisitor : public Tailslide::ASTVisitor {
     bool visit(Tailslide::LSLDeclaration *node) override;
     bool visit(Tailslide::LSLEventHandler *node) override;
 
-    LSOSymbolSizeData *_getSymbolData(Tailslide::LSLSymbol *sym);
-    void _handleFuncDecl(LSOSymbolSizeData *func_sym_data, LSLASTNode *func_decl);
+    LSOSymbolSizeData *getSymbolData(Tailslide::LSLSymbol *sym);
+    void handleFuncDecl(LSOSymbolSizeData *func_sym_data, LSLASTNode *func_decl);
 
     uint32_t _mGlobalsOffset = 0;
     uint32_t _mFuncCount = 0;

@@ -4,8 +4,8 @@
 namespace Tailslide {
 
 
-bool ASTVisitor::visit_specific(LSLASTNode *node) {
-  switch(node->get_node_type()) {
+bool ASTVisitor::visitSpecific(LSLASTNode *node) {
+  switch(node->getNodeType()) {
     case NODE_NODE:
       return visit(node);
     case NODE_NULL:
@@ -23,7 +23,7 @@ bool ASTVisitor::visit_specific(LSLASTNode *node) {
     case NODE_IDENTIFIER:
       return visit((LSLIdentifier *)node);
     case NODE_CONSTANT: {
-      switch(node->get_node_sub_type()) {
+      switch(node->getNodeSubType()) {
         case NODE_INTEGER_CONSTANT:
           return visit((LSLIntegerConstant *)node);
         case NODE_FLOAT_CONSTANT:
@@ -49,7 +49,7 @@ bool ASTVisitor::visit_specific(LSLASTNode *node) {
     case NODE_EVENT_HANDLER:
       return visit((LSLEventHandler *)node);
     case NODE_STATEMENT:
-      switch(node->get_node_sub_type()) {
+      switch(node->getNodeSubType()) {
         case NODE_COMPOUND_STATEMENT:
           return visit((LSLCompoundStatement *)node);
         case NODE_RETURN_STATEMENT:
@@ -74,7 +74,7 @@ bool ASTVisitor::visit_specific(LSLASTNode *node) {
           return visit((LSLStatement *)node);
       }
     case NODE_EXPRESSION:
-      switch(node->get_node_sub_type()) {
+      switch(node->getNodeSubType()) {
         case NODE_TYPECAST_EXPRESSION:
           return visit((LSLTypecastExpression *)node);
         case NODE_PRINT_EXPRESSION:
@@ -106,11 +106,11 @@ bool ASTVisitor::visit_specific(LSLASTNode *node) {
   return visit(node);
 }
 
-void ASTVisitor::visit_children(LSLASTNode *node) {
-  LSLASTNode *child = node->get_children();
+void ASTVisitor::visitChildren(LSLASTNode *node) {
+  LSLASTNode *child = node->getChildren();
 
   while (child != nullptr) {
-    LSLASTNode *next = child->get_next();
+    LSLASTNode *next = child->getNext();
     assert(child != next);
     assert(child != node);
     child->visit(this);

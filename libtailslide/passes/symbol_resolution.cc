@@ -5,13 +5,13 @@ namespace Tailslide {
 
 
 bool ExprSymbolResolutionVisitor::visit(LSLLValueExpression *node) {
-  ((LSLIdentifier*)node->get_child(0))->resolve_symbol(SYM_VARIABLE);
+  ((LSLIdentifier *) node->getChild(0))->resolveSymbol(SYM_VARIABLE);
   return false;
 }
 
 bool ExprSymbolResolutionVisitor::visit(LSLFunctionExpression *node) {
-  auto *id = (LSLIdentifier *) node->get_child(0);
-  id->resolve_symbol(SYM_FUNCTION);
+  auto *id = (LSLIdentifier *) node->getChild(0);
+  id->resolveSymbol(SYM_FUNCTION);
   return true;
 }
 
@@ -20,49 +20,51 @@ bool ExprSymbolResolutionVisitor::visit(LSLFunctionExpression *node) {
 // all functions and states have their declarations implicitly hoisted as well.
 class GlobalSymbolResolutionVisitor: public ExprSymbolResolutionVisitor {
   public:
+    explicit GlobalSymbolResolutionVisitor(ScriptAllocator *allocator) : ExprSymbolResolutionVisitor(allocator) {};
     virtual bool visit(LSLGlobalVariable *node) {
       // descend first so we can resolve any symbol references present in the rvalue
       // before we've defined the identifier from the lvalue.
       // Necessary so things like `string foo = foo;` will error correctly.
-      visit_children(node);
+      visitChildren(node);
 
-      auto *identifier = (LSLIdentifier *) node->get_children();
-      identifier->set_symbol(node->context->allocator->new_tracked<LSLSymbol>(
-          identifier->get_name(), identifier->get_type(), SYM_VARIABLE, SYM_GLOBAL, node->get_lloc(), nullptr, node->get_parent()
+      auto *identifier = (LSLIdentifier *) node->getChildren();
+      identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
+          identifier->getName(), identifier->getType(), SYM_VARIABLE, SYM_GLOBAL, node->getLoc(), nullptr,
+          node->getParent()
       ));
-      node->define_symbol(identifier->get_symbol());
+      node->defineSymbol(identifier->getSymbol());
       return false;
     };
 
     virtual bool visit(LSLGlobalFunction *node) {
-      auto *identifier = (LSLIdentifier *) node->get_child(0);
+      auto *identifier = (LSLIdentifier *) node->getChild(0);
 
       // define function in parent scope since functions have their own scope
-      identifier->set_symbol(node->context->allocator->new_tracked<LSLSymbol>(
-          identifier->get_name(),
-          identifier->get_type(),
+      identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
+          identifier->getName(),
+          identifier->getType(),
           SYM_FUNCTION,
           SYM_GLOBAL,
-          node->get_lloc(),
-          (LSLFunctionDec *) node->get_child(1)
+          node->getLoc(),
+          (LSLFunctionDec *) node->getChild(1)
       ));
-      node->get_parent()->define_symbol(identifier->get_symbol());
+      node->getParent()->defineSymbol(identifier->getSymbol());
       // don't descend, we only want the declaration.
       return false;
     };
 
     virtual bool visit(LSLState *node) {
-      LSLASTNode *maybe_id = node->get_children();
+      LSLASTNode *maybe_id = node->getChildren();
       LSLIdentifier *identifier;
 
-      if (maybe_id->get_node_type() == NODE_NULL) // null identifier = default state, nothing to define
+      if (maybe_id->getNodeType() == NODE_NULL) // null identifier = default state, nothing to define
         return false;
 
       identifier = (LSLIdentifier *) maybe_id;
-      identifier->set_symbol(node->context->allocator->new_tracked<LSLSymbol>(
-          identifier->get_name(), identifier->get_type(), SYM_STATE, SYM_GLOBAL, identifier->get_lloc()
+      identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
+          identifier->getName(), identifier->getType(), SYM_STATE, SYM_GLOBAL, identifier->getLoc()
       ));
-      node->get_parent()->define_symbol(identifier->get_symbol());
+      node->getParent()->defineSymbol(identifier->getSymbol());
       // don't descend, we only want the declaration
       return false;
     };
@@ -71,7 +73,7 @@ class GlobalSymbolResolutionVisitor: public ExprSymbolResolutionVisitor {
 bool SymbolResolutionVisitor::visit(LSLScript *node) {
   // Walk over just the globals before we descend into function
   // bodies and do general symbol resolution.
-  GlobalSymbolResolutionVisitor visitor;
+  GlobalSymbolResolutionVisitor visitor(_mAllocator);
   node->visit(&visitor);
   return true;
 }
@@ -79,42 +81,42 @@ bool SymbolResolutionVisitor::visit(LSLScript *node) {
 bool SymbolResolutionVisitor::visit(LSLDeclaration *node) {
   // visit the rvalue first so we correctly handle things like
   // `string foo = foo;`
-  LSLASTNode *rvalue = node->get_child(1);
+  LSLASTNode *rvalue = node->getChild(1);
   if (rvalue)
     rvalue->visit(this);
 
-  auto *identifier = (LSLIdentifier *) node->get_child(0);
-  identifier->set_symbol(node->context->allocator->new_tracked<LSLSymbol>(
-      identifier->get_name(), identifier->get_type(), SYM_VARIABLE, SYM_LOCAL, node->get_lloc(), nullptr, node
+  auto *identifier = (LSLIdentifier *) node->getChild(0);
+  identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
+      identifier->getName(), identifier->getType(), SYM_VARIABLE, SYM_LOCAL, node->getLoc(), nullptr, node
   ));
-  node->define_symbol(identifier->get_symbol());
+  node->defineSymbol(identifier->getSymbol());
 
-  if (!node->get_declaration_allowed()) {
-    NODE_ERROR(node, E_DECLARATION_INVALID_HERE, identifier->get_symbol()->get_name());
+  if (!node->getDeclarationAllowed()) {
+    NODE_ERROR(node, E_DECLARATION_INVALID_HERE, identifier->getSymbol()->getName());
   }
   return false;
 }
 
 static void register_func_param_symbols(LSLASTNode *proto, bool is_event) {
-  LSLASTNode *child = proto->get_children();
+  LSLASTNode *child = proto->getChildren();
   while (child) {
     auto *identifier = (LSLIdentifier *) child;
-    identifier->set_symbol(proto->context->allocator->new_tracked<LSLSymbol>(
-        identifier->get_name(),
-        identifier->get_type(),
+    identifier->setSymbol(proto->mContext->allocator->newTracked<LSLSymbol>(
+        identifier->getName(),
+        identifier->getType(),
         SYM_VARIABLE,
         is_event ? SYM_EVENT_PARAMETER : SYM_FUNCTION_PARAMETER,
-        child->get_lloc()
+        child->getLoc()
     ));
-    proto->define_symbol(identifier->get_symbol());
-    child = child->get_next();
+    proto->defineSymbol(identifier->getSymbol());
+    child = child->getNext();
   }
 }
 
 bool SymbolResolutionVisitor::visit(LSLGlobalFunction *node) {
-  assert(_pending_jumps.empty());
-  visit_children(node);
-  _resolve_pending_jumps();
+  assert(_mPendingJumps.empty());
+  visitChildren(node);
+  resolvePendingJumps();
   return false;
 }
 
@@ -129,21 +131,21 @@ bool SymbolResolutionVisitor::visit(LSLGlobalVariable *node) {
 }
 
 bool SymbolResolutionVisitor::visit(LSLEventHandler *node) {
-  auto *id = (LSLIdentifier *) node->get_child(0);
+  auto *id = (LSLIdentifier *) node->getChild(0);
   // look for a prototype for this event in the builtin namespace
-  auto *sym = node->get_root()->lookup_symbol(id->get_name(), SYM_EVENT);
+  auto *sym = node->getRoot()->lookupSymbol(id->getName(), SYM_EVENT);
   if (sym) {
-    id->set_symbol(node->context->allocator->new_tracked<LSLSymbol>(
-        id->get_name(), id->get_type(), SYM_EVENT, SYM_BUILTIN, node->get_lloc(), (LSLParamList*)node->get_child(1)
+    id->setSymbol(_mAllocator->newTracked<LSLSymbol>(
+        id->getName(), id->getType(), SYM_EVENT, SYM_BUILTIN, node->getLoc(), (LSLParamList *) node->getChild(1)
     ));
-    node->get_parent()->define_symbol(id->get_symbol());
+    node->getParent()->defineSymbol(id->getSymbol());
   } else {
-    NODE_ERROR(node, E_INVALID_EVENT, id->get_name());
+    NODE_ERROR(node, E_INVALID_EVENT, id->getName());
   }
 
-  assert(_pending_jumps.empty());
-  visit_children(node);
-  _resolve_pending_jumps();
+  assert(_mPendingJumps.empty());
+  visitChildren(node);
+  resolvePendingJumps();
   return false;
 }
 
@@ -153,12 +155,12 @@ bool SymbolResolutionVisitor::visit(LSLEventDec *node) {
 }
 
 bool SymbolResolutionVisitor::visit(LSLLabel *node) {
-  auto *identifier = (LSLIdentifier *) node->get_child(0);
-  identifier->set_symbol(node->context->allocator->new_tracked<LSLSymbol>(
-      identifier->get_name(), identifier->get_type(), SYM_LABEL, SYM_LOCAL, node->get_lloc()
+  auto *identifier = (LSLIdentifier *) node->getChild(0);
+  identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
+      identifier->getName(), identifier->getType(), SYM_LABEL, SYM_LOCAL, node->getLoc()
   ));
-  node->define_symbol(identifier->get_symbol());
-  _collected_labels.emplace_back(identifier);
+  node->defineSymbol(identifier->getSymbol());
+  _mCollectedLabels.emplace_back(identifier);
   return true;
 }
 
@@ -167,22 +169,22 @@ bool SymbolResolutionVisitor::visit(LSLJumpStatement *node) {
   // can only resolve the labels they refer to after we leave the enclosing
   // function or event handler, having passed the last place the label it
   // refers to could have been defined.
-  _pending_jumps.emplace_back((LSLIdentifier*)node->get_child(0));
+  _mPendingJumps.emplace_back((LSLIdentifier*) node->getChild(0));
   return true;
 }
 
 bool SymbolResolutionVisitor::visit(LSLStateStatement *node) {
-  ((LSLIdentifier *) node->get_child(0))->resolve_symbol(SYM_STATE);
+  ((LSLIdentifier *) node->getChild(0))->resolveSymbol(SYM_STATE);
   return true;
 }
 
-void SymbolResolutionVisitor::_resolve_pending_jumps() {
-  for (auto *id : _pending_jumps) {
+void SymbolResolutionVisitor::resolvePendingJumps() {
+  for (auto *id : _mPendingJumps) {
     // First do the lookup by lexical scope, triggering an error if it fails.
-    id->resolve_symbol(SYM_LABEL);
+    id->resolveSymbol(SYM_LABEL);
 
     // That's all we have to do unless we want to match SL exactly.
-    if (!_linden_jump_semantics)
+    if (!_mLindenJumpSemantics)
       continue;
 
     // Labels in SL are weird in that they pretend they're lexically scoped but they
@@ -195,16 +197,16 @@ void SymbolResolutionVisitor::_resolve_pending_jumps() {
     // Note that Mono will actually fail to compile correctly on duplicated labels.
     // because they're included in the CIL verbatim.
 
-    if (auto *orig_sym = id->get_symbol()) {
+    if (auto *orig_sym = id->getSymbol()) {
       LSLSymbol *new_sym = nullptr;
       // Now get the label this will jump to in SL, iterate in reverse so the last
       // instance of a label in a function will come first
-      for (auto i = _collected_labels.rbegin(); i != _collected_labels.rend(); ++i) {
-        auto *cand_sym = (*i)->get_symbol();
-        if (!cand_sym || cand_sym->get_symbol_type() != SYM_LABEL)
+      for (auto i = _mCollectedLabels.rbegin(); i != _mCollectedLabels.rend(); ++i) {
+        auto *cand_sym = (*i)->getSymbol();
+        if (!cand_sym || cand_sym->getSymbolType() != SYM_LABEL)
           continue;
         // name matches
-        if (!strcmp(cand_sym->get_name(), orig_sym->get_name())) {
+        if (!strcmp(cand_sym->getName(), orig_sym->getName())) {
           new_sym = cand_sym;
           break;
         }
@@ -213,26 +215,26 @@ void SymbolResolutionVisitor::_resolve_pending_jumps() {
       // This jump specifically will jump to a label other than the one you might expect,
       // so warn on that along with the general warning for duplicate label names.
       if (new_sym != orig_sym) {
-        NODE_ERROR(id, W_JUMP_TO_WRONG_LABEL, orig_sym->get_name());
+        NODE_ERROR(id, W_JUMP_TO_WRONG_LABEL, orig_sym->getName());
       }
-      id->set_symbol(new_sym);
+      id->setSymbol(new_sym);
     }
   }
 
-  if (_linden_jump_semantics) {
+  if (_mLindenJumpSemantics) {
     // Walk the list of collected labels and warn on any duplicated names
     std::set<std::string> label_names;
-    for (auto &label_id: _collected_labels) {
-      if (label_names.find(label_id->get_name()) != label_names.end()) {
-        NODE_ERROR(label_id, W_DUPLICATE_LABEL_NAME, label_id->get_name());
+    for (auto &label_id: _mCollectedLabels) {
+      if (label_names.find(label_id->getName()) != label_names.end()) {
+        NODE_ERROR(label_id, W_DUPLICATE_LABEL_NAME, label_id->getName());
       } else {
-        label_names.insert(label_id->get_name());
+        label_names.insert(label_id->getName());
       }
     }
   }
 
-  _pending_jumps.clear();
-  _collected_labels.clear();
+  _mPendingJumps.clear();
+  _mCollectedLabels.clear();
 }
 
 }

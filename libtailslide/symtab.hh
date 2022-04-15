@@ -11,7 +11,7 @@
 
 namespace Tailslide {
 
-enum LST_TYPE : uint8_t {
+enum LSLIType : uint8_t {
   LST_NULL          = 0,
   LST_INTEGER       = 1,
   LST_FLOATINGPOINT = 2,
@@ -30,26 +30,26 @@ enum LSLSymbolSubType    { SYM_LOCAL, SYM_GLOBAL, SYM_BUILTIN, SYM_FUNCTION_PARA
 class LSLSymbol: public TrackableObject {
   public:
     LSLSymbol( ScriptContext *ctx, const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, YYLTYPE *lloc, class LSLParamList *function_decl = NULL, class LSLASTNode *var_decl = NULL )
-      : name(name), type(type), symbol_type(symbol_type), sub_type(sub_type), lloc(*lloc), function_decl(function_decl), var_decl(var_decl),
-      constant_value(NULL), references(0), assignments(0), mangled_name(NULL), TrackableObject(ctx) {};
+      : _mName(name), _mType(type), _mSymbolType(symbol_type), _mSubType(sub_type), _mLoc(*lloc), _mFunctionDecl(function_decl), _mVarDecl(var_decl),
+        _mConstantValue(NULL), _mReferences(0), _mAssignments(0), _mMangledName(NULL), TrackableObject(ctx) {};
 
     LSLSymbol( ScriptContext *ctx, const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, class LSLParamList *function_decl = NULL, class LSLASTNode *var_decl = NULL )
-      : name(name), type(type), symbol_type(symbol_type), sub_type(sub_type), function_decl(function_decl), var_decl(var_decl),
-      constant_value(NULL), references(0), assignments(0), mangled_name(NULL), TrackableObject(ctx) {};
+      : _mName(name), _mType(type), _mSymbolType(symbol_type), _mSubType(sub_type), _mFunctionDecl(function_decl), _mVarDecl(var_decl),
+        _mConstantValue(NULL), _mReferences(0), _mAssignments(0), _mMangledName(NULL), _mLoc({}), TrackableObject(ctx) {};
 
-    const char          *get_name()         { return name; }
-    class LSLType  *get_type()         { return type; }
-    LST_TYPE get_itype();
+    const char          *getName()         { return _mName; }
+    class LSLType  *getType()         { return _mType; }
+    LSLIType getIType();
 
-    int                  get_references()   { return references; }
-    int                  add_reference()    { return ++references; }
-    int                  get_assignments()  { return assignments; }
-    int                  add_assignment()   { return ++assignments; }
-    void                 reset_tracking()   { assignments = 0; references = 0; }
+    int                  getReferences() const   { return _mReferences; }
+    int                  addReference()    { return ++_mReferences; }
+    int                  getAssignments() const  { return _mAssignments; }
+    int                  addAssignment()   { return ++_mAssignments; }
+    void                 resetTracking()   { _mAssignments = 0; _mReferences = 0; }
 
-    LSLSymbolType         get_symbol_type()  { return symbol_type; }
-    LSLSymbolSubType      get_sub_type()     { return sub_type;    }
-    static const char         *get_type_name(LSLSymbolType t)    {
+    LSLSymbolType         getSymbolType()  { return _mSymbolType; }
+    LSLSymbolSubType      getSubType()     { return _mSubType;    }
+    static const char         *getTypeName(LSLSymbolType t)    {
       switch (t) {
         case SYM_VARIABLE:  return "variable";
         case SYM_FUNCTION:  return "function";
@@ -60,39 +60,39 @@ class LSLSymbol: public TrackableObject {
       }
     }
 
-    YYLTYPE             *get_lloc()         { return &lloc; }
-    class LSLParamList *get_function_decl() { return function_decl; }
-    class LSLASTNode        *get_var_decl() { return var_decl; }
+    YYLTYPE             *getLoc()         { return &_mLoc; }
+    class LSLParamList *getFunctionDecl() { return _mFunctionDecl; }
+    class LSLASTNode        *getVarDecl() { return _mVarDecl; }
 
-    class LSLConstant *get_constant_value()                            { return constant_value;    };
-    void                    set_constant_value(class LSLConstant *v)   { constant_value = v;       };
-    bool get_constant_precluded() { return constant_precluded; };
-    void set_constant_precluded(bool precluded) { constant_precluded = precluded; };
+    class LSLConstant *getConstantValue()                       { return _mConstantValue;    };
+    void               setConstantValue(class LSLConstant *v)   { _mConstantValue = v;       };
+    bool getConstantPrecluded() const { return _mConstantPrecluded; };
+    void setConstantPrecluded(bool precluded) { _mConstantPrecluded = precluded; };
 
-    char                   *get_mangled_name()             { return mangled_name; };
-    void                    set_mangled_name(char* m_name) {
-      mangled_name = m_name;
+    char                   *getMangledName()             { return _mMangledName; };
+    void                    setMangledName(char* m_name) {
+      _mMangledName = m_name;
     };
 
   private:
-    const char          *name;
-    class LSLType  *type;
-    LSLSymbolType         symbol_type;
-    LSLSymbolSubType      sub_type;
-    YYLTYPE              lloc;
-    class LSLParamList *function_decl;
-    class LSLASTNode     *var_decl;
-    class LSLConstant *constant_value;
-    bool constant_precluded = false;
-    int                  references;            // how many times this symbol is referred to
-    int                  assignments;           // how many times it is assigned to
-    char                *mangled_name;
+    const char          *_mName;
+    class LSLType  *_mType;
+    LSLSymbolType         _mSymbolType;
+    LSLSymbolSubType      _mSubType;
+    YYLTYPE              _mLoc;
+    class LSLParamList *_mFunctionDecl;
+    class LSLASTNode     *_mVarDecl;
+    class LSLConstant *_mConstantValue;
+    bool _mConstantPrecluded = false;
+    int                  _mReferences;            // how many times this symbol is referred to
+    int                  _mAssignments;           // how many times it is assigned to
+    char                *_mMangledName;
 };
 
 
 // based on Java string hashing algo, assumes null-terminated
 template <class T = const char *>
-struct chash {
+struct CStrHash {
   constexpr std::size_t operator()(T x) const {
     size_t result = 0;
     const size_t prime = 31;
@@ -103,7 +103,7 @@ struct chash {
 };
 
 template <class T = const char *>
-struct cstr_equal_to {
+struct CStrEqualTo {
   constexpr bool operator()(T x, T y) const {
     return strcmp(x, y) == 0;
   }
@@ -111,33 +111,33 @@ struct cstr_equal_to {
 
 class LSLSymbolTable: public TrackableObject {
   public:
-    LSLSymbolTable(ScriptContext *ctx): TrackableObject(ctx) {};
+    explicit LSLSymbolTable(ScriptContext *ctx): TrackableObject(ctx) {};
     LSLSymbol *lookup( const char *name, LSLSymbolType type = SYM_ANY );
     void            define( LSLSymbol *symbol );
     bool            remove( LSLSymbol *symbol );
-    void            check_symbols();
-    void            register_subtable(LSLSymbolTable *table);
-    void            unregister_subtable(LSLSymbolTable *table);
-    void            reset_reference_data();
-    void            set_mangled_names();
+    void            checkSymbols();
+    void            registerSubtable(LSLSymbolTable *table);
+    void            unregisterSubtable(LSLSymbolTable *table);
+    void            resetReferenceData();
+    void            setMangledNames();
 
   private:
     typedef std::unordered_multimap<
         const char *,
         LSLSymbol *,
-        chash<const char *>,
-        cstr_equal_to<const char *>
+        CStrHash<const char *>,
+        CStrEqualTo<const char *>
       > SensitiveSymbolMap;
 
-    SensitiveSymbolMap symbols;
+    SensitiveSymbolMap _mSymbols;
 
     // The root table contains pointers to all of the tables
     // below it. This should be empty for anything else.
     // TODO: This symbol table parenting logic sucks. replace it.
-    std::vector<LSLSymbolTable *>  desc_tables;
+    std::vector<LSLSymbolTable *>  _mDescTables;
 
   public:
-    SensitiveSymbolMap &get_map() {return symbols;}
+    SensitiveSymbolMap &getMap() {return _mSymbols;}
 };
 
 }

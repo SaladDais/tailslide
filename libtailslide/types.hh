@@ -7,20 +7,21 @@ namespace Tailslide {
 
 class LSLType : public LSLASTNode {
   public:
-    explicit LSLType(LST_TYPE type, bool static_def=false) : LSLASTNode(nullptr), itype(type) {
+    explicit LSLType(LSLIType type, bool static_def=false) : LSLASTNode(nullptr), _mIType(type) {
       // Parenting the global LSLType instances to a specific script's tree is illegal
       if (static_def)
-        mark_static();
+        markStatic();
     };
-    static LSLType *get( LST_TYPE type ) {
-      return &types[type];
+    static LSLType *get(LSLIType type ) {
+      return &_sTypes[type];
     }
-    bool can_coerce( LSLType *to );
-    LSLType *get_result_type(int op,  LSLType *right);
+    bool canCoerce(LSLType *to );
+    LSLType *getResultType(int op, LSLType *right);
 
-    LST_TYPE get_itype() { return itype; } ;
-    virtual const char *get_node_name() {
-      switch (itype) {
+
+    LSLIType getIType() { return _mIType; };
+    virtual const char *getNodeName() {
+      switch (_mIType) {
         case LST_ERROR:         return "error";
         case LST_INTEGER:       return "integer";
         case LST_FLOATINGPOINT: return "float";
@@ -33,21 +34,21 @@ class LSLType : public LSLASTNode {
         default:                return "!invalid!";
       }
     }
-    virtual LSLNodeType get_node_type() { return NODE_TYPE; };
+    virtual LSLNodeType getNodeType() { return NODE_TYPE; };
   private:
-    LST_TYPE itype;
-    static LSLType types[LST_MAX];
+    LSLIType _mIType;
+    static LSLType _sTypes[LST_MAX];
 };
 
 // convenience
-inline LSLType *TYPE(LST_TYPE type) {
+inline LSLType *TYPE(LSLIType type) {
   return LSLType::get(type);
 }
 
 bool operation_mutates(int operation);
 const char* operation_str(int operation);
 const char* operation_repr_str(int operation);
-bool is_cast_legal(LST_TYPE from, LST_TYPE to);
+bool is_cast_legal(LSLIType from, LSLIType to);
 }
 
 #endif /* not _TYPES_HH */

@@ -21,25 +21,25 @@ ScopedScriptParser::ScopedScriptParser(LSLSymbolTable *builtins) : allocator(), 
     context.builtins = &gGlobalSymbolTable;
 }
 
-LSLScript *ScopedScriptParser::parse_lsl(const std::string &filename) {
+LSLScript *ScopedScriptParser::parseLSL(const std::string &filename) {
   // can only be used to parse a single script.
   assert(!script);
   FILE *yyin = fopen(filename.c_str(), "rb");
   if (yyin == nullptr) {
     throw "couldn't open file";
   }
-  auto result = parse_lsl(yyin);
+  auto result = parseLSL(yyin);
   fclose(yyin);
   return result;
 }
 
-LSLScript *ScopedScriptParser::parse_lsl(FILE *yyin) {
+LSLScript *ScopedScriptParser::parseLSL(FILE *yyin) {
   assert(!script);
   void *scanner;
   // ScopedScriptParser owns the allocator and context instance because we can't
   // reasonably re-use Allocator instances with our current model of having
   // it magically pass along the current script context.
-  allocator.set_context(&context);
+  allocator.setContext(&context);
 
   // initialize flex
   tailslide_lex_init_extra(&context, &scanner);

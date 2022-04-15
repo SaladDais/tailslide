@@ -23,7 +23,7 @@ def main():
 #pragma execution_character_set("utf-8")
 #endif
 namespace Tailslide {
-const char *builtins_txt[] = {
+const char *BUILTINS_TXT[] = {
 """)
         for line in builtins_lines:
             line = line.strip()

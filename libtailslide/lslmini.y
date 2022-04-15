@@ -6,13 +6,13 @@
 
     using namespace Tailslide;
     //int yylex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param);
-    extern int tailslide_lex (TAILSLIDE_STYPE * yylval_param, TAILSLIDE_LTYPE * yylloc_param , void *yyscanner);
+    extern int tailslide_lex (TAILSLIDE_STYPE * yylval_param, TailslideLType * yylloc_param , void *yyscanner);
     extern ScriptContext *tailslide_get_extra(void *scanner);
     #define ALLOCATOR tailslide_get_extra(scanner)->allocator
 %}
 %{
     int yyerror( YYLTYPE*, void *, const char * );
-    #define MAKEID(type,id,pos) ALLOCATOR->new_tracked<LSLIdentifier>(TYPE(type), (id), &(pos))
+    #define MAKEID(type,id,pos) ALLOCATOR->newTracked<LSLIdentifier>(TYPE(type), (id), &(pos))
     // Anything larger is liable to make MSVC explode with the default compile options
     #ifndef LSLINT_STACK_OVERFLOW_AT
     #  ifdef _WIN32
@@ -249,16 +249,16 @@
 lscript_program
     : globals states
     {
-        tailslide_get_extra(scanner)->script = ALLOCATOR->new_tracked<LSLScript>(
-            ALLOCATOR->new_tracked<LSLASTNodeList>($1),
-            ALLOCATOR->new_tracked<LSLASTNodeList>($2)
+        tailslide_get_extra(scanner)->script = ALLOCATOR->newTracked<LSLScript>(
+            ALLOCATOR->newTracked<LSLASTNodeList>($1),
+            ALLOCATOR->newTracked<LSLASTNodeList>($2)
         );
     }
     | states
     {
-        tailslide_get_extra(scanner)->script = ALLOCATOR->new_tracked<LSLScript>(
-            ALLOCATOR->new_tracked<LSLASTNodeList>(),
-            ALLOCATOR->new_tracked<LSLASTNodeList>($1)
+        tailslide_get_extra(scanner)->script = ALLOCATOR->newTracked<LSLScript>(
+            ALLOCATOR->newTracked<LSLASTNodeList>(),
+            ALLOCATOR->newTracked<LSLASTNodeList>($1)
         );
     }
     ;
@@ -272,8 +272,8 @@ globals
     | global globals
     {
         if ( $1 ) {
-            DEBUG( LOG_DEBUG_SPAM, nullptr, "** global [%p,%p] globals [%p,%p]\n", $1->get_prev(), $1->get_next(), $2->get_prev(), $2->get_next());
-            $1->add_next_sibling($2);
+            DEBUG( LOG_DEBUG_SPAM, nullptr, "** global [%p,%p] globals [%p,%p]\n", $1->getPrev(), $1->getNext(), $2->getPrev(), $2->getNext());
+            $1->addNextSibling($2);
             $$ = $1;
         } else {
             $$ = $2;
@@ -284,29 +284,29 @@ globals
 global
     : global_variable
     {
-        $$ = ALLOCATOR->new_tracked<LSLGlobalStorage>($1, nullptr);
+        $$ = ALLOCATOR->newTracked<LSLGlobalStorage>($1, nullptr);
     }
     | global_function
     {
-        $$ = ALLOCATOR->new_tracked<LSLGlobalStorage>(nullptr, $1);
+        $$ = ALLOCATOR->newTracked<LSLGlobalStorage>(nullptr, $1);
     }
     ;
 
 name_type
     : typename IDENTIFIER
     {
-        $$ = ALLOCATOR->new_tracked<LSLIdentifier>($1, $2, &@2);
+        $$ = ALLOCATOR->newTracked<LSLIdentifier>($1, $2, &@2);
     }
     ;
 
 global_variable
     : name_type ';'
     {
-        $$ = ALLOCATOR->new_tracked<LSLGlobalVariable>($1, nullptr);
+        $$ = ALLOCATOR->newTracked<LSLGlobalVariable>($1, nullptr);
     }
     | name_type '=' expression ';'
     {
-        $$ = ALLOCATOR->new_tracked<LSLGlobalVariable>($1, $3);
+        $$ = ALLOCATOR->newTracked<LSLGlobalVariable>($1, $3);
     }
     | name_type '=' error ';'
     {
@@ -317,23 +317,23 @@ global_variable
 constant
     : '-' INTEGER_CONSTANT
     {
-        $$ = ALLOCATOR->new_tracked<LSLIntegerConstant>(-$2);
+        $$ = ALLOCATOR->newTracked<LSLIntegerConstant>(-$2);
     }
     | INTEGER_CONSTANT
     {
-        $$ = ALLOCATOR->new_tracked<LSLIntegerConstant>($1);
+        $$ = ALLOCATOR->newTracked<LSLIntegerConstant>($1);
     }
     | '-' FP_CONSTANT
     {
-        $$ = ALLOCATOR->new_tracked<LSLFloatConstant>(-$2);
+        $$ = ALLOCATOR->newTracked<LSLFloatConstant>(-$2);
     }
     | FP_CONSTANT
     {
-        $$ = ALLOCATOR->new_tracked<LSLFloatConstant>($1);
+        $$ = ALLOCATOR->newTracked<LSLFloatConstant>($1);
     }
     | STRING_CONSTANT
     {
-        $$ = ALLOCATOR->new_tracked<LSLStringConstant>($1);
+        $$ = ALLOCATOR->newTracked<LSLStringConstant>($1);
     }
     ;
 
@@ -371,19 +371,19 @@ typename
 global_function
     : IDENTIFIER '(' ')' compound_statement
     {
-        $$ = ALLOCATOR->new_tracked<LSLGlobalFunction>( MAKEID(LST_NULL, $1, @1), nullptr, $4 );
+        $$ = ALLOCATOR->newTracked<LSLGlobalFunction>( MAKEID(LST_NULL, $1, @1), nullptr, $4 );
     }
     | name_type '(' ')' compound_statement
     {
-        $$ = ALLOCATOR->new_tracked<LSLGlobalFunction>( $1, nullptr, $4 );
+        $$ = ALLOCATOR->newTracked<LSLGlobalFunction>( $1, nullptr, $4 );
     }
     | IDENTIFIER '(' function_parameters ')' compound_statement
     {
-        $$ = ALLOCATOR->new_tracked<LSLGlobalFunction>( MAKEID(LST_NULL, $1, @1), $3, $5 );
+        $$ = ALLOCATOR->newTracked<LSLGlobalFunction>( MAKEID(LST_NULL, $1, @1), $3, $5 );
     }
     | name_type '(' function_parameters ')' compound_statement
     {
-        $$ = ALLOCATOR->new_tracked<LSLGlobalFunction>( $1, $3, $5 );
+        $$ = ALLOCATOR->newTracked<LSLGlobalFunction>( $1, $3, $5 );
     }
     ;
 
@@ -395,7 +395,7 @@ function_parameters
     | function_parameter ',' function_parameters
     {
         if ( $1 ) {
-            $1->push_child($3->get_children());
+            $1->pushChild($3->getChildren());
             // delete $3;
             $$ = $1;
         } else {
@@ -407,7 +407,7 @@ function_parameters
 function_parameter
     : typename IDENTIFIER
     {
-        $$ = ALLOCATOR->new_tracked<LSLFunctionDec>( ALLOCATOR->new_tracked<LSLIdentifier>($1, $2, &@2) );
+        $$ = ALLOCATOR->newTracked<LSLFunctionDec>( ALLOCATOR->newTracked<LSLIdentifier>($1, $2, &@2) );
     }
     ;
 
@@ -419,7 +419,7 @@ event_parameters
     | event_parameter ',' event_parameters
     {
         if ( $1 ) {
-            $1->push_child($3->get_children());
+            $1->pushChild($3->getChildren());
             // delete $3;
             $$ = $1;
         } else {
@@ -431,7 +431,7 @@ event_parameters
 event_parameter
     : typename IDENTIFIER
     {
-        $$ = ALLOCATOR->new_tracked<LSLEventDec>( ALLOCATOR->new_tracked<LSLIdentifier>($1, $2, &@2) );
+        $$ = ALLOCATOR->newTracked<LSLEventDec>( ALLOCATOR->newTracked<LSLIdentifier>($1, $2, &@2) );
     }
     ;
 
@@ -443,8 +443,8 @@ states
     | default other_states
     {
         if ( $1 ) {
-            DEBUG( LOG_DEBUG_SPAM, nullptr, "---- default [%p,%p] other_states [%p,%p]\n", $1->get_prev(), $1->get_next(), $2->get_prev(), $2->get_next());
-            $1->add_next_sibling($2);
+            DEBUG( LOG_DEBUG_SPAM, nullptr, "---- default [%p,%p] other_states [%p,%p]\n", $1->getPrev(), $1->getNext(), $2->getPrev(), $2->getNext());
+            $1->addNextSibling($2);
             $$ = $1;
         } else {
             $$ = $2;
@@ -462,7 +462,7 @@ other_states
     {
         //DEBUG(200,"--(%d)-- state other_states\n", yylloc.first_line);
         if ( $1 ) {
-            $1->add_next_sibling($2);
+            $1->addNextSibling($2);
             $$ = $1;
         } else {
             $$ = $2;
@@ -473,24 +473,24 @@ other_states
 default
     : STATE_DEFAULT '{' state_body '}'
     {
-        $$ = ALLOCATOR->new_tracked<LSLState>( MAKEID(LST_NULL, $1, @1), $3 );
+        $$ = ALLOCATOR->newTracked<LSLState>( MAKEID(LST_NULL, $1, @1), $3 );
     }
     | STATE_DEFAULT '{' '}'
     {
         tailslide_get_extra(scanner)->logger->error( &@1, E_NO_EVENT_HANDLERS );
-        $$ = ALLOCATOR->new_tracked<LSLState>( MAKEID(LST_NULL, $1, @1), nullptr );
+        $$ = ALLOCATOR->newTracked<LSLState>( MAKEID(LST_NULL, $1, @1), nullptr );
     }
     ;
 
 state
     : STATE IDENTIFIER '{' state_body '}'
     {
-        $$ = ALLOCATOR->new_tracked<LSLState>( MAKEID(LST_NULL, $2, @2), $4 );
+        $$ = ALLOCATOR->newTracked<LSLState>( MAKEID(LST_NULL, $2, @2), $4 );
     }
     | STATE IDENTIFIER '{' '}'
     {
         tailslide_get_extra(scanner)->logger->error( &@1, E_NO_EVENT_HANDLERS );
-        $$ = ALLOCATOR->new_tracked<LSLState>( MAKEID(LST_NULL, $2, @2), nullptr );
+        $$ = ALLOCATOR->newTracked<LSLState>( MAKEID(LST_NULL, $2, @2), nullptr );
     }
     ;
 
@@ -502,7 +502,7 @@ state_body
     | event state_body
     {
         if ( $1 ) {
-            $1->add_next_sibling($2);
+            $1->addNextSibling($2);
             $$ = $1;
         } else {
             $$ = $2;
@@ -513,22 +513,22 @@ state_body
 event
     : IDENTIFIER '(' ')' compound_statement
     {
-        $$ = ALLOCATOR->new_tracked<LSLEventHandler>(MAKEID(LST_NULL, $1, @1), nullptr, $4);
+        $$ = ALLOCATOR->newTracked<LSLEventHandler>(MAKEID(LST_NULL, $1, @1), nullptr, $4);
     }
     | IDENTIFIER '(' event_parameters ')' compound_statement
     {
-        $$ = ALLOCATOR->new_tracked<LSLEventHandler>(MAKEID(LST_NULL, $1, @1), $3, $5);
+        $$ = ALLOCATOR->newTracked<LSLEventHandler>(MAKEID(LST_NULL, $1, @1), $3, $5);
     }
    ;
 
 compound_statement
     : '{' '}'
     {
-        $$ = ALLOCATOR->new_tracked<LSLCompoundStatement>(nullptr);
+        $$ = ALLOCATOR->newTracked<LSLCompoundStatement>(nullptr);
     }
     | '{' statements '}'
     {
-        $$ = ALLOCATOR->new_tracked<LSLCompoundStatement>($2);
+        $$ = ALLOCATOR->newTracked<LSLCompoundStatement>($2);
     }
     ;
 
@@ -541,7 +541,7 @@ statements
     | statements statement
     {
         if ( $1 ) {
-            $1->add_next_sibling($2);
+            $1->addNextSibling($2);
             $$ = $1;
         } else {
             $$ = $2;
@@ -552,35 +552,35 @@ statements
 statement
     : ';'
     {
-        $$ = ALLOCATOR->new_tracked<LSLStatement>(nullptr);
+        $$ = ALLOCATOR->newTracked<LSLStatement>(nullptr);
     }
     | STATE IDENTIFIER ';'
     {
-        $$ = ALLOCATOR->new_tracked<LSLStateStatement>(MAKEID(LST_NULL, $2, @2));
+        $$ = ALLOCATOR->newTracked<LSLStateStatement>(MAKEID(LST_NULL, $2, @2));
     }
     | STATE STATE_DEFAULT ';'
     {
-        $$ = ALLOCATOR->new_tracked<LSLStateStatement>(MAKEID(LST_NULL, $2, @2));
+        $$ = ALLOCATOR->newTracked<LSLStateStatement>(MAKEID(LST_NULL, $2, @2));
     }
     | JUMP IDENTIFIER ';'
     {
-        $$ = ALLOCATOR->new_tracked<LSLJumpStatement>(MAKEID(LST_NULL, $2, @2));
+        $$ = ALLOCATOR->newTracked<LSLJumpStatement>(MAKEID(LST_NULL, $2, @2));
     }
     | '@' IDENTIFIER ';'
     {
-        $$ = ALLOCATOR->new_tracked<LSLLabel>(MAKEID(LST_NULL, $2, @2));
+        $$ = ALLOCATOR->newTracked<LSLLabel>(MAKEID(LST_NULL, $2, @2));
     }
     | RETURN expression ';'
     {
-        $$ = ALLOCATOR->new_tracked<LSLReturnStatement>($2);
+        $$ = ALLOCATOR->newTracked<LSLReturnStatement>($2);
     }
     | RETURN ';'
     {
-        $$ = ALLOCATOR->new_tracked<LSLReturnStatement>(nullptr);
+        $$ = ALLOCATOR->newTracked<LSLReturnStatement>(nullptr);
     }
     | expression ';'
     {
-        $$ = ALLOCATOR->new_tracked<LSLStatement>($1);
+        $$ = ALLOCATOR->newTracked<LSLStatement>($1);
     }
     | declaration ';'
     {
@@ -592,45 +592,45 @@ statement
     }
     | IF '(' expression ')' statement    %prec LOWER_THAN_ELSE
     {
-        $$ = ALLOCATOR->new_tracked<LSLIfStatement>($3, $5, nullptr);
-        $5->set_declaration_allowed(false);
+        $$ = ALLOCATOR->newTracked<LSLIfStatement>($3, $5, nullptr);
+        $5->setDeclarationAllowed(false);
     }
     | IF '(' expression ')' statement ELSE statement
     {
-        $$ = ALLOCATOR->new_tracked<LSLIfStatement>($3, $5, $7);
-        $5->set_declaration_allowed(false);
-        $7->set_declaration_allowed(false);
+        $$ = ALLOCATOR->newTracked<LSLIfStatement>($3, $5, $7);
+        $5->setDeclarationAllowed(false);
+        $7->setDeclarationAllowed(false);
     }
     | FOR '(' forexpressionlist ';' expression ';' forexpressionlist ')' statement
     {
-        $$ = ALLOCATOR->new_tracked<LSLForStatement>($3, $5, $7, $9);
-        $9->set_declaration_allowed(false);
+        $$ = ALLOCATOR->newTracked<LSLForStatement>($3, $5, $7, $9);
+        $9->setDeclarationAllowed(false);
     }
     | DO statement WHILE '(' expression ')' ';'
     {
-        $$ = ALLOCATOR->new_tracked<LSLDoStatement>($2, $5);
-        $2->set_declaration_allowed(false);
+        $$ = ALLOCATOR->newTracked<LSLDoStatement>($2, $5);
+        $2->setDeclarationAllowed(false);
     }
     | WHILE '(' expression ')' statement
     {
-        $$ = ALLOCATOR->new_tracked<LSLWhileStatement>($3, $5);
-        $5->set_declaration_allowed(false);
+        $$ = ALLOCATOR->newTracked<LSLWhileStatement>($3, $5);
+        $5->setDeclarationAllowed(false);
     }
     | error ';'
     {
-        $$ = ALLOCATOR->new_tracked<LSLStatement>(nullptr);
+        $$ = ALLOCATOR->newTracked<LSLStatement>(nullptr);
     }
     ;
 
 declaration
     : typename IDENTIFIER
     {
-        $$ = ALLOCATOR->new_tracked<LSLDeclaration>(ALLOCATOR->new_tracked<LSLIdentifier>($1, $2, &@2), nullptr);
+        $$ = ALLOCATOR->newTracked<LSLDeclaration>(ALLOCATOR->newTracked<LSLIdentifier>($1, $2, &@2), nullptr);
     }
     | typename IDENTIFIER '=' expression
     {
-        DEBUG( LOG_DEBUG_SPAM, nullptr, "= %s\n", $4->get_node_name());
-        $$ = ALLOCATOR->new_tracked<LSLDeclaration>(ALLOCATOR->new_tracked<LSLIdentifier>($1, $2, &@2), $4);
+        DEBUG( LOG_DEBUG_SPAM, nullptr, "= %s\n", $4->getNodeName());
+        $$ = ALLOCATOR->newTracked<LSLDeclaration>(ALLOCATOR->newTracked<LSLIdentifier>($1, $2, &@2), $4);
     }
     ;
 
@@ -642,7 +642,7 @@ forexpressionlist
     }
     | nextforexpressionlist
     {
-        $$ = ALLOCATOR->new_tracked<LSLASTNodeList>($1);
+        $$ = ALLOCATOR->newTracked<LSLASTNodeList>($1);
     }
     ;
 
@@ -654,7 +654,7 @@ nextforexpressionlist
     | expression ',' nextforexpressionlist
     {
         if ( $1 ) {
-            $1->add_next_sibling($3);
+            $1->addNextSibling($3);
             $$ = $1;
         } else {
             $$ = $3;
@@ -665,7 +665,7 @@ nextforexpressionlist
 funcexpressionlist
     : /* empty */
     {
-        //$$ = ALLOCATOR->new_tracked<LSLExpression>(0);
+        //$$ = ALLOCATOR->newTracked<LSLExpression>(0);
         $$ = nullptr;
     }
     | nextfuncexpressionlist
@@ -682,7 +682,7 @@ nextfuncexpressionlist
     | expression ',' nextfuncexpressionlist
     {
         if ( $1 ) {
-            $1->add_next_sibling($3);
+            $1->addNextSibling($3);
             $$ = $1;
         } else {
             $$ = $3;
@@ -693,7 +693,7 @@ nextfuncexpressionlist
 listexpressionlist
     : /* empty */
     {
-        //$$ = ALLOCATOR->new_tracked<LSLExpression>(0);
+        //$$ = ALLOCATOR->newTracked<LSLExpression>(0);
         //$$ = nullptr;
         $$ = nullptr;
     }
@@ -711,7 +711,7 @@ nextlistexpressionlist
     | expression ',' nextlistexpressionlist
     {
         if ($1) {
-            $1->add_next_sibling($3);
+            $1->addNextSibling($3);
             $$ = $1;
         } else {
             $$ = $3;
@@ -726,122 +726,122 @@ expression
     }
     | lvalue '=' expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>( $1, '=', $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, '=', $3 );
     }
     | lvalue ADD_ASSIGN expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>( $1, ADD_ASSIGN, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, ADD_ASSIGN, $3 );
     }
     | lvalue SUB_ASSIGN expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>( $1, SUB_ASSIGN, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, SUB_ASSIGN, $3 );
     }
     | lvalue MUL_ASSIGN expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>( $1, MUL_ASSIGN, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, MUL_ASSIGN, $3 );
     }
     | lvalue DIV_ASSIGN expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>( $1, DIV_ASSIGN, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, DIV_ASSIGN, $3 );
     }
     | lvalue MOD_ASSIGN expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>( $1, MOD_ASSIGN, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, MOD_ASSIGN, $3 );
     }
     | expression EQ expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>( $1, EQ, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, EQ, $3 );
     }
     | expression NEQ expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>( $1, NEQ, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, NEQ, $3 );
     }
     | expression LEQ expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>( $1, LEQ, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, LEQ, $3 );
     }
     | expression GEQ expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>( $1, GEQ, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, GEQ, $3 );
     }
     | expression '<' expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>( $1, '<', $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, '<', $3 );
     }
     | expression '>' expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>( $1, '>', $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, '>', $3 );
     }
     | expression '+' expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>( $1, '+', $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, '+', $3 );
     }
     | expression '-' expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>( $1, '-', $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, '-', $3 );
     }
     | expression '*' expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>( $1, '*', $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, '*', $3 );
     }
     | expression '/' expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>(  $1, '/',  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, '/',  $3  );
     }
     | expression '%' expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>(  $1, '%',  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, '%',  $3  );
     }
     | expression '&' expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>(  $1, '&',  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, '&',  $3  );
     }
     | expression '|' expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>(  $1, '|',  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, '|',  $3  );
     }
     | expression '^' expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>(  $1, '^',  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, '^',  $3  );
     }
     | expression BOOLEAN_AND expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>(  $1, BOOLEAN_AND,  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, BOOLEAN_AND,  $3  );
     }
     | expression BOOLEAN_OR expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>(  $1, BOOLEAN_OR,  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, BOOLEAN_OR,  $3  );
     }
     | expression SHIFT_LEFT expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>(  $1, SHIFT_LEFT,  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, SHIFT_LEFT,  $3  );
     }
     | expression SHIFT_RIGHT expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLBinaryExpression>(  $1, SHIFT_RIGHT,  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, SHIFT_RIGHT,  $3  );
     }
     ;
 
 unaryexpression
     : '-' expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLUnaryExpression>( $2, '-' );
+        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>( $2, '-' );
     }
     | '!' expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLUnaryExpression>(  $2 , '!' );
+        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $2 , '!' );
     }
     | '~' expression
     {
-        $$ = ALLOCATOR->new_tracked<LSLUnaryExpression>(  $2 , '~' );
+        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $2 , '~' );
     }
     | INC_OP lvalue
     {
-        $$ = ALLOCATOR->new_tracked<LSLUnaryExpression>(  $2 , INC_PRE_OP );
+        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $2 , INC_PRE_OP );
     }
     | DEC_OP lvalue
     {
-        $$ = ALLOCATOR->new_tracked<LSLUnaryExpression>(  $2 , DEC_PRE_OP );
+        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $2 , DEC_PRE_OP );
     }
     | typecast
     {
@@ -853,22 +853,22 @@ unaryexpression
     }
     | '(' expression ')'
     {
-        $$ = ALLOCATOR->new_tracked<LSLParenthesisExpression>($2);
+        $$ = ALLOCATOR->newTracked<LSLParenthesisExpression>($2);
     }
     ;
 
 typecast
     : '(' typename ')' lvalue
     {
-        $$ = ALLOCATOR->new_tracked<LSLTypecastExpression>($2, $4);
+        $$ = ALLOCATOR->newTracked<LSLTypecastExpression>($2, $4);
     }
     | '(' typename ')' unarypostfixexpression
     {
-        $$ = ALLOCATOR->new_tracked<LSLTypecastExpression>($2, $4);
+        $$ = ALLOCATOR->newTracked<LSLTypecastExpression>($2, $4);
     }
     | '(' typename ')' '(' expression ')'
     {
-        $$ = ALLOCATOR->new_tracked<LSLTypecastExpression>($2, $5);
+        $$ = ALLOCATOR->newTracked<LSLTypecastExpression>($2, $5);
     }
     ;
 
@@ -892,18 +892,18 @@ unarypostfixexpression
     }
     | lvalue INC_OP
     {
-        $$ = ALLOCATOR->new_tracked<LSLUnaryExpression>(  $1 , INC_POST_OP );
+        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $1 , INC_POST_OP );
     }
     | lvalue DEC_OP
     {
-        $$ = ALLOCATOR->new_tracked<LSLUnaryExpression>(  $1 , DEC_POST_OP );
+        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $1 , DEC_POST_OP );
     }
     | IDENTIFIER '(' funcexpressionlist ')'
     {
         if ( $3 != nullptr ) {
-            $$ = ALLOCATOR->new_tracked<LSLFunctionExpression>( ALLOCATOR->new_tracked<LSLIdentifier>($1), $3 );
+            $$ = ALLOCATOR->newTracked<LSLFunctionExpression>( ALLOCATOR->newTracked<LSLIdentifier>($1), $3 );
         } else {
-            $$ = ALLOCATOR->new_tracked<LSLFunctionExpression>( ALLOCATOR->new_tracked<LSLIdentifier>($1) );
+            $$ = ALLOCATOR->newTracked<LSLFunctionExpression>( ALLOCATOR->newTracked<LSLIdentifier>($1) );
         }
 
     }
@@ -911,45 +911,45 @@ unarypostfixexpression
     {
     /* This is effectively a no-op to most people in modern LSL, but we might need
        `expression`'s side-effects. Oh well. */
-        $$ = ALLOCATOR->new_tracked<LSLPrintExpression>($3);
+        $$ = ALLOCATOR->newTracked<LSLPrintExpression>($3);
     }
     | constant
     {
-        $$ = ALLOCATOR->new_tracked<LSLConstantExpression>($1);
+        $$ = ALLOCATOR->newTracked<LSLConstantExpression>($1);
     }
     ;
 
 vector_initializer
     : '<' expression ',' expression ',' expression '>'    %prec INITIALIZER
     {
-        $$ = ALLOCATOR->new_tracked<LSLVectorExpression>($2, $4, $6);
+        $$ = ALLOCATOR->newTracked<LSLVectorExpression>($2, $4, $6);
     }
     ;
 
 quaternion_initializer
     : '<' expression ',' expression ',' expression ',' expression '>' %prec INITIALIZER
     {
-        $$ = ALLOCATOR->new_tracked<LSLQuaternionExpression>($2, $4, $6, $8);
+        $$ = ALLOCATOR->newTracked<LSLQuaternionExpression>($2, $4, $6, $8);
     }
     ;
 
 list_initializer
     : '[' listexpressionlist ']' %prec INITIALIZER
     {
-        $$ = ALLOCATOR->new_tracked<LSLListExpression>($2);
+        $$ = ALLOCATOR->newTracked<LSLListExpression>($2);
     }
     ;
 
 lvalue
     : IDENTIFIER
     {
-        $$ = ALLOCATOR->new_tracked<LSLLValueExpression>(ALLOCATOR->new_tracked<LSLIdentifier>($1));
+        $$ = ALLOCATOR->newTracked<LSLLValueExpression>(ALLOCATOR->newTracked<LSLIdentifier>($1));
     }
     | IDENTIFIER PERIOD IDENTIFIER
     {
-        $$ = ALLOCATOR->new_tracked<LSLLValueExpression>(
-            ALLOCATOR->new_tracked<LSLIdentifier>($1),
-            ALLOCATOR->new_tracked<LSLIdentifier>($3)
+        $$ = ALLOCATOR->newTracked<LSLLValueExpression>(
+            ALLOCATOR->newTracked<LSLIdentifier>($1),
+            ALLOCATOR->newTracked<LSLIdentifier>($3)
         );
     }
     ;

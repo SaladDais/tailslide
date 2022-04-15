@@ -13,18 +13,16 @@
 
 namespace Tailslide {
 
-class ScopedScriptParser {
-  public:
+struct ScopedScriptParser {
     explicit ScopedScriptParser(LSLSymbolTable *builtins);
     ScriptAllocator allocator;
     Logger logger;
     LSLScript *script = nullptr;
     bool ast_sane = false;
-
-    LSLScript *parse_lsl(FILE *yyin);
-    LSLScript *parse_lsl(const std::string &filename);
-  protected:
     ScriptContext context;
+
+    LSLScript *parseLSL(FILE *yyin);
+    LSLScript *parseLSL(const std::string &filename);
 };
 
 }

@@ -67,8 +67,8 @@ class BitStream {
     static constexpr uint32_t MIN_REALLOC = 10;
 
   public:
-    explicit BitStream(Endianness endian=ENDIAN_BIG) : m_pos(0), m_size(0), m_alloc_size(0), m_data(nullptr),
-        m_read_only(false), m_endianness(endian) {
+    explicit BitStream(Endianness endian=ENDIAN_BIG) : _mPos(0), _mSize(0), _mAllocSize(0), _mData(nullptr),
+                                                       _mReadOnly(false), _mEndianness(endian) {
     }
 
     /**
@@ -79,22 +79,22 @@ class BitStream {
      * NOTE: Use assign() if you want to prevent memcpy
      */
     BitStream(const uint8_t *data, const uint32_t length, Endianness endian=ENDIAN_BIG)
-        : m_pos(0), m_size(0), m_alloc_size(MIN_REALLOC), m_data(nullptr), m_read_only(false), m_endianness(endian) {
-      m_data = reinterpret_cast<uint8_t *>(malloc(m_alloc_size));
-      if (m_data == nullptr) {
+        : _mPos(0), _mSize(0), _mAllocSize(MIN_REALLOC), _mData(nullptr), _mReadOnly(false), _mEndianness(endian) {
+      _mData = reinterpret_cast<uint8_t *>(malloc(_mAllocSize));
+      if (_mData == nullptr) {
         throw std::runtime_error("Failed to allocated data");
       }
-      memset(m_data, 0, m_alloc_size);
+      memset(_mData, 0, _mAllocSize);
 
       if (length > 0) {
-        write_raw_data(data, length, false);
+        writeRawData(data, length, false);
       }
     }
 
     BitStream(BitStream &&other) noexcept
-        : m_pos(other.m_pos), m_size(other.m_size), m_alloc_size(other.m_alloc_size), m_data(other.m_data),
-          m_read_only(other.m_read_only), m_endianness(other.m_endianness) {
-      other.m_data = nullptr;
+        : _mPos(other._mPos), _mSize(other._mSize), _mAllocSize(other._mAllocSize), _mData(other._mData),
+          _mReadOnly(other._mReadOnly), _mEndianness(other._mEndianness) {
+      other._mData = nullptr;
     }
 
     BitStream(const BitStream &other) = delete;
@@ -103,12 +103,12 @@ class BitStream {
       clear();
     }
 
-    bool is_read_only() const {
-      return m_read_only;
+    bool isReadOnly() const {
+      return _mReadOnly;
     }
 
     /// Create read-only BitStream that accesses this BitStream's data
-    BitStream make_view() const {
+    BitStream makeView() const {
       BitStream view;
       view.assign(data(), size(), true);
       return view;
@@ -117,20 +117,20 @@ class BitStream {
     /**
      * Allocate initial buffer space so we reduce the number of mallocs
      */
-    void pre_alloc(uint32_t size) {
-      if (size < m_alloc_size) {
+    void preAlloc(uint32_t size) {
+      if (size < _mAllocSize) {
         throw std::runtime_error("Can only increase alloc size");
       }
 
-      size_t old_size = m_alloc_size;
-      m_alloc_size = size;
-      m_data = reinterpret_cast<uint8_t *>(realloc(m_data, m_alloc_size));
+      size_t old_size = _mAllocSize;
+      _mAllocSize = size;
+      _mData = reinterpret_cast<uint8_t *>(realloc(_mData, _mAllocSize));
 
-      if (m_data == nullptr) {
+      if (_mData == nullptr) {
         throw std::runtime_error("Failed to allocated data");
       }
       // zero out any new data added.
-      memset(m_data + old_size, 0, size - old_size);
+      memset(_mData + old_size, 0, size - old_size);
     }
 
     /**
@@ -142,71 +142,71 @@ class BitStream {
     BitStream duplicate(bool force_copy = false) const {
       BitStream result;
 
-      if (m_read_only && !force_copy) {
-        result.assign(m_data, m_size, true);
+      if (_mReadOnly && !force_copy) {
+        result.assign(_mData, _mSize, true);
       } else {
-        result = BitStream(m_data, m_size);
+        result = BitStream(_mData, _mSize);
       }
 
-      result.move_to(pos());
+      result.moveTo(pos());
       return result;
     }
 
     void clear() {
       // NOLINTNEXTLINE
-      if (!m_read_only && m_data != nullptr) {
+      if (!_mReadOnly && _mData != nullptr) {
         // NOLINTNEXTLINE
-        free(m_data);
+        free(_mData);
       }
 
-      m_read_only = false;
-      m_data = nullptr;
-      m_size = m_alloc_size = 0;
+      _mReadOnly = false;
+      _mData = nullptr;
+      _mSize = _mAllocSize = 0;
     }
 
     BitStream& operator=(BitStream &&other)  noexcept {
       clear();
 
-      m_data = other.m_data;
-      m_read_only = other.m_read_only;
-      m_pos = other.m_pos;
-      m_size = other.m_size;
-      m_alloc_size = other.m_alloc_size;
+      _mData = other._mData;
+      _mReadOnly = other._mReadOnly;
+      _mPos = other._mPos;
+      _mSize = other._mSize;
+      _mAllocSize = other._mAllocSize;
 
-      other.m_data = nullptr;
-      other.m_pos = other.m_size = other.m_alloc_size = 0;
+      other._mData = nullptr;
+      other._mPos = other._mSize = other._mAllocSize = 0;
       return *this;
     }
 
     void resize(uint32_t new_size) {
-      if (m_read_only) {
+      if (_mReadOnly) {
         throw std::runtime_error("Cannot resize: is read-only!");
       }
 
-      if (m_data == nullptr) {
-        m_size = m_alloc_size = new_size;
+      if (_mData == nullptr) {
+        _mSize = _mAllocSize = new_size;
         if (new_size > 0) {
-          m_data = reinterpret_cast<uint8_t *>(malloc(new_size));
-          memset(m_data, 0, new_size);
+          _mData = reinterpret_cast<uint8_t *>(malloc(new_size));
+          memset(_mData, 0, new_size);
         }
         return;
       }
 
-      if (new_size < m_size) {
-        m_size = new_size;
+      if (new_size < _mSize) {
+        _mSize = new_size;
         //no reason to change alloc size?
         return;
       }
 
-      if (new_size <= m_alloc_size) {
-        m_size = new_size;
+      if (new_size <= _mAllocSize) {
+        _mSize = new_size;
         return;
       }
 
-      uint32_t step = std::max(MIN_REALLOC, new_size - m_size);
-      pre_alloc(m_alloc_size + step);
+      uint32_t step = std::max(MIN_REALLOC, new_size - _mSize);
+      preAlloc(_mAllocSize + step);
 
-      m_size = new_size;
+      _mSize = new_size;
     }
 
     /**
@@ -214,30 +214,30 @@ class BitStream {
      *
      * @note This will raise an exception if data is a nullpointer or length is of size 0
      */
-    BitStream &write_raw_data(const uint8_t *data, const uint32_t length, bool advance = true) {
+    BitStream &writeRawData(const uint8_t *data, const uint32_t length, bool advance = true) {
       if (data == nullptr || length == 0) {
         throw std::runtime_error("Invalid parameters");
       }
 
-      if (m_pos + length > size()) {
-        resize(m_pos + length);
+      if (_mPos + length > size()) {
+        resize(_mPos + length);
       }
 
-      memcpy(&m_data[m_pos], data, length);
+      memcpy(&_mData[_mPos], data, length);
 
       if (advance) {
-        m_pos += length;
+        _mPos += length;
       }
 
       return *this;
     }
 
-    void make_space(uint32_t increase) {
-      if (m_read_only) {
+    void makeSpace(uint32_t increase) {
+      if (_mReadOnly) {
         throw std::runtime_error("Cannot make space in read only mode");
       }
 
-      auto remain = remaining_size();
+      auto remain = remainingSize();
       resize(size() + increase);
 
       // had data after the cursor and we're increasing in size
@@ -249,22 +249,22 @@ class BitStream {
       }
     }
 
-    void remove_space(uint32_t decrease) {
-      if (decrease > remaining_size()) {
+    void removeSpace(uint32_t decrease) {
+      if (decrease > remainingSize()) {
         throw std::runtime_error("Not enough space left");
       }
 
-      memmove(current(), current() + decrease, remaining_size() - decrease);
+      memmove(current(), current() + decrease, remainingSize() - decrease);
       resize(size() - decrease);
     }
 
-    void read_raw_data(uint8_t **data, uint32_t length) {
-      if (m_pos + length > size()) {
+    void readRawData(uint8_t **data, uint32_t length) {
+      if (_mPos + length > size()) {
         throw std::runtime_error("Cannot read from BitStream. Already at the end.");
       }
 
-      *data = &m_data[m_pos];
-      m_pos += length;
+      *data = &_mData[_mPos];
+      _mPos += length;
     }
 
     /**
@@ -276,9 +276,9 @@ class BitStream {
     BitStream &operator<<(const T &data) {
       static_assert(std::is_trivially_copyable<T>(), "Need a specialized serialized function for non-POD types");
 
-      if (m_pos + sizeof(T) > size()) {
-        uint32_t newSize = m_pos + sizeof(T);
-        resize(newSize);
+      if (_mPos + sizeof(T) > size()) {
+        uint32_t new_size = _mPos + sizeof(T);
+        resize(new_size);
       }
 
       // need special endian swapping logic if this is an integral larger than a byte
@@ -286,15 +286,15 @@ class BitStream {
         // Store data reinterpreted as an integral type of the appropriate size and byte-swap,
         // should optimize to a bswap instruction for the given integer width.
         SameSizedUInt<T> val = reinterpret_cast<const SameSizedUInt<T> &>(data);
-        if (m_endianness == ENDIAN_BIG)
+        if (_mEndianness == ENDIAN_BIG)
           val = tail_htobe(val);
         else
           val = tail_htole(val);
-        memcpy(&m_data[m_pos], &val, sizeof(T));
+        memcpy(&_mData[_mPos], &val, sizeof(T));
       } else {
-        memcpy(&m_data[m_pos], &data, sizeof(T));
+        memcpy(&_mData[_mPos], &data, sizeof(T));
       }
-      m_pos += sizeof(T);
+      _mPos += sizeof(T);
 
       return *this;
     }
@@ -306,7 +306,7 @@ class BitStream {
      */
     template<typename T>
     BitStream &operator>>(T &data) {
-      if (m_pos + sizeof(T) > size()) {
+      if (_mPos + sizeof(T) > size()) {
         throw std::runtime_error("Cannot read from BitStream: Already at the end.");
       }
 
@@ -314,16 +314,16 @@ class BitStream {
       if constexpr ((std::is_arithmetic_v<T> || std::is_enum_v<T>) && sizeof(T) > 1) {
         // reinterpret as an integral type of the appropriate size and byte-swap
         // should optimize to a bswap instruction for the given integer width
-        auto *val = reinterpret_cast<SameSizedUInt<T> *>(&m_data[m_pos]);
+        auto *val = reinterpret_cast<SameSizedUInt<T> *>(&_mData[_mPos]);
         auto &sized_data = reinterpret_cast<SameSizedUInt<T> &>(data);
-        if (m_endianness == ENDIAN_BIG)
+        if (_mEndianness == ENDIAN_BIG)
           sized_data = tail_betoh(*val);
         else
           sized_data = tail_letoh(*val);
       } else {
-        memcpy(&data, &m_data[m_pos], sizeof(T));
+        memcpy(&data, &_mData[_mPos], sizeof(T));
       }
-      m_pos += sizeof(T);
+      _mPos += sizeof(T);
 
       return *this;
     }
@@ -333,32 +333,32 @@ class BitStream {
      * @note This should only be used internally to write to the socket
      */
     const uint8_t *data() const {
-      return m_data;
+      return _mData;
     }
 
     uint8_t *data() {
-      return m_data;
+      return _mData;
     }
 
     void detach(uint8_t *&out, uint32_t &len) {
-      if (m_size == 0) {
+      if (_mSize == 0) {
         out = nullptr;
         // there might be pre-allocated buffer
-        free(m_data);
-      } else if (m_size < m_alloc_size) {
+        free(_mData);
+      } else if (_mSize < _mAllocSize) {
         // no need to zero out because array is shrinking
-        out = reinterpret_cast<uint8_t *>(realloc(m_data, m_size));
-      } else if (m_size == m_alloc_size) {
-        out = m_data;
+        out = reinterpret_cast<uint8_t *>(realloc(_mData, _mSize));
+      } else if (_mSize == _mAllocSize) {
+        out = _mData;
       } else {
         throw std::runtime_error("invalid state: m_size > m_alloc_size");
       }
 
-      len = m_size;
+      len = _mSize;
 
-      m_data = nullptr;
-      m_size = 0;
-      m_alloc_size = 0;
+      _mData = nullptr;
+      _mSize = 0;
+      _mAllocSize = 0;
     }
 
     int64_t hash() const {
@@ -366,7 +366,7 @@ class BitStream {
       auto *ptr = reinterpret_cast<uint8_t *>(&result);
 
       for (uint32_t i = 0; i < this->size(); ++i) {
-        ptr[i % 8] = ptr[i % 8] ^ m_data[i];
+        ptr[i % 8] = ptr[i % 8] ^ _mData[i];
       }
 
       return result;
@@ -383,37 +383,37 @@ class BitStream {
     void assign(uint8_t *buffer, uint32_t len, bool read_only = false) {
       clear();
 
-      m_data = buffer;
-      m_size = m_alloc_size = len;
-      m_pos = 0;
-      m_read_only = read_only;
+      _mData = buffer;
+      _mSize = _mAllocSize = len;
+      _mPos = 0;
+      _mReadOnly = read_only;
     }
 
     /**
      * @brief Return the current size of the stream
      */
     size_t size() const {
-      return m_size;
+      return _mSize;
     }
 
     bool empty() const {
-      return m_size == 0;
+      return _mSize == 0;
     }
 
-    size_t remaining_size() const {
+    size_t remainingSize() const {
       return size() - pos();
     }
 
-    size_t allocated_size() const {
-      return m_alloc_size;
+    size_t allocatedSize() const {
+      return _mAllocSize;
     }
 
     /**
      * @brief Did we read until the end of the stream
      * @note This only makes sense when reading. Writing dynamically expands the stream
      */
-    bool at_end() const {
-      return m_pos == m_size;
+    bool atEnd() const {
+      return _mPos == _mSize;
     }
 
     /**
@@ -421,11 +421,11 @@ class BitStream {
      * @return Returns the position (in Bytes)
      */
     uint32_t pos() const {
-      return m_pos;
+      return _mPos;
     }
 
-    bool move_to(uint32_t pos, bool allocate = false) {
-      if (pos > m_size) {
+    bool moveTo(uint32_t pos, bool allocate = false) {
+      if (pos > _mSize) {
         if (allocate) {
           resize(pos + 1);
         } else {
@@ -433,17 +433,17 @@ class BitStream {
         }
       }
 
-      m_pos = pos;
+      _mPos = pos;
       return true;
     }
 
-    bool move_by(int32_t offset, bool allocate = false) {
+    bool moveBy(int32_t offset, bool allocate = false) {
       // make sure we don't overflow
-      if (offset < 0 && static_cast<uint32_t>((-1) * offset) > m_pos) {
+      if (offset < 0 && static_cast<uint32_t>((-1) * offset) > _mPos) {
         throw std::runtime_error("Can't move. Would overflow buffer!");
       }
 
-      return move_to(m_pos + offset, allocate);
+      return moveTo(_mPos + offset, allocate);
     }
 
     /**
@@ -451,24 +451,24 @@ class BitStream {
      * @return
      */
     uint8_t *current() {
-      return &m_data[m_pos];
+      return &_mData[_mPos];
     }
 
     const uint8_t *current() const {
-      return &m_data[m_pos];
+      return &_mData[_mPos];
     }
 
   private:
-    uint32_t m_pos;
-    uint32_t m_size, m_alloc_size;
+    uint32_t _mPos;
+    uint32_t _mSize, _mAllocSize;
 
-    uint8_t *m_data;
+    uint8_t *_mData;
 
-    Endianness m_endianness;
+    Endianness _mEndianness;
 
     // a read only BitStream cannot modify the underlying data
     // useful to avoid copying and delete
-    bool m_read_only;
+    bool _mReadOnly;
 };
 
 /***
@@ -485,16 +485,16 @@ BitStream &BitStream::operator>><BitStream>(BitStream &bstream) {
   uint32_t length = 0;
   *this >> length;
 
-  if (m_pos + length > size()) {
+  if (_mPos + length > size()) {
     throw std::runtime_error("length is longer than BitStream");
   }
 
   if (length > 0) {
-    bstream.write_raw_data(current(), length);
-    move_by((int32_t)length);
+    bstream.writeRawData(current(), length);
+    moveBy((int32_t) length);
   }
 
-  bstream.move_to(0);
+  bstream.moveTo(0);
   return *this;
 }
 
@@ -507,7 +507,7 @@ inline BitStream &BitStream::operator<< <BitStream>(const BitStream &bstream) {
   *this << length;
 
   if (length > 0) {
-    write_raw_data(bstream.data(), length);
+    writeRawData(bstream.data(), length);
   }
 
   return *this;
@@ -516,12 +516,12 @@ inline BitStream &BitStream::operator<< <BitStream>(const BitStream &bstream) {
 template<>
 inline
 BitStream &BitStream::operator>><char>(char &data) {
-  if (at_end()) {
+  if (atEnd()) {
     throw std::runtime_error("Cannot read more: Already at end");
   }
 
-  data = (char)m_data[m_pos];
-  m_pos++;
+  data = (char)_mData[_mPos];
+  _mPos++;
 
   return *this;
 }
@@ -542,16 +542,16 @@ inline bool operator!=(const BitStream &first, const BitStream &second) {
 class ScopedBitStreamSeek {
   public:
     ScopedBitStreamSeek(BitStream &bstream, uint32_t pos, bool allocate=false) {
-      _m_old_pos = bstream.pos();
-      _m_bstream = &bstream;
-      _m_bstream->move_to(pos, allocate);
+      _mOldPos = bstream.pos();
+      _mBStream = &bstream;
+      _mBStream->moveTo(pos, allocate);
     };
     ~ScopedBitStreamSeek() {
-      _m_bstream->move_to(_m_old_pos);
+      _mBStream->moveTo(_mOldPos);
     }
   protected:
-    uint32_t _m_old_pos;
-    BitStream *_m_bstream;
+    uint32_t _mOldPos;
+    BitStream *_mBStream;
 };
 
 }

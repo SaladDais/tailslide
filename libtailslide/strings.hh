@@ -1,5 +1,5 @@
-#ifndef LSLINT_STRINGS_HH
-#define LSLINT_STRINGS_HH
+#ifndef TAILSLIDE_STRINGS_HH
+#define TAILSLIDE_STRINGS_HH
 
 #include "loctype.hh"
 

@@ -12,48 +12,48 @@ struct ScriptContext;
 
 class TrackableObject {
 public:
-  explicit TrackableObject(ScriptContext *ctx) {context = ctx;};
+  explicit TrackableObject(ScriptContext *ctx) { mContext = ctx;};
   virtual ~TrackableObject() = default;
-  ScriptContext *context = nullptr;
+  ScriptContext *mContext = nullptr;
 };
 
 class ScriptAllocator {
 public:
-    ScriptAllocator();
+    ScriptAllocator() = default;
     virtual ~ScriptAllocator();
 
-    void set_context(ScriptContext *context) {_context = context;};
+    void setContext(ScriptContext *context) { _mContext = context;};
 
     template<typename TClazz, typename... Args>
-    inline TClazz * new_tracked(Args&&... args) {
+    inline TClazz * newTracked(Args&&... args) {
       static_assert(std::is_base_of<TrackableObject, TClazz>::value, "Must be based on LLTrackableObject");
-      auto* val = new TClazz(_context, std::forward<Args>(args)...);
-      _tracked_objects.emplace_back(val);
+      auto* val = new TClazz(_mContext, std::forward<Args>(args)...);
+      _mTrackedObjects.emplace_back(val);
       return val;
     }
 
     char *alloc(size_t size) {
       char *val = (char *)malloc(size);
-      _mallocs.emplace_back(val);
+      _mMallocs.emplace_back(val);
       return val;
     }
 
-    char *copy_str(const char* old_str) {
+    char *copyStr(const char* old_str) {
       char *new_str = (char *)malloc(strlen(old_str) + 1);
       if (new_str) {
         strcpy(new_str, old_str);
-        track_malloc(new_str);
+        trackMalloc(new_str);
       }
       return new_str;
     }
 
-    void track_malloc(void *alloced_data) {
-      _mallocs.emplace_back(alloced_data);
+    void trackMalloc(void *alloced_data) {
+      _mMallocs.emplace_back(alloced_data);
     }
 private:
-    std::vector<TrackableObject *> _tracked_objects {};
-    std::vector<void *> _mallocs {};
-    ScriptContext *_context = nullptr;
+    std::vector<TrackableObject *> _mTrackedObjects {};
+    std::vector<void *> _mMallocs {};
+    ScriptContext *_mContext = nullptr;
 };
 
 }

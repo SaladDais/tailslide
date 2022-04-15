@@ -11,8 +11,8 @@ ParserRef runConformance(const char* name, bool allow_syntax_errors)
 
   ParserRef parser(new ScopedScriptParser(nullptr));
   Logger *logger = &parser->logger;
-  logger->set_check_assertions(true);
-  parser->parse_lsl(path);
+  logger->setCheckAssertions(true);
+  parser->parseLSL(path);
   LSLScript *script = parser->script;
 
   if (script == nullptr)
@@ -23,14 +23,14 @@ ParserRef runConformance(const char* name, bool allow_syntax_errors)
       FAIL(message);
     }
   } else {
-    script->collect_symbols();
-    script->link_symbol_tables();
-    script->determine_types();
-    script->recalculate_reference_data();
-    script->propagate_values();
-    script->check_best_practices();
-    script->validate_globals(true);
-    script->check_symbols();
+    script->collectSymbols();
+    script->linkSymbolTables();
+    script->determineTypes();
+    script->recalculateReferenceData();
+    script->propagateValues();
+    script->checkBestPractices();
+    script->validateGlobals(true);
+    script->checkSymbols();
   }
 
   return parser;
@@ -38,7 +38,7 @@ ParserRef runConformance(const char* name, bool allow_syntax_errors)
 
 void assertNoLintErrors(Logger* logger, const std::string& name) {
   logger->finalize();
-  int num_errors = logger->get_errors();
+  int num_errors = logger->getErrors();
   if (num_errors) {
     logger->report();
     std::string message = "script " + name + " encountered " + std::to_string(num_errors) + " errors during parse!";
@@ -58,7 +58,7 @@ public:
   virtual std::string format(LSLScript *script) const {
     PrettyPrintVisitor pretty_visitor(pretty_opts);
     script->visit(&pretty_visitor);
-    return pretty_visitor.stream.str();
+    return pretty_visitor.mStream.str();
   };
   PrettyPrintOpts pretty_opts;
 };
@@ -68,22 +68,22 @@ public:
   virtual std::string format(LSLScript *script) const {
     TreePrintingVisitor tree_visitor;
     script->visit(&tree_visitor);
-    return tree_visitor.stream.str();
+    return tree_visitor.mStream.str();
   };
 };
 
 static void checkStringOutput(
     const char* name,
     const char* expected_prefix,
-    const OptimizationContext &ctx,
+    const OptimizationOptions &ctx,
     void (*massager)(LSLScript* script),
     const ScriptFormatter& formatter
 ) {
   ParserRef parser = runConformance(name);
   Logger *logger = &parser->logger;
   logger->finalize();
-  CHECK(logger->get_errors() == 0);
-  if (logger->get_errors()) {
+  CHECK(logger->getErrors() == 0);
+  if (logger->getErrors()) {
     logger->report();
     // If there are errors at this stage then the AST isn't even guaranteed to be sane.
     return;
@@ -94,9 +94,9 @@ static void checkStringOutput(
     massager(parser->script);
   if (ctx)
     parser->script->optimize(ctx);
-  parser->script->validate_globals(true);
-  parser->script->check_symbols();
-  parser->script->get_symbol_table()->set_mangled_names();
+  parser->script->validateGlobals(true);
+  parser->script->checkSymbols();
+  parser->script->getSymbolTable()->setMangledNames();
 
   std::string prettified = formatter.format(parser->script);
 
@@ -129,7 +129,7 @@ static void checkStringOutput(
 
 void checkPrettyPrintOutput(
         const char* name,
-        const OptimizationContext &ctx,
+        const OptimizationOptions &ctx,
         const PrettyPrintOpts &pretty_opts,
         void (*massager)(LSLScript* script)
 ) {
@@ -144,7 +144,7 @@ void checkPrettyPrintOutput(
 
 void checkTreeDumpOutput(
     const char* name,
-    const OptimizationContext &ctx,
+    const OptimizationOptions &ctx,
     void (*massager)(LSLScript* script)
 ) {
   checkStringOutput(

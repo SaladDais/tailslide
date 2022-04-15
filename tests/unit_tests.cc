@@ -12,15 +12,15 @@ TEST_CASE("Get parent slot") {
     nullptr,
     &allocator
   };
-  allocator.set_context(&context);
+  allocator.setContext(&context);
 
-  auto *int_const = allocator.new_tracked<LSLIntegerConstant>(1);
-  auto *list_const = allocator.new_tracked<LSLListConstant>(nullptr);
-  list_const->push_child(allocator.new_tracked<LSLIntegerConstant>(1));
-  list_const->push_child(allocator.new_tracked<LSLIntegerConstant>(2));
-  CHECK_EQ(int_const->get_parent_slot(), -1);
-  list_const->push_child(int_const);
-  CHECK_EQ(int_const->get_parent_slot(), 2);
+  auto *int_const = allocator.newTracked<LSLIntegerConstant>(1);
+  auto *list_const = allocator.newTracked<LSLListConstant>(nullptr);
+  list_const->pushChild(allocator.newTracked<LSLIntegerConstant>(1));
+  list_const->pushChild(allocator.newTracked<LSLIntegerConstant>(2));
+  CHECK_EQ(int_const->getParentSlot(), -1);
+  list_const->pushChild(int_const);
+  CHECK_EQ(int_const->getParentSlot(), 2);
 }
 
 TEST_CASE("BitStream int writing") {
@@ -44,7 +44,7 @@ TEST_CASE("BitStream int reading") {
   int32_t val_1;
   uint16_t val_2;
   bs_big << (int32_t)1 << (uint16_t)2;
-  bs_big.move_to(0);
+  bs_big.moveTo(0);
   bs_big >> val_1;
   bs_big >> val_2;
   CHECK_EQ(val_1, 1);
@@ -52,7 +52,7 @@ TEST_CASE("BitStream int reading") {
 
   BitStream bs_little(ENDIAN_LITTLE);
   bs_little << (int32_t)1 << (uint16_t)2;
-  bs_big.move_to(0);
+  bs_big.moveTo(0);
   bs_big >> val_1;
   bs_big >> val_2;
   CHECK_EQ(val_1, 1);
@@ -78,7 +78,7 @@ TEST_CASE("Bitstream duplicate") {
   bs1 << v1;
   auto pos = bs1.pos();
   bs1 << v2;
-  bs1.move_to(pos);
+  bs1.moveTo(pos);
 
   auto bs2 = bs1.duplicate(true);
   auto bs3 = bs1.duplicate();
@@ -100,7 +100,7 @@ TEST_CASE("Bitstream view")
   bs1 << v1;
   bs1 << v2;
 
-  auto bs2 = bs1.make_view();
+  auto bs2 = bs1.makeView();
 
   size_t res1, res2;
   bs2 >> res1 >> res2;
@@ -118,8 +118,8 @@ TEST_CASE("Bitstream read_only")
 
   bs2.assign(bs1.data(), bs1.size(), true);
 
-  CHECK_FALSE(bs1.is_read_only());
-  CHECK(bs2.is_read_only());
+  CHECK_FALSE(bs1.isReadOnly());
+  CHECK(bs2.isReadOnly());
 }
 
 TEST_SUITE_END();

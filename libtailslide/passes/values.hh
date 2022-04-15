@@ -8,9 +8,10 @@
 namespace Tailslide {
 class ConstantDeterminingVisitor : public DepthFirstASTVisitor {
   public:
-    explicit ConstantDeterminingVisitor(AOperationBehavior *behavior): operation_behavior(behavior) {}
+    explicit ConstantDeterminingVisitor(AOperationBehavior *behavior, ScriptAllocator *allocator)
+        : _mOperationBehavior(behavior), _mAllocator(allocator) {}
 
-    virtual bool before_descend(LSLASTNode *node);
+    virtual bool beforeDescend(LSLASTNode *node);
 
     virtual bool visit(LSLScript *node);
     virtual bool visit(LSLDeclaration *node);
@@ -22,7 +23,8 @@ class ConstantDeterminingVisitor : public DepthFirstASTVisitor {
     virtual bool visit(LSLQuaternionExpression *node);
     virtual bool visit(LSLTypecastExpression *node);
   protected:
-    AOperationBehavior *operation_behavior = nullptr;
+    AOperationBehavior *_mOperationBehavior = nullptr;
+    ScriptAllocator *_mAllocator;
 };
 }
 

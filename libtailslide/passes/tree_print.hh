@@ -14,8 +14,8 @@ class TreePrintingVisitor: public ASTVisitor {
     virtual bool visit(LSLASTNullNode *node) { return visit((LSLASTNode *)node); }
     virtual bool visit(LSLASTNodeList *node) { return visit((LSLASTNode *)node); }
 
-    int walklevel = 0;
-    std::stringstream stream {};
+    int mWalkLevel = 0;
+    std::stringstream mStream {};
 };
 }
 

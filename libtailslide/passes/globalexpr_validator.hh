@@ -14,7 +14,7 @@ class GlobalExprValidatingVisitor: public ASTVisitor {
     virtual bool visit(LSLFunctionExpression *node);
     // reset to `true` before checking each rvalue, if it's false after
     // visiting the rvalue then raise an error about non-constant expression.
-    bool valid_rvalue = true;
+    bool _mValidRValue = true;
 };
 
 // More strict form of above. Enforces the same restrictions on

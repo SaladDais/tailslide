@@ -8,7 +8,7 @@
 namespace Tailslide {
 // TODO: use structs or something here
 
-const static int coercion_table[][2] = {
+const static int COERCION_TABLE[][2] = {
         // wanted type      acceptable type
         {LST_FLOATINGPOINT, LST_INTEGER},
         {LST_STRING,        LST_KEY},
@@ -17,7 +17,7 @@ const static int coercion_table[][2] = {
 };
 
 // from->to allowed lookup table
-const static int legal_cast_table[LST_MAX][LST_MAX] = {
+const static int LEGAL_CAST_TABLE[LST_MAX][LST_MAX] = {
     /* NULL   */ {0},
     /* INT    */ {0, 1, 1, 1, 0, 0, 0, 1, 0},
     /* FLOAT  */ {0, 1, 1, 1, 0, 0, 0, 1, 0},
@@ -29,7 +29,7 @@ const static int legal_cast_table[LST_MAX][LST_MAX] = {
     /* ERROR  */ {0},
 };
 
-const static int operator_result_table[][4] = {
+const static int OPERATOR_RESULTS[][4] = {
 
         // operator   left type           right type          result type
         // ++
@@ -181,7 +181,7 @@ const static int operator_result_table[][4] = {
         {-1,          -1,                -1,                -1},
 };
 
-LSLType LSLType::types[LST_MAX] = {
+LSLType LSLType::_sTypes[LST_MAX] = { // NOLINT(cert-err58-cpp)
         LSLType(LST_NULL, true),
         LSLType(LST_INTEGER, true),
         LSLType(LST_FLOATINGPOINT, true),
@@ -193,30 +193,30 @@ LSLType LSLType::types[LST_MAX] = {
         LSLType(LST_ERROR, true),
 };
 
-bool LSLType::can_coerce(LSLType *to) {
+bool LSLType::canCoerce(LSLType *to) {
   int i;
 
   // error type matches anything
-  if (get_itype() == LST_ERROR || to->get_itype() == LST_ERROR)
+  if (getIType() == LST_ERROR || to->getIType() == LST_ERROR)
     return true;
 
   // if we're already of the target type, then of course we can be used for it
-  if (get_itype() == to->get_itype())
+  if (getIType() == to->getIType())
     return true;
 
-  for (i = 0; coercion_table[i][1] != -1; i++) {
-    if (coercion_table[i][1] == get_itype() && coercion_table[i][0] == to->get_itype()) {
+  for (i = 0; COERCION_TABLE[i][1] != -1; i++) {
+    if (COERCION_TABLE[i][1] == getIType() && COERCION_TABLE[i][0] == to->getIType()) {
       return true;
     }
   }
   return false;
 }
 
-class LSLType *LSLType::get_result_type(int op, LSLType *right) {
+class LSLType *LSLType::getResultType(int op, LSLType *right) {
   int i;
 
   // error on either side is always error
-  if (get_itype() == LST_ERROR || (right != nullptr && right->get_itype() == LST_ERROR))
+  if (getIType() == LST_ERROR || (right != nullptr && right->getIType() == LST_ERROR))
     return TYPE(LST_ERROR);
 
   if (op == '(') {
@@ -237,32 +237,32 @@ class LSLType *LSLType::get_result_type(int op, LSLType *right) {
   }
 
   // go through each entry in the operator result table
-  for (i = 0; operator_result_table[i][0] != -1; i++) {
+  for (i = 0; OPERATOR_RESULTS[i][0] != -1; i++) {
 
     // no operator match
-    if (operator_result_table[i][0] != op)
+    if (OPERATOR_RESULTS[i][0] != op)
       continue;
 
     // the left side must match our left side
-    if (operator_result_table[i][1] != get_itype() && operator_result_table[i][1] != LST_ANY)
+    if (OPERATOR_RESULTS[i][1] != getIType() && OPERATOR_RESULTS[i][1] != LST_ANY)
       continue;
 
     bool match;
 
     if (right == nullptr)
       // right IS empty and matches nothing
-      match = (operator_result_table[i][2] == LST_NONE);
+      match = (OPERATOR_RESULTS[i][2] == LST_NONE);
     else
       // or right isn't empty and matches our side
-      match = (operator_result_table[i][2] == LST_ANY ||
-               operator_result_table[i][2] == (int) right->get_itype());
+      match = (OPERATOR_RESULTS[i][2] == LST_ANY ||
+               OPERATOR_RESULTS[i][2] == (int) right->getIType());
 
     // no type match on the operation
     if (!match)
       continue;
 
     // send back the type
-    auto *ret_type = TYPE((LST_TYPE) operator_result_table[i][3]);
+    auto *ret_type = TYPE((LSLIType) OPERATOR_RESULTS[i][3]);
     // for compound assignment operators the type of the operation's retval
     // must additionally match the type of the lvalue, or it is not a valid
     // compound assignment.
@@ -277,8 +277,8 @@ class LSLType *LSLType::get_result_type(int op, LSLType *right) {
       // In LSO it behaves the same as `(int_val = (integer)(int_val * float_val)) * 0.0`.
       // In Mono it causes a runtime VM error due to invalid IL if you actually try to use
       // the retval in something like `llOwnerSay((string)(int_val *= float_val))`.
-      // For now let's just pretend it returns a float, because it sort of does in LSO.
-      if (get_itype() == LST_INTEGER && right && right->get_itype() == LST_FLOATINGPOINT && op == '*') {
+      // For now let's just warn and pretend it returns a float, because it sort of does in LSO.
+      if (getIType() == LST_INTEGER && right && right->getIType() == LST_FLOATINGPOINT && op == '*') {
         return TYPE(LST_FLOATINGPOINT);
       }
       return nullptr;
@@ -392,7 +392,7 @@ const char *operation_repr_str(int operation) {
   }
 }
 
-bool is_cast_legal(LST_TYPE from, LST_TYPE to) {
-  return legal_cast_table[from][to] == 1;
+bool is_cast_legal(LSLIType from, LSLIType to) {
+  return LEGAL_CAST_TABLE[from][to] == 1;
 }
 }

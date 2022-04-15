@@ -89,15 +89,15 @@ enum ErrorCode {
 
 #ifndef HIDE_TAILSLIDE_INTERNALS
 #define LINECOL(l)  (l)->first_line, (l)->first_column
-#define NODE_ERROR(node, ...) do {(node)->context->logger->error((node)->get_lloc(), __VA_ARGS__);} while(0)
+#define NODE_ERROR(node, ...) do {(node)->mContext->logger->error((node)->getLoc(), __VA_ARGS__);} while(0)
 #endif
 
 class Logger {
   public:
     explicit Logger(ScriptAllocator *allocator) :
-               errors(0), warnings(0), show_end(false), show_info(false), sort(true),
-               show_error_codes(true), check_assertions(false), last_message(NULL),
-               file(stderr), finalized(false), _allocator(allocator) {};
+        _mErrors(0), _mWarnings(0), _mShowEnd(false), _mShowInfo(false), _mSort(true),
+        _mShowErrorCodes(true), _mCheckAssertions(false), _mLastMessage(NULL),
+        _mFinalized(false), _mAllocator(allocator) {};
     void log(LogLevel type, YYLTYPE *loc, const char *fmt, ...);
     void logv(LogLevel type, YYLTYPE *loc, const char *fmt, va_list args, int error=0);
     void error( YYLTYPE *loc, int error, ... );
@@ -105,39 +105,37 @@ class Logger {
     void reset();
     void finalize();
 
-    int     get_errors()    { return errors;    }
-    int     get_warnings()  { finalize(); return warnings;  }
-    void    set_show_end(bool v) { show_end = v; }
-    void    set_show_info(bool v){ show_info = v;}
-    void    set_sort(bool v)     { sort = v;     }
-    void    set_show_error_codes(bool v) { show_error_codes = v; }
-    void    set_check_assertions(bool v) { check_assertions = v; }
-    void    filter_assert_errors();
+    int     getErrors() const    { return _mErrors;    }
+    int     getWarnings()  { finalize(); return _mWarnings;  }
+    void    setShowEnd(bool v) { _mShowEnd = v; }
+    void    setShowInfo(bool v){ _mShowInfo = v;}
+    void    setSort(bool v)     { _mSort = v;     }
+    void    setShowErrorCodes(bool v) { _mShowErrorCodes = v; }
+    void    setCheckAssertions(bool v) { _mCheckAssertions = v; }
+    void    filterAssertErrors();
 
-    void    add_assertion( int line, ErrorCode error ) {
-      assertions.emplace_back( std::pair<int, ErrorCode>( line, error ) );
+    void    addAssertion(int line, ErrorCode error ) {
+      _mAssertions.emplace_back(std::pair<int, ErrorCode>(line, error ) );
     }
 
   protected:
-    int     errors;
-    int     warnings;
-    bool    show_end;
-    bool    show_info;
-    bool    sort;
-    bool    show_error_codes;
-    bool    check_assertions;
-    bool    finalized;
-    class LogMessage *last_message;
-    ScriptAllocator *_allocator;
+    int     _mErrors;
+    int     _mWarnings;
+    bool    _mShowEnd;
+    bool    _mShowInfo;
+    bool    _mSort;
+    bool    _mShowErrorCodes;
+    bool    _mCheckAssertions;
+    bool    _mFinalized;
+    class LogMessage *_mLastMessage;
+    ScriptAllocator *_mAllocator;
 
   private:
-    static thread_local Logger instance;
-    FILE    *file;
-    std::vector<class LogMessage*>    messages;
-    std::vector<ErrorCode>            errors_seen;
-    std::vector< std::pair<int, ErrorCode>>    assertions;
-    static const char* error_messages[];
-    static const char* warning_messages[];
+    std::vector<class LogMessage*>    _mMessages;
+    std::vector<ErrorCode>            _mErrorsSeen;
+    std::vector< std::pair<int, ErrorCode>>    _mAssertions;
+    static const char* _sErrorMessages[];
+    static const char* _sWarningMessages[];
 };
 
 inline void DEBUG(LogLevel level, YYLTYPE *yylloc, const char *fmt, ...) {
@@ -153,22 +151,22 @@ class LogMessage: public TrackableObject {
   public:
     LogMessage( ScriptContext *ctx, LogLevel type, YYLTYPE *loc, char *message, ErrorCode error );
 
-    LogLevel    get_type() { return type; }
-    YYLTYPE    *get_loc()  { return &loc;  }
-    ErrorCode   get_error() { return error; }
+    LogLevel    getType() { return _mLogType; }
+    YYLTYPE    *getLoc()  { return &_mLoc;  }
+    ErrorCode   getError() { return _mErrorCode; }
     void        cont(char *message);
     void        print(FILE *fp);
 
   private:
-    LogLevel            type;
+    LogLevel            _mLogType;
 
     // we need our own copy of loc, because messages logged in the parser will be
     // handing us a copy of a loc structure that is constantly changing, and will
     // be invalid when we go to sort.
-    YYLTYPE             loc;
+    YYLTYPE             _mLoc;
 
-    std::vector<char*>  messages;
-    ErrorCode           error;
+    std::vector<char*>  _mMessages;
+    ErrorCode           _mErrorCode;
 };
 
 }
