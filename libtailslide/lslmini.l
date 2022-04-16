@@ -91,7 +91,7 @@ FS            (f|F)
 "."                     { return(PERIOD); }
 
 
-0[xX]{H}+               { yylval->ival = strtoul(yytext, NULL, 0);  return(INTEGER_CONSTANT); }
+0[xX]{H}+               { yylval->ival = strtoul(yytext, NULL, 16); return(INTEGER_CONSTANT); }
 {N}+                    { yylval->ival = strtoul(yytext, NULL, 10); return(INTEGER_CONSTANT); }
 
 {L}({L}|{N})*           { yylval->sval = ALLOCATOR->alloc(strlen(yytext) + 1); strcpy(yylval->sval, yytext); return(IDENTIFIER); }
