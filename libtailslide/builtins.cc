@@ -70,6 +70,23 @@ static char* tailslide_strtok_r(char *str, const char *delim, char **nextp) {
   return ret;
 }
 
+static void set_default_value(LSLType *type, LSLConstant *constant) {
+  if (constant)
+    constant->markStatic();
+  type->setDefaultValue(constant);
+}
+
+static void init_default_values() {
+  set_default_value(TYPE(LST_INTEGER), gStaticAllocator.newTracked<LSLIntegerConstant>(0));
+  set_default_value(TYPE(LST_FLOATINGPOINT), gStaticAllocator.newTracked<LSLFloatConstant>(0));
+  set_default_value(TYPE(LST_STRING), gStaticAllocator.newTracked<LSLStringConstant>(""));
+  // Default value is _not_ NULL_KEY, even though you might logically think that.
+  set_default_value(TYPE(LST_KEY), gStaticAllocator.newTracked<LSLStringConstant>(""));
+  set_default_value(TYPE(LST_VECTOR), gStaticAllocator.newTracked<LSLVectorConstant>(0, 0, 0));
+  set_default_value(TYPE(LST_QUATERNION), gStaticAllocator.newTracked<LSLQuaternionConstant>(0, 0, 0, 1));
+  set_default_value(TYPE(LST_LIST), gStaticAllocator.newTracked<LSLListConstant>(nullptr));
+}
+
 // called once at startup, not thread-safe.
 void tailslide_init_builtins(const char *builtins_file) {
   LSLFunctionDec *dec = nullptr;
@@ -90,6 +107,8 @@ void tailslide_init_builtins(const char *builtins_file) {
       exit(EXIT_FAILURE);
     }
   }
+
+  init_default_values();
 
   while (true) {
     if (fp) {

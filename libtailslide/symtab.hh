@@ -1,5 +1,5 @@
-#ifndef _SYMTAB_HH
-#define _SYMTAB_HH 1
+#ifndef TAILSLIDE_SYMTAB_HH
+#define TAILSLIDE_SYMTAB_HH
 
 #include <clocale>
 #include <cstddef>
@@ -142,4 +142,4 @@ class LSLSymbolTable: public TrackableObject {
 
 }
 
-#endif /* not _SYMTAB_HH */
+#endif

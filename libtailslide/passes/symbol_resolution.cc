@@ -27,7 +27,7 @@ class GlobalSymbolResolutionVisitor: public ExprSymbolResolutionVisitor {
       // Necessary so things like `string foo = foo;` will error correctly.
       visitChildren(node);
 
-      auto *identifier = (LSLIdentifier *) node->getChildren();
+      auto *identifier = (LSLIdentifier *) node->getChild(0);
       identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
           identifier->getName(), identifier->getType(), SYM_VARIABLE, SYM_GLOBAL, node->getLoc(), nullptr,
           node->getParent()
@@ -54,13 +54,7 @@ class GlobalSymbolResolutionVisitor: public ExprSymbolResolutionVisitor {
     };
 
     virtual bool visit(LSLState *node) {
-      LSLASTNode *maybe_id = node->getChildren();
-      LSLIdentifier *identifier;
-
-      if (maybe_id->getNodeType() == NODE_NULL) // null identifier = default state, nothing to define
-        return false;
-
-      identifier = (LSLIdentifier *) maybe_id;
+      auto *identifier = (LSLIdentifier *)node->getChild(0);
       identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
           identifier->getName(), identifier->getType(), SYM_STATE, SYM_GLOBAL, identifier->getLoc()
       ));

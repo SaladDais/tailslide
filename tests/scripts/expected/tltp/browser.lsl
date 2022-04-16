@@ -4,7 +4,6 @@ key source;
 integer is_on;
 integer browsing_channel;
 integer browsing_handle;
-integer advert_handle;
 integer channel;
 integer handle;
 integer action;
@@ -258,8 +257,8 @@ on()
 {
     is_on = TRUE;
     llSetColor(<1.00000, 1.00000, 0.00000>, ALL_SIDES);
-    llListenRemove(advert_handle);
-    advert_handle == llListen(-9, "", "", "");
+    llListenRemove(0);
+    0 == llListen(-9, "", "", "");
     integer n;
     for (n = 0; n < max_prim_used; ++n)
         llSetLinkAlpha(n + 2, 1.00000, ALL_SIDES);
@@ -271,7 +270,7 @@ off()
     is_on = FALSE;
     llSetColor(<0.200000, 0.200000, 0.200000>, ALL_SIDES);
     llSetText("", <0.00000, 0.00000, 0.00000>, 0.00000);
-    llListenRemove(advert_handle);
+    llListenRemove(0);
     llListenRemove(browsing_handle);
     advertised_urls = [];
     advertised_names = [];

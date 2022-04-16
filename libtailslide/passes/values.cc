@@ -41,20 +41,21 @@ bool ConstantDeterminingVisitor::visit(LSLScript *node) {
 }
 
 bool ConstantDeterminingVisitor::visit(LSLDeclaration *node) {
-  auto *id = (LSLIdentifier *) node->getChild(0);
+  auto *sym = node->getSymbol();
   LSLASTNode *rvalue = node->getChild(1);
-  LSLConstant *cv = nullptr;
+  LSLConstant *cv;
   bool cv_precluded = false;
   if (rvalue && rvalue->getNodeType() != NODE_NULL) {
     cv = rvalue->getConstantValue();
     cv_precluded = rvalue->getConstantPrecluded();
+  } else {
+    cv = sym->getType()->getDefaultValue();
   }
   DEBUG(LOG_DEBUG_SPAM, nullptr,
       "set %s const to %p\n",
-        id->getName(),
-        rvalue ? rvalue->getConstantValue() : nullptr
+        sym->getName(),
+        cv
   );
-  auto *sym = id->getSymbol();
   sym->setConstantValue(cv);
   sym->setConstantPrecluded(cv_precluded);
   return false;
@@ -113,19 +114,19 @@ bool ConstantDeterminingVisitor::visit(LSLExpression *node) {
 
 bool ConstantDeterminingVisitor::visit(LSLGlobalVariable *node) {
   // if it's initialized, set its constant value
-  auto *identifier = (LSLIdentifier *) node->getChild(0);
-  auto *sym = identifier->getSymbol();
+  auto *sym = node->getSymbol();
   LSLASTNode *rvalue = node->getChild(1);
-  if (rvalue) {
+  if (rvalue && rvalue->getNodeType() != NODE_NULL) {
     sym->setConstantValue(rvalue->getConstantValue());
     sym->setConstantPrecluded(rvalue->getConstantPrecluded());
+  } else {
+    sym->setConstantValue(sym->getType()->getDefaultValue());
   }
   return true;
 }
 
 bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {
-  auto *id = (LSLIdentifier*) node->getChild(0);
-  LSLSymbol *symbol = id->getSymbol();
+  LSLSymbol *symbol = node->getSymbol();
 
   // can't determine value if we don't have a symbol
   if (symbol == nullptr) {
@@ -135,22 +136,22 @@ bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {
   }
 
   auto *member_id = (LSLIdentifier*) node->getChild(1);
-  const char *member = nullptr;
+  const char *member_name = nullptr;
   if (member_id && member_id->getNodeType() == NODE_IDENTIFIER)
-    member = ((LSLIdentifier *) member_id)->getName();
+    member_name = member_id->getName();
 
   LSLConstant *constant_value = nullptr;
-  DEBUG(LOG_DEBUG_SPAM, nullptr, "id %s assigned %d times\n", id->getName(), symbol->getAssignments());
+  DEBUG(LOG_DEBUG_SPAM, nullptr, "id %s assigned %d times\n", symbol->getName(), symbol->getAssignments());
   if (symbol->getAssignments() == 0) {
     constant_value = symbol->getConstantValue();
-    if (constant_value != nullptr && member != nullptr) { // getting a member
+    if (constant_value != nullptr && member_name != nullptr) { // getting a member_name
       LSLIType c_type = constant_value->getIType();
       switch (c_type) {
         case LST_VECTOR: {
           auto *c = (LSLVectorConstant *) constant_value;
           auto *v = (Vector3 *) c->getValue();
           assert(v);
-          switch (member[0]) {
+          switch (member_name[0]) {
             case 'x':
               constant_value = _mAllocator->newTracked<LSLFloatConstant>(v->x);
               break;
@@ -169,7 +170,7 @@ bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {
           auto *c = (LSLQuaternionConstant *) constant_value;
           auto *v = (Quaternion *) c->getValue();
           assert(v);
-          switch (member[0]) {
+          switch (member_name[0]) {
             case 'x':
               constant_value = _mAllocator->newTracked<LSLFloatConstant>(v->x);
               break;

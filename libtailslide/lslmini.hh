@@ -613,8 +613,9 @@ class LSLLValueExpression : public LSLExpression {
       return buf;
     };
     virtual LSLNodeSubType getNodeSubType() { return NODE_LVALUE_EXPRESSION; };
-
     virtual LSLConstant* getConstantValue();
+    virtual LSLSymbol* getSymbol() {return ((LSLIdentifier*)getChild(0))->getSymbol(); };
+
     void setIsFoldable(bool foldable) { _mIsFoldable = foldable;};
     bool getIsFoldable() const {return _mIsFoldable;};
   private:
