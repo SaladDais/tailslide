@@ -212,7 +212,7 @@ bool LSLType::can_coerce(LSLType *to) {
   return false;
 }
 
-class LSLType *LSLType::get_result_type(int op, LSLType *right, LSLASTNode *node) {
+class LSLType *LSLType::get_result_type(int op, LSLType *right) {
   int i;
 
   // error on either side is always error
@@ -277,11 +277,8 @@ class LSLType *LSLType::get_result_type(int op, LSLType *right, LSLASTNode *node
       // In LSO it behaves the same as `(int_val = (integer)(int_val * float_val)) * 0.0`.
       // In Mono it causes a runtime VM error due to invalid IL if you actually try to use
       // the retval in something like `llOwnerSay((string)(int_val *= float_val))`.
-      // For now let's just warn and pretend it returns a float, because it sort of does in LSO.
+      // For now let's just pretend it returns a float, because it sort of does in LSO.
       if (get_itype() == LST_INTEGER && right && right->get_itype() == LST_FLOATINGPOINT && op == '*') {
-        if (node) {
-          NODE_ERROR(node, W_INT_FLOAT_MUL_ASSIGN);
-        }
         return TYPE(LST_FLOATINGPOINT);
       }
       return nullptr;

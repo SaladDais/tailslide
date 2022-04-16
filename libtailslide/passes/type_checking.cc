@@ -170,7 +170,7 @@ bool TypeCheckVisitor::visit(LSLExpression *node) {
     // guess as to what the result of the expression is meant to be.
     type = TYPE(LST_ERROR);
   } else {
-    type = l_type->get_result_type(operation, r_type, node);
+    type = l_type->get_result_type(operation, r_type);
     if (type == nullptr) {
       NODE_ERROR(
           node,
@@ -182,6 +182,9 @@ bool TypeCheckVisitor::visit(LSLExpression *node) {
       // We don't know what type this expression is supposed to result in,
       // either because this operation is unsupported.
       type = TYPE(LST_ERROR);
+    } else if (l_type == TYPE(LST_INTEGER) && r_type == TYPE(LST_FLOATINGPOINT) && operation == MUL_ASSIGN) {
+      // see note in `LSLType::getResultType` for details on this case.
+      NODE_ERROR(node, W_INT_FLOAT_MUL_ASSIGN);
     }
   }
   node->set_type(type);
