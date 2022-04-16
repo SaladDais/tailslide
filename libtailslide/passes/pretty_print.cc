@@ -464,6 +464,8 @@ static std::string format_float(float v) {
     } else if (v > 0.0) {
       // about as close as we can get to an inf literal in LSL, exponent places it outside
       // the range of both float and double width.
+      // oddly enough these _are_ allowed as initializers for globals under LSO, because the fault
+      // register gets cleared at the end of compilation. The value just can't ever be used.
       return "2.0e+999";
     } else {
       return "-2.0e+999";
