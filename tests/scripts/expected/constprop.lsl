@@ -68,6 +68,8 @@ default
             return;
         if (1)
             return;
+        if (1)
+            return;
         llFrand(1.00000);
         llFrand(2.0e+999);
         llFrand(2.0e+999 * 0.00000);

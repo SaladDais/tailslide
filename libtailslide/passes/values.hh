@@ -25,6 +25,8 @@ class ConstantDeterminingVisitor : public DepthFirstASTVisitor {
   protected:
     AOperationBehavior *_mOperationBehavior = nullptr;
     ScriptAllocator *_mAllocator;
+
+    void handleDeclaration(LSLASTNode *node);
 };
 }
 

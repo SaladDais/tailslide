@@ -326,7 +326,7 @@ default
         llSetText(Unescape(""), <1.00000, 1.00000, 1.00000>, 1.00000);
         llTargetOmega(<0.00000, 0.00000, 0.00000>, 0.00000, 0.00000);
         llParticleSystem(llParticleSystem_list);
-        llSetTextureAnim(0, -1, 2, 2, 0, 3, 0.100000);
+        llSetTextureAnim(0, -1, 2, 2, 0.00000, 3.00000, 0.100000);
         llOwnerSay("--------------------------------------");
         sep = llUnescapeURL("%01");
         if ((llGetObjectPermMask(MASK_OWNER) & 57344) != 57344)
@@ -367,7 +367,7 @@ default
         if (0)
         {
             break();
-            add([-1, 0, 2, 2, 0, 3, 0.100000], 2097408);
+            add([-1, 0, 2, 2, 0.00000, 3.00000, 0.100000], 2097408);
         }
         store();
         t = llGetListLength(commands);

@@ -205,10 +205,32 @@ class LSLStringConstant : public LSLConstant {
       return new_const;
     };
 
-  private:
+  protected:
     const char *_mValue;
 };
 
+
+/////////////////////////////////////////////////////
+// String Constant
+
+
+class LSLKeyConstant : public LSLStringConstant {
+  public:
+    LSLKeyConstant( ScriptContext *ctx, const char *v ) : LSLStringConstant(ctx, v) { _mType = TYPE(LST_KEY); }
+    virtual LSLConstant* copy(ScriptAllocator *allocator) {
+      auto* new_const = allocator->newTracked<LSLKeyConstant>(_mValue);
+      new_const->_mConstantValue = new_const;
+      return new_const;
+    };
+
+    virtual const char *getNodeName() {
+      static thread_local char buf[256];
+      snprintf(buf, 256, "key constant: \"%s\"", escape_string(_mValue).c_str());
+      return buf;
+    }
+
+    virtual LSLNodeSubType getNodeSubType() { return NODE_KEY_CONSTANT; }
+};
 
 /////////////////////////////////////////////////////
 // List Constant

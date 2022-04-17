@@ -41,24 +41,31 @@ bool ConstantDeterminingVisitor::visit(LSLScript *node) {
 }
 
 bool ConstantDeterminingVisitor::visit(LSLDeclaration *node) {
+  handleDeclaration(node);
+  return false;
+}
+
+void ConstantDeterminingVisitor::handleDeclaration(LSLASTNode *node) {
+  // if it's initialized, set its constant value
   auto *sym = node->getSymbol();
   LSLASTNode *rvalue = node->getChild(1);
-  LSLConstant *cv;
-  bool cv_precluded = false;
   if (rvalue && rvalue->getNodeType() != NODE_NULL) {
-    cv = rvalue->getConstantValue();
-    cv_precluded = rvalue->getConstantPrecluded();
+    sym->setConstantPrecluded(rvalue->getConstantPrecluded());
+    if (rvalue->getConstantPrecluded()) {
+      // Can't determine a value due to a type or symbol error somewhere
+      sym->setConstantValue(nullptr);
+    } else {
+      auto *cv = rvalue->getConstantValue();
+      // Must be a case where we're expecting automatic type promotion,
+      // perform it on the rvalue's constant value before assigning it to the symbol
+      if (cv && cv->getType() != sym->getType() && cv->getType()->canCoerce(sym->getType())) {
+        cv = _mOperationBehavior->cast(sym->getType(), cv, cv->getLoc());
+      }
+      sym->setConstantValue(cv);
+    }
   } else {
-    cv = sym->getType()->getDefaultValue();
+    sym->setConstantValue(sym->getType()->getDefaultValue());
   }
-  DEBUG(LOG_DEBUG_SPAM, nullptr,
-      "set %s const to %p\n",
-        sym->getName(),
-        cv
-  );
-  sym->setConstantValue(cv);
-  sym->setConstantPrecluded(cv_precluded);
-  return false;
 }
 
 bool ConstantDeterminingVisitor::visit(LSLExpression *node) {
@@ -113,16 +120,8 @@ bool ConstantDeterminingVisitor::visit(LSLExpression *node) {
 }
 
 bool ConstantDeterminingVisitor::visit(LSLGlobalVariable *node) {
-  // if it's initialized, set its constant value
-  auto *sym = node->getSymbol();
-  LSLASTNode *rvalue = node->getChild(1);
-  if (rvalue && rvalue->getNodeType() != NODE_NULL) {
-    sym->setConstantValue(rvalue->getConstantValue());
-    sym->setConstantPrecluded(rvalue->getConstantPrecluded());
-  } else {
-    sym->setConstantValue(sym->getType()->getDefaultValue());
-  }
-  return true;
+  handleDeclaration(node);
+  return false;
 }
 
 bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {

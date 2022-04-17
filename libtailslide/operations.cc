@@ -19,6 +19,9 @@ LSLConstant *TailslideOperationBehavior::operation(
     case LST_STRING:
       new_cv = operation(oper, (LSLStringConstant*)cv, other_cv);
       break;
+    case LST_KEY:
+      new_cv = operation(oper, (LSLKeyConstant*)cv, other_cv);
+      break;
     case LST_INTEGER:
       new_cv = operation(oper, (LSLIntegerConstant*)cv, other_cv);
       break;
@@ -36,7 +39,6 @@ LSLConstant *TailslideOperationBehavior::operation(
       break;
     case LST_MAX:
     case LST_NULL:
-    case LST_KEY:
     case LST_ERROR:
       return nullptr;
   }
@@ -293,6 +295,49 @@ LSLConstant *TailslideOperationBehavior::operation(
           return nullptr;
       }
     }
+    case NODE_KEY_CONSTANT: {
+      const char *ov = ((LSLStringConstant *) other_const)->getValue();
+      switch (operation) {
+        case EQ:
+          return _mAllocator->newTracked<LSLIntegerConstant>(!strcmp(value, ov));
+          // If you want LSO's behaviour, remove the `!= 0`.
+        case NEQ:
+          return _mAllocator->newTracked<LSLIntegerConstant>(strcmp(value, ov) != 0);
+        default:
+          return nullptr;
+      }
+    }
+    default:
+      return nullptr;
+  }
+}
+
+//////////////////////////////////////////////
+// Key Constants
+
+LSLConstant *TailslideOperationBehavior::operation(
+    int operation, LSLKeyConstant *cv, LSLConstant *other_const) {
+  const char *value = cv->getValue();
+  // unary op
+  if (other_const == nullptr) {
+    return nullptr;
+  }
+
+  // binary op
+  switch (other_const->getNodeSubType()) {
+    case NODE_STRING_CONSTANT:
+    case NODE_KEY_CONSTANT: {
+      const char *ov = ((LSLStringConstant *) other_const)->getValue();
+      switch (operation) {
+        case EQ:
+          return _mAllocator->newTracked<LSLIntegerConstant>(!strcmp(value, ov));
+          // If you want LSO's behaviour, remove the `!= 0`.
+        case NEQ:
+          return _mAllocator->newTracked<LSLIntegerConstant>(strcmp(value, ov) != 0);
+        default:
+          return nullptr;
+      }
+    }
     default:
       return nullptr;
   }
@@ -482,6 +527,9 @@ LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLConstant *cv,
 
   LSLConstant *new_cv = nullptr;
   switch (orig_type->getIType()) {
+    case LST_KEY:
+      new_cv = cast(to_type, (LSLKeyConstant *)cv);
+      break;
     case LST_STRING:
       new_cv = cast(to_type, (LSLStringConstant *)cv);
       break;
@@ -502,7 +550,6 @@ LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLConstant *cv,
       break;
     case LST_MAX:
     case LST_NULL:
-    case LST_KEY:
     case LST_ERROR:
       return nullptr;
   }
@@ -528,6 +575,18 @@ LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLStringConstan
     case LST_FLOATINGPOINT: {
       return _mAllocator->newTracked<LSLFloatConstant>((F32) strtod(v, nullptr));
     }
+    case LST_KEY:
+      return _mAllocator->newTracked<LSLKeyConstant>(v);
+    default:
+      return nullptr;
+  }
+}
+
+LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLKeyConstant *cv) {
+  auto *v = cv->getValue();
+  switch(to_type->getIType()) {
+    case LST_STRING:
+      return _mAllocator->newTracked<LSLStringConstant>(v);
     default:
       return nullptr;
   }
@@ -541,6 +600,8 @@ LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLIntegerConsta
           _mAllocator->copyStr(std::to_string(v).c_str())
       );
     }
+    case LST_FLOATINGPOINT:
+      return _mAllocator->newTracked<LSLFloatConstant>((float)v);
     default:
       return nullptr;
   }

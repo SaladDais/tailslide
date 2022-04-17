@@ -67,6 +67,10 @@ bool TreeSimplifyingVisitor::visit(LSLExpression* node) {
   // this expression results in a list, don't fold the result in.
   if (c_type == LST_LIST)
     return true;
+  // Need to be careful about where we inline these (I.E. in list casts or expressions)
+  // just avoid inlining them at all for now.
+  if (c_type == LST_KEY)
+    return true;
   // LSL doesn't really have NaN literals, can't fold this.
   if (cv->containsNaN())
     return true;
@@ -101,6 +105,10 @@ bool TreeSimplifyingVisitor::visit(LSLLValueExpression *node) {
     // These references are usually "free" given that they're
     // lexer tokens in SL proper.
     if (sym->getSubType() == SYM_BUILTIN)
+      return false;
+    // Need to be careful about where we inline these (I.E. in list casts or expressions)
+    // just avoid inlining them at all for now.
+    if (sym->getIType() == LST_KEY)
       return false;
     LSLConstant *cv = node->getConstantValue();
     if (cv && !cv->containsNaN()) {

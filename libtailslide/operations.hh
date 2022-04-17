@@ -35,6 +35,7 @@ class TailslideOperationBehavior : public AOperationBehavior {
     LSLConstant *operation(int operation, LSLIntegerConstant *cv, LSLConstant *other_cv);
     LSLConstant *operation(int operation, LSLFloatConstant *cv, LSLConstant *other_cv);
     LSLConstant *operation(int operation, LSLStringConstant *cv, LSLConstant *other_cv);
+    LSLConstant *operation(int operation, LSLKeyConstant *cv, LSLConstant *other_cv);
     LSLConstant *operation(int operation, LSLListConstant *cv, LSLConstant *other_cv);
     LSLConstant *operation(int operation, LSLVectorConstant *cv, LSLConstant *other_cv);
     LSLConstant *operation(int operation, LSLQuaternionConstant *cv, LSLConstant *other_cv);
@@ -46,6 +47,7 @@ class TailslideOperationBehavior : public AOperationBehavior {
     LSLConstant *cast(LSLType *to_type, LSLIntegerConstant *cv);
     LSLConstant *cast(LSLType *to_type, LSLFloatConstant *cv);
     LSLConstant *cast(LSLType *to_type, LSLStringConstant *cv);
+    LSLConstant *cast(LSLType *to_type, LSLKeyConstant *cv);
     LSLConstant *cast(LSLType *to_type, LSLListConstant *cv) { return nullptr; };
     LSLConstant *cast(LSLType *to_type, LSLVectorConstant *cv) { return nullptr; };
     LSLConstant *cast(LSLType *to_type, LSLQuaternionConstant *cv) { return nullptr; };

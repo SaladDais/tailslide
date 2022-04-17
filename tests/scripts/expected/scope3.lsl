@@ -1,4 +1,4 @@
-list foo = ["quux", <0.00000, 0.00000, 3.00000>, 3];
+list foo = ["quux", <0.00000, 0.00000, 3.00000>, 3.00000];
 test()
 {
 }
@@ -19,7 +19,7 @@ default
         @test;
         jump llOwnerSay;
         llOwnerSay(llDumpList2String(foo, "|"));
-        llOwnerSay(llDumpList2String(["quux", <0.00000, 0.00000, 3.00000>, 3], "|"));
+        llOwnerSay(llDumpList2String(["quux", <0.00000, 0.00000, 3.00000>, 3.00000], "|"));
         @llOwnerSay;
     }
 }

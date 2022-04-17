@@ -10,6 +10,8 @@ default {
         float      f = 1.0;
         vector     v = <1,2,3>;
         quaternion r = <3,2,1,0>;
+        key        k = NULL_KEY;
+        key        k2 = NULL_KEY;
         list       l = [1,2,3];
         if ( s == 2 ) return;                   // $[E20012]
         string     s = "hello";                 // $[E20001]
@@ -51,6 +53,7 @@ default {
         if ( "NaN" == (string)(((float)"inf") * 0.0) ) return; // $[E20012]
         // uninitialized rotation is <0, 0, 0, 1>, not <0, 0, 0, 0>!
         if ( uninit_r == <0, 0, 0, 1> ) return; // $[E20012]
+        if ( k == NULL_KEY && k == k2 ) return;  // $[E20012]
 
         llFrand(r.z);
         llFrand((float)"inf");
