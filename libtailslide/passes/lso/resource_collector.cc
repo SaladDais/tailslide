@@ -34,7 +34,7 @@ bool LSOResourceVisitor::visit(Tailslide::LSLGlobalVariable *node) {
   // Offset to actual data, type, null terminator for name (empty)
   _mGlobalsOffset += 4 + 1 + 1;
   sym_data->offset = _mGlobalsOffset;
-  _mGlobalsOffset += sym_data->size = LSOTypeDataSize[sym->getIType()];
+  _mGlobalsOffset += sym_data->size = LSO_TYPE_DATA_SIZES[sym->getIType()];
   return true;
 }
 
@@ -55,7 +55,7 @@ bool LSOResourceVisitor::visit(Tailslide::LSLEventHandler *node) {
   _mCurrentFunc = nullptr;
   // figure out the LSO event handler index for this handler name
   for(size_t handler_idx=0; handler_idx<LSOH_MAX; ++handler_idx) {
-    if (!strcmp(sym->getName(), LSOHandlerNames[handler_idx])) {
+    if (!strcmp(sym->getName(), LSO_HANDLER_NAMES[handler_idx])) {
       handler_sym_data->count = (LSOHandlerType)handler_idx;
     }
   }
@@ -69,7 +69,7 @@ bool LSOResourceVisitor::visit(Tailslide::LSLDeclaration *node) {
   sym_data->count = _mCurrentFunc->locals.size();
   sym_data->offset = _mCurrentFunc->size - _mCurrentFunc->offset;
   // local slots are smaller than globals, no overhead for offset to data, type and name.
-  _mCurrentFunc->size += sym_data->size = LSOTypeDataSize[sym->getIType()];
+  _mCurrentFunc->size += sym_data->size = LSO_TYPE_DATA_SIZES[sym->getIType()];
   _mCurrentFunc->locals.push_back(sym->getIType());
   return true;
 }
@@ -81,7 +81,7 @@ void LSOResourceVisitor::handleFuncDecl(LSOSymbolSizeData *func_sym_data, Tailsl
   auto *params = (Tailslide::LSLIdentifier *) func_decl->getChildren();
   while (params) {
     auto param_type = params->getIType();
-    auto param_size = LSOTypeDataSize[param_type];
+    auto param_size = LSO_TYPE_DATA_SIZES[param_type];
     // may not have a symbol if this is a builtin function!
     auto *param_sym = params->getSymbol();
     if (param_sym) {

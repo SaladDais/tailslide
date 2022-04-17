@@ -17,7 +17,7 @@ enum LSORegisters {
   LREG_BP,  // base pointer - what local variables are referenced from
   LREG_SP,  // stack pointer - where the top of the stack is
   LREG_HR,  // heap register - where in memory does the heap start
-  LREG_HP,  // heap pointer - where is the top of the heap?
+  LREG_HP,  // heap pointer - where is the top of the heap? Should be one past the last entry
   LREG_CS,  // current state
   LREG_NS,  // next state - what state are we switching to?
   // CE IE and ER are NOT used in version 2 bytecode.
@@ -40,7 +40,7 @@ enum LSORegisters {
   LREG_MAX
 };
 
-const int32_t LSORegisterOffsets[LREG_MAX + 1] = {
+const int32_t LSO_REGISTER_OFFSETS[LREG_MAX + 1] = {
     0,  // TM
     4,  // IP
     8,  // VN
@@ -67,44 +67,44 @@ const int32_t LSORegisterOffsets[LREG_MAX + 1] = {
 };
 
 typedef enum {
-  LSOH_STATE_ENTRY = 0,
-  LSOH_STATE_EXIT = 1,
-  LSOH_TOUCH_START = 2,
-  LSOH_TOUCH = 3,
-  LSOH_TOUCH_END = 4,
-  LSOH_COLLISION_START = 5,
-  LSOH_COLLISION = 6,
-  LSOH_COLLISION_END = 7,
-  LSOH_LAND_COLLISION_START = 8,
-  LSOH_LAND_COLLISION = 9,
-  LSOH_LAND_COLLISION_END = 10,
-  LSOH_TIMER = 11,
-  LSOH_LISTEN = 12,
-  LSOH_REZ = 13,
-  LSOH_SENSOR = 14,
-  LSOH_NO_SENSOR = 15,
-  LSOH_CONTROL = 16,
-  LSOH_MONEY = 17,
-  LSOH_EMAIL = 18,
-  LSOH_AT_TARGET = 19,
-  LSOH_NOT_AT_TARGET = 20,
-  LSOH_AT_ROT_TARGET = 21,
-  LSOH_NOT_AT_ROT_TARGET = 22,
-  LSOH_RTPERMISSIONS = 23,
-  LSOH_INVENTORY = 24,
-  LSOH_ATTACH = 25,
-  LSOH_DATASERVER = 26,
-  LSOH_LINK_MESSAGE = 27,
-  LSOH_MOVING_START = 28,
-  LSOH_MOVING_END = 29,
-  LSOH_OBJECT_REZ = 30,
-  LSOH_REMOTE_DATA = 31,
-  LSOH_HTTP_RESPONSE = 32,
-  LSOH_HTTP_REQUEST = 33,
-  LSOH_MAX = 34,
+  LSOH_STATE_ENTRY = 1,
+  LSOH_STATE_EXIT = 2,
+  LSOH_TOUCH_START = 3,
+  LSOH_TOUCH = 4,
+  LSOH_TOUCH_END = 5,
+  LSOH_COLLISION_START = 6,
+  LSOH_COLLISION = 7,
+  LSOH_COLLISION_END = 8,
+  LSOH_LAND_COLLISION_START = 9,
+  LSOH_LAND_COLLISION = 10,
+  LSOH_LAND_COLLISION_END = 11,
+  LSOH_TIMER = 12,
+  LSOH_LISTEN = 13,
+  LSOH_REZ = 14,
+  LSOH_SENSOR = 15,
+  LSOH_NO_SENSOR = 16,
+  LSOH_CONTROL = 17,
+  LSOH_MONEY = 18,
+  LSOH_EMAIL = 19,
+  LSOH_AT_TARGET = 20,
+  LSOH_NOT_AT_TARGET = 21,
+  LSOH_AT_ROT_TARGET = 22,
+  LSOH_NOT_AT_ROT_TARGET = 23,
+  LSOH_RTPERMISSIONS = 24,
+  LSOH_INVENTORY = 25,
+  LSOH_ATTACH = 26,
+  LSOH_DATASERVER = 27,
+  LSOH_LINK_MESSAGE = 28,
+  LSOH_MOVING_START = 29,
+  LSOH_MOVING_END = 30,
+  LSOH_OBJECT_REZ = 31,
+  LSOH_REMOTE_DATA = 32,
+  LSOH_HTTP_RESPONSE = 33,
+  LSOH_HTTP_REQUEST = 34,
+  LSOH_MAX = 35,
 } LSOHandlerType;
 
-const char * const LSOHandlerNames[LSOH_MAX] = {
+const char * const LSO_HANDLER_NAMES[LSOH_MAX] = {
     "state_entry",  // LSOH_STATE_ENTRY
     "state_exit",  // LSOH_STATE_EXIT
     "touch_start",  // LSOH_TOUCH_START
@@ -141,7 +141,7 @@ const char * const LSOHandlerNames[LSOH_MAX] = {
     "http_request",  // LSOH_HTTP_REQUEST
 };
 
-const uint32_t LSOTypeDataSize[LST_MAX] = {
+const uint32_t LSO_TYPE_DATA_SIZES[LST_MAX] = {
     0,  // null
     4,  // int
     4,  // float

@@ -29,8 +29,7 @@ class GlobalSymbolResolutionVisitor: public ExprSymbolResolutionVisitor {
 
       auto *identifier = (LSLIdentifier *) node->getChild(0);
       identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
-          identifier->getName(), identifier->getType(), SYM_VARIABLE, SYM_GLOBAL, node->getLoc(), nullptr,
-          node->getParent()
+          identifier->getName(), identifier->getType(), SYM_VARIABLE, SYM_GLOBAL, node->getLoc(), nullptr, node
       ));
       node->defineSymbol(identifier->getSymbol());
       return false;

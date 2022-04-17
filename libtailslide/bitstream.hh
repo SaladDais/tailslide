@@ -216,7 +216,7 @@ class BitStream {
      */
     BitStream &writeRawData(const uint8_t *data, const uint32_t length, bool advance = true) {
       if (data == nullptr || length == 0) {
-        throw std::runtime_error("Invalid parameters");
+        return *this;
       }
 
       if (_mPos + length > size()) {

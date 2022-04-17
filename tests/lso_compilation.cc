@@ -15,10 +15,11 @@ TEST_CASE("Simple register initialization") {
   script->script->visit(&visitor);
   LSOBitStream script_bs(std::move(visitor.mScriptBS));
 
-  script_bs.moveTo(LSORegisterOffsets[LREG_VN]);
+  script_bs.moveTo(LSO_REGISTER_OFFSETS[LREG_VN]);
   uint32_t version_num;
   script_bs >> version_num;
   CHECK_EQ(version_num, LSO_VERSION_NUM);
+  CHECK_EQ(script_bs.size(), TOTAL_LSO_MEMORY);
 }
 
 TEST_CASE("Simple heap compilation") {
@@ -30,26 +31,28 @@ TEST_CASE("Simple heap compilation") {
   auto *vec_child = parser.allocator.newTracked<LSLVectorConstant>(1, 2, 3);
   list_const->pushChild(vec_child);
   LSOHeapManager heap_manager;
-  heap_manager.writeConstant(list_const);
+  CHECK_EQ(heap_manager.writeConstant(list_const), 1);
 
   LSOBitStream heap_bs(std::move(heap_manager.mHeapBS));
-  CHECK_EQ(heap_bs.size(), 52);
-  CHECK_EQ(heap_bs.pos(), 52);
+  CHECK_EQ(heap_bs.size(), 49);
+  CHECK_EQ(heap_bs.pos(), 49);
   heap_bs.moveTo(0);
-  uint32_t size, child_1_idx, child_2_idx;
+  uint32_t size, len, child_1_idx, child_2_idx;
   LSLIType type;
   uint16_t ref_count;
-  heap_bs >> size >> type >> ref_count >> child_1_idx >> child_2_idx;
+  heap_bs >> size >> type >> ref_count >> len >> child_1_idx >> child_2_idx;
   // 2 elements, so two 32-bit heap ptrs
-  CHECK_EQ(size, 8);
+  CHECK_EQ(size, 12);
   CHECK_EQ(type, LST_LIST);
   CHECK_EQ(ref_count, 1);
-  CHECK_EQ(child_1_idx, 15);
-  CHECK_EQ(child_2_idx, 26);
+  CHECK_EQ(len, 2);
+  // + 1 gets added to all indexes
+  CHECK_EQ(child_1_idx, 20);
+  CHECK_EQ(child_2_idx, 31);
 
   // move to the vector value on the heap
   float z;
-  const uint32_t vec_pos = 26 + 4 + 1 + 2;
+  const uint32_t vec_pos = 30 + 4 + 1 + 2;
   heap_bs.moveTo(vec_pos);
   Vector3 v;
   heap_bs >> v;

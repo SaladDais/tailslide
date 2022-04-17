@@ -5,6 +5,7 @@
 #include "lslmini.hh"
 #include "visitor.hh"
 #include "bitstream.hh"
+#include "bytecode_format.hh"
 
 namespace Tailslide {
 
@@ -52,9 +53,20 @@ inline LSOBitStream& operator>>(LSOBitStream &bs, Quaternion &v) {
 class LSOHeapManager {
   public:
     uint32_t writeConstant(LSLConstant *constant);
+    uint32_t writeTerminalBlock();
     LSOBitStream mHeapBS {ENDIAN_BIG};
   protected:
-    void writeHeader(uint32_t size, LSLIType type);
+    void writeHeader(uint32_t size, LSLIType type, uint16_t ref_count=1);
+};
+
+class LSOGlobalVarManager {
+  public:
+    explicit LSOGlobalVarManager(LSOHeapManager *heap_manager): _mHeapManager(heap_manager) {}
+    void writeVar(LSLSymbol *symbol);
+    void writePlaceholder(LSLIType type);
+    LSOBitStream mGlobalsBS {ENDIAN_BIG};
+  protected:
+    LSOHeapManager *_mHeapManager;
 };
 
 class LSOCompilerVisitor : public ASTVisitor {
@@ -62,10 +74,15 @@ class LSOCompilerVisitor : public ASTVisitor {
     LSOBitStream mScriptBS {ENDIAN_BIG};
   protected:
     virtual bool visit(LSLScript *node);
-    LSOBitStream _mGlobalsBS {ENDIAN_BIG};
+    virtual bool visit(LSLGlobalVariable *node);
+
+    void writeRegister(LSORegisters reg, uint32_t val);
+    void writeEventRegister(LSORegisters reg, uint64_t val);
+
     LSOBitStream _mFunctionsBS {ENDIAN_BIG};
     LSOBitStream _mStatesBS {ENDIAN_BIG};
     LSOHeapManager _mHeapManager;
+    LSOGlobalVarManager _mGlobalVarManager {&_mHeapManager};
 };
 
 }
