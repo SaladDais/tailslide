@@ -7,6 +7,7 @@
 #include "passes/pretty_print.hh"
 #include "passes/tree_print.hh"
 #include "passes/tree_simplifier.hh"
+#include "passes/lso/lso_compiler.hh"
 
 using namespace Tailslide;
 
@@ -27,32 +28,35 @@ int main(int argc, char **argv) {
   cxxopts::Options options("tailslide", "");
 
   options.add_options("General")
-          ("help", "Show this message")
-          ("version", "Display the banner and current version of Tailslide");
+      ("help", "Show this message")
+      ("version", "Display the banner and current version of Tailslide");
 
   options.add_options("Obfuscation")
-          ("obfuscate", "Standard obfuscation method - uses all methods with no negative performance impact")
-          ("minw", "Minimize whitespace within the script")
-          ("mangle-globals", "Mangle and shorten global variable names")
-          ("mangle-locals", "Mangle and shorten local variable names")
-          ("mangle-funcs", "Mangle and shorten function names")
-          ("show-unmangled", "Put a comment next to instances of mangled identifiers with the original name")
-          ("obfuscate-numbers", "Obfuscate numeric literals");
+      ("obfuscate", "Standard obfuscation method - uses all methods with no negative performance impact")
+      ("minw", "Minimize whitespace within the script")
+      ("mangle-globals", "Mangle and shorten global variable names")
+      ("mangle-locals", "Mangle and shorten local variable names")
+      ("mangle-funcs", "Mangle and shorten function names")
+      ("show-unmangled", "Put a comment next to instances of mangled identifiers with the original name")
+      ("obfuscate-numbers", "Obfuscate numeric literals");
 
   options.add_options("Optimization / Debug")
-          ("O1", "Simple optimizations with no risk or effect on readability")
-          ("O2", "Slightly risky optimizations, logic is partially rewritten")
-          ("O3", "Risky optimizations that might render script unreadable by humans")
-          ("fold-constants", "Simplify the source by performing constant folding")
-          ("prune-globals", "Prune unused globals")
-          ("prune-locals", "Prune unused locals")
-          ("prune-funcs", "Prune unused functions")
-          ("lint", "Only lint the file for errors, don't optimize or pretty print.")
-          ("show-tree", "Show the AST after optimizations")
-          ("check-asserts", "check assert comments and suppress errors based on matches");
+      ("O1", "Simple optimizations with no risk or effect on readability")
+      ("O2", "Slightly risky optimizations, logic is partially rewritten")
+      ("O3", "Risky optimizations that might render script unreadable by humans")
+      ("fold-constants", "Simplify the source by performing constant folding")
+      ("prune-globals", "Prune unused globals")
+      ("prune-locals", "Prune unused locals")
+      ("prune-funcs", "Prune unused functions")
+      ("lint", "Only lint the file for errors, don't optimize or pretty print.")
+      ("show-tree", "Show the AST after optimizations")
+      ("check-asserts", "check assert comments and suppress errors based on matches");
+
+  options.add_options("LSO Compilation")
+      ("lso-compile", "Compile to LSO and write to file", cxxopts::value<std::string>());
 
   options.add_options()
-          ("script", "Input script's filename", cxxopts::value<std::string>());
+      ("script", "Input script's filename", cxxopts::value<std::string>());
   options.parse_positional({"script"});
   options.positional_help("<script>");
 
@@ -187,6 +191,13 @@ int main(int argc, char **argv) {
   } else {
     logger->report();
   }
+  if (!logger->getErrors() && vm.count("lso-compile")) {
+    auto lso_dest = vm["lso-compile"].as<std::string>();
+    LSOCompilerVisitor lso_visitor;
+    script->visit(&lso_visitor);
 
+    std::ofstream f(lso_dest, std::ios::binary);
+    f.write((const char*)lso_visitor.mScriptBS.data(), (std::streamsize)lso_visitor.mScriptBS.size());
+  }
   return logger->getErrors();
 }
