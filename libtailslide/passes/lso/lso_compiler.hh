@@ -62,7 +62,7 @@ class LSOHeapManager {
 class LSOGlobalVarManager {
   public:
     explicit LSOGlobalVarManager(LSOHeapManager *heap_manager): _mHeapManager(heap_manager) {}
-    void writeVar(LSLSymbol *symbol);
+    void writeVar(LSLConstant *constant, const char *name=nullptr);
     void writePlaceholder(LSLIType type);
     LSOBitStream mGlobalsBS {ENDIAN_BIG};
   protected:
@@ -71,6 +71,7 @@ class LSOGlobalVarManager {
 
 class LSOCompilerVisitor : public ASTVisitor {
   public:
+    explicit LSOCompilerVisitor (ScriptAllocator *allocator) : _mAllocator(allocator) {};
     LSOBitStream mScriptBS {ENDIAN_BIG};
   protected:
     virtual bool visit(LSLScript *node);
@@ -83,6 +84,7 @@ class LSOCompilerVisitor : public ASTVisitor {
     LSOBitStream _mStatesBS {ENDIAN_BIG};
     LSOHeapManager _mHeapManager;
     LSOGlobalVarManager _mGlobalVarManager {&_mHeapManager};
+    ScriptAllocator *_mAllocator;
 };
 
 }

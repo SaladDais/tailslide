@@ -88,6 +88,30 @@ bool SimpleAssignableValidatingVisitor::visit(LSLLValueExpression *node) {
     _mValidRValue = false;
     return false;
   }
+  // SALists don't allow SAIdentifiers with no rvalue in their declaration.
+  if (node->getParent()->getNodeSubType() == NODE_LIST_EXPRESSION) {
+    LSLASTNode *rvalue = node;
+    while (rvalue && rvalue->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
+      auto *sym = rvalue->getSymbol();
+      if (!sym)
+        break;
+      // This lvalue references a builtin symbol, we don't expect to be able to
+      // follow that to a variable declaration, so we can break.
+      if (sym->getSubType() == SYM_BUILTIN)
+        break;
+      // get the node where the referenced symbol was declared
+      auto *decl_node = sym->getVarDecl();
+      // this should always be set except in the builtin case, which we handled.
+      assert(decl_node);
+      // get the rvalue of the node where this global was declared.
+      rvalue = decl_node->getChild(1);
+    }
+    // no rvalue on the SAIdentifier this value originally came from
+    if (!rvalue || rvalue->getNodeType() == NODE_NULL) {
+      _mValidRValue = false;
+      return false;
+    }
+  }
   return true;
 }
 

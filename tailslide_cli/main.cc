@@ -193,7 +193,7 @@ int main(int argc, char **argv) {
   }
   if (!logger->getErrors() && vm.count("lso-compile")) {
     auto lso_dest = vm["lso-compile"].as<std::string>();
-    LSOCompilerVisitor lso_visitor;
+    LSOCompilerVisitor lso_visitor(&parser.allocator);
     script->visit(&lso_visitor);
 
     std::ofstream f(lso_dest, std::ios::binary);

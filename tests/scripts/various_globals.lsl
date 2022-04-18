@@ -13,6 +13,8 @@ vector v = <f, 2, 3>;
 // this should be written as a key global with a string heap entry
 key k = NULL_KEY;
 rotation r = ZERO_ROTATION;
+rotation r2;
+rotation r3 = r2; // should be == <0, 0, 0, 0> and not <0, 0, 0, 1> as above. $[E20009]
 
 list l = [i, f, v, str_1, k, r, v];  // $[E20009]
 

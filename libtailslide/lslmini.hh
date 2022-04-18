@@ -240,7 +240,8 @@ class LSLListConstant : public LSLConstant {
     LSLListConstant( ScriptContext *ctx, class LSLConstant *v ) : LSLConstant(ctx) {
       _mType = TYPE(LST_LIST);
       // so we can do symbol resolution inside the list constant
-      pushChild(v);
+      if (v != nullptr)
+        pushChild(v);
     }
 
     virtual const char *getNodeName() {

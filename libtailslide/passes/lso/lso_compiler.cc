@@ -55,6 +55,37 @@ bool LSOCompilerVisitor::visit(LSLScript *node) {
   return false;
 }
 
+void LSOCompilerVisitor::writeRegister(LSORegisters reg, uint32_t val) {
+  ScopedBitStreamSeek seek(mScriptBS, LSO_REGISTER_OFFSETS[reg]);
+  mScriptBS << val;
+}
+
+void LSOCompilerVisitor::writeEventRegister(LSORegisters reg, uint64_t val) {
+  // TODO: v1 compatibility
+  ScopedBitStreamSeek seek(mScriptBS, LSO_REGISTER_OFFSETS[reg]);
+  mScriptBS << val;
+}
+
+
+
+LSLASTNode *resolve_sa_identifier(LSLASTNode *rvalue) {
+  // try to figure out where the rvalue in the lvalue was actually declared
+  while (rvalue && rvalue->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
+    auto *sym = rvalue->getSymbol();
+    // This lvalue references a builtin symbol, we don't expect to be able to
+    // follow that to a variable declaration, so we can break.
+    if (sym->getSubType() == SYM_BUILTIN)
+      break;
+    // get the node where the referenced symbol was declared
+    auto *decl_node = sym->getVarDecl();
+    // this should always be set except in the builtin case, which we handled.
+    assert(decl_node);
+    // get the rvalue of the node where this global was declared.
+    rvalue = decl_node->getChild(1);
+  }
+  return rvalue;
+}
+
 bool LSOCompilerVisitor::visit(LSLGlobalVariable *node) {
   // Weird special case for if we have only an lvalue reference in the rvalue
   // for compatibility with LL's LSO compiler. If the lvalue ultimately references
@@ -68,48 +99,85 @@ bool LSOCompilerVisitor::visit(LSLGlobalVariable *node) {
   // TODO: might make sense to have LSO-specific constant value propagation that accounts
   //  for this global lvalue weirdness as much as possible. Constant folding decisions or
   //  always true / always false warnings may be wrong otherwise.
+  //  otherwise LSO compilation must always have optimization off and use SL-strict
+  //  global validation because the semantics are closer to Mono. That might be an OK tradeoff.
   auto *rvalue = node->getChild(1);
+  auto *sym = node->getSymbol();
+  // Specifically take the symbol constant value by default and not the rvalue's since it
+  // should have any automatic casts applied.
+  auto *cv = sym->getConstantValue();
   if (rvalue->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
-    // try to figure out where the rvalue in the lvalue was actually declared
-    while (rvalue && rvalue->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
-      auto *sym = rvalue->getSymbol();
-      // This lvalue references a builtin symbol, we don't expect to be able to
-      // follow that to a variable declaration, so we can break.
-      if (sym->getSubType() == SYM_BUILTIN)
-        break;
-      // get the node where the referenced symbol was declared
-      auto *decl_node = sym->getVarDecl();
-      // this should always be set except in the builtin case, which we handled.
-      assert(decl_node);
-      // get the rvalue of the node where this global was declared.
-      rvalue = decl_node->getChild(1);
-    }
+    rvalue = resolve_sa_identifier(rvalue);
 
     // After following the lvalues all the way up the chain we hit a global
     // declaration with no rvalue
     if (!rvalue || rvalue->getNodeType() == NODE_NULL) {
       // invoke the stupid special case that fills the variable with all zeros
-      // and skips to the next field.
-      _mGlobalVarManager.writePlaceholder(node->getSymbol()->getIType());
+      // and skips to the next field. For heap types, this will crash your script
+      // if you ever try to use the value since 0 is not a valid heap index.
+      _mGlobalVarManager.writePlaceholder(sym->getIType());
       return false;
     }
+  } else if (rvalue->getNodeSubType() == NODE_LIST_EXPRESSION) {
+    // Need to do similar logic to resolve SAIdentifiers inside lists, which means
+    // we can't use the existing list constant value, it might not be correct according
+    // to our SAIdentifier propagation rules! Note that we can skip the "undefined rvalue"
+    // case above because SAIdentifiers with no rvalue are not allowed in lists.
+    //
+    // This is needed to handle cases like `float f = 1; list l = [f];` where the list
+    // is meant to contain a single integer under LSO, due to the integer rvalue.
+    auto *list_children = rvalue->getChildren();
+    auto *new_list_cv = _mAllocator->newTracked<LSLListConstant>(nullptr);
+    while (list_children != nullptr) {
+      auto *child_cv = resolve_sa_identifier(list_children)->getConstantValue();
+      assert(child_cv);
+      new_list_cv->pushChild(child_cv->copy(_mAllocator));
+      list_children = list_children->getNext();
+    }
+    cv = new_list_cv;
   }
 
-  _mGlobalVarManager.writeVar(node->getSymbol());
+  _mGlobalVarManager.writeVar(cv, sym->getName());
 
   return false;
 }
 
-void LSOCompilerVisitor::writeRegister(LSORegisters reg, uint32_t val) {
-  ScopedBitStreamSeek seek(mScriptBS, LSO_REGISTER_OFFSETS[reg]);
-  mScriptBS << val;
+
+void LSOGlobalVarManager::writeVar(LSLConstant *constant, const char *name) {
+  assert(constant != nullptr);
+  // data offset, type, name
+  mGlobalsBS << (uint32_t)6 << constant->getIType() << '\0';
+  switch(constant->getIType()) {
+    case LST_INTEGER:
+      mGlobalsBS << ((LSLIntegerConstant *) constant)->getValue();
+      break;
+    case LST_FLOATINGPOINT:
+      mGlobalsBS << ((LSLFloatConstant *) constant)->getValue();
+      break;
+    case LST_KEY:
+    case LST_STRING:
+      mGlobalsBS << _mHeapManager->writeConstant((LSLStringConstant *) constant);
+      break;
+    case LST_VECTOR:
+      mGlobalsBS << *((LSLVectorConstant *) constant)->getValue();
+      break;
+    case LST_QUATERNION:
+      mGlobalsBS << *((LSLQuaternionConstant *) constant)->getValue();
+      break;
+    case LST_LIST:
+      mGlobalsBS << _mHeapManager->writeConstant((LSLListConstant *) constant);
+      break;
+    default:
+      // just write all zeros
+      mGlobalsBS.moveBy((int32_t)LSO_TYPE_DATA_SIZES[constant->getIType()], true);
+  }
 }
 
-void LSOCompilerVisitor::writeEventRegister(LSORegisters reg, uint64_t val) {
-  // TODO: v1 compatibility
-  ScopedBitStreamSeek seek(mScriptBS, LSO_REGISTER_OFFSETS[reg]);
-  mScriptBS << val;
+void LSOGlobalVarManager::writePlaceholder(LSLIType type) {
+  mGlobalsBS << (uint32_t)6 << type << '\0';
+  mGlobalsBS.moveBy((int32_t)LSO_TYPE_DATA_SIZES[type], true);
 }
+
 
 uint32_t LSOHeapManager::writeConstant(LSLConstant *constant) {
   // first byte on the heap has an index of 1, not 0. 0 is completely invalid.
@@ -130,7 +198,10 @@ uint32_t LSOHeapManager::writeConstant(LSLConstant *constant) {
       auto *str_val = ((LSLStringConstant *) constant)->getValue();
       auto str_len = strlen(str_val);
 
-      writeHeader(str_len + 1, itype);
+      // Keys are always added to the heap as strings in the global case.
+      // they can only be added as LST_KEY in the runtime list expression case
+      // which we don't need to handle.
+      writeHeader(str_len + 1, LST_STRING);
       mHeapBS.writeRawData((uint8_t *) str_val, str_len);
       mHeapBS << '\0';
       break;
@@ -193,43 +264,6 @@ uint32_t LSOHeapManager::writeTerminalBlock() {
   uint16_t start_pos = mHeapBS.pos();
   writeHeader(TOTAL_LSO_MEMORY, LST_NULL, 0);
   return start_pos + 1;
-}
-
-void LSOGlobalVarManager::writeVar(LSLSymbol *symbol) {
-  // data offset, type, name
-  mGlobalsBS << (uint32_t)6 << symbol->getIType() << '\0';
-
-  LSLConstant *constant = symbol->getConstantValue();
-  assert(constant != nullptr);
-  switch(constant->getIType()) {
-    case LST_INTEGER:
-      mGlobalsBS << ((LSLIntegerConstant *) constant)->getValue();
-      break;
-    case LST_FLOATINGPOINT:
-      mGlobalsBS << ((LSLFloatConstant *) constant)->getValue();
-      break;
-    case LST_KEY:
-    case LST_STRING:
-      mGlobalsBS << _mHeapManager->writeConstant((LSLStringConstant *) constant);
-      break;
-    case LST_VECTOR:
-      mGlobalsBS << *((LSLVectorConstant *) constant)->getValue();
-      break;
-    case LST_QUATERNION:
-      mGlobalsBS << *((LSLQuaternionConstant *) constant)->getValue();
-      break;
-    case LST_LIST:
-      mGlobalsBS << _mHeapManager->writeConstant((LSLListConstant *) constant);
-      break;
-    default:
-      // just write all zeros
-      mGlobalsBS.moveBy((int32_t)LSO_TYPE_DATA_SIZES[symbol->getIType()], true);
-  }
-}
-
-void LSOGlobalVarManager::writePlaceholder(LSLIType type) {
-  mGlobalsBS << (uint32_t)6 << type << '\0';
-  mGlobalsBS.moveBy((int32_t)LSO_TYPE_DATA_SIZES[type], true);
 }
 
 

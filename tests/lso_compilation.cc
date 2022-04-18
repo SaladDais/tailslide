@@ -5,13 +5,13 @@
 #include "passes/lso/lso_compiler.hh"
 #include "passes/lso/bytecode_format.hh"
 
-using namespace Tailslide;
+namespace Tailslide {
 
 TEST_SUITE_BEGIN("LSO");
 
 TEST_CASE("Simple register initialization") {
   auto script = runConformance("constprop.lsl");
-  LSOCompilerVisitor visitor;
+  LSOCompilerVisitor visitor(&script->allocator);
   script->script->visit(&visitor);
   LSOBitStream script_bs(std::move(visitor.mScriptBS));
 
@@ -23,6 +23,7 @@ TEST_CASE("Simple register initialization") {
 }
 
 TEST_CASE("Simple heap compilation") {
+  // so we don't have to set up the context on the allocator
   ScopedScriptParser parser(nullptr);
 
   // create a list and write it (and its contents) to the heap
@@ -65,4 +66,49 @@ TEST_CASE("Simple heap compilation") {
   CHECK_EQ(z, 3.0f);
 }
 
+TEST_CASE("Simple Global Var Serialization") {
+  // so we don't have to set up the context on the allocator
+  ScopedScriptParser parser(nullptr);
+
+  // some global vars do implicit heap allocs
+  LSOHeapManager heap_manager;
+  LSOGlobalVarManager global_var_manager(&heap_manager);
+  global_var_manager.writeVar(parser.allocator.newTracked<LSLIntegerConstant>(2));
+  global_var_manager.writeVar(parser.allocator.newTracked<LSLKeyConstant>("foobar"));
+
+  LSOBitStream heap_bs(std::move(heap_manager.mHeapBS));
+  LSOBitStream globals_bs(std::move(global_var_manager.mGlobalsBS));
+  CHECK_EQ(heap_bs.size(), 14);
+  CHECK_EQ(globals_bs.size(), 20);
+
+  uint32_t offset, val;
+  LSLIType type;
+  char nil;
+  globals_bs.moveTo(0);
+  globals_bs >> offset >> type >> nil >> val;
+  CHECK_EQ(offset, 6);
+  CHECK_EQ(type, LST_INTEGER);
+  CHECK_EQ(nil, 0);
+  CHECK_EQ(val, 2);
+
+  globals_bs >> offset >> type >> nil >> val;
+  CHECK_EQ(offset, 6);
+  CHECK_EQ(type, LST_KEY);
+  CHECK_EQ(nil, 0);
+  // first entry on the heap
+  CHECK_EQ(val, 1);
+
+  heap_bs.moveTo(0);
+  uint32_t size;
+  uint16_t ref_count;
+  heap_bs >> size >> type >> ref_count;
+  CHECK_EQ(size, 7);  // foobar + nul
+  // all keys get string heap entries
+  CHECK_EQ(type, LST_STRING);
+  CHECK_EQ(ref_count, 1);
+  CHECK(!memcmp(heap_bs.current(), "foobar", 6));
+}
+
 TEST_SUITE_END();
+
+}
