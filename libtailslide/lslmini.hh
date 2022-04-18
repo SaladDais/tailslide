@@ -282,7 +282,7 @@ class LSLVectorConstant : public LSLConstant {
 
     virtual LSLNodeSubType getNodeSubType() { return NODE_VECTOR_CONSTANT; }
 
-    Vector3 *getValue() { return &_mValue; }
+    const Vector3 *getValue() { return &_mValue; }
     virtual bool containsNaN();
 
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
@@ -313,7 +313,7 @@ class LSLQuaternionConstant : public LSLConstant {
 
     virtual LSLNodeSubType getNodeSubType() { return NODE_QUATERNION_CONSTANT; }
 
-    Quaternion *getValue() { return &_mValue; }
+    const Quaternion *getValue() { return &_mValue; }
     virtual bool containsNaN();
 
     virtual LSLConstant* copy(ScriptAllocator *allocator) {

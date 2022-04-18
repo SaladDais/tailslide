@@ -420,13 +420,11 @@ bool LSLFloatConstant::containsNaN() {
 }
 
 bool LSLVectorConstant::containsNaN() {
-  Vector3 *v = getValue();
-  return std::isnan(v->x) || std::isnan(v->y) || std::isnan(v->z);
+  return std::isnan(_mValue.x) || std::isnan(_mValue.y) || std::isnan(_mValue.z);
 }
 
 bool LSLQuaternionConstant::containsNaN() {
-  Quaternion *v = getValue();
-  return std::isnan(v->x) || std::isnan(v->y) || std::isnan(v->z) || std::isnan(v->s);
+  return std::isnan(_mValue.x) || std::isnan(_mValue.y) || std::isnan(_mValue.z) || std::isnan(_mValue.s);
 }
 
 }
