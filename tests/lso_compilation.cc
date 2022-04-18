@@ -1,4 +1,3 @@
-// This file was originally part of the Luau programming language and is licensed under MIT License;
 #include "tailslide.hh"
 #include "doctest.hh"
 #include "testutils.hh"
