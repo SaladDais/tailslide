@@ -1,83 +1,82 @@
-key /*DOMAIN*/_0 = "MASA MUSIC SCRIPT";
-list /*clips*/_4;
-string /*total_time*/_17;
-integer /*num_clips*/_b;
-integer /*clip_playing*/_2;
-integer /*clip_preloading*/_3;
-integer /*preset_clips*/_10;
-integer /*notecard_line*/_a;
-integer /*disable_touch*/_7;
-integer /*disable_text*/_6;
-integer /*die_on_unlink*/_5;
-/*say*/_14(string /*str*/_1a)
+list /*clips*/_3;
+string /*total_time*/_16;
+integer /*num_clips*/_a;
+integer /*clip_playing*/_1;
+integer /*clip_preloading*/_2;
+integer /*preset_clips*/_f;
+integer /*notecard_line*/_9;
+integer /*disable_touch*/_6;
+integer /*disable_text*/_5;
+integer /*die_on_unlink*/_4;
+/*say*/_13(string /*str*/_19)
 {
-    llSay(0, /*str*/_1a);
+    llSay(0, /*str*/_19);
 }
 
-string /*format_float*/_8(float /*num*/_1d, integer /*after_dec*/_1b, integer /*chop_dec*/_1c)
+string /*format_float*/_7(float /*num*/_1c, integer /*after_dec*/_1a, integer /*chop_dec*/_1b)
 {
-    string /*str*/_1f = "";
-    list /*x*/_20 = llParseString2List((string)/*num*/_1d, ["."], []);
-    /*str*/_1f += llList2String(/*x*/_20, 0);
-    string /*decimal*/_1e = llList2String(/*x*/_20, 1);
-    if ((integer)/*decimal*/_1e != 0 || !/*chop_dec*/_1c)
+    string /*str*/_1e = "";
+    list /*x*/_1f = llParseString2List((string)/*num*/_1c, ["."], []);
+    /*str*/_1e += llList2String(/*x*/_1f, 0);
+    string /*decimal*/_1d = llList2String(/*x*/_1f, 1);
+    if ((integer)/*decimal*/_1d != 0 || !/*chop_dec*/_1b)
     {
-        /*str*/_1f += ".";
-        /*str*/_1f += llGetSubString(/*decimal*/_1e, 0, /*after_dec*/_1b - 1);
+        /*str*/_1e += ".";
+        /*str*/_1e += llGetSubString(/*decimal*/_1d, 0, /*after_dec*/_1a - 1);
     }
-    return /*str*/_1f;
+    return /*str*/_1e;
 }
 
-/*set_text*/_16(string /*str*/_22, vector /*color*/_21)
+/*set_text*/_15(string /*str*/_21, vector /*color*/_20)
 {
-    if (/*disable_text*/_6)
+    if (/*disable_text*/_5)
         return;
-    llSetText(llGetObjectName() + "\n" + /*str*/_22, /*color*/_21, 1.00000);
+    llSetText(llGetObjectName() + "\n" + /*str*/_21, /*color*/_20, 1.00000);
 }
 
-integer /*check_control*/_1(integer /*num*/_23)
+integer /*check_control*/_0(integer /*num*/_22)
 {
-    integer /*i*/_24;
-    if (/*disable_touch*/_7)
+    integer /*i*/_23;
+    if (/*disable_touch*/_6)
         return FALSE;
     if (1)
         return TRUE;
-    for (/*i*/_24 = 0; /*i*/_24 < /*num*/_23; /*i*/_24++)
-        if (llDetectedKey(/*i*/_24) == llGetOwner())
+    for (/*i*/_23 = 0; /*i*/_23 < /*num*/_22; /*i*/_23++)
+        if (llDetectedKey(/*i*/_23) == llGetOwner())
             return TRUE;
     return FALSE;
 }
 
-/*preload_next_clip*/_f(integer /*show_text*/_25)
+/*preload_next_clip*/_e(integer /*show_text*/_24)
 {
-    if (/*clip_preloading*/_3 < /*num_clips*/_b)
-        llPreloadSound(llList2Key(/*clips*/_4, /*clip_preloading*/_3));
-    if (/*show_text*/_25)
+    if (/*clip_preloading*/_2 < /*num_clips*/_a)
+        llPreloadSound(llList2Key(/*clips*/_3, /*clip_preloading*/_2));
+    if (/*show_text*/_24)
     {
-        /*set_text*/_16("Preloading " + (string)(2 - /*clip_preloading*/_3) + " clip(s) " + "[" + /*format_float*/_8(4.50000 * (2 - /*clip_preloading*/_3), 1, 0) + " sec]\n" + "Click to start play immediately.", <0.00000, 0.00000, 1.00000>);
+        /*set_text*/_15("Preloading " + (string)(2 - /*clip_preloading*/_2) + " clip(s) " + "[" + /*format_float*/_7(4.50000 * (2 - /*clip_preloading*/_2), 1, 0) + " sec]\n" + "Click to start play immediately.", <0.00000, 0.00000, 1.00000>);
     }
-    /*clip_preloading*/_3 += 1;
+    /*clip_preloading*/_2 += 1;
 }
 
-/*play_next_clip*/_c()
+/*play_next_clip*/_b()
 {
-    llPlaySound(llList2Key(/*clips*/_4, /*clip_playing*/_2), 1.00000);
-    /*clip_playing*/_2 += 1;
+    llPlaySound(llList2Key(/*clips*/_3, /*clip_playing*/_1), 1.00000);
+    /*clip_playing*/_1 += 1;
 }
 
-/*update_text*/_18()
+/*update_text*/_17()
 {
-    /*set_text*/_16("Playing: " + /*format_time*/_9((integer)llGetTime()) + "/" + /*total_time*/_17, <0.00000, 1.00000, 0.00000>);
+    /*set_text*/_15("Playing: " + /*format_time*/_8((integer)llGetTime()) + "/" + /*total_time*/_16, <0.00000, 1.00000, 0.00000>);
 }
 
-string /*format_time*/_9(integer /*secs*/_26)
+string /*format_time*/_8(integer /*secs*/_25)
 {
-    return (string)((integer)(/*secs*/_26 / 60)) + ":" + llGetSubString("0" + (string)(/*secs*/_26 % 60), -2, -1);
+    return (string)((integer)(/*secs*/_25 / 60)) + ":" + llGetSubString("0" + (string)(/*secs*/_25 % 60), -2, -1);
 }
 
-/*send_message*/_15(integer /*msg*/_28, list /*data*/_27)
+/*send_message*/_14(integer /*msg*/_27, list /*data*/_26)
 {
-    llMessageLinked(LINK_SET, /*msg*/_28, llList2CSV(/*data*/_27), /*DOMAIN*/_0);
+    llMessageLinked(LINK_SET, /*msg*/_27, llList2CSV(/*data*/_26), "MASA MUSIC SCRIPT");
 }
 
 default
@@ -86,115 +85,115 @@ default
     {
         if (1)
             llSetTextureAnim(FALSE, ALL_SIDES, 0, 0, 0, 0, 0);
-        /*clip_playing*/_2 = 0;
-        /*clip_preloading*/_3 = 0;
-        /*num_clips*/_b = llGetListLength(/*clips*/_4);
-        if (/*num_clips*/_b > 0)
+        /*clip_playing*/_1 = 0;
+        /*clip_preloading*/_2 = 0;
+        /*num_clips*/_a = llGetListLength(/*clips*/_3);
+        if (/*num_clips*/_a > 0)
         {
-            /*preset_clips*/_10 = TRUE;
-            /*total_time*/_17 = /*format_time*/_9((integer)(/*num_clips*/_b * 9.00000));
+            /*preset_clips*/_f = TRUE;
+            /*total_time*/_16 = /*format_time*/_8((integer)(/*num_clips*/_a * 9.00000));
         }
         llStopSound();
-        /*set_text*/_16("Stopped", <1.00000, 0.00000, 0.00000>);
-        /*send_message*/_15(20100, []);
+        /*set_text*/_15("Stopped", <1.00000, 0.00000, 0.00000>);
+        /*send_message*/_14(20100, []);
         if (llGetStartParameter() == 222646)
-            /*die_on_unlink*/_5 = TRUE;
+            /*die_on_unlink*/_4 = TRUE;
         else
-            /*die_on_unlink*/_5 = FALSE;
+            /*die_on_unlink*/_4 = FALSE;
     }
 
-    on_rez(integer /*param*/_29)
+    on_rez(integer /*param*/_28)
     {
-        state /*reset*/_13;
+        state /*reset*/_12;
     }
 
-    touch_start(integer /*num*/_2a)
+    touch_start(integer /*num*/_29)
     {
-        if (/*check_control*/_1(/*num*/_2a))
+        if (/*check_control*/_0(/*num*/_29))
         {
-            if (/*preset_clips*/_10)
-                state /*preload*/_e;
+            if (/*preset_clips*/_f)
+                state /*preload*/_d;
             else if (llGetInventoryKey("sounds") != NULL_KEY)
-                state /*read_notecard*/_12;
+                state /*read_notecard*/_11;
             else if (llGetInventoryNumber(INVENTORY_SOUND) > 0)
-                state /*read_inventory*/_11;
+                state /*read_inventory*/_10;
             else
-                /*say*/_14("nothing to play!");
+                /*say*/_13("nothing to play!");
         }
     }
 
-    link_message(integer /*sender*/_2e, integer /*msg*/_2d, string /*data*/_2b, key /*domain*/_2c)
+    link_message(integer /*sender*/_2d, integer /*msg*/_2c, string /*data*/_2a, key /*domain*/_2b)
     {
-        if (/*domain*/_2c != /*DOMAIN*/_0)
+        if (/*domain*/_2b != "MASA MUSIC SCRIPT")
             return;
-        if (/*msg*/_2d == 10000)
+        if (/*msg*/_2c == 10000)
         {
-            if (/*preset_clips*/_10)
-                state /*preload*/_e;
+            if (/*preset_clips*/_f)
+                state /*preload*/_d;
             else if (llGetInventoryKey("sounds") != NULL_KEY)
-                state /*read_notecard*/_12;
+                state /*read_notecard*/_11;
             else if (llGetInventoryNumber(INVENTORY_SOUND) > 0)
-                state /*read_inventory*/_11;
+                state /*read_inventory*/_10;
             else
-                /*say*/_14("nothing to play!");
+                /*say*/_13("nothing to play!");
         }
-        else if (/*msg*/_2d == 11000)
+        else if (/*msg*/_2c == 11000)
         {
-            /*disable_touch*/_7 = (integer)/*data*/_2b;
+            /*disable_touch*/_6 = (integer)/*data*/_2a;
         }
-        else if (/*msg*/_2d == 12000)
+        else if (/*msg*/_2c == 12000)
         {
-            /*disable_text*/_6 = (integer)/*data*/_2b;
-            if (/*disable_text*/_6)
+            /*disable_text*/_5 = (integer)/*data*/_2a;
+            if (/*disable_text*/_5)
                 llSetText("", <0.00000, 0.00000, 0.00000>, 0);
         }
     }
 
-    changed(integer /*what*/_2f)
+    changed(integer /*what*/_2e)
     {
-        if (/*what*/_2f & CHANGED_LINK && llGetLinkNumber() == 0 && /*die_on_unlink*/_5)
+        if (/*what*/_2e & CHANGED_LINK && llGetLinkNumber() == 0 && /*die_on_unlink*/_4)
             llDie();
     }
 }
-state /*reset*/_13
+state /*reset*/_12
 {
     state_entry()
     {
-        /*disable_touch*/_7 = 0;
-        /*disable_text*/_6 = 0;
+        /*disable_touch*/_6 = 0;
+        /*disable_text*/_5 = 0;
         state default;
     }
 }
-state /*read_notecard*/_12
+state /*read_notecard*/_11
 {
     state_entry()
     {
-        /*notecard_line*/_a = 0;
-        llGetNotecardLine("sounds", /*notecard_line*/_a++);
-        /*send_message*/_15(10300, []);
-        /*set_text*/_16("reading notecard", <0.00000, 0.00000, 1.00000>);
+        /*notecard_line*/_9 = 0;
+        llGetNotecardLine("sounds", /*notecard_line*/_9++);
+        /*send_message*/_14(10300, []);
+        /*set_text*/_15("reading notecard", <0.00000, 0.00000, 1.00000>);
         llSetTimerEvent(5);
-        /*clips*/_4 = [];
+        /*clips*/_3 = [];
     }
 
-    dataserver(key /*qid*/_31, string /*data*/_30)
+    dataserver(key /*qid*/_30, string /*data*/_2f)
     {
-        if (/*data*/_30 == EOF)
+        if (/*data*/_2f == EOF)
         {
-            /*num_clips*/_b = llGetListLength(/*clips*/_4);
-            if (/*num_clips*/_b <= 0)
+            /*num_clips*/_a = llGetListLength(/*clips*/_3);
+            if (/*num_clips*/_a <= 0)
             {
-                /*say*/_14("no clips");
+                /*say*/_13("no clips");
                 state default;
             }
             else
             {
-                /*total_time*/_17 = /*format_time*/_9((integer)(/*num_clips*/_b * 9.00000));
-                state /*preload*/_e;
+                /*total_time*/_16 = /*format_time*/_8((integer)(/*num_clips*/_a * 9.00000));
+                state /*preload*/_d;
             }
         }
-        /*clips*/_4 += llCSV2List(/*data*/_30);
-        llGetNotecardLine("sounds", /*notecard_line*/_a++);
+        /*clips*/_3 += llCSV2List(/*data*/_2f);
+        llGetNotecardLine("sounds", /*notecard_line*/_9++);
         llResetTime();
     }
 
@@ -202,7 +201,7 @@ state /*read_notecard*/_12
     {
         if (llGetTime() > 5.00000)
         {
-            /*say*/_14("dataserver timeout");
+            /*say*/_13("dataserver timeout");
             state default;
         }
     }
@@ -212,90 +211,90 @@ state /*read_notecard*/_12
         llSetTimerEvent(0);
     }
 
-    changed(integer /*what*/_32)
+    changed(integer /*what*/_31)
     {
-        if (/*what*/_32 & CHANGED_LINK && llGetLinkNumber() == 0 && /*die_on_unlink*/_5)
+        if (/*what*/_31 & CHANGED_LINK && llGetLinkNumber() == 0 && /*die_on_unlink*/_4)
             llDie();
     }
 
-    on_rez(integer /*param*/_33)
+    on_rez(integer /*param*/_32)
     {
-        state /*reset*/_13;
+        state /*reset*/_12;
     }
 
-    link_message(integer /*sender*/_37, integer /*msg*/_36, string /*data*/_34, key /*domain*/_35)
+    link_message(integer /*sender*/_36, integer /*msg*/_35, string /*data*/_33, key /*domain*/_34)
     {
-        if (/*domain*/_35 != /*DOMAIN*/_0)
+        if (/*domain*/_34 != "MASA MUSIC SCRIPT")
             return;
-        if (/*msg*/_36 == 10100)
+        if (/*msg*/_35 == 10100)
             state default;
-        else if (/*msg*/_36 == 11000)
-            /*disable_touch*/_7 = (integer)/*data*/_34;
-        else if (/*msg*/_36 == 12000)
-            /*disable_text*/_6 = (integer)/*data*/_34;
+        else if (/*msg*/_35 == 11000)
+            /*disable_touch*/_6 = (integer)/*data*/_33;
+        else if (/*msg*/_35 == 12000)
+            /*disable_text*/_5 = (integer)/*data*/_33;
     }
 }
-state /*read_inventory*/_11
+state /*read_inventory*/_10
 {
     state_entry()
     {
-        integer /*i*/_38;
-        /*send_message*/_15(10300, []);
-        /*set_text*/_16("reading inventory", <1.00000, 0.00000, 0.00000>);
-        /*num_clips*/_b = llGetInventoryNumber(INVENTORY_SOUND);
-        /*total_time*/_17 = /*format_time*/_9((integer)(/*num_clips*/_b * 9.00000));
-        /*clips*/_4 = [];
-        for (/*i*/_38 = 0; /*i*/_38 < /*num_clips*/_b; /*i*/_38++)
-            /*clips*/_4 += [llGetInventoryName(INVENTORY_SOUND, /*i*/_38)];
-        state /*preload*/_e;
+        integer /*i*/_37;
+        /*send_message*/_14(10300, []);
+        /*set_text*/_15("reading inventory", <1.00000, 0.00000, 0.00000>);
+        /*num_clips*/_a = llGetInventoryNumber(INVENTORY_SOUND);
+        /*total_time*/_16 = /*format_time*/_8((integer)(/*num_clips*/_a * 9.00000));
+        /*clips*/_3 = [];
+        for (/*i*/_37 = 0; /*i*/_37 < /*num_clips*/_a; /*i*/_37++)
+            /*clips*/_3 += [llGetInventoryName(INVENTORY_SOUND, /*i*/_37)];
+        state /*preload*/_d;
     }
 
-    changed(integer /*what*/_39)
+    changed(integer /*what*/_38)
     {
-        if (/*what*/_39 & CHANGED_LINK && llGetLinkNumber() == 0 && /*die_on_unlink*/_5)
+        if (/*what*/_38 & CHANGED_LINK && llGetLinkNumber() == 0 && /*die_on_unlink*/_4)
             llDie();
     }
 
-    on_rez(integer /*param*/_3a)
+    on_rez(integer /*param*/_39)
     {
-        state /*reset*/_13;
+        state /*reset*/_12;
     }
 }
-state /*preload*/_e
+state /*preload*/_d
 {
     state_entry()
     {
-        /*send_message*/_15(21000, [/*num_clips*/_b, 9.00000]);
-        /*send_message*/_15(10200, []);
-        /*preload_next_clip*/_f(TRUE);
+        /*send_message*/_14(21000, [/*num_clips*/_a, 9.00000]);
+        /*send_message*/_14(10200, []);
+        /*preload_next_clip*/_e(TRUE);
         llSetTimerEvent(4.50000);
     }
 
-    touch_start(integer /*num*/_3b)
+    touch_start(integer /*num*/_3a)
     {
-        if (/*check_control*/_1(/*num*/_3b))
-            state /*playing*/_d;
+        if (/*check_control*/_0(/*num*/_3a))
+            state /*playing*/_c;
     }
 
     timer()
     {
-        if (/*clip_preloading*/_3 >= 2 || /*clip_preloading*/_3 >= /*num_clips*/_b)
-            state /*playing*/_d;
-        /*preload_next_clip*/_f(TRUE);
+        if (/*clip_preloading*/_2 >= 2 || /*clip_preloading*/_2 >= /*num_clips*/_a)
+            state /*playing*/_c;
+        /*preload_next_clip*/_e(TRUE);
     }
 
-    link_message(integer /*sender*/_3f, integer /*msg*/_3e, string /*data*/_3c, key /*domain*/_3d)
+    link_message(integer /*sender*/_3e, integer /*msg*/_3d, string /*data*/_3b, key /*domain*/_3c)
     {
-        if (/*domain*/_3d != /*DOMAIN*/_0)
+        if (/*domain*/_3c != "MASA MUSIC SCRIPT")
             return;
-        if (/*msg*/_3e == 10000)
-            state /*playing*/_d;
-        else if (/*msg*/_3e == 10100)
+        if (/*msg*/_3d == 10000)
+            state /*playing*/_c;
+        else if (/*msg*/_3d == 10100)
             state default;
-        else if (/*msg*/_3e == 11000)
-            /*disable_touch*/_7 = (integer)/*data*/_3c;
-        else if (/*msg*/_3e == 12000)
-            /*disable_text*/_6 = (integer)/*data*/_3c;
+        else if (/*msg*/_3d == 11000)
+            /*disable_touch*/_6 = (integer)/*data*/_3b;
+        else if (/*msg*/_3d == 12000)
+            /*disable_text*/_5 = (integer)/*data*/_3b;
     }
 
     state_exit()
@@ -303,62 +302,62 @@ state /*preload*/_e
         llSetTimerEvent(0);
     }
 
-    changed(integer /*what*/_40)
+    changed(integer /*what*/_3f)
     {
-        if (/*what*/_40 & CHANGED_LINK && llGetLinkNumber() == 0 && /*die_on_unlink*/_5)
+        if (/*what*/_3f & CHANGED_LINK && llGetLinkNumber() == 0 && /*die_on_unlink*/_4)
             llDie();
     }
 
-    on_rez(integer /*param*/_41)
+    on_rez(integer /*param*/_40)
     {
-        state /*reset*/_13;
+        state /*reset*/_12;
     }
 }
-state /*playing*/_d
+state /*playing*/_c
 {
     state_entry()
     {
         llSetSoundQueueing(TRUE);
         llSetTimerEvent(1);
-        /*send_message*/_15(20000, []);
+        /*send_message*/_14(20000, []);
         llResetTime();
         if (1)
             llSetTextureAnim(35, ALL_SIDES, 0, 0, 0, TWO_PI, 30.0000);
-        /*play_next_clip*/_c();
-        /*preload_next_clip*/_f(FALSE);
-        /*update_text*/_18();
-        if (/*clip_playing*/_2 >= /*num_clips*/_b)
-            state /*wind_down*/_19;
+        /*play_next_clip*/_b();
+        /*preload_next_clip*/_e(FALSE);
+        /*update_text*/_17();
+        if (/*clip_playing*/_1 >= /*num_clips*/_a)
+            state /*wind_down*/_18;
     }
 
     timer()
     {
-        if ((integer)((llGetTime() + 1.00000) / 9.00000) >= /*clip_playing*/_2)
+        if ((integer)((llGetTime() + 1.00000) / 9.00000) >= /*clip_playing*/_1)
         {
-            /*play_next_clip*/_c();
-            /*preload_next_clip*/_f(FALSE);
-            if (/*clip_playing*/_2 >= /*num_clips*/_b)
-                state /*wind_down*/_19;
+            /*play_next_clip*/_b();
+            /*preload_next_clip*/_e(FALSE);
+            if (/*clip_playing*/_1 >= /*num_clips*/_a)
+                state /*wind_down*/_18;
         }
-        /*update_text*/_18();
+        /*update_text*/_17();
     }
 
-    touch_start(integer /*num*/_42)
+    touch_start(integer /*num*/_41)
     {
-        if (/*check_control*/_1(/*num*/_42))
+        if (/*check_control*/_0(/*num*/_41))
             state default;
     }
 
-    link_message(integer /*sender*/_46, integer /*msg*/_45, string /*data*/_43, key /*domain*/_44)
+    link_message(integer /*sender*/_45, integer /*msg*/_44, string /*data*/_42, key /*domain*/_43)
     {
-        if (/*domain*/_44 != /*DOMAIN*/_0)
+        if (/*domain*/_43 != "MASA MUSIC SCRIPT")
             return;
-        if (/*msg*/_45 == 10100)
+        if (/*msg*/_44 == 10100)
             state default;
-        else if (/*msg*/_45 == 11000)
-            /*disable_touch*/_7 = (integer)/*data*/_43;
-        else if (/*msg*/_45 == 12000)
-            /*disable_text*/_6 = (integer)/*data*/_43;
+        else if (/*msg*/_44 == 11000)
+            /*disable_touch*/_6 = (integer)/*data*/_42;
+        else if (/*msg*/_44 == 12000)
+            /*disable_text*/_5 = (integer)/*data*/_42;
     }
 
     state_exit()
@@ -366,18 +365,18 @@ state /*playing*/_d
         llSetTimerEvent(0);
     }
 
-    changed(integer /*what*/_47)
+    changed(integer /*what*/_46)
     {
-        if (/*what*/_47 & CHANGED_LINK && llGetLinkNumber() == 0 && /*die_on_unlink*/_5)
+        if (/*what*/_46 & CHANGED_LINK && llGetLinkNumber() == 0 && /*die_on_unlink*/_4)
             llDie();
     }
 
-    on_rez(integer /*param*/_48)
+    on_rez(integer /*param*/_47)
     {
-        state /*reset*/_13;
+        state /*reset*/_12;
     }
 }
-state /*wind_down*/_19
+state /*wind_down*/_18
 {
     state_entry()
     {
@@ -386,27 +385,27 @@ state /*wind_down*/_19
 
     timer()
     {
-        if (llGetTime() >= (/*num_clips*/_b * 9.00000))
+        if (llGetTime() >= (/*num_clips*/_a * 9.00000))
             state default;
-        /*update_text*/_18();
+        /*update_text*/_17();
     }
 
-    touch_start(integer /*num*/_49)
+    touch_start(integer /*num*/_48)
     {
-        if (/*check_control*/_1(/*num*/_49))
+        if (/*check_control*/_0(/*num*/_48))
             state default;
     }
 
-    link_message(integer /*sender*/_4d, integer /*msg*/_4c, string /*data*/_4a, key /*domain*/_4b)
+    link_message(integer /*sender*/_4c, integer /*msg*/_4b, string /*data*/_49, key /*domain*/_4a)
     {
-        if (/*domain*/_4b != /*DOMAIN*/_0)
+        if (/*domain*/_4a != "MASA MUSIC SCRIPT")
             return;
-        if (/*msg*/_4c == 10100)
+        if (/*msg*/_4b == 10100)
             state default;
-        else if (/*msg*/_4c == 11000)
-            /*disable_touch*/_7 = (integer)/*data*/_4a;
-        else if (/*msg*/_4c == 12000)
-            /*disable_text*/_6 = (integer)/*data*/_4a;
+        else if (/*msg*/_4b == 11000)
+            /*disable_touch*/_6 = (integer)/*data*/_49;
+        else if (/*msg*/_4b == 12000)
+            /*disable_text*/_5 = (integer)/*data*/_49;
     }
 
     state_exit()
@@ -414,14 +413,14 @@ state /*wind_down*/_19
         llSetTimerEvent(0);
     }
 
-    changed(integer /*what*/_4e)
+    changed(integer /*what*/_4d)
     {
-        if (/*what*/_4e & CHANGED_LINK && llGetLinkNumber() == 0 && /*die_on_unlink*/_5)
+        if (/*what*/_4d & CHANGED_LINK && llGetLinkNumber() == 0 && /*die_on_unlink*/_4)
             llDie();
     }
 
-    on_rez(integer /*param*/_4f)
+    on_rez(integer /*param*/_4e)
     {
-        state /*reset*/_13;
+        state /*reset*/_12;
     }
 }

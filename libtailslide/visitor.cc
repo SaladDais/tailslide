@@ -30,6 +30,8 @@ bool ASTVisitor::visitSpecific(LSLASTNode *node) {
           return visit((LSLFloatConstant *)node);
         case NODE_STRING_CONSTANT:
           return visit((LSLStringConstant *)node);
+        case NODE_KEY_CONSTANT:
+          return visit((LSLKeyConstant *)node);
         case NODE_VECTOR_CONSTANT:
           return visit((LSLVectorConstant *)node);
         case NODE_QUATERNION_CONSTANT:

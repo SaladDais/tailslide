@@ -1,4 +1,3 @@
-key nullk = NULL_KEY;
 list current_url;
 list history;
 key source;
@@ -250,7 +249,7 @@ tlml(string t)
 clear()
 {
     integer n;
-    llMessageLinked(LINK_ALL_OTHERS, 8999, "nevermind", nullk);
+    llMessageLinked(LINK_ALL_OTHERS, 8999, "nevermind", "00000000-0000-0000-0000-000000000000");
     max_prim_used = 0;
 }
 
@@ -277,9 +276,9 @@ off()
     advertised_names = [];
     source = "";
     browsing_handle = 0;
-    page_query = nullk;
-    query = nullk;
-    joint_page_query = nullk;
+    page_query = "00000000-0000-0000-0000-000000000000";
+    query = "00000000-0000-0000-0000-000000000000";
+    joint_page_query = "00000000-0000-0000-0000-000000000000";
     integer n;
     for (n = 0; n < max_prim_used; ++n)
         llSetLinkAlpha(n + 2, 0.00000, ALL_SIDES);

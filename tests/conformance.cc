@@ -241,6 +241,17 @@ TEST_CASE("fpinc.lsl") {
   checkPrettyPrintOutput("fpinc.lsl", ctx, pretty_ctx);
 }
 
+TEST_CASE("key_inlining.lsl") {
+  OptimizationOptions ctx {
+      .fold_constants = true,
+      .prune_unused_locals = true,
+      .prune_unused_globals = true,
+      .prune_unused_functions = true,
+  };
+  PrettyPrintOpts pretty_ctx {};
+  checkPrettyPrintOutput("key_inlining.lsl", ctx, pretty_ctx);
+}
+
 TEST_CASE("num_literals.lsl") {
   OptimizationOptions ctx {};
   PrettyPrintOpts pretty_ctx {};

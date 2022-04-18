@@ -31,6 +31,7 @@ public:
     virtual bool visit(LSLIntegerConstant *node);
     virtual bool visit(LSLFloatConstant *node);
     virtual bool visit(LSLStringConstant *node);
+    virtual bool visit(LSLKeyConstant *node);
     virtual bool visit(LSLListConstant *node);
     virtual bool visit(LSLVectorConstant *node);
     virtual bool visit(LSLQuaternionConstant *node);

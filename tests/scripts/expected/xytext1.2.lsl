@@ -1,4 +1,3 @@
-key TRANSPARENT = "701917a8-d614-471f-13dd-5f4644e36e3c";
 key gFontTexture = "b2e7394f-5e54-aa12-6e1c-ef327b6bed9e";
 string gCharIndex;
 integer gCellChannel = -1;
@@ -51,7 +50,7 @@ RenderWithEffects(string str)
     llSleep(gCellHoldDelay);
     for (Alpha = 0.950000; Alpha >= 0.0500000; Alpha -= 0.0500000)
         llSetAlpha(Alpha, ALL_SIDES);
-    llSetTexture(TRANSPARENT, ALL_SIDES);
+    llSetTexture("701917a8-d614-471f-13dd-5f4644e36e3c", ALL_SIDES);
 }
 
 RenderExtended(string str)

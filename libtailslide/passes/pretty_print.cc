@@ -533,6 +533,10 @@ bool PrettyPrintVisitor::visit(LSLStringConstant *node) {
   return false;
 }
 
+bool PrettyPrintVisitor::visit(LSLKeyConstant *node) {
+  return visit((LSLStringConstant *)node);
+}
+
 bool PrettyPrintVisitor::visit(LSLPrintExpression *node) {
   mStream << "print(";
   visitChildren(node);

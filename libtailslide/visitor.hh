@@ -34,6 +34,9 @@ class ASTVisitor {
     virtual bool visit(LSLStringConstant *node) {
       return visit((LSLConstant *)node);
     };
+    virtual bool visit(LSLKeyConstant *node) {
+      return visit((LSLConstant *)node);
+    };
     virtual bool visit(LSLListConstant *node) {
       return visit((LSLConstant *)node);
     };

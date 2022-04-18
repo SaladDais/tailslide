@@ -106,10 +106,41 @@ bool TreeSimplifyingVisitor::visit(LSLLValueExpression *node) {
     // lexer tokens in SL proper.
     if (sym->getSubType() == SYM_BUILTIN)
       return false;
-    // Need to be careful about where we inline these (I.E. in list casts or expressions)
-    // just avoid inlining them at all for now.
-    if (sym->getIType() == LST_KEY)
-      return false;
+
+    // Keys have special inlining rules so key-ness isn't lost.
+    if (sym->getIType() == LST_KEY) {
+      auto *node_ancestor = node->getParent();
+      if (node_ancestor) {
+        auto *maybe_conditional = node_ancestor;
+        // Might be the expression list of a for loop, look one above.
+        if (maybe_conditional->getNodeType() == NODE_AST_NODE_LIST)
+          maybe_conditional = maybe_conditional->getParent();
+        if (maybe_conditional && maybe_conditional->getNodeType() == NODE_STATEMENT) {
+          switch (maybe_conditional->getNodeSubType()) {
+            case NODE_WHILE_STATEMENT:
+            case NODE_IF_STATEMENT:
+            case NODE_DO_STATEMENT:
+            case NODE_FOR_STATEMENT:
+              // have to be careful about inlining directly within conditional expressions because
+              // `key k = "1"; if (k) {...}` and `if ("1") { ... }` branch differently!
+              return false;
+            default:
+              break;
+          }
+        }
+      }
+      // Need to be careful about which expressions we inline keys under (I.E. list casts and list expressions)
+      while (node_ancestor && node_ancestor->getNodeType() == NODE_EXPRESSION) {
+        if (node_ancestor->getNodeSubType() == NODE_LIST_EXPRESSION)
+          return false;
+        if (node_ancestor->getNodeSubType() == NODE_TYPECAST_EXPRESSION && node_ancestor->getIType() == LST_LIST)
+          return false;
+        // key-ness matters for print()!
+        if (node_ancestor->getNodeSubType() == NODE_PRINT_EXPRESSION)
+          return false;
+        node_ancestor = node_ancestor->getParent();
+      }
+    }
     LSLConstant *cv = node->getConstantValue();
     if (cv && !cv->containsNaN()) {
       auto *new_expr = node->mContext->allocator->newTracked<LSLConstantExpression>(cv);
