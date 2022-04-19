@@ -26,44 +26,44 @@ enum LSORegisters {
   LREG_IE,  // in event - which event handler are we currently in?
   LREG_ER,  // event register - what events do we have active handlers for?
   LREG_FR,  // fault register - which errors are currently active?
-  LREG_SLR,  // sleep register - are we sleeping? For how long?
-  LREG_GVR,  // global variable register - where do global variables start
-  LREG_GFR,  // global function register - where do global functions start
+  LREG_SLR, // sleep register - are we sleeping? For how long?
+  LREG_GVR, // global variable register - where do global variables start
+  LREG_GFR, // global function register - where do global functions start
   LREG_PR,  // parameter register - data passed to script from launcher
-  LREG_ESR,  // energy supply register - how much energy do we have on board?
+  LREG_ESR, // energy supply register - how much energy do we have on board?
   LREG_SR,  // state register - where do state details start
 
   // 64-bit registers, only exist in version 2 bytecode
-  LREG_NCE,  // 64 bit current events - what events are waiting to be handled?
-  LREG_NIE,  // 64 bit in event - which event handler are we currently in?
-  LREG_NER,  // 64 bit event register - what events do we have active handlers for?
+  LREG_NCE, // 64 bit current events - what events are waiting to be handled?
+  LREG_NIE, // 64 bit in event - which event handler are we currently in?
+  LREG_NER, // 64 bit event register - what events do we have active handlers for?
   LREG_MAX
 };
 
 const int32_t LSO_REGISTER_OFFSETS[LREG_MAX + 1] = {
-    0,  // TM
-    4,  // IP
-    8,  // VN
-    12,  // BP
-    16,  // SP
-    20,  // HR
-    24,  // HP
-    28,  // CS
-    32,  // NS
-    36,  // CE
-    40,  // IE
-    44,  // ER
-    48,  // FR
-    52,  // SLR
-    56,  // GVR
-    60,  // GFR
-    64,  // PR
-    68,  // ESR
-    72,  // SR
-    76,  // NCE
-    84,  // NIE
-    92,  // NER
-    100, // end of registers
+  0,   // TM
+  4,   // IP
+  8,   // VN
+  12,  // BP
+  16,  // SP
+  20,  // HR
+  24,  // HP
+  28,  // CS
+  32,  // NS
+  36,  // CE
+  40,  // IE
+  44,  // ER
+  48,  // FR
+  52,  // SLR
+  56,  // GVR
+  60,  // GFR
+  64,  // PR
+  68,  // ESR
+  72,  // SR
+  76,  // NCE
+  84,  // NIE
+  92,  // NER
+  100, // end of registers
 };
 
 typedef enum {
@@ -105,52 +105,52 @@ typedef enum {
 } LSOHandlerType;
 
 const char * const LSO_HANDLER_NAMES[LSOH_MAX] = {
-    "state_entry",  // LSOH_STATE_ENTRY
-    "state_exit",  // LSOH_STATE_EXIT
-    "touch_start",  // LSOH_TOUCH_START
-    "touch",  // LSOH_TOUCH
-    "touch_end",  // LSOH_TOUCH_END
-    "collision_start",  // LSOH_COLLISION_START
-    "collision",  // LSOH_COLLISION
-    "collision_end",  // LSOH_COLLISION_END
-    "land_collision_start",  // LSOH_LAND_COLLISION_START
-    "land_collision",  // LSOH_LAND_COLLISION
-    "land_collision_end",  // LSOH_LAND_COLLISION_END
-    "timer",  // LSOH_TIMER
-    "listen",  // LSOH_LISTEN
-    "rez",  // LSOH_REZ
-    "sensor",  // LSOH_SENSOR
-    "no_sensor",  // LSOH_NO_SENSOR
-    "control",  // LSOH_CONTROL
-    "money",  // LSOH_MONEY
-    "email",  // LSOH_EMAIL
-    "at_target",  // LSOH_AT_TARGET
-    "not_at_target",  // LSOH_NOT_AT_TARGET
-    "at_rot_target",  // LSOH_AT_ROT_TARGET
-    "not_at_rot_target",  // LSOH_NOT_AT_ROT_TARGET
-    "runtime_permissions",  // LSOH_RTPERMISSIONS
-    "inventory",  // LSOH_INVENTORY
-    "attach",  // LSOH_ATTACH
-    "dataserver",  // LSOH_DATASERVER
-    "link_message",  // LSOH_LINK_MESSAGE
-    "moving_start",  // LSOH_MOVING_START
-    "moving_end",  // LSOH_MOVING_END
-    "object_rez",  // LSOH_OBJECT_REZ
-    "remote_data",  // LSOH_REMOTE_DATA
-    "http_response",  // LSOH_HTTP_RESPONSE
-    "http_request",  // LSOH_HTTP_REQUEST
+  "state_entry",  // LSOH_STATE_ENTRY
+  "state_exit",  // LSOH_STATE_EXIT
+  "touch_start",  // LSOH_TOUCH_START
+  "touch",  // LSOH_TOUCH
+  "touch_end",  // LSOH_TOUCH_END
+  "collision_start",  // LSOH_COLLISION_START
+  "collision",  // LSOH_COLLISION
+  "collision_end",  // LSOH_COLLISION_END
+  "land_collision_start",  // LSOH_LAND_COLLISION_START
+  "land_collision",  // LSOH_LAND_COLLISION
+  "land_collision_end",  // LSOH_LAND_COLLISION_END
+  "timer",  // LSOH_TIMER
+  "listen",  // LSOH_LISTEN
+  "rez",  // LSOH_REZ
+  "sensor",  // LSOH_SENSOR
+  "no_sensor",  // LSOH_NO_SENSOR
+  "control",  // LSOH_CONTROL
+  "money",  // LSOH_MONEY
+  "email",  // LSOH_EMAIL
+  "at_target",  // LSOH_AT_TARGET
+  "not_at_target",  // LSOH_NOT_AT_TARGET
+  "at_rot_target",  // LSOH_AT_ROT_TARGET
+  "not_at_rot_target",  // LSOH_NOT_AT_ROT_TARGET
+  "runtime_permissions",  // LSOH_RTPERMISSIONS
+  "inventory",  // LSOH_INVENTORY
+  "attach",  // LSOH_ATTACH
+  "dataserver",  // LSOH_DATASERVER
+  "link_message",  // LSOH_LINK_MESSAGE
+  "moving_start",  // LSOH_MOVING_START
+  "moving_end",  // LSOH_MOVING_END
+  "object_rez",  // LSOH_OBJECT_REZ
+  "remote_data",  // LSOH_REMOTE_DATA
+  "http_response",  // LSOH_HTTP_RESPONSE
+  "http_request",  // LSOH_HTTP_REQUEST
 };
 
 const uint32_t LSO_TYPE_DATA_SIZES[LST_MAX] = {
-    0,  // null
-    4,  // int
-    4,  // float
-    4,  // string (just a pointer)
-    4,  // key (just a pointer)
-    12, // vector
-    16, // quaternion
-    4,  // list (just a pointer)
-    0,  // error!
+  0,  // null
+  4,  // int
+  4,  // float
+  4,  // string (just a pointer)
+  4,  // key (just a pointer)
+  12, // vector
+  16, // quaternion
+  4,  // list (just a pointer)
+  0,  // error!
 };
 
 /// pack two types into a single byte (common for LSO)
