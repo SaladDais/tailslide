@@ -110,13 +110,29 @@ bool TreeSimplifyingVisitor::visit(LSLLValueExpression *node) {
     // Keys have special inlining rules so key-ness isn't lost.
     if (sym->getIType() == LST_KEY) {
       auto *node_ancestor = node->getParent();
-      if (node_ancestor) {
-        auto *maybe_conditional = node_ancestor;
+      LSLASTNode *top_expr = node;
+
+      // Need to be careful about which expressions we inline keys under (I.E. list casts and list expressions)
+      while (node_ancestor && node_ancestor->getNodeType() == NODE_EXPRESSION) {
+        if (node_ancestor->getNodeSubType() == NODE_LIST_EXPRESSION)
+          return false;
+        if (node_ancestor->getNodeSubType() == NODE_TYPECAST_EXPRESSION && node_ancestor->getIType() == LST_LIST)
+          return false;
+        // key-ness matters for print()!
+        if (node_ancestor->getNodeSubType() == NODE_PRINT_EXPRESSION)
+          return false;
+        top_expr = node_ancestor;
+        node_ancestor = node_ancestor->getParent();
+      }
+      // Still have ancestors after going past the top level of the expression, might be statements.
+      // where the key-ness matters.
+      if (top_expr->getIType() == LST_KEY) {
+        node_ancestor = top_expr->getParent();
         // Might be the expression list of a for loop, look one above.
-        if (maybe_conditional->getNodeType() == NODE_AST_NODE_LIST)
-          maybe_conditional = maybe_conditional->getParent();
-        if (maybe_conditional && maybe_conditional->getNodeType() == NODE_STATEMENT) {
-          switch (maybe_conditional->getNodeSubType()) {
+        if (node_ancestor && node_ancestor->getNodeType() == NODE_AST_NODE_LIST)
+          node_ancestor = node_ancestor->getParent();
+        if (node_ancestor && node_ancestor->getNodeType() == NODE_STATEMENT) {
+          switch (node_ancestor->getNodeSubType()) {
             case NODE_WHILE_STATEMENT:
             case NODE_IF_STATEMENT:
             case NODE_DO_STATEMENT:
@@ -128,17 +144,6 @@ bool TreeSimplifyingVisitor::visit(LSLLValueExpression *node) {
               break;
           }
         }
-      }
-      // Need to be careful about which expressions we inline keys under (I.E. list casts and list expressions)
-      while (node_ancestor && node_ancestor->getNodeType() == NODE_EXPRESSION) {
-        if (node_ancestor->getNodeSubType() == NODE_LIST_EXPRESSION)
-          return false;
-        if (node_ancestor->getNodeSubType() == NODE_TYPECAST_EXPRESSION && node_ancestor->getIType() == LST_LIST)
-          return false;
-        // key-ness matters for print()!
-        if (node_ancestor->getNodeSubType() == NODE_PRINT_EXPRESSION)
-          return false;
-        node_ancestor = node_ancestor->getParent();
       }
     }
     LSLConstant *cv = node->getConstantValue();

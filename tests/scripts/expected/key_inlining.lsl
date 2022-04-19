@@ -5,10 +5,12 @@ default
     state_entry()
     {
         list baz = (list)foo;
+        list quux = [(key)"foobar", 2];
         print(foo);
         print(bar);
         print(baz);
-        if (foo)
+        print(quux);
+        if ((foo))
             ;
         while (foo)
             ;
