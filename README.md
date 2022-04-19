@@ -83,18 +83,19 @@ default
 
 TOTAL:: Errors: 0  Warnings: 0
 script [none] (cv=) (1,1)
-  null [none] (cv=) (1,1)
-  state [none] (cv=) (1,1)
-    null [none] (cv=) (1,1)
-    event handler [none] (cv=) (2,8)
-      identifier "state_entry" [none] (cv=) (2,8)
-      null [none] (cv=) (2,8)
-      compound statement [none] (cv=) (2,22)
-        statement [none] (cv=) (3,9)
-          function call [none] (cv=) (3,9)
-            identifier "llOwnerSay" [none] (cv=) (3,9)
-            constant expression [string] (cv=string constant: "\"Hello\nworld!") (3,20)
-              string constant: "\"Hello\nworld!" [string] (cv=string constant: "\"Hello\nworld!") (3,20)
+  ast node list [none] (cv=) (1,1)
+  ast node list [none] (cv=) (1,1)
+    state [none] (cv=) (1,1)
+      identifier "default" [none] (cv=) (1,1)
+      event handler [none] (cv=) (2,8)
+        identifier "state_entry" [none] (cv=) (2,8)
+        null [none] (cv=) (2,8)
+        compound statement [none] (cv=) (2,22)
+          statement [none] (cv=) (3,9)
+            function call [none] (cv=) (3,9)
+              identifier "llOwnerSay" [none] (cv=) (3,9)
+              constant expression [string] (cv=string constant: "\"Hello\nworld!") (3,20)
+                string constant: "\"Hello\nworld!" [string] (cv=string constant: "\"Hello\nworld!") (3,20)
 ```
 
 Special attention has been paid to weird, undocumented corner cases.
