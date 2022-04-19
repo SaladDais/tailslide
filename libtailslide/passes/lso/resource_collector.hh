@@ -3,30 +3,35 @@
 #include <map>
 #include <vector>
 
+#include "bytecode_format.hh"
 #include "visitor.hh"
 
 namespace Tailslide {
-struct LSOSymbolSizeData {
+struct LSOSymbolData {
   // The end of the parameters for function symbols, offset from the start for everything else
   uint32_t offset = 0;
   // parameters + locals for function symbols, size of the symbol for everything else.
   // this will be == offset for library functions.
   uint32_t size = 0;
-  // only really meaningful for states, functions and locals. index starting from 0
-  uint64_t count = 0;
+  // index within some collection starting from 0
+  uint64_t index = 0;
+  // defined event handlers in sort order, if this is a state
+  std::set<LSOHandlerType> handlers{};
   // all locals (if this symbol is a function or event handler)
   std::vector<LSLIType> locals{};
   // all arguments (if this symbol is a function or event handler)
   std::vector<LSLIType> function_args{};
+  // for event handlers and functions with no retval, should we inject a return instruction?
+  bool has_trailing_return = false;
 };
 
-typedef std::map<Tailslide::LSLSymbol *, LSOSymbolSizeData> LSOSymbolSizeDataMap;
+typedef std::map<Tailslide::LSLSymbol *, LSOSymbolData> LSOSymbolDataMap;
 
 // Walks the script, figuring out how much space to reserve for data slots
 // and what order to place them in.
 class LSOResourceVisitor : public Tailslide::ASTVisitor {
   public:
-    explicit LSOResourceVisitor(LSOSymbolSizeDataMap *size_data) : _mSizeData(size_data) {}
+    explicit LSOResourceVisitor(LSOSymbolDataMap *sym_data) : _mSymData(sym_data) {}
 
   protected:
     bool visit(Tailslide::LSLScript *node) override;
@@ -34,15 +39,18 @@ class LSOResourceVisitor : public Tailslide::ASTVisitor {
     bool visit(Tailslide::LSLGlobalVariable *node) override;
     bool visit(Tailslide::LSLState *node) override;
     bool visit(Tailslide::LSLDeclaration *node) override;
+    bool visit(Tailslide::LSLStatement *node) override;
+    bool visit(Tailslide::LSLReturnStatement *node) override;
     bool visit(Tailslide::LSLEventHandler *node) override;
 
-    LSOSymbolSizeData *getSymbolData(Tailslide::LSLSymbol *sym);
-    void handleFuncDecl(LSOSymbolSizeData *func_sym_data, LSLASTNode *func_decl);
+    LSOSymbolData *getSymbolData(Tailslide::LSLSymbol *sym);
+    void handleFuncDecl(LSOSymbolData *func_sym_data, LSLASTNode *func_decl);
 
     uint32_t _mGlobalsOffset = 0;
     uint32_t _mFuncCount = 0;
     uint32_t _mStateCount = 0;
-    LSOSymbolSizeData *_mCurrentFunc = nullptr;
-    LSOSymbolSizeDataMap *_mSizeData = nullptr;
+    LSOSymbolData *_mCurrentFunc = nullptr;
+    LSOSymbolData *_mCurrentState = nullptr;
+    LSOSymbolDataMap *_mSymData = nullptr;
 };
 }

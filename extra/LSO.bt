@@ -3,7 +3,7 @@
 //
 //      File: LSO.bt
 //   Authors: Salad Dais
-//   Version: 0.1
+//   Version: 0.2
 //   Purpose: Dissector for V1 and V2 LSO bytecode for LSL.
 //  Category:
 // File Mask: *.lso
@@ -349,6 +349,8 @@ local uint32 handler_to_check;
 for(state_num=0; state_num<num_states; ++state_num) {
     FSeek(registers.SR + states_table[state_num].state_offset);
     handlers = states_table[state_num].handled_events;
+    // The start of a new state is definitely a terminator
+    bytecode_end_ptrs[num_bytecode_end_ptrs++] = FTell();
     struct {
         uint32 jump_table_offset <comment="State-relative offset to event handler jump table">;
         string state_name;

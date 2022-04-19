@@ -39,4 +39,9 @@ void checkTreeDumpOutput(
     void (*massager)(Tailslide::LSLScript* script) = nullptr
 );
 
+void checkLSOOutput(
+    const char* name,
+    void (*massager)(Tailslide::LSLScript* script) = nullptr
+);
+
 #endif

@@ -1,4 +1,5 @@
 #include "testutils.hh"
+#include "passes/lso/lso_compiler.hh"
 
 using namespace Tailslide;
 
@@ -50,6 +51,7 @@ void assertNoLintErrors(Logger* logger, const std::string& name) {
 class ScriptFormatter {
 public:
   virtual std::string format(LSLScript *script) const = 0;
+  bool mBinary = false;
 };
 
 class ScriptPrettyPrinter: public ScriptFormatter {
@@ -70,6 +72,16 @@ public:
     script->visit(&tree_visitor);
     return tree_visitor.mStream.str();
   };
+};
+
+class ScriptLSOCompiler: public ScriptFormatter {
+  public:
+    ScriptLSOCompiler() {mBinary = true;};
+    virtual std::string format(LSLScript *script) const {
+      LSOCompilerVisitor lso_visitor(script->mContext->allocator);
+      script->visit(&lso_visitor);
+      return {(const char*)lso_visitor.mScriptBS.data(), lso_visitor.mScriptBS.size()};
+    };
 };
 
 static void checkStringOutput(
@@ -121,7 +133,12 @@ static void checkStringOutput(
       if (expected[diff_pos] != prettified[diff_pos])
         break;
     }
-    std::string msg = expected + "\n\nIS NOT EQUAL TO\n\n" + prettified + "\ndifference at pos " + std::to_string(diff_pos);
+    std::string msg;
+    if (formatter.mBinary) {
+      msg = "difference at pos " + std::to_string(diff_pos);
+    } else {
+      msg = expected + "\n\nIS NOT EQUAL TO\n\n" + prettified + "\ndifference at pos " + std::to_string(diff_pos);
+    }
     FAIL(msg);
   }
 }
@@ -153,5 +170,19 @@ void checkTreeDumpOutput(
       ctx,
       massager,
       ScriptTreeDumper()
+  );
+}
+
+void checkLSOOutput(
+    const char* name,
+    void (*massager)(LSLScript* script)
+) {
+  OptimizationOptions opt;
+  checkStringOutput(
+      name,
+      "lso",
+      opt,
+      massager,
+      ScriptLSOCompiler()
   );
 }

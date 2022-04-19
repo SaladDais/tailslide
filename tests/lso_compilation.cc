@@ -110,4 +110,14 @@ TEST_CASE("Simple Global Var Serialization") {
 
 TEST_SUITE_END();
 
+TEST_SUITE_BEGIN("LSO conformance");
+
+#define SIMPLE_LSO_CONFORMANCE(name) TEST_CASE((name)) { checkLSOOutput((name)); }
+
+SIMPLE_LSO_CONFORMANCE("event_handler_order.lsl")
+SIMPLE_LSO_CONFORMANCE("two_states.lsl")
+SIMPLE_LSO_CONFORMANCE("various_globals.lsl")
+
+TEST_SUITE_END();
+
 }

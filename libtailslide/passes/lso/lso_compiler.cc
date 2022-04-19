@@ -3,7 +3,24 @@
 
 namespace Tailslide {
 
+inline size_t state_table_pos(uint32_t state_num) {
+  return sizeof(uint32_t) + ((sizeof(uint32_t) + sizeof(uint64_t)) * state_num);
+}
+
+uint64_t pack_handled_events(LSOSymbolData *state_data) {
+  uint64_t handled_events = 0;
+  for(auto entry : state_data->handlers) {
+    handled_events |= 1 << (entry - 1);
+  }
+  return handled_events;
+}
+
+LSLASTNode *resolve_sa_identifier(LSLASTNode *rvalue);
+
 bool LSOCompilerVisitor::visit(LSLScript *node) {
+  LSOResourceVisitor resource_visitor(&_mSymData);
+  node->visit(&resource_visitor);
+
   // allocate all of the script memory and fill with zeros
   mScriptBS.makeSpace(TOTAL_LSO_MEMORY);
   // write the first few registers whose values are mostly
@@ -13,10 +30,7 @@ bool LSOCompilerVisitor::visit(LSLScript *node) {
   writeRegister(LREG_VN, LSO_VERSION_NUM);
   writeRegister(LREG_BP, TOTAL_LSO_MEMORY - 1);
   writeRegister(LREG_SP, TOTAL_LSO_MEMORY - 1);
-  // Need to queue up a state_entry event for when the script starts
-  // TODO: LSO v1 compatibility
-  writeEventRegister(LREG_NCE, LSOH_STATE_ENTRY);
-  writeEventRegister(LREG_NER, LSOH_STATE_ENTRY);
+
   // record where the variables start
   // TODO: This will break if we're writing v1 bytecode, the registers end earlier!
   writeRegister(LREG_GVR, LSO_REGISTER_OFFSETS[LREG_MAX]);
@@ -35,55 +49,58 @@ bool LSOCompilerVisitor::visit(LSLScript *node) {
 
   // Write in the global variables themselves
   mScriptBS.moveTo(LSO_REGISTER_OFFSETS[LREG_MAX]);
-  mScriptBS.writeRawData(_mGlobalVarManager.mGlobalsBS.data(), _mGlobalVarManager.mGlobalsBS.size());
+  mScriptBS.writeBitStream(_mGlobalVarManager.mGlobalsBS);
 
   // mark the end of the globals as the start of the functions
   writeRegister(LREG_GFR, mScriptBS.pos());
 
   // mark the start of the state entries, just say we have 0 states for now
   writeRegister(LREG_SR, mScriptBS.pos());
-  mScriptBS << (uint32_t)0;
-  // enough null padding for a null state
-  // TODO: fill this in.
-  mScriptBS.moveBy(31);
+
+  auto *states = node->getChild(1);
+  auto num_states = (uint32_t)states->getNumChildren();
+  _mStatesBS << num_states;
+
+  // skip past the table for state offset and handled events bitfield for each state
+  _mStatesBS.moveTo((int32_t)state_table_pos(num_states), true);
+
+  auto *state = states->getChildren();
+  while(state) {
+    auto state_pos = _mStatesBS.pos();
+    auto *state_data = getSymbolData(state->getSymbol());
+    // Temporarily seek back to our entry in the state table and write info about the state
+    {
+      ScopedBitStreamSeek seek(_mStatesBS, state_table_pos(state_data->index));
+      // TODO: LSO v1 compat
+      _mStatesBS << (uint32_t)state_pos << pack_handled_events(state_data);
+    }
+    // resize keeps the underlying buffer allocated
+    _mStateBS.resize(0);
+    state->visit(this);
+    _mStatesBS.writeBitStream(_mStateBS);
+    state = state->getNext();
+  }
+
+  mScriptBS.writeBitStream(_mStatesBS);
+
+  // Need to queue up a state_entry event for when the script starts if the
+  // default state has a handle for it
+  auto *default_state_data = getSymbolData(states->getChild(0)->getSymbol());
+  const auto &default_handlers = default_state_data->handlers;
+  if (default_handlers.find(LSOH_STATE_ENTRY) != default_handlers.end())
+    writeEventRegister(LREG_NCE, LSOH_STATE_ENTRY);
+  else
+    writeEventRegister(LREG_NCE, 0);
+
+  // write in what events the default state handles
+  writeEventRegister(LREG_NER, pack_handled_events(default_state_data));
 
   // mark where the heap starts
   writeRegister(LREG_HR, mScriptBS.pos());
-  mScriptBS.writeRawData(_mHeapManager.mHeapBS.data(), _mHeapManager.mHeapBS.size());
+  mScriptBS.writeBitStream(_mHeapManager.mHeapBS);
   // mark the top of the heap
   writeRegister(LREG_HP, mScriptBS.pos());
   return false;
-}
-
-void LSOCompilerVisitor::writeRegister(LSORegisters reg, uint32_t val) {
-  ScopedBitStreamSeek seek(mScriptBS, LSO_REGISTER_OFFSETS[reg]);
-  mScriptBS << val;
-}
-
-void LSOCompilerVisitor::writeEventRegister(LSORegisters reg, uint64_t val) {
-  // TODO: v1 compatibility
-  ScopedBitStreamSeek seek(mScriptBS, LSO_REGISTER_OFFSETS[reg]);
-  mScriptBS << val;
-}
-
-
-
-LSLASTNode *resolve_sa_identifier(LSLASTNode *rvalue) {
-  // try to figure out where the rvalue in the lvalue was actually declared
-  while (rvalue && rvalue->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
-    auto *sym = rvalue->getSymbol();
-    // This lvalue references a builtin symbol, we don't expect to be able to
-    // follow that to a variable declaration, so we can break.
-    if (sym->getSubType() == SYM_BUILTIN)
-      break;
-    // get the node where the referenced symbol was declared
-    auto *decl_node = sym->getVarDecl();
-    // this should always be set except in the builtin case, which we handled.
-    assert(decl_node);
-    // get the rvalue of the node where this global was declared.
-    rvalue = decl_node->getChild(1);
-  }
-  return rvalue;
 }
 
 bool LSOCompilerVisitor::visit(LSLGlobalVariable *node) {
@@ -140,6 +157,79 @@ bool LSOCompilerVisitor::visit(LSLGlobalVariable *node) {
   _mGlobalVarManager.writeVar(cv, sym->getName());
 
   return false;
+}
+
+bool LSOCompilerVisitor::visit(LSLState *node) {
+  // offset to jump table, we don't put in the state name for now.
+  const uint32_t jump_table_base = 5;
+  const uint32_t jump_table_size = sizeof(uint32_t) + sizeof(uint32_t);
+  auto *state_data = getSymbolData(node->getSymbol());
+
+  _mStateBS << jump_table_base << '\0';
+  // skip past the jump tables to the start of the first state data struct
+  _mStateBS.moveBy((int32_t)(jump_table_size * state_data->handlers.size()), true);
+  auto *event_handler = node->getChild(1);
+  while (event_handler != nullptr) {
+    auto *event_data = getSymbolData(event_handler->getSymbol());
+    // the jump table is in handler enum order, figure out our position within it
+    auto table_iter = state_data->handlers.find((LSOHandlerType)event_data->index);
+    auto table_idx = std::distance(state_data->handlers.begin(), table_iter);
+
+    auto event_start_pos = _mStateBS.pos();
+    {
+      ScopedBitStreamSeek seek(_mStateBS, jump_table_base + (jump_table_size * table_idx));
+      // offset from jump table to state data, stack required for handler's locals + params
+      _mStateBS << (uint32_t)(event_start_pos - jump_table_base) << (uint32_t)event_data->size;
+    }
+    event_handler->visit(this);
+    event_handler = event_handler->getNext();
+  }
+  return false;
+}
+
+bool LSOCompilerVisitor::visit(LSLEventHandler *node) {
+  // offset to code + empty name
+  _mStateBS << (uint32_t)5 << '\0';
+  _mCodeBS.resize(0);
+  // TODO: just a RET for now, normally this would descend.
+  _mCodeBS << LOPC_RETURN;
+  _mStateBS.writeBitStream(_mCodeBS);
+  return false;
+}
+
+
+void LSOCompilerVisitor::writeRegister(LSORegisters reg, uint32_t val) {
+  ScopedBitStreamSeek seek(mScriptBS, LSO_REGISTER_OFFSETS[reg]);
+  mScriptBS << val;
+}
+
+void LSOCompilerVisitor::writeEventRegister(LSORegisters reg, uint64_t val) {
+  // TODO: v1 compatibility
+  ScopedBitStreamSeek seek(mScriptBS, LSO_REGISTER_OFFSETS[reg]);
+  mScriptBS << val;
+}
+
+LSOSymbolData *LSOCompilerVisitor::getSymbolData(Tailslide::LSLSymbol *sym) {
+  return &_mSymData[sym];
+}
+
+
+LSLASTNode *resolve_sa_identifier(LSLASTNode *rvalue) {
+  // try to figure out where the rvalue in the lvalue was actually declared
+  while (rvalue && rvalue->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
+    auto *sym = rvalue->getSymbol();
+    // This lvalue references a builtin symbol, we don't expect to be able to
+    // follow that to a variable declaration, so we can break.
+    if (sym->getSubType() == SYM_BUILTIN)
+      break;
+    // get the node where the referenced symbol was declared
+    auto *decl_node = sym->getVarDecl();
+    // this should always be set except in the builtin case, which we handled.
+    assert(decl_node);
+    // get the rvalue of the node where this global was declared.
+    rvalue = decl_node->getChild(1);
+  }
+  return rvalue;
 }
 
 

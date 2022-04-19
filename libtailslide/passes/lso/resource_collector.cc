@@ -1,4 +1,5 @@
 #include "bytecode_format.hh"
+#include "library_funcs.hh"
 #include "resource_collector.hh"
 
 namespace Tailslide {
@@ -8,8 +9,18 @@ bool LSOResourceVisitor::visit(Tailslide::LSLScript *node) {
     auto *sym = builtin_val.second;
     if (sym->getSymbolType() != Tailslide::SYM_FUNCTION)
       continue;
+    auto sym_data = getSymbolData(sym);
+    // get the library num for this function
+    auto iter = std::find(LSO_LIBRARY_FUNCS.begin(), LSO_LIBRARY_FUNCS.end(), sym->getName());
+    if (iter != LSO_LIBRARY_FUNCS.end())
+      sym_data->index = iter - LSO_LIBRARY_FUNCS.begin();
+    else
+      // There are lot of functions we don't have the library num for,
+      // just put a placeholder number.
+      sym_data->index = 0xFFff;
+
     // figure out the size of the parameters
-    handleFuncDecl(getSymbolData(sym), sym->getFunctionDecl());
+    handleFuncDecl(sym_data, sym->getFunctionDecl());
   }
   return true;
 }
@@ -17,7 +28,7 @@ bool LSOResourceVisitor::visit(Tailslide::LSLScript *node) {
 bool LSOResourceVisitor::visit(Tailslide::LSLGlobalFunction *node) {
   auto *sym = node->getSymbol();
   auto *func_sym_data = getSymbolData(sym);
-  func_sym_data->count = _mFuncCount++;
+  func_sym_data->index = _mFuncCount++;
   // enrich function prototype and parameters with sizing information
   handleFuncDecl(func_sym_data, sym->getFunctionDecl());
 
@@ -39,7 +50,37 @@ bool LSOResourceVisitor::visit(Tailslide::LSLGlobalVariable *node) {
 }
 
 bool LSOResourceVisitor::visit(Tailslide::LSLState *node) {
-  getSymbolData(node->getSymbol())->count = _mStateCount++;
+  auto *sym_data = getSymbolData(node->getSymbol());
+  sym_data->index = _mStateCount++;
+  _mCurrentState = sym_data;
+  visitChildren(node);
+  _mCurrentState = nullptr;
+  return false;
+}
+
+
+bool LSOResourceVisitor::visit(Tailslide::LSLDeclaration *node) {
+  _mCurrentFunc->has_trailing_return = false;
+
+  auto *sym = node->getSymbol();
+  auto *sym_data = getSymbolData(sym);
+  sym_data->index = _mCurrentFunc->locals.size();
+  sym_data->offset = _mCurrentFunc->size - _mCurrentFunc->offset;
+  // local slots are smaller than globals, no overhead for offset to data, type and name.
+  _mCurrentFunc->size += sym_data->size = LSO_TYPE_DATA_SIZES[sym->getIType()];
+  _mCurrentFunc->locals.push_back(sym->getIType());
+  return true;
+}
+
+bool LSOResourceVisitor::visit(Tailslide::LSLStatement *node) {
+  _mCurrentFunc->has_trailing_return = false;
+  return true;
+}
+
+bool LSOResourceVisitor::visit(Tailslide::LSLReturnStatement *node) {
+  // this should only be true if a return was the last node visited in a function or
+  // event handler.
+  _mCurrentFunc->has_trailing_return = true;
   return true;
 }
 
@@ -54,28 +95,19 @@ bool LSOResourceVisitor::visit(Tailslide::LSLEventHandler *node) {
   visitChildren(node);
   _mCurrentFunc = nullptr;
   // figure out the LSO event handler index for this handler name
-  for(size_t handler_idx=0; handler_idx<LSOH_MAX; ++handler_idx) {
+  for(size_t handler_idx=LSOH_STATE_ENTRY; handler_idx<LSOH_MAX; ++handler_idx) {
     if (!strcmp(sym->getName(), LSO_HANDLER_NAMES[handler_idx])) {
-      handler_sym_data->count = (LSOHandlerType)handler_idx;
+      handler_sym_data->index = handler_idx;
+      // register the state as having this handler as well
+      _mCurrentState->handlers.insert((LSOHandlerType)handler_idx);
     }
   }
-  assert(handler_sym_data->count);
+  assert(handler_sym_data->index);
   return false;
 }
 
-bool LSOResourceVisitor::visit(Tailslide::LSLDeclaration *node) {
-  auto *sym = node->getSymbol();
-  auto *sym_data = getSymbolData(sym);
-  sym_data->count = _mCurrentFunc->locals.size();
-  sym_data->offset = _mCurrentFunc->size - _mCurrentFunc->offset;
-  // local slots are smaller than globals, no overhead for offset to data, type and name.
-  _mCurrentFunc->size += sym_data->size = LSO_TYPE_DATA_SIZES[sym->getIType()];
-  _mCurrentFunc->locals.push_back(sym->getIType());
-  return true;
-}
-
 // shared by functions and event handlers
-void LSOResourceVisitor::handleFuncDecl(LSOSymbolSizeData *func_sym_data, Tailslide::LSLASTNode *func_decl) {
+void LSOResourceVisitor::handleFuncDecl(LSOSymbolData *func_sym_data, Tailslide::LSLASTNode *func_decl) {
   if (!func_decl || func_decl->getNodeType() == Tailslide::NODE_NULL)
     return;
   auto *params = (Tailslide::LSLIdentifier *) func_decl->getChildren();
@@ -99,12 +131,12 @@ void LSOResourceVisitor::handleFuncDecl(LSOSymbolSizeData *func_sym_data, Tailsl
   func_sym_data->size = func_sym_data->offset;
 }
 
-LSOSymbolSizeData *LSOResourceVisitor::getSymbolData(Tailslide::LSLSymbol *sym) {
-  auto sym_iter = _mSizeData->find(sym);
-  if (sym_iter != _mSizeData->end())
+LSOSymbolData *LSOResourceVisitor::getSymbolData(Tailslide::LSLSymbol *sym) {
+  auto sym_iter = _mSymData->find(sym);
+  if (sym_iter != _mSymData->end())
     return &sym_iter->second;
-  (*_mSizeData)[sym] = {};
-  return &_mSizeData->find(sym)->second;
+  (*_mSymData)[sym] = {};
+  return &_mSymData->find(sym)->second;
 }
 
 }

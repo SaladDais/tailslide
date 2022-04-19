@@ -6,6 +6,7 @@
 #include "visitor.hh"
 #include "bitstream.hh"
 #include "bytecode_format.hh"
+#include "resource_collector.hh"
 
 namespace Tailslide {
 
@@ -76,15 +77,22 @@ class LSOCompilerVisitor : public ASTVisitor {
   protected:
     virtual bool visit(LSLScript *node);
     virtual bool visit(LSLGlobalVariable *node);
+    virtual bool visit(LSLState *node);
+    virtual bool visit(LSLEventHandler *node);
 
     void writeRegister(LSORegisters reg, uint32_t val);
     void writeEventRegister(LSORegisters reg, uint64_t val);
+    LSOSymbolData *getSymbolData(Tailslide::LSLSymbol *sym);
 
     LSOBitStream _mFunctionsBS {ENDIAN_BIG};
     LSOBitStream _mStatesBS {ENDIAN_BIG};
+    LSOBitStream _mStateBS {ENDIAN_BIG};
+    LSOBitStream _mCodeBS {ENDIAN_BIG};
     LSOHeapManager _mHeapManager;
     LSOGlobalVarManager _mGlobalVarManager {&_mHeapManager};
     ScriptAllocator *_mAllocator;
+    LSOSymbolDataMap _mSymData {};
+
 };
 
 }
