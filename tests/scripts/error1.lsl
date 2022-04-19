@@ -24,7 +24,7 @@ default {
     state_entry(integer param) {    // state_entry does not take params         $[E10028]
         integer number = "hello";   // type mismatch, warning: shadow decl      $[E10015] $[E20001]
         int q;                      // should point out int->integer typo maybe $[E10020]
-        [1] == [2];                 // warning: only compares length            $[E20011]
+        [1] == [2];                 // warning: only compares length            $[E20011] $[E20018]
         number = number;            // warning: statement with no effect?
         str = "hi!";                // undeclared                               $[E10006]
         llSay(0, number.x);         // number is not a vector                   $[E10010]

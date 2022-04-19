@@ -104,4 +104,20 @@ bool BestPracticesVisitor::visit(LSLBinaryExpression *node) {
   return true;
 }
 
+bool BestPracticesVisitor::visit(LSLStatement *node) {
+  // only care about ExpressionStatements
+  if (node->getNodeSubType() != NODE_NO_SUB_TYPE)
+    return true;
+
+  auto *child = node->getChild(0);
+  if (!child || child->getNodeType() != NODE_EXPRESSION)
+    return true;
+
+  auto *expr = (LSLExpression *)child;
+  if (expr->getOperation() == EQ) {
+    NODE_ERROR(node, W_EQ_AS_STATEMENT);
+  }
+  return true;
+}
+
 }

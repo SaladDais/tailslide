@@ -10,6 +10,7 @@ class BestPracticesVisitor: public ASTVisitor {
     virtual bool visit(LSLGlobalFunction* node);
     virtual bool visit(LSLIfStatement *node);
     virtual bool visit(LSLBinaryExpression *node);
+    virtual bool visit(LSLStatement *node);
 };
 
 }

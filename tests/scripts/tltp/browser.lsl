@@ -275,7 +275,7 @@ on()
     is_on = TRUE;
     llSetColor(color_on, ALL_SIDES);
     llListenRemove(advert_handle);
-    advert_handle == llListen(advert_channel, "", "", "");
+    advert_handle == llListen(advert_channel, "", "", ""); // eq as statement $[E20018]
     integer n;
     for(n = 0; n<max_prim_used; ++n) llSetLinkAlpha(n + link_offset, 1.0, ALL_SIDES);
     llSetTimerEvent(5.0);

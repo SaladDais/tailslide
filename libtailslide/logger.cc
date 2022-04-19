@@ -305,7 +305,8 @@ const char *Logger::_sWarningMessages[] = {
         "Empty loop body.",
         "`i_val *= f_val' can have unpredictable runtime behavior, prefer `i_val = (integer)(i_val * f_val)'",
         "`jump %s;' may jump to the wrong label due to label name clashes within function",
-        "label `@%s' is declared multiple times in the same function, which may cause undesired behavior"
+        "label `@%s' is declared multiple times in the same function, which may cause undesired behavior",
+        "== comparison used as a statement"
 };
 
 }
