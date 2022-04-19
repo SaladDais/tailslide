@@ -189,8 +189,8 @@ void LSLASTNode::visit(ASTVisitor *visitor) {
 }
 
 
-void LSLASTNode::propagateValues() {
-  TailslideOperationBehavior behavior(mContext->allocator);
+void LSLASTNode::propagateValues(bool create_heap_values) {
+  TailslideOperationBehavior behavior(mContext->allocator, create_heap_values);
   ConstantDeterminingVisitor visitor(&behavior, mContext->allocator);
   visit(&visitor);
 }

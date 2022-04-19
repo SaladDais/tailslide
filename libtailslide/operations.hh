@@ -26,7 +26,10 @@ class AOperationBehavior {
 // runtime operation behavior!
 class TailslideOperationBehavior : public AOperationBehavior {
   public:
-    TailslideOperationBehavior(ScriptAllocator *allocator) { _mAllocator = allocator;};
+    explicit TailslideOperationBehavior(ScriptAllocator *allocator, bool create_heap_values=false) {
+      _mAllocator = allocator;
+      _mMayCreateHeapValues = create_heap_values;
+    };
     // dispatch method
     LSLConstant *operation(
         int operation, LSLConstant *cv, LSLConstant *other_cv, YYLTYPE *lloc) override;
@@ -60,6 +63,7 @@ class TailslideOperationBehavior : public AOperationBehavior {
       return ns;
     }
     ScriptAllocator *_mAllocator;
+    bool _mMayCreateHeapValues;
 };
 
 }

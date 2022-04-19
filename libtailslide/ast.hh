@@ -168,7 +168,7 @@ class LSLASTNode : public TrackableObject {
     // Convenience methods for common visitor uses
     void collectSymbols();
     void determineTypes();
-    void propagateValues();
+    void propagateValues(bool create_heap_values=true);
     void checkBestPractices();
     void checkSymbols(); // look for unused symbols, etc
 

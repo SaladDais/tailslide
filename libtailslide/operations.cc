@@ -285,7 +285,11 @@ LSLConstant *TailslideOperationBehavior::operation(
       const char *ov = ((LSLStringConstant *) other_const)->getValue();
       switch (operation) {
         case '+':
-          return _mAllocator->newTracked<LSLStringConstant>(joinString(value, ov));
+          if (_mMayCreateHeapValues) {
+            return _mAllocator->newTracked<LSLStringConstant>(joinString(value, ov));
+          } else {
+            return nullptr;
+          }
         case EQ:
           return _mAllocator->newTracked<LSLIntegerConstant>(!strcmp(value, ov));
           // If you want LSO's behaviour, remove the `!= 0`.
@@ -519,14 +523,22 @@ LSLConstant *TailslideOperationBehavior::operation(
 
 LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLConstant *cv, YYLTYPE *lloc) {
 
-  auto *orig_type = cv->getType();
-  if (orig_type == to_type) {
+  auto orig_itype = cv->getIType();
+  auto to_itype = to_type->getIType();
+
+  if (orig_itype == to_itype) {
     // no-op case
     return cv;
   }
 
+  // These may force us to do an expensive alloc (key <-> str is free)
+  if ((to_itype == LST_STRING && orig_itype != LST_KEY) || to_itype == LST_LIST) {
+    if (!_mMayCreateHeapValues)
+      return nullptr;
+  }
+
   LSLConstant *new_cv = nullptr;
-  switch (orig_type->getIType()) {
+  switch (orig_itype) {
     case LST_KEY:
       new_cv = cast(to_type, (LSLKeyConstant *)cv);
       break;
@@ -540,7 +552,7 @@ LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLConstant *cv,
       new_cv = cast(to_type, (LSLFloatConstant *)cv);
       break;
     case LST_LIST:
-      new_cv = cast(to_type, (LSLListConstant *)cv);
+      new_cv = cast(to_type, (LSLListConstant *) cv);
       break;
     case LST_VECTOR:
       new_cv = cast(to_type, (LSLVectorConstant *)cv);
