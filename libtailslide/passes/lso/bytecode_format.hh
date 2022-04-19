@@ -67,6 +67,7 @@ const int32_t LSO_REGISTER_OFFSETS[LREG_MAX + 1] = {
 };
 
 typedef enum {
+  LSOH_INVALID = 0,
   LSOH_STATE_ENTRY = 1,
   LSOH_STATE_EXIT = 2,
   LSOH_TOUCH_START = 3,
@@ -105,6 +106,7 @@ typedef enum {
 } LSOHandlerType;
 
 const char * const LSO_HANDLER_NAMES[LSOH_MAX] = {
+  "",
   "state_entry",  // LSOH_STATE_ENTRY
   "state_exit",  // LSOH_STATE_EXIT
   "touch_start",  // LSOH_TOUCH_START
