@@ -18,26 +18,26 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     exit(EXIT_FAILURE);
   }
 
-  Tailslide::ScoperScriptParser parser;
+  Tailslide::ScopedScriptParser parser(nullptr);
   try {
-    auto *script = parser.parse_lsl(file);
+    auto *script = parser.parseLSL(file);
     if (script) {
-      script->collect_symbols();
-      script->link_symbol_tables();
-      script->determine_types();
-      script->recalculate_reference_data();
-      script->propagate_values();
-      script->check_best_practices();
-      if (!parser.logger.get_errors()) {
-        Tailslide::OptimizationContext ctx {
+      script->collectSymbols();
+      script->linkSymbolTables();
+      script->determineTypes();
+      script->recalculateReferenceData();
+      script->propagateValues();
+      script->checkBestPractices();
+      if (!parser.logger.getErrors()) {
+        Tailslide::OptimizationOptions ctx {
           .fold_constants = true,
           .prune_unused_locals = true,
           .prune_unused_globals = true,
           .prune_unused_functions = true,
         };
         script->optimize(ctx);
-        script->validate_globals(true);
-        script->check_symbols();
+        script->validateGlobals(true);
+        script->checkSymbols();
       }
     }
   } catch (const std::exception& e) {
