@@ -145,9 +145,7 @@ class LSLIntegerConstant : public LSLConstant {
 
     int getValue() const { return _mValue; }
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
-      auto* new_const = allocator->newTracked<LSLIntegerConstant>(_mValue);
-      new_const->_mConstantValue = new_const;
-      return new_const;
+      return allocator->newTracked<LSLIntegerConstant>(_mValue);
     };
 
   private:
@@ -173,9 +171,7 @@ class LSLFloatConstant : public LSLConstant {
     float getValue() const { return _mValue; }
     virtual bool containsNaN();
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
-      auto* new_const = allocator->newTracked<LSLFloatConstant>(_mValue);
-      new_const->_mConstantValue = new_const;
-      return new_const;
+      return allocator->newTracked<LSLFloatConstant>(_mValue);
     };
 
   private:
@@ -200,9 +196,7 @@ class LSLStringConstant : public LSLConstant {
 
     const char *getValue() { return _mValue; }
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
-      auto* new_const = allocator->newTracked<LSLStringConstant>(_mValue);
-      new_const->_mConstantValue = new_const;
-      return new_const;
+      return allocator->newTracked<LSLStringConstant>(_mValue);
     };
 
   protected:
@@ -218,9 +212,7 @@ class LSLKeyConstant : public LSLStringConstant {
   public:
     LSLKeyConstant( ScriptContext *ctx, const char *v ) : LSLStringConstant(ctx, v) { _mType = TYPE(LST_KEY); }
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
-      auto* new_const = allocator->newTracked<LSLKeyConstant>(_mValue);
-      new_const->_mConstantValue = new_const;
-      return new_const;
+      return allocator->newTracked<LSLKeyConstant>(_mValue);
     };
 
     virtual const char *getNodeName() {
@@ -257,10 +249,13 @@ class LSLListConstant : public LSLConstant {
     int getLength() { return (int) getNumChildren(); }
 
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
-      // TODO: probably actually have to copy all of the elements.
-      //  since it will reparent the child values.
-      auto* new_const = allocator->newTracked<LSLListConstant>(getValue());
-      new_const->_mConstantValue = new_const;
+      auto* new_const = allocator->newTracked<LSLListConstant>(nullptr);
+      // need to copy the children since they're going to be re-parented to the copy
+      auto *old_children = getValue();
+      while (old_children != nullptr) {
+        new_const->pushChild(old_children->copy(allocator));
+        old_children = (LSLConstant *)old_children->getNext();
+      }
       return new_const;
     };
 };
@@ -286,9 +281,7 @@ class LSLVectorConstant : public LSLConstant {
     virtual bool containsNaN();
 
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
-      auto* new_const = allocator->newTracked<LSLVectorConstant>(_mValue.x, _mValue.y, _mValue.z);
-      new_const->_mConstantValue = new_const;
-      return new_const;
+      return allocator->newTracked<LSLVectorConstant>(_mValue.x, _mValue.y, _mValue.z);
     };
 
   private:
@@ -317,9 +310,7 @@ class LSLQuaternionConstant : public LSLConstant {
     virtual bool containsNaN();
 
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
-      auto* new_const = allocator->newTracked<LSLQuaternionConstant>(_mValue.x, _mValue.y, _mValue.z, _mValue.s);
-      new_const->_mConstantValue = new_const;
-      return new_const;
+      return allocator->newTracked<LSLQuaternionConstant>(_mValue.x, _mValue.y, _mValue.z, _mValue.s);
     };
 
   private:
