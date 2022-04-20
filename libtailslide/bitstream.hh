@@ -161,7 +161,7 @@ class BitStream {
 
       _mReadOnly = false;
       _mData = nullptr;
-      _mSize = _mAllocSize = 0;
+      _mPos = _mSize = _mAllocSize = 0;
     }
 
     BitStream& operator=(BitStream &&other)  noexcept {
@@ -194,12 +194,14 @@ class BitStream {
 
       if (new_size < _mSize) {
         _mSize = new_size;
+        _mPos = std::min(new_size, _mPos);
         //no reason to change alloc size?
         return;
       }
 
       if (new_size <= _mAllocSize) {
         _mSize = new_size;
+        _mPos = std::min(new_size, _mPos);
         return;
       }
 
@@ -207,6 +209,7 @@ class BitStream {
       preAlloc(_mAllocSize + step);
 
       _mSize = new_size;
+      _mPos = std::min(new_size, _mPos);
     }
 
     /**
@@ -326,6 +329,14 @@ class BitStream {
       _mPos += sizeof(T);
 
       return *this;
+    }
+
+    /**
+    * @brief Place a bitstream's entire contents in this bitstream, ignoring stream position.
+    * @param bstream
+    */
+    BitStream &writeBitStream(const BitStream &other) {
+      return writeRawData(other.data(), other.size());
     }
 
     /**
@@ -471,47 +482,6 @@ class BitStream {
     bool _mReadOnly;
 };
 
-/***
- * Read a length-prefixed BitStream and place its contents in @bstream
- * @param bstream
- */
-template<>
-inline
-BitStream &BitStream::operator>><BitStream>(BitStream &bstream) {
-  if (bstream.size() > 0) {
-    throw std::runtime_error("Target bstream already contains data");
-  }
-
-  uint32_t length = 0;
-  *this >> length;
-
-  if (_mPos + length > size()) {
-    throw std::runtime_error("length is longer than BitStream");
-  }
-
-  if (length > 0) {
-    bstream.writeRawData(current(), length);
-    moveBy((int32_t) length);
-  }
-
-  bstream.moveTo(0);
-  return *this;
-}
-
-/***
- * Write a length-prefixed BitStream into another BitStream
- */
-template<>
-inline BitStream &BitStream::operator<< <BitStream>(const BitStream &bstream) {
-  uint32_t length = bstream.size();
-  *this << length;
-
-  if (length > 0) {
-    writeRawData(bstream.data(), length);
-  }
-
-  return *this;
-}
 
 template<>
 inline
