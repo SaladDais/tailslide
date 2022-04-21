@@ -1,8 +1,8 @@
-#include "tailslide.hh"
 #include "doctest.hh"
-#include "testutils.hh"
-#include "passes/lso/lso_compiler.hh"
 #include "passes/lso/bytecode_format.hh"
+#include "passes/lso/script_compiler.hh"
+#include "tailslide.hh"
+#include "testutils.hh"
 
 namespace Tailslide {
 
@@ -10,7 +10,7 @@ TEST_SUITE_BEGIN("LSO");
 
 TEST_CASE("Simple register initialization") {
   auto script = runConformance("constprop.lsl");
-  LSOCompilerVisitor visitor(&script->allocator);
+  LSOScriptCompiler visitor(&script->allocator);
   script->script->visit(&visitor);
   LSOBitStream script_bs(std::move(visitor.mScriptBS));
 
@@ -117,6 +117,7 @@ TEST_SUITE_BEGIN("LSO conformance");
 SIMPLE_LSO_CONFORMANCE("event_handler_order.lsl")
 SIMPLE_LSO_CONFORMANCE("two_states.lsl")
 SIMPLE_LSO_CONFORMANCE("various_globals.lsl")
+SIMPLE_LSO_CONFORMANCE("lso_jump_behavior.lsl")
 
 TEST_SUITE_END();
 

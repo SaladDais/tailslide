@@ -1,5 +1,5 @@
 #include "testutils.hh"
-#include "passes/lso/lso_compiler.hh"
+#include "passes/lso/script_compiler.hh"
 
 using namespace Tailslide;
 
@@ -78,7 +78,7 @@ class ScriptLSOCompiler: public ScriptFormatter {
   public:
     ScriptLSOCompiler() {mBinary = true;};
     virtual std::string format(LSLScript *script) const {
-      LSOCompilerVisitor lso_visitor(script->mContext->allocator);
+      LSOScriptCompiler lso_visitor(script->mContext->allocator);
       script->visit(&lso_visitor);
       return {(const char*)lso_visitor.mScriptBS.data(), lso_visitor.mScriptBS.size()};
     };

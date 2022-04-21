@@ -96,8 +96,9 @@ add_library(libtailslide STATIC
         libtailslide/passes/tree_print.cc
         libtailslide/passes/tree_simplifier.cc
         libtailslide/passes/values.cc
+        libtailslide/passes/lso/bytecode_compiler.cc
         libtailslide/passes/lso/library_funcs.cc
-        libtailslide/passes/lso/lso_compiler.cc
+        libtailslide/passes/lso/script_compiler.cc
         libtailslide/passes/lso/resource_collector.cc
         libtailslide/tailslide.cc
         )
@@ -122,9 +123,10 @@ target_sources(libtailslide PRIVATE
         libtailslide/passes/tree_print.hh
         libtailslide/passes/type_checking.hh
         libtailslide/passes/values.hh
+        libtailslide/passes/lso/bytecode_compiler.hh
         libtailslide/passes/lso/bytecode_format.hh
         libtailslide/passes/lso/library_funcs.hh
-        libtailslide/passes/lso/lso_compiler.hh
+        libtailslide/passes/lso/script_compiler.hh
         libtailslide/passes/lso/resource_collector.hh
         libtailslide/tailslide.hh
 )
