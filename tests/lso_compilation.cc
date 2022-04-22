@@ -118,6 +118,7 @@ SIMPLE_LSO_CONFORMANCE("event_handler_order.lsl")
 SIMPLE_LSO_CONFORMANCE("two_states.lsl")
 SIMPLE_LSO_CONFORMANCE("various_globals.lsl")
 SIMPLE_LSO_CONFORMANCE("lso_jump_behavior.lsl")
+SIMPLE_LSO_CONFORMANCE("simple_function_defs.lsl")
 
 TEST_SUITE_END();
 

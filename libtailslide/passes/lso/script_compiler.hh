@@ -38,6 +38,7 @@ class LSOScriptCompiler : public ASTVisitor {
     virtual bool visit(LSLGlobalVariable *node);
     virtual bool visit(LSLState *node);
     virtual bool visit(LSLEventHandler *node);
+    virtual bool visit(LSLGlobalFunction *node);
 
     void writeRegister(LSORegisters reg, uint32_t val);
     void writeEventRegister(LSORegisters reg, uint64_t val);

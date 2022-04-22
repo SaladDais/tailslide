@@ -25,16 +25,25 @@ bool LSOScriptCompiler::visit(LSLScript *node) {
   // allocate all of the script memory and fill with zeros
   mScriptBS.makeSpace(TOTAL_LSO_MEMORY);
 
-  // Collect all the global variables
-  auto *globals = node->getChild(0)->getChildren();
-  while (globals != nullptr) {
-    auto *gs_var_slot = globals->getChild(0);
-    // this globalstorage holds a variable, not a function
-    if (gs_var_slot->getNodeType() != NODE_NULL) {
-      gs_var_slot->visit(this);
-    }
-    globals = globals->getNext();
+  // figure out if we have any functions, and if so what the highest index is.
+  uint32_t num_funcs = 0;
+  for (auto &sym_data : _mSymData) {
+    auto *sym = sym_data.first;
+    if (sym->getSymbolType() != SYM_FUNCTION || sym->getSubType() == SYM_BUILTIN)
+      continue;
+    ++num_funcs;
   }
+
+  // only need to write the function header if we actually have any functions
+  if (num_funcs) {
+    _mFunctionsBS << num_funcs;
+    _mFunctionsBS.moveBy((int32_t) (sizeof(uint32_t) * num_funcs), true);
+  }
+
+  // Collect all the global variables and functions
+  visitChildren(node->getChild(0));
+
+  // Nothing should be writing to the heap after handling global vars, write the terminal block.
   _mHeapManager.writeTerminalBlock();
 
   auto *states = node->getChild(1);
@@ -77,6 +86,7 @@ bool LSOScriptCompiler::visit(LSLScript *node) {
 
   // mark the end of the globals as the start of the functions
   writeRegister(LREG_GFR, mScriptBS.pos());
+  mScriptBS.writeBitStream(_mFunctionsBS);
   // mark the start of the state entries, marks the end of the functions
   writeRegister(LREG_SR, mScriptBS.pos());
   mScriptBS.writeBitStream(_mStatesBS);
@@ -151,6 +161,23 @@ bool LSOScriptCompiler::visit(LSLGlobalVariable *node) {
   return false;
 }
 
+bool LSOScriptCompiler::visit(LSLGlobalFunction *node) {
+  auto *sym = node->getSymbol();
+  auto &func_data = _mSymData[sym];
+  auto function_start = _mFunctionsBS.pos();
+  {
+    // temporarily seek to this function's index in the function table, write in where it starts
+    ScopedBitStreamSeek seek(_mFunctionsBS, sizeof(uint32_t) + (sizeof(uint32_t) * func_data.index));
+    _mFunctionsBS << (uint32_t)function_start;
+  }
+  // offset to code, name, ret_type, [param_type, ...], '\0', bytecode
+  _mFunctionsBS << (uint32_t)7 << '\0' << sym->getIType() << '\0';
+  LSOBytecodeCompiler visitor(_mSymData);
+  node->visit(&visitor);
+  _mFunctionsBS.writeBitStream(visitor.mCodeBS);
+  return false;
+}
+
 bool LSOScriptCompiler::visit(LSLState *node) {
   // offset to jump table, we don't put in the state name for now.
   const uint32_t jump_table_base = 5;
@@ -187,6 +214,7 @@ bool LSOScriptCompiler::visit(LSLEventHandler *node) {
   _mStateBS.writeBitStream(visitor.mCodeBS);
   return false;
 }
+
 
 
 void LSOScriptCompiler::writeRegister(LSORegisters reg, uint32_t val) {
