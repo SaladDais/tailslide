@@ -3,11 +3,11 @@
 #include "resource_collector.hh"
 
 namespace Tailslide {
-bool LSOResourceVisitor::visit(Tailslide::LSLScript *node) {
+bool LSOResourceVisitor::visit(LSLScript *node) {
   // build up symbol data for library functions
   for (auto builtin_val: node->mContext->builtins->getMap()) {
     auto *sym = builtin_val.second;
-    if (sym->getSymbolType() != Tailslide::SYM_FUNCTION)
+    if (sym->getSymbolType() != SYM_FUNCTION)
       continue;
     auto sym_data = getSymbolData(sym);
     // get the library num for this function
@@ -25,7 +25,7 @@ bool LSOResourceVisitor::visit(Tailslide::LSLScript *node) {
   return true;
 }
 
-bool LSOResourceVisitor::visit(Tailslide::LSLGlobalFunction *node) {
+bool LSOResourceVisitor::visit(LSLGlobalFunction *node) {
   auto *sym = node->getSymbol();
   auto *func_sym_data = getSymbolData(sym);
   func_sym_data->index = _mFuncCount++;
@@ -39,7 +39,7 @@ bool LSOResourceVisitor::visit(Tailslide::LSLGlobalFunction *node) {
   return false;
 }
 
-bool LSOResourceVisitor::visit(Tailslide::LSLGlobalVariable *node) {
+bool LSOResourceVisitor::visit(LSLGlobalVariable *node) {
   auto *sym = node->getSymbol();
   auto sym_data = getSymbolData(sym);
   // Offset to actual data, type, null terminator for name (empty)
@@ -49,7 +49,7 @@ bool LSOResourceVisitor::visit(Tailslide::LSLGlobalVariable *node) {
   return true;
 }
 
-bool LSOResourceVisitor::visit(Tailslide::LSLState *node) {
+bool LSOResourceVisitor::visit(LSLState *node) {
   auto *sym_data = getSymbolData(node->getSymbol());
   sym_data->index = _mStateCount++;
   _mCurrentState = sym_data;
@@ -59,9 +59,7 @@ bool LSOResourceVisitor::visit(Tailslide::LSLState *node) {
 }
 
 
-bool LSOResourceVisitor::visit(Tailslide::LSLDeclaration *node) {
-  _mCurrentFunc->has_trailing_return = false;
-
+bool LSOResourceVisitor::visit(LSLDeclaration *node) {
   auto *sym = node->getSymbol();
   auto *sym_data = getSymbolData(sym);
   sym_data->index = _mCurrentFunc->locals.size();
@@ -72,19 +70,8 @@ bool LSOResourceVisitor::visit(Tailslide::LSLDeclaration *node) {
   return true;
 }
 
-bool LSOResourceVisitor::visit(Tailslide::LSLStatement *node) {
-  _mCurrentFunc->has_trailing_return = false;
-  return true;
-}
 
-bool LSOResourceVisitor::visit(Tailslide::LSLReturnStatement *node) {
-  // this should only be true if a return was the last node visited in a function or
-  // event handler.
-  _mCurrentFunc->has_trailing_return = true;
-  return true;
-}
-
-bool LSOResourceVisitor::visit(Tailslide::LSLEventHandler *node) {
+bool LSOResourceVisitor::visit(LSLEventHandler *node) {
   auto *sym = node->getSymbol();
   auto *handler_sym_data = getSymbolData(sym);
   // enrich handler prototype and parameters with sizing information
@@ -107,10 +94,10 @@ bool LSOResourceVisitor::visit(Tailslide::LSLEventHandler *node) {
 }
 
 // shared by functions and event handlers
-void LSOResourceVisitor::handleFuncDecl(LSOSymbolData *func_sym_data, Tailslide::LSLASTNode *func_decl) {
-  if (!func_decl || func_decl->getNodeType() == Tailslide::NODE_NULL)
+void LSOResourceVisitor::handleFuncDecl(LSOSymbolData *func_sym_data, LSLASTNode *func_decl) {
+  if (!func_decl || func_decl->getNodeType() == NODE_NULL)
     return;
-  auto *params = (Tailslide::LSLIdentifier *) func_decl->getChildren();
+  auto *params = (LSLIdentifier *) func_decl->getChildren();
   while (params) {
     auto param_type = params->getIType();
     auto param_size = LSO_TYPE_DATA_SIZES[param_type];
@@ -124,14 +111,14 @@ void LSOResourceVisitor::handleFuncDecl(LSOSymbolData *func_sym_data, Tailslide:
 
     func_sym_data->offset += param_size;
     func_sym_data->function_args.push_back(param_type);
-    params = (Tailslide::LSLIdentifier *) params->getNext();
+    params = (LSLIdentifier *) params->getNext();
   }
   // function size is parameters + locals, add the parameter sizes
   // before we start looking at the locals
   func_sym_data->size = func_sym_data->offset;
 }
 
-LSOSymbolData *LSOResourceVisitor::getSymbolData(Tailslide::LSLSymbol *sym) {
+LSOSymbolData *LSOResourceVisitor::getSymbolData(LSLSymbol *sym) {
   auto sym_iter = _mSymData->find(sym);
   if (sym_iter != _mSymData->end())
     return &sym_iter->second;

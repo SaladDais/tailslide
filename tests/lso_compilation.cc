@@ -122,6 +122,7 @@ SIMPLE_LSO_CONFORMANCE("simple_function_defs.lsl")
 SIMPLE_LSO_CONFORMANCE("constant_expressions.lsl")
 SIMPLE_LSO_CONFORMANCE("branching.lsl")
 SIMPLE_LSO_CONFORMANCE("simple_declarations.lsl")
+SIMPLE_LSO_CONFORMANCE("implied_return.lsl")
 
 TEST_SUITE_END();
 

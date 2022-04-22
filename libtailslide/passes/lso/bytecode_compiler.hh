@@ -26,6 +26,7 @@ class LSOBytecodeCompiler : public ASTVisitor {
     bool visit(LSLWhileStatement *node) override;
     bool visit(LSLDoStatement *node) override;
     bool visit(LSLDeclaration *node) override;
+    bool visit(LSLReturnStatement *node) override;
 
     void pushConstant(LSLConstant *constant);
     void popLocals();

@@ -41,13 +41,24 @@ bool BestPracticesVisitor::visit(LSLGlobalFunction* node) {
   auto *id = (LSLIdentifier *) node->getChild(0);
   auto *statement = (LSLStatement *) node->getChild(2);
 
-  // this function has a non-null return type
-  if (id->getIType() != LST_NULL) {
-    AllPathsReturnVisitor visitor;
-    statement->visit(&visitor);
-    if (!visitor.mAllReturn) {
-      NODE_ERROR(node->getChild(0), E_NOT_ALL_PATHS_RETURN);
-    }
+  AllPathsReturnVisitor visitor;
+  statement->visit(&visitor);
+  // this function has a non-null return type, it requires explicit returns.
+  if (id->getIType() != LST_NULL && !visitor.mAllReturn) {
+    NODE_ERROR(id, E_NOT_ALL_PATHS_RETURN);
+  }
+  if (auto *sym = node->getSymbol()) {
+    sym->setAllPathsReturn(visitor.mAllReturn);
+  }
+  return true;
+}
+
+bool BestPracticesVisitor::visit(LSLEventHandler *node) {
+  auto *statement = (LSLStatement *) node->getChild(2);
+  AllPathsReturnVisitor visitor;
+  statement->visit(&visitor);
+  if (auto *sym = node->getSymbol()) {
+    sym->setAllPathsReturn(visitor.mAllReturn);
   }
   return true;
 }

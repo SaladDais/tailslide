@@ -7,7 +7,8 @@ inline int32_t calculate_jump_operand(uint64_t operand_pos, uint64_t target_pos)
 }
 
 void LSOBytecodeCompiler::buildFunction(LSLASTNode *node) {
-  _mFuncSymData = &_mSymData[node->getSymbol()];
+  auto *sym = node->getSymbol();
+  _mFuncSymData = &_mSymData[sym];
 
   visitChildren(node);
 
@@ -19,7 +20,7 @@ void LSOBytecodeCompiler::buildFunction(LSLASTNode *node) {
     mCodeBS << calculate_jump_operand(jump_pair.second, label_pos);
   }
 
-  if (!_mFuncSymData->has_trailing_return) {
+  if (!sym->getAllPathsReturn()) {
     writeReturn();
   }
 }
@@ -214,6 +215,13 @@ bool LSOBytecodeCompiler::visit(LSLDeclaration *node) {
       break;
   }
   mCodeBS << _mSymData[node->getSymbol()].offset;
+  return false;
+}
+
+bool LSOBytecodeCompiler::visit(LSLReturnStatement *node) {
+  // TODO: write retval if applicable
+  visitChildren(node);
+  writeReturn();
   return false;
 }
 

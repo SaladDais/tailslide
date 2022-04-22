@@ -70,9 +70,10 @@ class LSLSymbol: public TrackableObject {
     void setConstantPrecluded(bool precluded) { _mConstantPrecluded = precluded; };
 
     char                   *getMangledName()             { return _mMangledName; };
-    void                    setMangledName(char* m_name) {
-      _mMangledName = m_name;
-    };
+    void                    setMangledName(char* m_name) { _mMangledName = m_name; };
+
+    bool getAllPathsReturn() const { return _mAllPathsReturn; }
+    void setAllPathsReturn(bool all_ret) { _mAllPathsReturn = all_ret; }
 
   private:
     const char          *_mName;
@@ -87,6 +88,7 @@ class LSLSymbol: public TrackableObject {
     int                  _mReferences;            // how many times this symbol is referred to
     int                  _mAssignments;           // how many times it is assigned to
     char                *_mMangledName;
+    bool _mAllPathsReturn = false;
 };
 
 

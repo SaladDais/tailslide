@@ -21,8 +21,6 @@ struct LSOSymbolData {
   std::vector<LSLIType> locals{};
   // all arguments (if this symbol is a function or event handler)
   std::vector<LSLIType> function_args{};
-  // for event handlers and functions with no retval, should we inject a return instruction?
-  bool has_trailing_return = false;
 };
 
 typedef std::map<Tailslide::LSLSymbol *, LSOSymbolData> LSOSymbolDataMap;
@@ -39,8 +37,6 @@ class LSOResourceVisitor : public Tailslide::ASTVisitor {
     bool visit(Tailslide::LSLGlobalVariable *node) override;
     bool visit(Tailslide::LSLState *node) override;
     bool visit(Tailslide::LSLDeclaration *node) override;
-    bool visit(Tailslide::LSLStatement *node) override;
-    bool visit(Tailslide::LSLReturnStatement *node) override;
     bool visit(Tailslide::LSLEventHandler *node) override;
 
     LSOSymbolData *getSymbolData(Tailslide::LSLSymbol *sym);
