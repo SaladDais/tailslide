@@ -42,4 +42,39 @@ bool LSOBytecodeCompiler::visit(LSLLabel *node) {
   return false;
 }
 
+bool LSOBytecodeCompiler::visit(LSLConstantExpression *node) {
+  auto *constant = node->getChild(0);
+  mCodeBS << LSO_TYPE_LITERAL_PUSH_OPCODE[constant->getIType()];
+  constant->visit(this);
+  return false;
+}
+
+bool LSOBytecodeCompiler::visit(LSLConstant *node) {
+  throw std::runtime_error(std::string("Bad constant type ") + node->getNodeName() );
+  return false;
+}
+
+bool LSOBytecodeCompiler::visit(LSLStringConstant *node) {
+  auto *str = node->getValue();
+  mCodeBS.writeRawData((const uint8_t*)str, strlen(str) + 1);
+  return false;
+}
+
+bool LSOBytecodeCompiler::visit(LSLIntegerConstant *node) {
+  mCodeBS << node->getValue();
+  return false;
+}
+
+bool LSOBytecodeCompiler::visit(LSLFloatConstant *node) {
+  mCodeBS << node->getValue();
+  return false;
+}
+
+bool LSOBytecodeCompiler::visit(LSLExpressionStatement *node) {
+  auto *expr = node->getChild(0);
+  expr->visit(this);
+  mCodeBS << LSO_TYPE_POP_OPCODE[expr->getIType()];
+  return false;
+}
+
 }
