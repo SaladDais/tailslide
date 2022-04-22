@@ -25,10 +25,14 @@ class LSOBytecodeCompiler : public ASTVisitor {
     bool visit(LSLForStatement *node) override;
     bool visit(LSLWhileStatement *node) override;
     bool visit(LSLDoStatement *node) override;
+    bool visit(LSLDeclaration *node) override;
 
     void pushConstant(LSLConstant *constant);
+    void popLocals();
+    void writeReturn();
 
     LSOSymbolDataMap &_mSymData;
+    LSOSymbolData *_mFuncSymData = nullptr;
     /// map of label name -> position of the jump instruction. Intentionally
     /// disallows multiple jumps to match LL LSO compiler behavior.
     std::map<std::string, uint64_t> _mJumpMap;

@@ -121,6 +121,7 @@ SIMPLE_LSO_CONFORMANCE("lso_jump_behavior.lsl")
 SIMPLE_LSO_CONFORMANCE("simple_function_defs.lsl")
 SIMPLE_LSO_CONFORMANCE("constant_expressions.lsl")
 SIMPLE_LSO_CONFORMANCE("branching.lsl")
+SIMPLE_LSO_CONFORMANCE("simple_declarations.lsl")
 
 TEST_SUITE_END();
 

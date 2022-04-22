@@ -7,7 +7,7 @@ inline int32_t calculate_jump_operand(uint64_t operand_pos, uint64_t target_pos)
 }
 
 void LSOBytecodeCompiler::buildFunction(LSLASTNode *node) {
-  auto &func_sym_data = _mSymData[node->getSymbol()];
+  _mFuncSymData = &_mSymData[node->getSymbol()];
 
   visitChildren(node);
 
@@ -19,8 +19,9 @@ void LSOBytecodeCompiler::buildFunction(LSLASTNode *node) {
     mCodeBS << calculate_jump_operand(jump_pair.second, label_pos);
   }
 
-  if (!func_sym_data.has_trailing_return)
-    mCodeBS << LOPC_RETURN;
+  if (!_mFuncSymData->has_trailing_return) {
+    writeReturn();
+  }
 }
 
 bool LSOBytecodeCompiler::visit(LSLEventHandler *node) {
@@ -174,6 +175,47 @@ bool LSOBytecodeCompiler::visit(LSLDoStatement *node) {
   return false;
 }
 
+bool LSOBytecodeCompiler::visit(LSLDeclaration *node) {
+  auto *expr = node->getChild(1);
+  auto *var_type = node->getSymbol()->getType();
+  if (expr->getNodeType() != NODE_NULL) {
+    expr->visit(this);
+  } else {
+    auto *default_type = var_type;
+    // This gets pushed as an int in the default case, even though it
+    // would normally use pushargf.
+    if (default_type->getIType() == LST_FLOATINGPOINT) {
+      default_type = TYPE(LST_INTEGER);
+    }
+    pushConstant(default_type->getDefaultValue());
+  }
+
+  switch(var_type->getIType()) {
+    case LST_INTEGER:
+    case LST_FLOATINGPOINT:
+      mCodeBS << LOPC_LOADP;
+      break;
+    case LST_STRING:
+    case LST_KEY:
+      mCodeBS << LOPC_LOADSP;
+      break;
+    case LST_VECTOR:
+      mCodeBS << LOPC_LOADVP;
+      break;
+    case LST_QUATERNION:
+      mCodeBS << LOPC_LOADQP;
+      break;
+    case LST_LIST:
+      mCodeBS << LOPC_LOADLP;
+      break;
+    case LST_ERROR:
+    case LST_NULL:
+    case LST_MAX:
+      break;
+  }
+  mCodeBS << _mSymData[node->getSymbol()].offset;
+  return false;
+}
 
 
 void LSOBytecodeCompiler::pushConstant(LSLConstant *constant) {
@@ -215,6 +257,22 @@ void LSOBytecodeCompiler::pushConstant(LSLConstant *constant) {
     case LST_NULL:
       break;
   }
+}
+
+void LSOBytecodeCompiler::popLocals() {
+  // pop locals in reverse order
+  for (auto i = _mFuncSymData->locals.rbegin(); i != _mFuncSymData->locals.rend(); ++i) {
+    mCodeBS << LSO_TYPE_POP_OPCODE[*i];
+  }
+  // then the arguments that're above the locals on the stack
+  for (auto i = _mFuncSymData->function_args.rbegin(); i != _mFuncSymData->function_args.rend(); ++i) {
+    mCodeBS << LSO_TYPE_POP_OPCODE[*i];
+  }
+}
+
+void LSOBytecodeCompiler::writeReturn() {
+  popLocals();
+  mCodeBS << LOPC_RETURN;
 }
 
 }
