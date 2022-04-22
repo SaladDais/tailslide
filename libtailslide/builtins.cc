@@ -81,7 +81,7 @@ static void init_default_values() {
   set_default_value(TYPE(LST_FLOATINGPOINT), gStaticAllocator.newTracked<LSLFloatConstant>(0));
   set_default_value(TYPE(LST_STRING), gStaticAllocator.newTracked<LSLStringConstant>(""));
   // Default value is _not_ NULL_KEY, even though you might logically think that.
-  set_default_value(TYPE(LST_KEY), gStaticAllocator.newTracked<LSLStringConstant>(""));
+  set_default_value(TYPE(LST_KEY), gStaticAllocator.newTracked<LSLKeyConstant>(""));
   set_default_value(TYPE(LST_VECTOR), gStaticAllocator.newTracked<LSLVectorConstant>(0, 0, 0));
   set_default_value(TYPE(LST_QUATERNION), gStaticAllocator.newTracked<LSLQuaternionConstant>(0, 0, 0, 1));
   set_default_value(TYPE(LST_LIST), gStaticAllocator.newTracked<LSLListConstant>(nullptr));
