@@ -250,9 +250,9 @@ typedef enum : uint8_t {
     LOPC_CALLLIB_TWO_BYTE = 0xd1,
     LOPC_SHL = 0xe0,
     LOPC_SHR = 0xe1
-} LSOOpCodes;
+} LSOOpCode;
 
-const LSOOpCodes LSO_TYPE_POP_OPCODE[LST_MAX] = {
+const LSOOpCode LSO_TYPE_POP_OPCODE[LST_MAX] = {
     LOPC_NOOP, // null
     LOPC_POP,  // int
     LOPC_POP,  // float
@@ -262,18 +262,6 @@ const LSOOpCodes LSO_TYPE_POP_OPCODE[LST_MAX] = {
     LOPC_POPQ, // quat
     LOPC_POPL, // list
     LOPC_NOOP, // error
-};
-
-const LSOOpCodes LSO_TYPE_LITERAL_PUSH_OPCODE[LST_MAX] = {
-    LOPC_NOOP,     // null
-    LOPC_PUSHARGI, // int
-    LOPC_PUSHARGF, // float
-    LOPC_PUSHARGS, // str
-    LOPC_NOOP,     // key (key literals aren't "real")
-    LOPC_PUSHARGV, // vec (only ever used for the default value)
-    LOPC_PUSHARGQ, // quat (only ever used for the default value)
-    LOPC_NOOP,     // list (list literals aren't "real")
-    LOPC_NOOP,     // error
 };
 
 /// pack two types into a single byte (common for LSO)

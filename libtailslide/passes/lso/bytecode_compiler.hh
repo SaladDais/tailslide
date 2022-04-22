@@ -18,10 +18,6 @@ class LSOBytecodeCompiler : public ASTVisitor {
     bool visit(LSLEventHandler *node) override;
     bool visit(LSLGlobalFunction *node) override;
     bool visit(LSLConstantExpression *node) override;
-    bool visit(LSLConstant *node) override;
-    bool visit(LSLIntegerConstant *node) override;
-    bool visit(LSLFloatConstant *node) override;
-    bool visit(LSLStringConstant *node) override;
     bool visit(LSLExpressionStatement *node) override;
     bool visit(LSLJumpStatement *node) override;
     bool visit(LSLLabel *node) override;
@@ -29,6 +25,8 @@ class LSOBytecodeCompiler : public ASTVisitor {
     bool visit(LSLForStatement *node) override;
     bool visit(LSLWhileStatement *node) override;
     bool visit(LSLDoStatement *node) override;
+
+    void pushConstant(LSLConstant *constant);
 
     LSOSymbolDataMap &_mSymData;
     /// map of label name -> position of the jump instruction. Intentionally

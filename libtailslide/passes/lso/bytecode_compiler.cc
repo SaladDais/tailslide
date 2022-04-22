@@ -34,32 +34,7 @@ bool LSOBytecodeCompiler::visit(LSLGlobalFunction *node) {
 }
 
 bool LSOBytecodeCompiler::visit(LSLConstantExpression *node) {
-  auto *constant = node->getChild(0);
-  mCodeBS << LSO_TYPE_LITERAL_PUSH_OPCODE[constant->getIType()];
-  constant->visit(this);
-  return false;
-}
-
-bool LSOBytecodeCompiler::visit(LSLConstant *node) {
-  // TODO: add some kind of de-sugaring visitor for LSO to turn vec / quat / key / list
-  //  constants back into expressions of the appropriate type.
-  throw std::runtime_error(std::string("Bad constant type ") + node->getNodeName());
-  return false;
-}
-
-bool LSOBytecodeCompiler::visit(LSLStringConstant *node) {
-  auto *str = node->getValue();
-  mCodeBS.writeRawData((const uint8_t*)str, strlen(str) + 1);
-  return false;
-}
-
-bool LSOBytecodeCompiler::visit(LSLIntegerConstant *node) {
-  mCodeBS << node->getValue();
-  return false;
-}
-
-bool LSOBytecodeCompiler::visit(LSLFloatConstant *node) {
-  mCodeBS << node->getValue();
+  pushConstant(node->getChild(0)->getConstantValue());
   return false;
 }
 
@@ -197,6 +172,49 @@ bool LSOBytecodeCompiler::visit(LSLDoStatement *node) {
   // then the conditional jump back to the top of the body
   mCodeBS << LOPC_JUMPIF << check_expr->getIType() << calculate_jump_operand(mCodeBS.pos(), start_pos);
   return false;
+}
+
+
+
+void LSOBytecodeCompiler::pushConstant(LSLConstant *constant) {
+  switch(constant->getIType()) {
+    case LST_INTEGER:
+      mCodeBS << LOPC_PUSHARGI << ((LSLIntegerConstant *) constant)->getValue();
+      break;
+    case LST_FLOATINGPOINT:
+      mCodeBS << LOPC_PUSHARGF << ((LSLFloatConstant *) constant)->getValue();
+      break;
+    // will be disambiguated in the list case by PUSH_ARGB below.
+    case LST_STRING:
+    case LST_KEY: {
+      auto *str = ((LSLStringConstant *) constant)->getValue();
+      mCodeBS << LOPC_PUSHARGS;
+      mCodeBS.writeRawData((uint8_t *)str, strlen(str) + 1);
+      break;
+    }
+    case LST_VECTOR:
+      mCodeBS << LOPC_PUSHARGV << *((LSLVectorConstant *) constant)->getValue();
+      break;
+    case LST_QUATERNION:
+      mCodeBS << LOPC_PUSHARGQ << *((LSLQuaternionConstant *) constant)->getValue();
+      break;
+    case LST_LIST: {
+      auto *list_cv = (LSLListConstant *)constant;
+      auto *list_child = constant->getChildren();
+      while (list_child != nullptr) {
+        // push the constant, then its type so STACKTOL knows what's actually on the stack.
+        pushConstant((LSLConstant *)list_child);
+        mCodeBS << LOPC_PUSHARGB << list_child->getIType();
+        list_child = list_child->getNext();
+      }
+      mCodeBS << LOPC_STACKTOL << (uint32_t)list_cv->getLength();
+      break;
+    }
+    case LST_ERROR:
+    case LST_MAX:
+    case LST_NULL:
+      break;
+  }
 }
 
 }
