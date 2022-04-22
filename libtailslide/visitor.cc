@@ -54,6 +54,8 @@ bool ASTVisitor::visitSpecific(LSLASTNode *node) {
       switch(node->getNodeSubType()) {
         case NODE_COMPOUND_STATEMENT:
           return visit((LSLCompoundStatement *)node);
+        case NODE_EXPRESSION_STATEMENT:
+          return visit((LSLExpressionStatement *)node);
         case NODE_RETURN_STATEMENT:
           return visit((LSLReturnStatement *)node);
         case NODE_LABEL:

@@ -395,6 +395,13 @@ class LSLCompoundStatement : public LSLStatement {
     virtual LSLNodeSubType getNodeSubType() { return NODE_COMPOUND_STATEMENT; };
 };
 
+class LSLExpressionStatement : public LSLStatement {
+  public:
+  LSLExpressionStatement( ScriptContext *ctx, class LSLExpression *expr ) : LSLStatement(ctx, 1, expr) {}
+  virtual const char *getNodeName() { return "expression statement"; };
+  virtual LSLNodeSubType getNodeSubType() { return NODE_EXPRESSION_STATEMENT; };
+};
+
 class LSLStateStatement : public LSLStatement {
   public:
     explicit LSLStateStatement(ScriptContext *ctx) : LSLStatement(ctx, 0) {};

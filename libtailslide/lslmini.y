@@ -580,7 +580,7 @@ statement
     }
     | expression ';'
     {
-        $$ = ALLOCATOR->newTracked<LSLStatement>($1);
+        $$ = ALLOCATOR->newTracked<LSLExpressionStatement>($1);
     }
     | declaration ';'
     {

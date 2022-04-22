@@ -70,6 +70,9 @@ class ASTVisitor {
     virtual bool visit(LSLCompoundStatement *node) {
       return visit((LSLStatement *)node);
     };
+    virtual bool visit(LSLExpressionStatement *node) {
+      return visit((LSLStatement *)node);
+    };
     virtual bool visit(LSLStateStatement *node) {
       return visit((LSLStatement *)node);
     };
