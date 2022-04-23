@@ -91,20 +91,23 @@ bool TypeCheckVisitor::visit(LSLReturnStatement *node) {
       ancestor->getNodeType() != NODE_GLOBAL_FUNCTION)
     ancestor = ancestor->getParent();
 
+  auto *ancestor_type = ancestor->getChild(0)->getType();
+  auto *ret = node->getChild(0);
+  auto *ret_type = ret->getType();
+
   // if an event handler
   if (ancestor->getNodeType() == NODE_EVENT_HANDLER) {
     // make sure we're not returning anything
-    if (node->getChild(0)->getNodeType() != NODE_NULL) {
+    if (ret->getNodeType() != NODE_NULL) {
       NODE_ERROR(node, E_RETURN_VALUE_IN_EVENT_HANDLER);
     }
-  } else {  // otherwise it's a function
+  } else {
+    // otherwise it's a function
     // the return type of the function is stored in the identifier which is
     // the first child
-    if (!node->getChild(0)->getType()->canCoerce(
-        ancestor->getChild(0)->getType())) {
-      NODE_ERROR(node, E_BAD_RETURN_TYPE,
-                 node->getChild(0)->getType()->getNodeName(),
-                 ancestor->getChild(0)->getType()->getNodeName());
+    if (!ret_type->canCoerce(ancestor_type)
+        || (ret_type == TYPE(LST_NULL) && ret->getNodeType() != NODE_NULL)) {
+      NODE_ERROR(node, E_BAD_RETURN_TYPE, ret_type->getNodeName(), ancestor_type->getNodeName());
     }
   }
   return true;
