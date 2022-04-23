@@ -40,6 +40,60 @@ bool LSOBytecodeCompiler::visit(LSLConstantExpression *node) {
   return false;
 }
 
+bool LSOBytecodeCompiler::visit(LSLLValueExpression *node) {
+  if (node->getSymbol()->getSubType() == SYM_GLOBAL) {
+    switch(node->getIType()) {
+      case LST_INTEGER:
+      case LST_FLOATINGPOINT:
+        mCodeBS << LOPC_PUSHG;
+        break;
+      case LST_STRING:
+      case LST_KEY:
+        mCodeBS << LOPC_PUSHGS;
+        break;
+      case LST_VECTOR:
+        mCodeBS << LOPC_PUSHGV;
+        break;
+      case LST_QUATERNION:
+        mCodeBS << LOPC_PUSHGQ;
+        break;
+      case LST_LIST:
+        mCodeBS << LOPC_PUSHGL;
+        break;
+      case LST_ERROR:
+      case LST_MAX:
+      case LST_NULL:
+        return false;
+    }
+  } else {
+    switch(node->getIType()) {
+      case LST_INTEGER:
+      case LST_FLOATINGPOINT:
+        mCodeBS << LOPC_PUSH;
+        break;
+      case LST_STRING:
+      case LST_KEY:
+        mCodeBS << LOPC_PUSHS;
+        break;
+      case LST_VECTOR:
+        mCodeBS << LOPC_PUSHV;
+        break;
+      case LST_QUATERNION:
+        mCodeBS << LOPC_PUSHQ;
+        break;
+      case LST_LIST:
+        mCodeBS << LOPC_PUSHL;
+        break;
+      case LST_ERROR:
+      case LST_MAX:
+      case LST_NULL:
+        return false;
+    }
+  }
+  mCodeBS << calculateLValueOffset(node);
+  return false;
+}
+
 bool LSOBytecodeCompiler::visit(LSLExpressionStatement *node) {
   auto *expr = node->getChild(0);
   expr->visit(this);
@@ -281,6 +335,38 @@ void LSOBytecodeCompiler::popLocals() {
 void LSOBytecodeCompiler::writeReturn() {
   popLocals();
   mCodeBS << LOPC_RETURN;
+}
+
+int32_t LSOBytecodeCompiler::calculateLValueOffset(LSLLValueExpression *node) {
+  char accessor;
+  auto *sym = node->getSymbol();
+  auto &sym_data = _mSymData[sym];
+  auto offset = (int32_t)sym_data.offset;
+
+  auto *accessor_id = (LSLIdentifier *) node->getChild(1);
+  if (accessor_id)
+    accessor = accessor_id->getName()[0];
+  else
+    return offset;
+
+  int32_t accessor_offset;
+  // offsets for locals are relative to the top of the stack, which means that
+  // x comes is at 0 even though it's "last" if reading the binary data from left
+  // to right.
+  switch(accessor) {
+    case 'x': accessor_offset = 0; break;
+    case 'y': accessor_offset = 4; break;
+    case 'z': accessor_offset = 8; break;
+    case 's': accessor_offset = 12; break;
+    default:
+      return offset;
+  }
+  // Conversely, offsets for globals are relative to the start of the global.
+  if (sym->getSubType() == SYM_GLOBAL) {
+    // only coordinates with float members can be accessed via accessors.
+    accessor_offset = ((int32_t)sym_data.size - (int32_t)sizeof(float) - accessor_offset);
+  }
+  return offset + accessor_offset;
 }
 
 }

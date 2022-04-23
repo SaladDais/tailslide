@@ -57,7 +57,10 @@ using SameSizedUInt =
 typename std::conditional<sizeof(T) == 1, std::uint8_t,
     typename std::conditional<sizeof(T) == 2, std::uint16_t,
         typename std::conditional<sizeof(T) == 4, std::uint32_t,
-            std::uint64_t
+            typename std::conditional<sizeof(T) == 8, std::uint64_t,
+                // cause an error if a weird-sized int is used.
+                void
+            >::type
         >::type
     >::type
 >::type;
@@ -481,20 +484,6 @@ class BitStream {
     // useful to avoid copying and delete
     bool _mReadOnly;
 };
-
-
-template<>
-inline
-BitStream &BitStream::operator>><char>(char &data) {
-  if (atEnd()) {
-    throw std::runtime_error("Cannot read more: Already at end");
-  }
-
-  data = (char)_mData[_mPos];
-  _mPos++;
-
-  return *this;
-}
 
 
 inline bool operator==(const BitStream &first, const BitStream &second) {

@@ -18,6 +18,7 @@ class LSOBytecodeCompiler : public ASTVisitor {
     bool visit(LSLEventHandler *node) override;
     bool visit(LSLGlobalFunction *node) override;
     bool visit(LSLConstantExpression *node) override;
+    bool visit(LSLLValueExpression *node) override;
     bool visit(LSLExpressionStatement *node) override;
     bool visit(LSLJumpStatement *node) override;
     bool visit(LSLLabel *node) override;
@@ -29,6 +30,7 @@ class LSOBytecodeCompiler : public ASTVisitor {
     bool visit(LSLReturnStatement *node) override;
 
     void pushConstant(LSLConstant *constant);
+    int32_t calculateLValueOffset(LSLLValueExpression *node);
     void popLocals();
     void writeReturn();
 

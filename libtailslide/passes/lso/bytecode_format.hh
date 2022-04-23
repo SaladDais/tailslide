@@ -276,6 +276,16 @@ class LSOBitStream : public BitStream {
   LSOBitStream(const uint8_t *data, const uint32_t length, Endianness endian=ENDIAN_BIG): BitStream(data, length, endian) {}
   LSOBitStream(LSOBitStream &&other) noexcept: BitStream(std::move(other)) {}
   LSOBitStream(const LSOBitStream &other) = delete;
+  /// need to help the type system realize that this returns an LSOBitStream.
+  /// should be fine because we never refer to BitStream subclasses by their base class.
+  template<typename T>
+  LSOBitStream &operator<<(const T &data) {
+    return static_cast<LSOBitStream&>(BitStream::operator<<(data));
+  };
+  template<typename T>
+  LSOBitStream &operator>>(T &data) {
+    return static_cast<LSOBitStream&>(BitStream::operator>>(data));
+  };
 };
 
 
