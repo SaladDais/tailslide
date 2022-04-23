@@ -124,7 +124,8 @@ SIMPLE_LSO_CONFORMANCE("branching.lsl")
 SIMPLE_LSO_CONFORMANCE("simple_declarations.lsl")
 SIMPLE_LSO_CONFORMANCE("implied_return.lsl")
 SIMPLE_LSO_CONFORMANCE("lvalue.lsl")
-SIMPLE_LSO_CONFORMANCE("expressions.lsl")
+SIMPLE_LSO_CONFORMANCE("xnary_expressions.lsl")
+SIMPLE_LSO_CONFORMANCE("print_expression.lsl")
 
 TEST_SUITE_END();
 

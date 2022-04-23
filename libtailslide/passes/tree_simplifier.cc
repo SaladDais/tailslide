@@ -107,6 +107,10 @@ bool TreeSimplifyingVisitor::visit(LSLLValueExpression *node) {
     if (sym->getSubType() == SYM_BUILTIN)
       return false;
 
+    // list lvalues may never be inlined.
+    if (sym->getIType() == LST_LIST)
+      return false;
+
     // Keys have special inlining rules so key-ness isn't lost.
     if (sym->getIType() == LST_KEY) {
       auto *node_ancestor = node->getParent();

@@ -5,7 +5,7 @@ default
         // print() is a (void) expression, not a statement, so it can be used in a forexpressionlist
         for(print("foo"),print("foo");0;)
         {
-            llOwnerSay("ok");
+            ;
         }
     }
 }

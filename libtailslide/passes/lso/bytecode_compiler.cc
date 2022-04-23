@@ -171,10 +171,25 @@ bool LSOBytecodeCompiler::visit(LSLLValueExpression *node) {
   return false;
 }
 
+bool LSOBytecodeCompiler::visit(LSLTypecastExpression *node) {
+  auto *expr = node->getChild(0);
+  expr->visit(this);
+  mCodeBS << LOPC_CAST << pack_lso_types(node->getIType(), expr->getIType());
+  return false;
+}
+
+bool LSOBytecodeCompiler::visit(LSLPrintExpression *node) {
+  auto *expr = node->getChild(0);
+  expr->visit(this);
+  mCodeBS << LOPC_PRINT << expr->getIType();
+  return false;
+}
+
 bool LSOBytecodeCompiler::visit(LSLExpressionStatement *node) {
   auto *expr = node->getChild(0);
   expr->visit(this);
-  mCodeBS << LSO_TYPE_POP_OPCODE[expr->getIType()];
+  if (auto pop_opcode = LSO_TYPE_POP_OPCODE[expr->getIType()])
+    mCodeBS << pop_opcode;
   return false;
 }
 
@@ -234,7 +249,8 @@ bool LSOBytecodeCompiler::visit(LSLForStatement *node) {
   auto *init_expr = node->getChild(0)->getChildren();
   while (init_expr != nullptr) {
     init_expr->visit(this);
-    mCodeBS << LSO_TYPE_POP_OPCODE[init_expr->getIType()];
+    if (auto pop_opcode = LSO_TYPE_POP_OPCODE[init_expr->getIType()])
+      mCodeBS << pop_opcode;
     init_expr = init_expr->getNext();
   }
 
@@ -253,7 +269,8 @@ bool LSOBytecodeCompiler::visit(LSLForStatement *node) {
   auto *incr_expr = node->getChild(2)->getChildren();
   while (incr_expr != nullptr) {
     incr_expr->visit(this);
-    mCodeBS << LSO_TYPE_POP_OPCODE[incr_expr->getIType()];
+    if (auto pop_opcode = LSO_TYPE_POP_OPCODE[incr_expr->getIType()])
+      mCodeBS << pop_opcode;
     incr_expr = incr_expr->getNext();
   }
 
