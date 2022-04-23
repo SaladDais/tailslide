@@ -264,6 +264,18 @@ const LSOOpCode LSO_TYPE_POP_OPCODE[LST_MAX] = {
     LOPC_NOOP, // error
 };
 
+const LSOOpCode LSO_TYPE_LOAD_LOCAL_OPCODE[LST_MAX] = {
+    LOPC_NOOP,   // null
+    LOPC_LOADP,  // int
+    LOPC_LOADP,  // float
+    LOPC_LOADSP, // str
+    LOPC_LOADSP, // key
+    LOPC_LOADVP, // vec
+    LOPC_LOADQP, // quat
+    LOPC_LOADLP, // list
+    LOPC_NOOP,   // error
+};
+
 /// pack two types into a single byte (common for LSO)
 inline uint8_t pack_lso_types(LSLIType left, LSLIType right) {
   return right | (left << 4);

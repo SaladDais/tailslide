@@ -12,13 +12,6 @@
 #include "passes/globalexpr_validator.hh"
 
 
-extern FILE *yyin;
-//extern int yynerrs;
-int yynwarns = 0;                // not defined by flex but named for consistency
-
-//int yyerror(const char *fmt, ... );
-//int yywarning(const char *fmt, ...);
-
 namespace Tailslide {
 
 const char *DEPRECATED_FUNCTIONS[][2] = {

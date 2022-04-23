@@ -185,6 +185,55 @@ bool LSOBytecodeCompiler::visit(LSLPrintExpression *node) {
   return false;
 }
 
+bool LSOBytecodeCompiler::visit(LSLFunctionExpression *node) {
+  auto *func_sym = node->getSymbol();
+  auto &func_sym_data = _mSymData[func_sym];
+
+  // need to push empty space onto the stack for the callee to write in the retval
+  switch(func_sym->getIType()) {
+    // most only need 4 bytes of space
+    case LST_INTEGER:
+    case LST_FLOATINGPOINT:
+    case LST_STRING:
+    case LST_KEY:
+    case LST_LIST:
+      mCodeBS << LOPC_PUSHE;
+      break;
+    case LST_VECTOR:
+      mCodeBS << LOPC_PUSHEV;
+      break;
+    case LST_QUATERNION:
+      mCodeBS << LOPC_PUSHEQ;
+      break;
+    // void and friends need no space for a retval.
+    default:
+      break;
+  }
+  // TODO: what's this empty for?
+  mCodeBS << LOPC_PUSHE;
+  // keep old base pointer on stack so caller can pop it on return
+  mCodeBS << LOPC_PUSHBP;
+  // function calls are `identifier, [arg1, arg2, ...]`
+  auto *child_expr = node->getChild(1);
+  while (child_expr != nullptr) {
+    // push arguments on to the stack
+    child_expr->visit(this);
+    child_expr = child_expr->getNext();
+  }
+  // make space for locals
+  mCodeBS << LOPC_PUSHARGE << (func_sym_data.size - func_sym_data.offset);
+  // calculate and set the new base pointer to locals
+  mCodeBS << LOPC_PUSHSP;
+  mCodeBS << LOPC_PUSHARGI << func_sym_data.size;
+  mCodeBS << LOPC_ADD << pack_lso_types(LST_INTEGER, LST_INTEGER);
+  mCodeBS << LOPC_POPBP;
+  if (func_sym->getSubType() == SYM_BUILTIN)
+    mCodeBS << LOPC_CALLLIB_TWO_BYTE << (uint16_t)func_sym_data.index;
+  else
+    mCodeBS << LOPC_CALL << (uint32_t)func_sym_data.index;
+  return false;
+}
+
 bool LSOBytecodeCompiler::visit(LSLExpressionStatement *node) {
   auto *expr = node->getChild(0);
   expr->visit(this);
@@ -339,36 +388,20 @@ bool LSOBytecodeCompiler::visit(LSLDeclaration *node) {
     pushConstant(default_type->getDefaultValue());
   }
 
-  switch(var_type->getIType()) {
-    case LST_INTEGER:
-    case LST_FLOATINGPOINT:
-      mCodeBS << LOPC_LOADP;
-      break;
-    case LST_STRING:
-    case LST_KEY:
-      mCodeBS << LOPC_LOADSP;
-      break;
-    case LST_VECTOR:
-      mCodeBS << LOPC_LOADVP;
-      break;
-    case LST_QUATERNION:
-      mCodeBS << LOPC_LOADQP;
-      break;
-    case LST_LIST:
-      mCodeBS << LOPC_LOADLP;
-      break;
-    case LST_ERROR:
-    case LST_NULL:
-    case LST_MAX:
-      break;
-  }
-  mCodeBS << _mSymData[node->getSymbol()].offset;
+  // use the appropriate opcode to load the top of the stack into a local offset
+  mCodeBS << LSO_TYPE_LOAD_LOCAL_OPCODE[var_type->getIType()] << _mSymData[node->getSymbol()].offset;
   return false;
 }
 
 bool LSOBytecodeCompiler::visit(LSLReturnStatement *node) {
-  // TODO: write retval if applicable
-  visitChildren(node);
+  auto *expr = node->getChild(0);
+  auto var_size = LSO_TYPE_DATA_SIZES[expr->getIType()];
+  if (var_size) {
+    expr->visit(this);
+    // write in the retval above the locals
+    int32_t retval_offset = -8 - (int32_t)var_size;
+    mCodeBS << LSO_TYPE_LOAD_LOCAL_OPCODE[expr->getIType()] << retval_offset;
+  }
   writeReturn();
   return false;
 }

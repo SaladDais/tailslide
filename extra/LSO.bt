@@ -3,7 +3,7 @@
 //
 //      File: LSO.bt
 //   Authors: Salad Dais
-//   Version: 0.2
+//   Version: 0.3
 //   Purpose: Dissector for V1 and V2 LSO bytecode for LSL.
 //  Category:
 // File Mask: *.lso
@@ -319,9 +319,12 @@ if (registers.GFR < registers.SR) {
             LSCRIPTType ret_type;
             // null-terminated list of parameter types
             while(ReadByte()) {
-                LSCRIPTType param;
+                struct {
+                    LSCRIPTType param_type;
+                    string param_name;
+                } param <read=(Str("%s : %s", EnumToString(this.param_type), param_name))>;
             }
-            LSCRIPTType param_terminator <comment="Indicates no more parameters">;
+            ubyte param_terminator <comment="Indicates no more parameters">;
             // opcodes start here, but no length field.
             // It's assumed something will force a ret
             // so we can't fall off the end of one function

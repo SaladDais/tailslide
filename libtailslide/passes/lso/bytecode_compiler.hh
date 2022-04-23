@@ -24,6 +24,7 @@ class LSOBytecodeCompiler : public ASTVisitor {
     bool visit(LSLLValueExpression *node) override;
     bool visit(LSLTypecastExpression *node) override;
     bool visit(LSLPrintExpression *node) override;
+    bool visit(LSLFunctionExpression *node) override;
 
     bool visit(LSLExpressionStatement *node) override;
     bool visit(LSLJumpStatement *node) override;

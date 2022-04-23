@@ -173,8 +173,20 @@ bool LSOScriptCompiler::visit(LSLGlobalFunction *node) {
     ScopedBitStreamSeek seek(_mFunctionsBS, sizeof(uint32_t) + (sizeof(uint32_t) * func_data.index));
     _mFunctionsBS << (uint32_t)function_start;
   }
-  // offset to code, name, ret_type, [param_type, ...], '\0', bytecode
-  _mFunctionsBS << (uint32_t)7 << '\0' << sym->getIType() << '\0';
+  // offset to code, name, ret_type, [param_type, '\0', ...], '\0', bytecode
+  _mFunctionsBS << (uint32_t)0 << '\0' << sym->getIType();
+  for (auto arg_type : func_data.function_args) {
+    // type and null-terminator for the parameter name that isn't there
+    _mFunctionsBS << arg_type << '\0';
+  }
+  // indicates end of parameter list
+  _mFunctionsBS << '\0';
+  auto func_header_end = _mFunctionsBS.pos();
+  {
+    // seek back to the function start and tell it where the code starts
+    ScopedBitStreamSeek seek(_mFunctionsBS, function_start);
+    _mFunctionsBS << (uint32_t)(func_header_end - function_start);
+  }
   LSOBytecodeCompiler visitor(_mSymData);
   node->visit(&visitor);
   _mFunctionsBS.writeBitStream(visitor.mCodeBS);
