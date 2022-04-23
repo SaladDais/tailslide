@@ -1,3 +1,4 @@
+#include "passes/desugaring.hh"
 #include "testutils.hh"
 
 using namespace Tailslide;
@@ -100,6 +101,36 @@ TEST_CASE("fancy_expr_replacement.lsl") {
     script->visit(&visitor);
     // all existing constant values are now potentially dirty, recalculate.
     script->propagateValues();
+  });
+}
+
+TEST_CASE("fancy_expr_replacement.lsl") {
+  OptimizationOptions ctx{false};
+  PrettyPrintOpts pretty_ctx {};
+  checkPrettyPrintOutput("fancy_expr_replacement.lsl", ctx, pretty_ctx, [](LSLScript* script) {
+    // pretend we have a builtin called "whatever()" that takes a string and returns an int
+    auto *symbol_table = script->getSymbolTable();
+    auto *allocator = script->mContext->allocator;
+    auto func_dec = allocator->newTracked<LSLFunctionDec>(
+        allocator->newTracked<LSLIdentifier>(LSLType::get(LST_STRING), "foobar")
+    );
+    symbol_table->define(allocator->newTracked<LSLSymbol>(
+        "whatever", LSLType::get(LST_INTEGER), SYM_FUNCTION, SYM_BUILTIN, func_dec
+        ));
+    FancyAddReplacementVisitor visitor;
+    script->visit(&visitor);
+    // all existing constant values are now potentially dirty, recalculate.
+    script->propagateValues();
+  });
+}
+
+
+TEST_CASE("desugaring.lsl") {
+  OptimizationOptions ctx{false};
+  PrettyPrintOpts pretty_ctx {};
+  checkPrettyPrintOutput("desugaring.lsl", ctx, pretty_ctx, [](LSLScript* script) {
+    DeSugaringVisitor visitor(script->mContext->allocator);
+    script->visit(&visitor);
   });
 }
 

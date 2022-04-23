@@ -1,4 +1,5 @@
 #include "script_compiler.hh"
+#include "passes/desugaring.hh"
 #include "bytecode_compiler.hh"
 #include "bytecode_format.hh"
 
@@ -19,6 +20,8 @@ uint64_t pack_handled_events(LSOSymbolData *state_data) {
 LSLASTNode *resolve_sa_identifier(LSLASTNode *rvalue);
 
 bool LSOScriptCompiler::visit(LSLScript *node) {
+  DeSugaringVisitor de_sugaring_visitor(_mAllocator);
+  node->visit(&de_sugaring_visitor);
   LSOResourceVisitor resource_visitor(&_mSymData);
   node->visit(&resource_visitor);
 

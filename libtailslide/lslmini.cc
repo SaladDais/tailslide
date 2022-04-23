@@ -427,4 +427,39 @@ bool LSLQuaternionConstant::containsNaN() {
   return std::isnan(_mValue.x) || std::isnan(_mValue.y) || std::isnan(_mValue.z) || std::isnan(_mValue.s);
 }
 
+LSLIdentifier *LSLIdentifier::clone() {
+  auto *id = mContext->allocator->newTracked<LSLIdentifier>(
+      getType(),
+      getName(),
+      getLoc()
+  );
+  id->setSymbol(getSymbol());
+  id->setConstantPrecluded(getConstantPrecluded());
+  id->setConstantValue(getConstantValue());
+  if (auto *sym = getSymbol()) {
+    sym->addReference();
+  }
+  return id;
+}
+
+LSLLValueExpression *LSLLValueExpression::clone() {
+  // TODO: this isn't very nice, need to think about copy constructors.
+  auto *id = (LSLIdentifier *) getChild(0);
+  auto *accessor = (LSLIdentifier *) getChild(1);
+  id = id->clone();
+  LSLLValueExpression *new_expr;
+  if (accessor) {
+    accessor = accessor->clone();
+    new_expr = mContext->allocator->newTracked<LSLLValueExpression>(id, accessor);
+  } else {
+    new_expr = mContext->allocator->newTracked<LSLLValueExpression>(id);
+  }
+  new_expr->setLoc(getLoc());
+  new_expr->setType(getType());
+  new_expr->setIsFoldable(getIsFoldable());
+  new_expr->setConstantValue(getConstantValue());
+  new_expr->setConstantPrecluded(getConstantPrecluded());
+  return new_expr;
+}
+
 }

@@ -90,6 +90,7 @@ add_library(libtailslide STATIC
         libtailslide/visitor.cc
         libtailslide/passes/globalexpr_validator.cc
         libtailslide/passes/best_practices.cc
+        libtailslide/passes/desugaring.cc
         libtailslide/passes/pretty_print.cc
         libtailslide/passes/symbol_resolution.cc
         libtailslide/passes/type_checking.cc
@@ -117,6 +118,7 @@ target_sources(libtailslide PRIVATE
         libtailslide/visitor.hh
         libtailslide/passes/globalexpr_validator.hh
         libtailslide/passes/best_practices.hh
+        libtailslide/passes/desugaring.hh
         libtailslide/passes/pretty_print.hh
         libtailslide/passes/symbol_resolution.hh
         libtailslide/passes/tree_simplifier.hh

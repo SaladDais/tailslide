@@ -49,6 +49,7 @@ inline LSLType *TYPE(LSLIType type) {
   return LSLType::get(type);
 }
 
+int decouple_compound_operation(int operation);
 bool operation_mutates(int operation);
 const char* operation_str(int operation);
 const char* operation_repr_str(int operation);

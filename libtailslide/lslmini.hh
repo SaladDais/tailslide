@@ -101,6 +101,8 @@ class LSLIdentifier : public LSLASTNode {
     virtual LSLNodeType getNodeType() { return NODE_IDENTIFIER; };
     virtual class LSLConstant *getConstantValue();
 
+    LSLIdentifier *clone();
+
   private:
     LSLSymbol                  *_mSymbol = nullptr;
     const char                      *_mName;
@@ -497,6 +499,7 @@ public:
     virtual LSLConstant* getConstantValue();
     virtual bool nodeAllowsFolding() { return true; };
     int getOperation() const {return _mOperation;};
+    void setOperation(int op) {_mOperation = op;};
   protected:
     int _mOperation;
 };
@@ -639,6 +642,8 @@ class LSLLValueExpression : public LSLExpression {
 
     void setIsFoldable(bool foldable) { _mIsFoldable = foldable;};
     bool getIsFoldable() const {return _mIsFoldable;};
+
+    LSLLValueExpression *clone();
   private:
     bool _mIsFoldable;
 };

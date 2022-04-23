@@ -224,17 +224,9 @@ class LSLType *LSLType::getResultType(int op, LSLType *right) {
   }
 
   // *_ASSIGN is usually just syntactic sugar. `foo *= 3` is the same as `foo = foo * 3`
-  bool compound_assignment = true;
-  switch (op) {
-    case ADD_ASSIGN: op = '+'; break;
-    case SUB_ASSIGN: op = '-'; break;
-    case MUL_ASSIGN: op = '*'; break;
-    case DIV_ASSIGN: op = '/'; break;
-    case MOD_ASSIGN: op = '%'; break;
-    default:
-      compound_assignment = false;
-      break;
-  }
+  int orig_operation = op;
+  op = decouple_compound_operation(op);
+  bool compound_assignment = (op != orig_operation);
 
   // go through each entry in the operator result table
   for (i = 0; OPERATOR_RESULTS[i][0] != -1; i++) {
@@ -395,4 +387,19 @@ const char *operation_repr_str(int operation) {
 bool is_cast_legal(LSLIType from, LSLIType to) {
   return LEGAL_CAST_TABLE[from][to] == 1;
 }
+
+int decouple_compound_operation(int operation) {
+  // *_ASSIGN is usually just syntactic sugar. `foo *= 3` is the same as `foo = foo * 3`
+  switch (operation) {
+    case ADD_ASSIGN: operation = '+'; break;
+    case SUB_ASSIGN: operation = '-'; break;
+    case MUL_ASSIGN: operation = '*'; break;
+    case DIV_ASSIGN: operation = '/'; break;
+    case MOD_ASSIGN: operation = '%'; break;
+    default:
+      break;
+  }
+  return operation;
+}
+
 }
