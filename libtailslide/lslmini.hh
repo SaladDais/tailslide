@@ -514,6 +514,7 @@ public:
         constant = constant->copy(ctx->allocator);
       pushChild(constant);
       _mConstantValue = constant;
+      _mType = constant->getType();
     };
 
     virtual const char *getNodeName() {

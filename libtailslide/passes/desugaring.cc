@@ -151,6 +151,63 @@ bool DeSugaringVisitor::visit(LSLReturnStatement *node) {
   return true;
 }
 
+/// Replace any builtin references with their actual values.
+/// These are lexer tokens in LL's compiler, they aren't "real" globals or locals.
+bool DeSugaringVisitor::visit(LSLLValueExpression *node) {
+  auto *sym = node->getSymbol();
+  if (sym->getSymbolType() != SYM_VARIABLE)
+    return true;
+  if (sym->getSubType() != SYM_BUILTIN)
+    return true;
+  LSLConstant *cv = node->getConstantValue();
+  if (!cv)
+    return true;
+
+  LSLASTNode *new_expr;
+  auto itype = cv->getIType();
+  if (itype == LST_VECTOR || itype == LST_QUATERNION) {
+    // vector and quaternion builtin constants are a little special in that they'd normally
+    // be parsed as vector expressions within a function context. We don't want to desugar
+    // them as constantexpressions since they get serialized differently from
+    // (potentially non-constant) vectorexpressions.
+    std::vector<float> children;
+    std::vector<LSLConstantExpression *> new_expr_children;
+    if (itype == LST_VECTOR) {
+      auto *vec_val = ((LSLVectorConstant *) cv)->getValue();
+      children.assign({vec_val->x, vec_val->y, vec_val->z});
+    } else {
+      auto *quat_val = ((LSLQuaternionConstant *) cv)->getValue();
+      children.assign({quat_val->x, quat_val->y, quat_val->z, quat_val->s});
+    }
+
+    for (float axis : children) {
+      auto *expr_child = _mAllocator->newTracked<LSLConstantExpression>(
+          _mAllocator->newTracked<LSLFloatConstant>(axis)
+      );
+      expr_child->setLoc(node->getLoc());
+      new_expr_children.push_back(expr_child);
+    }
+    if (itype == LST_VECTOR) {
+      new_expr = _mAllocator->newTracked<LSLVectorExpression>(
+          new_expr_children[0], new_expr_children[1], new_expr_children[2]
+      );
+    } else {
+      new_expr = _mAllocator->newTracked<LSLQuaternionExpression>(
+          new_expr_children[0], new_expr_children[1], new_expr_children[2], new_expr_children[3]
+      );
+    }
+    new_expr->setConstantValue(node->getConstantValue());
+  } else {
+    new_expr = _mAllocator->newTracked<LSLConstantExpression>(cv);
+  }
+  new_expr->setLoc(node->getLoc());
+  LSLASTNode::replaceNode(
+      node,
+      new_expr
+  );
+  return false;
+}
+
 void DeSugaringVisitor::handleCoordinateNode(LSLASTNode *node) {
   // we may replace nodes during iteration so we can't use `node->getNext()`
   auto num_children = node->getNumChildren();

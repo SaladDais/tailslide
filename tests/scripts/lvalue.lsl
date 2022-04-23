@@ -15,5 +15,9 @@ default {
         gv.x;
         lr.s;
         gr.s;
+
+        NULL_KEY;
+        ZERO_VECTOR;
+        ZERO_ROTATION;
     }
 }

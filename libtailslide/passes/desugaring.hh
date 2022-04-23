@@ -18,6 +18,7 @@ class DeSugaringVisitor : public ASTVisitor {
     bool visit(LSLQuaternionExpression *node) override;
     bool visit(LSLFunctionExpression *node) override;
     bool visit(LSLReturnStatement *node) override;
+    bool visit(LSLLValueExpression *node) override;
 
     void handleCoordinateNode(LSLASTNode *node);
     void maybeInjectCast(LSLExpression *expr, LSLType *to);
