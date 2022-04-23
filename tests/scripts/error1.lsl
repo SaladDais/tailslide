@@ -45,6 +45,7 @@ default {
         key k = "foo";
         llOwnerSay(k + "foo");      // key + str is not valid, even             $[E10002]
                                     // with implicit promotion between the two.
+        list l = [llOwnerSay("")];  // no putting voids in lists!               $[E10036] $[E20009]
     }
 
     touch_start() {                 // requires parameters                      $[E10029]

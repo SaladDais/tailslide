@@ -202,7 +202,7 @@ bool ConstantDeterminingVisitor::visit(LSLListExpression *node) {
   LSLConstant *new_child = nullptr;
 
   // if we have children
-  if (child->getNodeType() != NODE_NULL) {
+  if (child && child->getNodeType() != NODE_NULL) {
     // make sure they are all constant
     for (child = node->getChildren(); child; child = child->getNext()) {
       if (!child->isConstant()) {

@@ -127,6 +127,8 @@ SIMPLE_LSO_CONFORMANCE("lvalue.lsl")
 SIMPLE_LSO_CONFORMANCE("xnary_expressions.lsl")
 SIMPLE_LSO_CONFORMANCE("print_expression.lsl")
 SIMPLE_LSO_CONFORMANCE("function_calls.lsl")
+SIMPLE_LSO_CONFORMANCE("more_expressions.lsl")
+SIMPLE_LSO_CONFORMANCE("desugaring.lsl")
 
 TEST_SUITE_END();
 

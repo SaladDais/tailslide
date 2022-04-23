@@ -19,6 +19,9 @@ class LSOBytecodeCompiler : public ASTVisitor {
     bool visit(LSLGlobalFunction *node) override;
 
     bool visit(LSLConstantExpression *node) override;
+    bool visit(LSLVectorExpression *node) override;
+    bool visit(LSLQuaternionExpression *node) override;
+    bool visit(LSLListExpression *node) override;
     bool visit(LSLUnaryExpression *node) override;
     bool visit(LSLBinaryExpression *node) override;
     bool visit(LSLLValueExpression *node) override;
@@ -35,6 +38,7 @@ class LSOBytecodeCompiler : public ASTVisitor {
     bool visit(LSLDoStatement *node) override;
     bool visit(LSLDeclaration *node) override;
     bool visit(LSLReturnStatement *node) override;
+    bool visit(LSLStateStatement *node) override;
 
     void pushConstant(LSLConstant *constant);
     int32_t calculateLValueOffset(LSLLValueExpression *node);

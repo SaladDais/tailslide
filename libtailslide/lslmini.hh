@@ -562,8 +562,6 @@ public:
     virtual LSLNodeSubType getNodeSubType() { return NODE_UNARY_EXPRESSION; };
 };
 
-
-
 class LSLTypecastExpression : public LSLExpression {
   public:
     LSLTypecastExpression(ScriptContext *ctx, LSLType *type, LSLExpression *expression )
@@ -571,6 +569,11 @@ class LSLTypecastExpression : public LSLExpression {
 
     virtual const char *getNodeName() { return "typecast expression"; }
     virtual LSLNodeSubType getNodeSubType() { return NODE_TYPECAST_EXPRESSION; };
+
+    bool getSynthesized() const { return _mSynthesized; };
+    void setSynthesized(bool synthesized) { _mSynthesized = synthesized; };
+  protected:
+    bool _mSynthesized = false;
 };
 
 class LSLPrintExpression : public LSLExpression {
@@ -620,7 +623,11 @@ class LSLQuaternionExpression : public LSLExpression {
 
 class LSLListExpression : public LSLExpression {
   public:
-    LSLListExpression( ScriptContext *ctx, LSLExpression *c ) : LSLExpression( ctx, 1, c ) { _mType = TYPE(LST_LIST); };
+    LSLListExpression( ScriptContext *ctx, LSLExpression *c ) : LSLExpression(ctx) {
+      _mType = TYPE(LST_LIST);
+      if (c)
+        pushChild(c);
+    };
 
     virtual const char *getNodeName() { return "list expression"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_LIST_EXPRESSION; }

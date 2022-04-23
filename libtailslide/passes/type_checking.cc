@@ -209,8 +209,15 @@ bool TypeCheckVisitor::visit(LSLListConstant *node) {
 bool TypeCheckVisitor::visit(LSLListExpression *node) {
   LSLASTNode *val_c = node->getChildren();
   while (val_c != nullptr) {
-    if (val_c->getType() == TYPE(LST_LIST)) {
+    auto child_type = val_c->getIType();
+    if (child_type == LST_LIST) {
       NODE_ERROR(node, E_LIST_IN_LIST);
+      val_c->setType(TYPE(LST_ERROR));
+    } else if (child_type == LST_NULL) {
+      // not technically illegal in LL's compiler, but doesn't ever make sense,
+      // mono crashes on compile and LSO results in weird type confusion bugs
+      // and eventual heap corruption.
+      NODE_ERROR(node, E_NULL_IN_LIST);
       val_c->setType(TYPE(LST_ERROR));
     }
     val_c = val_c->getNext();

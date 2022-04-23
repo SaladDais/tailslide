@@ -97,6 +97,8 @@ void DeSugaringVisitor::maybeInjectCast(LSLExpression* expr, LSLType *to) {
       to,
       expr
   );
+  // so consumers can distinguish between explicit casts and ones we injected
+  typecast->setSynthesized(true);
   LSLASTNode::replaceNode(expr_placeholder, typecast);
   typecast->setLoc(expr->getLoc());
 }

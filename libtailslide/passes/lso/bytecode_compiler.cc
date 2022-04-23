@@ -40,6 +40,28 @@ bool LSOBytecodeCompiler::visit(LSLConstantExpression *node) {
   return false;
 }
 
+bool LSOBytecodeCompiler::visit(LSLVectorExpression *node) {
+  // the children just get pushed as floats from left to right,
+  // so we can use the base child visitation logic.
+  return true;
+}
+
+bool LSOBytecodeCompiler::visit(LSLQuaternionExpression *node) {
+  // same as above
+  return true;
+}
+
+bool LSOBytecodeCompiler::visit(LSLListExpression *node) {
+  auto *child = node->getChildren();
+  while (child) {
+    child->visit(this);
+    mCodeBS << LOPC_PUSHARGB << child->getIType();
+    child = child->getNext();
+  }
+  mCodeBS << LOPC_STACKTOL << (uint32_t)node->getNumChildren();
+  return false;
+}
+
 bool LSOBytecodeCompiler::visit(LSLUnaryExpression *node) {
   int op = node->getOperation();
   auto *lhs = node->getChild(0);
@@ -174,7 +196,7 @@ bool LSOBytecodeCompiler::visit(LSLLValueExpression *node) {
 bool LSOBytecodeCompiler::visit(LSLTypecastExpression *node) {
   auto *expr = node->getChild(0);
   expr->visit(this);
-  mCodeBS << LOPC_CAST << pack_lso_types(node->getIType(), expr->getIType());
+  mCodeBS << LOPC_CAST << pack_lso_types(expr->getIType(), node->getIType());
   return false;
 }
 
@@ -395,6 +417,13 @@ bool LSOBytecodeCompiler::visit(LSLDeclaration *node) {
 
 bool LSOBytecodeCompiler::visit(LSLReturnStatement *node) {
   auto *expr = node->getChild(0);
+  // To match LL's LSO compiler we need to _not_ auto-cast when the expression
+  // is promotable to the return type but not an exact match. Yuck.
+  if (expr->getNodeSubType() == NODE_TYPECAST_EXPRESSION) {
+    auto *cast_expr = (LSLTypecastExpression *) expr;
+    if (cast_expr->getSynthesized())
+      expr = cast_expr->getChild(0);
+  }
   auto var_size = LSO_TYPE_DATA_SIZES[expr->getIType()];
   if (var_size) {
     expr->visit(this);
@@ -403,6 +432,12 @@ bool LSOBytecodeCompiler::visit(LSLReturnStatement *node) {
     mCodeBS << LSO_TYPE_LOAD_LOCAL_OPCODE[expr->getIType()] << retval_offset;
   }
   writeReturn();
+  return false;
+}
+
+bool LSOBytecodeCompiler::visit(LSLStateStatement *node) {
+  popLocals();
+  mCodeBS << LOPC_STATE << (uint32_t)_mSymData[node->getSymbol()].index;
   return false;
 }
 

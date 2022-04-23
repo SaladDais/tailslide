@@ -278,6 +278,7 @@ const char *Logger::_sErrorMessages[] = {
         "Multiple handlers for event `%s'",
         "Lists may not contain other lists",
         "May not cast %s to %s",
+        "Lists may not contain nulls",
 };
 
 const char *Logger::_sWarningMessages[] = {
