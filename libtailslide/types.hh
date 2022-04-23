@@ -38,9 +38,12 @@ class LSLType : public LSLASTNode {
 
     class LSLConstant *getDefaultValue() { return _mDefaultVal; }
     void setDefaultValue(class LSLConstant *default_val) { _mDefaultVal = default_val; }
+    class LSLConstant *getOneValue() { return _mOneVal; }
+    void setOneValue(class LSLConstant *one_val) { _mOneVal = one_val; }
   private:
     LSLIType _mIType;
     class LSLConstant *_mDefaultVal = nullptr;
+    class LSLConstant *_mOneVal = nullptr;
     static LSLType _sTypes[LST_MAX];
 };
 

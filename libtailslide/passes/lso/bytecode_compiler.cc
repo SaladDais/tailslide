@@ -40,6 +40,83 @@ bool LSOBytecodeCompiler::visit(LSLConstantExpression *node) {
   return false;
 }
 
+bool LSOBytecodeCompiler::visit(LSLUnaryExpression *node) {
+  int op = node->getOperation();
+  auto *lhs = node->getChild(0);
+  auto lhs_itype = lhs->getIType();
+  auto lhs_type = lhs->getType();
+
+  lhs->visit(this);
+  switch(op) {
+    case '-': mCodeBS << LOPC_NEG << lhs_itype; break;
+    // integer-only, doesn't take a type.
+    case '!': mCodeBS << LOPC_BOOLNOT; break;
+    case '~': mCodeBS << LOPC_BITNOT; break;
+    case DEC_POST_OP:
+    case INC_POST_OP:
+      pushConstant(lhs_type->getOneValue());
+      // need to push another copy onto the stack so we can keep the original
+      lhs->visit(this);
+      if (op == INC_POST_OP)
+        mCodeBS << LOPC_ADD;
+      else
+        mCodeBS << LOPC_SUB;
+      mCodeBS << pack_lso_types(lhs_itype, lhs_itype);
+      storeStackToLValue((LSLLValueExpression *) lhs);
+      // pop the mutated lvalue off the stack, old lvalue should now be on top.
+      mCodeBS << LSO_TYPE_POP_OPCODE[lhs_itype];
+    default:
+      return false;
+  }
+  return false;
+}
+
+bool LSOBytecodeCompiler::visit(LSLBinaryExpression *node) {
+  int op = node->getOperation();
+  auto *lhs = node->getChild(0);
+  auto *rhs = node->getChild(1);
+  auto lhs_type = lhs->getIType();
+  auto rhs_type = rhs->getIType();
+  auto packed_types = pack_lso_types(lhs_type, rhs_type);
+  if (op == '=') {
+    rhs->visit(this);
+    storeStackToLValue((LSLLValueExpression *) lhs);
+    return false;
+  } else if (op == MUL_ASSIGN) {
+    // Must be that pesky `int *= float` which we can't decouple. Replicate the broken behavior.
+    rhs->visit(this);
+    lhs->visit(this);
+    mCodeBS << LOPC_MUL << pack_lso_types(LST_FLOATINGPOINT, LST_FLOATINGPOINT);
+    storeStackToLValue((LSLLValueExpression *) lhs);
+    return false;
+  }
+
+  rhs->visit(this);
+  lhs->visit(this);
+  switch(op) {
+    case '+': mCodeBS << LOPC_ADD << packed_types; break;
+    case '-': mCodeBS << LOPC_SUB << packed_types; break;
+    case '*': mCodeBS << LOPC_MUL << packed_types; break;
+    case '/': mCodeBS << LOPC_DIV << packed_types; break;
+    case '%': mCodeBS << LOPC_MOD << packed_types; break;
+    case EQ:  mCodeBS << LOPC_EQ << packed_types;  break;
+    case NEQ: mCodeBS << LOPC_NEQ << packed_types; break;
+    case GEQ: mCodeBS << LOPC_GEQ << packed_types; break;
+    case LEQ: mCodeBS << LOPC_LEQ << packed_types; break;
+    case '<': mCodeBS << LOPC_LESS << packed_types; break;
+    case '>': mCodeBS << LOPC_GREATER << packed_types; break;
+    // these have no type argument since they only work on ints
+    case '|': mCodeBS << LOPC_BITOR; break;
+    case '&': mCodeBS << LOPC_BITAND; break;
+    case '^': mCodeBS << LOPC_BITXOR; break;
+    case BOOLEAN_AND: mCodeBS << LOPC_BOOLAND; break;
+    case BOOLEAN_OR: mCodeBS << LOPC_BOOLOR; break;
+    default:
+      break;
+  }
+  return false;
+}
+
 bool LSOBytecodeCompiler::visit(LSLLValueExpression *node) {
   if (node->getSymbol()->getSubType() == SYM_GLOBAL) {
     switch(node->getIType()) {
@@ -367,6 +444,59 @@ int32_t LSOBytecodeCompiler::calculateLValueOffset(LSLLValueExpression *node) {
     accessor_offset = ((int32_t)sym_data.size - (int32_t)sizeof(float) - accessor_offset);
   }
   return offset + accessor_offset;
+}
+
+void LSOBytecodeCompiler::storeStackToLValue(LSLLValueExpression *lvalue) {
+  if (lvalue->getSymbol()->getSubType() == SYM_GLOBAL) {
+    switch(lvalue->getIType()) {
+      case LST_INTEGER:
+      case LST_FLOATINGPOINT:
+        mCodeBS << LOPC_STOREG;
+        break;
+      case LST_STRING:
+      case LST_KEY:
+        mCodeBS << LOPC_STOREGS;
+        break;
+      case LST_VECTOR:
+        mCodeBS << LOPC_STOREGV;
+        break;
+      case LST_QUATERNION:
+        mCodeBS << LOPC_STOREGQ;
+        break;
+      case LST_LIST:
+        mCodeBS << LOPC_STOREGL;
+        break;
+      case LST_ERROR:
+      case LST_MAX:
+      case LST_NULL:
+        return;
+    }
+  } else {
+    switch(lvalue->getIType()) {
+      case LST_INTEGER:
+      case LST_FLOATINGPOINT:
+        mCodeBS << LOPC_STORE;
+        break;
+      case LST_STRING:
+      case LST_KEY:
+        mCodeBS << LOPC_STORES;
+        break;
+      case LST_VECTOR:
+        mCodeBS << LOPC_STOREV;
+        break;
+      case LST_QUATERNION:
+        mCodeBS << LOPC_STOREQ;
+        break;
+      case LST_LIST:
+        mCodeBS << LOPC_STOREL;
+        break;
+      case LST_ERROR:
+      case LST_MAX:
+      case LST_NULL:
+        return;
+    }
+  }
+  mCodeBS << calculateLValueOffset(lvalue);
 }
 
 }

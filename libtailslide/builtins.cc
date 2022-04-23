@@ -85,6 +85,14 @@ static void init_default_values() {
   set_default_value(TYPE(LST_VECTOR), gStaticAllocator.newTracked<LSLVectorConstant>(0, 0, 0));
   set_default_value(TYPE(LST_QUATERNION), gStaticAllocator.newTracked<LSLQuaternionConstant>(0, 0, 0, 1));
   set_default_value(TYPE(LST_LIST), gStaticAllocator.newTracked<LSLListConstant>(nullptr));
+
+  // These are used for de-sugaring the pre/post-inc/decrement operators
+  auto *int_one = gStaticAllocator.newTracked<LSLIntegerConstant>(1);
+  int_one->markStatic();
+  TYPE(LST_INTEGER)->setOneValue(int_one);
+  auto *float_one = gStaticAllocator.newTracked<LSLFloatConstant>(1.f);
+  float_one->markStatic();
+  TYPE(LST_FLOATINGPOINT)->setOneValue(float_one);
 }
 
 // called once at startup, not thread-safe.

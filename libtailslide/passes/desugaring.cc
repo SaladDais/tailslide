@@ -55,11 +55,8 @@ bool DeSugaringVisitor::visit(LSLUnaryExpression *node) {
 
   auto *lvalue = (LSLLValueExpression*) node->takeChild(0);
   auto *lvalue_copy = lvalue->clone();
-  LSLConstant *cv = nullptr;
-  if (node->getIType() == LST_INTEGER)
-    cv = _mAllocator->newTracked<LSLIntegerConstant>(1);
-  else
-    cv = _mAllocator->newTracked<LSLFloatConstant>(1.f);
+  // "1" for the given type
+  LSLConstant *cv = lvalue->getType()->getOneValue();
   auto *rhs_operand = _mAllocator->newTracked<LSLConstantExpression>(cv);
 
   // turn `++lhs` into `lhs = lhs + 1`
