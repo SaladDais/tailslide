@@ -318,6 +318,7 @@ constant
     : '-' INTEGER_CONSTANT
     {
         $$ = ALLOCATOR->newTracked<LSLIntegerConstant>(-$2);
+        $$->setWasNegated(true);
     }
     | INTEGER_CONSTANT
     {
@@ -326,6 +327,7 @@ constant
     | '-' FP_CONSTANT
     {
         $$ = ALLOCATOR->newTracked<LSLFloatConstant>(-$2);
+        $$->setWasNegated(true);
     }
     | FP_CONSTANT
     {

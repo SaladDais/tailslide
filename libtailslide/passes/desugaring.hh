@@ -11,6 +11,7 @@ class DeSugaringVisitor : public ASTVisitor {
   public:
     explicit DeSugaringVisitor(ScriptAllocator *allocator) : _mAllocator(allocator) {}
   protected:
+    bool visit(LSLConstantExpression *node) override;
     bool visit(LSLBinaryExpression *node) override;
     bool visit(LSLUnaryExpression *node) override;
     bool visit(LSLDeclaration *node) override;

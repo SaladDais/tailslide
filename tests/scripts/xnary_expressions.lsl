@@ -25,6 +25,8 @@ default {
         1 | 2;
         1 & 2;
         1 ^ 2;
+        1 >> 2;
+        1 << 2;
 
         li *= 2;
         gi *= 2;
@@ -44,5 +46,10 @@ default {
         -gi;
         gi--;
         gi++;
+
+        // This is actually 1 with a unary minus operation rather than
+        // literal -1. Why.
+        -1;
+        -1.0;
     }
 }

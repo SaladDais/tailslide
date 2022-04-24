@@ -131,6 +131,8 @@ bool LSOBytecodeCompiler::visit(LSLBinaryExpression *node) {
     case '|': mCodeBS << LOPC_BITOR; break;
     case '&': mCodeBS << LOPC_BITAND; break;
     case '^': mCodeBS << LOPC_BITXOR; break;
+    case SHIFT_LEFT: mCodeBS << LOPC_SHL; break;
+    case SHIFT_RIGHT: mCodeBS << LOPC_SHR; break;
     case BOOLEAN_AND: mCodeBS << LOPC_BOOLAND; break;
     case BOOLEAN_OR: mCodeBS << LOPC_BOOLOR; break;
     default:

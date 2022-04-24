@@ -2,6 +2,35 @@
 
 namespace Tailslide {
 
+/// turns -1 literals into -(1). Necessary for matching LL's compiler exactly.
+bool DeSugaringVisitor::visit(LSLConstantExpression *node) {
+  auto *cv = node->getConstantValue();
+  // Only do this to values that were _parsed_ as '-' INTEGER_CONSTANT.
+  // it shouldn't be done to 0xFFffFFff or ALL_SIDES.
+  if (!cv->wasNegated())
+    return false;
+  LSLConstant *new_cv;
+  switch (cv->getIType()) {
+    case LST_INTEGER:
+      new_cv = _mAllocator->newTracked<LSLIntegerConstant>(-((LSLIntegerConstant *) cv)->getValue());
+      break;
+    case LST_FLOATINGPOINT:
+      new_cv = _mAllocator->newTracked<LSLFloatConstant>(-((LSLFloatConstant *) cv)->getValue());
+      break;
+    default:
+      return false;
+  }
+  new_cv->setLoc(cv->getLoc());
+  auto *new_constexpr = _mAllocator->newTracked<LSLConstantExpression>(new_cv);
+  new_constexpr->setLoc(node->getLoc());
+  auto *neg_expr = _mAllocator->newTracked<LSLUnaryExpression>(new_constexpr, '-');
+  neg_expr->setLoc(node->getLoc());
+  neg_expr->setConstantValue(cv);
+  neg_expr->setType(node->getType());
+  LSLASTNode::replaceNode(node, neg_expr);
+  return false;
+}
+
 bool DeSugaringVisitor::visit(LSLBinaryExpression *node) {
   int decoupled_op = decouple_compound_operation(node->getOperation());
 

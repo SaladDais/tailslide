@@ -128,6 +128,11 @@ class LSLConstant : public LSLASTNode {
     // make a shallow copy of the constant
     virtual LSLConstant* copy(ScriptAllocator *allocator) = 0;
     virtual bool containsNaN() { return false; };
+    /// was this constant negated by the parser
+    virtual bool wasNegated() { return _mWasNegated; };
+    virtual void setWasNegated(bool negated) { _mWasNegated = negated; };
+  protected:
+    bool _mWasNegated = false;
 };
 
 /////////////////////////////////////////////////////
