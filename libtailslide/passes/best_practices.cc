@@ -4,6 +4,7 @@ namespace Tailslide {
 
 class AllPathsReturnVisitor: public ASTVisitor {
   protected:
+    virtual bool visit(LSLExpression *node) { return false; };
     virtual bool visit(LSLCompoundStatement *node) {
       mAllReturn = false;
       return true;

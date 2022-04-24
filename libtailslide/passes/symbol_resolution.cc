@@ -84,6 +84,7 @@ bool SymbolResolutionVisitor::visit(LSLDeclaration *node) {
   ));
   node->defineSymbol(identifier->getSymbol());
 
+  // if (1) string foo; isn't valid!
   if (!node->getDeclarationAllowed()) {
     NODE_ERROR(node, E_DECLARATION_INVALID_HERE, identifier->getSymbol()->getName());
   }
