@@ -248,10 +248,8 @@ LSLASTNode *resolve_sa_identifier(LSLASTNode *rvalue) {
   // try to figure out where the rvalue in the lvalue was actually declared
   while (rvalue && rvalue->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
     auto *sym = rvalue->getSymbol();
-    // This lvalue references a builtin symbol, we don't expect to be able to
-    // follow that to a variable declaration, so we can break.
-    if (sym->getSubType() == SYM_BUILTIN)
-      break;
+    // these should have been cleared out by the de-sugaring pass
+    assert(sym->getSubType() != SYM_BUILTIN);
     // get the node where the referenced symbol was declared
     auto *decl_node = sym->getVarDecl();
     // this should always be set except in the builtin case, which we handled.
@@ -366,8 +364,6 @@ uint32_t LSOHeapManager::writeConstant(LSLConstant *constant) {
       break;
     }
     case LST_NULL:
-      writeHeader(0, LST_NULL);
-      break;
     case LST_ERROR:
     case LST_MAX:
       assert(0);
