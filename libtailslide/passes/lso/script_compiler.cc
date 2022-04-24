@@ -12,7 +12,7 @@ inline size_t state_table_pos(uint32_t state_num) {
 uint64_t pack_handled_events(LSOSymbolData *state_data) {
   uint64_t handled_events = 0;
   for(auto entry : state_data->handlers) {
-    handled_events |= 1 << (entry - 1);
+    handled_events |= 1LL << (entry - 1);
   }
   return handled_events;
 }

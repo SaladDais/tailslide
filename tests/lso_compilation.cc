@@ -139,6 +139,7 @@ SIMPLE_LSO_CONFORMANCE("more_expressions.lsl")
 SIMPLE_LSO_CONFORMANCE("desugaring.lsl")
 SIMPLE_LSO_CONFORMANCE("state_change.lsl")
 SIMPLE_LSO_CONFORMANCE("assignments.lsl")
+SIMPLE_LSO_CONFORMANCE("event_handlers.lsl")
 SIMPLE_LSO_CONFORMANCE("lsl_conformance.lsl")
 
 TEST_SUITE_END();

@@ -94,7 +94,7 @@ typedef enum : uint8_t {
   LSOH_AT_ROT_TARGET = 22,
   LSOH_NOT_AT_ROT_TARGET = 23,
   LSOH_RTPERMISSIONS = 24,
-  LSOH_INVENTORY = 25,
+  LSOH_CHANGED = 25,
   LSOH_ATTACH = 26,
   LSOH_DATASERVER = 27,
   LSOH_LINK_MESSAGE = 28,
@@ -104,7 +104,13 @@ typedef enum : uint8_t {
   LSOH_REMOTE_DATA = 32,
   LSOH_HTTP_RESPONSE = 33,
   LSOH_HTTP_REQUEST = 34,
-  LSOH_MAX = 35,
+  // These are guesses, based on when the events were added,
+  // we don't know their real enum values.
+  LSOH_TRANSACTION_RESULT = 35,
+  LSOH_PATH_UPDATE = 36,
+  LSOH_EXPERIENCE_PERMISSIONS = 37,
+  LSOH_EXPERIENCE_PERMISSIONS_DENIED = 38,
+  LSOH_MAX = 39,
 } LSOHandlerType;
 
 const char * const LSO_HANDLER_NAMES[LSOH_MAX] = {
@@ -122,7 +128,7 @@ const char * const LSO_HANDLER_NAMES[LSOH_MAX] = {
   "land_collision_end",  // LSOH_LAND_COLLISION_END
   "timer",  // LSOH_TIMER
   "listen",  // LSOH_LISTEN
-  "rez",  // LSOH_REZ
+  "on_rez",  // LSOH_REZ
   "sensor",  // LSOH_SENSOR
   "no_sensor",  // LSOH_NO_SENSOR
   "control",  // LSOH_CONTROL
@@ -132,8 +138,8 @@ const char * const LSO_HANDLER_NAMES[LSOH_MAX] = {
   "not_at_target",  // LSOH_NOT_AT_TARGET
   "at_rot_target",  // LSOH_AT_ROT_TARGET
   "not_at_rot_target",  // LSOH_NOT_AT_ROT_TARGET
-  "runtime_permissions",  // LSOH_RTPERMISSIONS
-  "inventory",  // LSOH_INVENTORY
+  "run_time_permissions",  // LSOH_RTPERMISSIONS
+  "changed",  // LSOH_CHANGED
   "attach",  // LSOH_ATTACH
   "dataserver",  // LSOH_DATASERVER
   "link_message",  // LSOH_LINK_MESSAGE
@@ -143,6 +149,10 @@ const char * const LSO_HANDLER_NAMES[LSOH_MAX] = {
   "remote_data",  // LSOH_REMOTE_DATA
   "http_response",  // LSOH_HTTP_RESPONSE
   "http_request",  // LSOH_HTTP_REQUEST
+  "transaction_result",  // LSOH_TRANSACTION_RESULT
+  "path_update",  // LSOH_PATH_UPDATE
+  "experience_permissions",  // LSOH_EXPERIENCE_PERMISSIONS
+  "experience_permissions_denied",  // LSOH_EXPERIENCE_PERMISSIONS_DENIED
 };
 
 const uint32_t LSO_TYPE_DATA_SIZES[LST_MAX] = {
