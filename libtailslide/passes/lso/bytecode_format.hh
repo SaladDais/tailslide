@@ -285,7 +285,6 @@ inline uint8_t pack_lso_types(LSLIType left, LSLIType right) {
 class LSOBitStream : public BitStream {
   public:
   explicit LSOBitStream(Endianness endian=ENDIAN_BIG) : BitStream(endian) {}
-  LSOBitStream(const uint8_t *data, const uint32_t length, Endianness endian=ENDIAN_BIG): BitStream(data, length, endian) {}
   LSOBitStream(LSOBitStream &&other) noexcept: BitStream(std::move(other)) {}
   LSOBitStream(const LSOBitStream &other) = delete;
   /// need to help the type system realize that this returns an LSOBitStream.

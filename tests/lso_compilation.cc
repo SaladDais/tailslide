@@ -63,6 +63,14 @@ TEST_CASE("Simple heap compilation") {
   heap_bs.moveTo(vec_pos);
   heap_bs >> z;
   CHECK_EQ(z, 3.0f);
+
+  Quaternion q(0, 1, 2, 3);
+  Quaternion new_q;
+  heap_bs.moveTo(0);
+  heap_bs << q;
+  heap_bs.moveTo(0);
+  heap_bs >> new_q;
+  CHECK_EQ(new_q.y, 1);
 }
 
 TEST_CASE("Simple Global Var Serialization") {
