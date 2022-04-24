@@ -12,6 +12,9 @@ class GlobalExprValidatingVisitor: public ASTVisitor {
   protected:
     virtual bool visit(LSLGlobalVariable *node);
     virtual bool visit(LSLFunctionExpression *node);
+    // these aren't interesting for validation of globals
+    virtual bool visit(LSLGlobalFunction *node) { return false; };
+    virtual bool visit(LSLState *node) { return false; };
     // reset to `true` before checking each rvalue, if it's false after
     // visiting the rvalue then raise an error about non-constant expression.
     bool _mValidRValue = true;

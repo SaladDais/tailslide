@@ -32,6 +32,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
       script->propagateValues();
       script->checkBestPractices();
       if (compile_lso) {
+        script->checkSymbols();
         script->validateGlobals(true);
         if (!parser.logger.getErrors()) {
           Tailslide::LSOScriptCompiler visitor(&parser.allocator);

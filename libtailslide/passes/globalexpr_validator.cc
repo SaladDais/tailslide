@@ -61,8 +61,10 @@ bool SimpleAssignableValidatingVisitor::visit(LSLUnaryExpression *node) {
   }
   auto *id = (LSLIdentifier*) rvalue->getChild(0);
   auto *sym = id->getSymbol();
-  // exprs not checked if type or symbol error occurred earlier
-  assert(sym);
+  // Don't check, but also don't re-error if a type or symbol error occurred earlier.
+  if (!sym || sym->getIType() == LST_ERROR) {
+    return false;
+  }
   if (sym->getSubType() != SYM_BUILTIN) {
     _mValidRValue = false;
     return false;
