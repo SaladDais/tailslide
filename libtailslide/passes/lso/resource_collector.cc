@@ -63,7 +63,7 @@ bool LSOResourceVisitor::visit(LSLDeclaration *node) {
   auto *sym = node->getSymbol();
   auto *sym_data = getSymbolData(sym);
   sym_data->index = _mCurrentFunc->locals.size();
-  sym_data->offset = _mCurrentFunc->size - _mCurrentFunc->offset;
+  sym_data->offset = _mCurrentFunc->size;
   // local slots are smaller than globals, no overhead for offset to data, type and name.
   _mCurrentFunc->size += sym_data->size = LSO_TYPE_DATA_SIZES[sym->getIType()];
   _mCurrentFunc->locals.push_back(sym->getIType());
