@@ -1,7 +1,7 @@
-#include "script_compiler.hh"
-#include "passes/desugaring.hh"
+#include "../desugaring.hh"
 #include "bytecode_compiler.hh"
 #include "bytecode_format.hh"
+#include "script_compiler.hh"
 
 namespace Tailslide {
 

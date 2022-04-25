@@ -1,7 +1,7 @@
 #ifndef TAILSLIDE_TREE_SIMPLIFIER_HH
 #define TAILSLIDE_TREE_SIMPLIFIER_HH
 
-#include "visitor.hh"
+#include "../visitor.hh"
 
 namespace Tailslide {
 

@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "bytecode_format.hh"
-#include "visitor.hh"
+#include "../../visitor.hh"
 
 namespace Tailslide {
 struct LSOSymbolData {

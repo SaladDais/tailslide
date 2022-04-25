@@ -1,5 +1,7 @@
-#include "lslmini.hh"
+#include "../lslmini.hh"
+
 #include "values.hh"
+
 
 namespace Tailslide {
 

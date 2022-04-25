@@ -1,6 +1,6 @@
 #pragma once
 
-#include "visitor.hh"
+#include "../visitor.hh"
 
 namespace Tailslide {
 

@@ -1,9 +1,9 @@
 #ifndef TAILSLIDE_VALUES_HH
 #define TAILSLIDE_VALUES_HH
 
-#include "lslmini.hh"
-#include "visitor.hh"
-#include "operations.hh"
+#include "../lslmini.hh"
+#include "../visitor.hh"
+#include "../operations.hh"
 
 namespace Tailslide {
 class ConstantDeterminingVisitor : public DepthFirstASTVisitor {

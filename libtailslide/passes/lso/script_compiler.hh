@@ -2,9 +2,9 @@
 
 #include <vector>
 
-#include "lslmini.hh"
-#include "visitor.hh"
-#include "bitstream.hh"
+#include "../../lslmini.hh"
+#include "../../visitor.hh"
+#include "../../bitstream.hh"
 #include "bytecode_format.hh"
 #include "resource_collector.hh"
 

@@ -1,5 +1,5 @@
 #include "symbol_resolution.hh"
-#include "lslmini.hh"
+#include "../lslmini.hh"
 
 namespace Tailslide {
 

@@ -1,5 +1,5 @@
 #include "tree_print.hh"
-#include "lslmini.hh"
+#include "../lslmini.hh"
 
 namespace Tailslide {
 

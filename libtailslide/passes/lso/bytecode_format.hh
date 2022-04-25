@@ -2,10 +2,10 @@
 
 #include <cstdint>
 
-#include "bitstream.hh"
-#include "lslmini.hh"
-#include "symtab.hh"
-#include "types.hh"
+#include "../../bitstream.hh"
+#include "../../lslmini.hh"
+#include "../../symtab.hh"
+#include "../../types.hh"
 
 namespace Tailslide {
 

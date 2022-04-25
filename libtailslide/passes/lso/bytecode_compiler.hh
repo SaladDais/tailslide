@@ -5,7 +5,7 @@
 
 #include "bytecode_format.hh"
 #include "resource_collector.hh"
-#include "visitor.hh"
+#include "../../visitor.hh"
 
 namespace Tailslide {
 

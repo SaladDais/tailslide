@@ -1,10 +1,10 @@
 #ifndef TAILSLIDE_SYMBOL_RESOLUTION_HH
 #define TAILSLIDE_SYMBOL_RESOLUTION_HH
 
-#include "lslmini.hh"
-#include "visitor.hh"
-
 #include <vector>
+
+#include "../lslmini.hh"
+#include "../visitor.hh"
 
 namespace Tailslide {
 

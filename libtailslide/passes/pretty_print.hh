@@ -2,8 +2,8 @@
 #define TAILSLIDE_PRETTY_PRINT_HH
 
 #include <sstream>
-#include "lslmini.hh"
-#include "visitor.hh"
+#include "../lslmini.hh"
+#include "../visitor.hh"
 
 namespace Tailslide {
 

@@ -2,8 +2,8 @@
 #include <cmath>
 
 #include "pretty_print.hh"
-#include "lslmini.hh"
-#include "strings.hh"
+#include "../lslmini.hh"
+#include "../strings.hh"
 
 
 namespace Tailslide {

@@ -3,7 +3,7 @@
 
 #include <sstream>
 
-#include "visitor.hh"
+#include "../visitor.hh"
 
 namespace Tailslide {
 

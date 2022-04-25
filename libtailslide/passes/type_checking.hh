@@ -1,7 +1,7 @@
 #pragma once
 
-#include "lslmini.hh"
-#include "visitor.hh"
+#include "../lslmini.hh"
+#include "../visitor.hh"
 
 namespace Tailslide {
 class TypeCheckVisitor: public DepthFirstASTVisitor {
