@@ -56,6 +56,7 @@ TEST_CASE("print_no_shadowing.lsl") {
   CHECK(parser->logger.getErrors() == 2);
 }
 SIMPLE_LINT_TEST_CASE("pathological_expression.lsl")
+SIMPLE_LINT_TEST_CASE("print_type_bug.lsl")
 SIMPLE_LINT_TEST_CASE("scope1.lsl")
 SIMPLE_LINT_TEST_CASE("scope2.lsl")
 SIMPLE_LINT_TEST_CASE("scope3.lsl")
