@@ -410,7 +410,7 @@ bool TypeCheckVisitor::visit(LSLTypecastExpression *node) {
   auto *to_type = node->getType();
   if(!is_cast_legal(from_type->getIType(), to_type->getIType())) {
     // this is just an error bubbling up
-    if (from_type->getType() != TYPE(LST_ERROR)) {
+    if (from_type->getIType() != LST_ERROR) {
       NODE_ERROR(node, E_ILLEGAL_CAST, from_type->getNodeName(), to_type->getNodeName());
     }
   }

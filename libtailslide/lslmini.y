@@ -864,6 +864,20 @@ typecast
     {
         $$ = ALLOCATOR->newTracked<LSLTypecastExpression>($2, $4);
     }
+    | '(' typename ')' '-' IDENTIFIER
+    {
+        // this branch is necessary because integer and float builtin constants
+        // are no longer treated as integer_constant and float_constant lexer tokens
+        bool valid_id_typecast = false;
+        if (auto *sym = tailslide_get_extra(scanner)->builtins->lookup($5, SYM_VARIABLE))
+            valid_id_typecast = sym->getSubType() == SYM_BUILTIN && (sym->getIType() == LST_INTEGER || sym->getIType() == LST_FLOATINGPOINT);
+
+        auto *lvalue = ALLOCATOR->newTracked<LSLLValueExpression>(MAKEID(LST_NULL, $5, @5));
+        $$ = ALLOCATOR->newTracked<LSLTypecastExpression>($2, ALLOCATOR->newTracked<LSLUnaryExpression>(lvalue, '-'));
+        if (!valid_id_typecast) {
+            tailslide_get_extra(scanner)->logger->error(&@2, E_SYNTAX_ERROR, "Typecast requires parentheses");
+        }
+    }
     | '(' typename ')' unarypostfixexpression
     {
         $$ = ALLOCATOR->newTracked<LSLTypecastExpression>($2, $4);
