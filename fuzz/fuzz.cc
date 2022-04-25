@@ -26,7 +26,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     auto *script = parser.parseLSL(file);
     if (script) {
       script->collectSymbols();
-      script->linkSymbolTables();
       script->determineTypes();
       script->recalculateReferenceData();
       script->propagateValues();

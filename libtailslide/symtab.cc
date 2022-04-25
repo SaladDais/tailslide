@@ -52,19 +52,17 @@ bool LSLSymbolTable::remove(LSLSymbol *symbol) {
   return false;
 }
 
-void LSLSymbolTable::resetReferenceData() {
+void LSLSymbolTable::resetTracking() {
   for (auto &symbol: _mSymbols) {
     symbol.second->resetTracking();
-  }
-  for (auto &desc_table: _mDescTables) {
-    desc_table->resetReferenceData();
   }
 }
 
 /* Oddly enough, using shorter names in globals saves bytecode space. */
-void LSLSymbolTable::setMangledNames() {
+void LSLSymbolTableManager::setMangledNames() {
   int seq = 0;
-  auto table_mangler = [seq, this](SensitiveSymbolMap &node_symbols) mutable {
+  for (auto &desc_table: _mTables) {
+    SensitiveSymbolMap &node_symbols = desc_table->getMap();
     // We want mangled symbol name to be consistent across STL implementations,
     // and our symbol map is specifically unsorted. Place the symbol names in an std::set
     // which will de-dupe and has a specification-imposed iteration order.
@@ -83,34 +81,24 @@ void LSLSymbolTable::setMangledNames() {
         if (sym->getSymbolType() == SYM_STATE && !strcmp("default", sym->getName()))
           continue;
 
-        char *mangled_id = mContext->allocator->alloc(30);
+        char *mangled_id = _mAllocator->alloc(30);
         while (true) {
           snprintf(mangled_id, 30, "_%x", seq++);
           // Make sure this name isn't already in use
-          if (!this->lookup(mangled_id, SYM_ANY)) {
+          if (!desc_table->lookup(mangled_id, SYM_ANY)) {
             sym->setMangledName(mangled_id);
             break;
           }
         }
       }
     }
-  };
-
-  table_mangler(_mSymbols);
-  for (auto &desc_table: _mDescTables) {
-    table_mangler(desc_table->_mSymbols);
   }
 }
 
-void LSLSymbolTable::registerSubtable(LSLSymbolTable *table) {
-  if (table != this)
-    _mDescTables.push_back(table);
-}
-
-void LSLSymbolTable::unregisterSubtable(LSLSymbolTable *table) {
-  auto found = std::find(_mDescTables.begin(), _mDescTables.end(), table);
-  if (found != _mDescTables.end())
-    _mDescTables.erase(found);
+void LSLSymbolTableManager::resetTracking() {
+  for (auto *table : _mTables) {
+    table->resetTracking();
+  }
 }
 
 LSLIType LSLSymbol::getIType() {

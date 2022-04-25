@@ -10,15 +10,16 @@ int tailslide_lex_destroy(void *);
 
 namespace Tailslide {
 
-extern LSLSymbolTable gGlobalSymbolTable;
+extern LSLSymbolTable gBuiltinsSymbolTable;
 
-ScopedScriptParser::ScopedScriptParser(LSLSymbolTable *builtins) : allocator(), logger(&allocator) {
+ScopedScriptParser::ScopedScriptParser(LSLSymbolTable *builtins) : logger(&allocator), table_manager(&allocator) {
   context.allocator = &allocator;
   context.logger = &logger;
+  context.table_manager = &table_manager;
   if (builtins)
     context.builtins = builtins;
   else
-    context.builtins = &gGlobalSymbolTable;
+    context.builtins = &gBuiltinsSymbolTable;
 }
 
 LSLScript *ScopedScriptParser::parseLSL(const std::string &filename) {

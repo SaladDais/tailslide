@@ -28,37 +28,6 @@ const char *DEPRECATED_FUNCTIONS[][2] = {
 };
 
 
-class SymbolLinkageVisitor: public ASTVisitor {
-public:
-    SymbolLinkageVisitor(bool unlink, LSLSymbolTable* root_table):
-        _mUnlink(unlink), _mRootTable(root_table) {};
-
-    bool visit(LSLASTNode *node) override {
-      LSLSymbolTable *our_table = node->getSymbolTable();
-      if (our_table != nullptr) {
-        if (_mUnlink)
-          _mRootTable->unregisterSubtable(our_table);
-        else
-          _mRootTable->registerSubtable(our_table);
-      }
-      return true;
-    }
-private:
-    bool _mUnlink;
-    LSLSymbolTable *_mRootTable;
-};
-
-void LSLASTNode::linkSymbolTables(bool unlink) {
-  LSLASTNode *root = getRoot();
-  LSLSymbolTable *root_table = root ? root->getSymbolTable() : nullptr;
-  if (root_table == nullptr)
-    return;
-  // NB: if setting parent to a node in another tree,
-  // set parent to NULL first.
-  auto visitor = SymbolLinkageVisitor(unlink, root_table);
-  visit(&visitor);
-}
-
 // Lookup a symbol, propagating up the tree until it is found.
 LSLSymbol *LSLASTNode::lookupSymbol(const char *name, LSLSymbolType type) {
   LSLSymbol *sym = nullptr;
@@ -320,8 +289,8 @@ class NodeReferenceUpdatingVisitor : public ASTVisitor {
 };
 
 void LSLScript::recalculateReferenceData() {
-// get updated mutation / reference counts
-  getSymbolTable()->resetReferenceData();
+  // get updated mutation / reference counts
+  mContext->table_manager->resetTracking();
   auto visitor = NodeReferenceUpdatingVisitor();
   visit(&visitor);
 }

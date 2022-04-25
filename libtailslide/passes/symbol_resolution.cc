@@ -4,23 +4,31 @@
 namespace Tailslide {
 
 
-bool ExprSymbolResolutionVisitor::visit(LSLLValueExpression *node) {
+bool BaseSymbolResolutionVisitor::visit(LSLLValueExpression *node) {
   ((LSLIdentifier *) node->getChild(0))->resolveSymbol(SYM_VARIABLE);
   return false;
 }
 
-bool ExprSymbolResolutionVisitor::visit(LSLFunctionExpression *node) {
+bool BaseSymbolResolutionVisitor::visit(LSLFunctionExpression *node) {
   auto *id = (LSLIdentifier *) node->getChild(0);
   id->resolveSymbol(SYM_FUNCTION);
   return true;
 }
 
+/// replace the node's old symbol table, registering the new one.
+void BaseSymbolResolutionVisitor::replaceSymbolTable(LSLASTNode *node) {
+  // TODO: unregister old table? need to figure out node copy semantics.
+  auto *symtab = _mAllocator->newTracked<LSLSymbolTable>();
+  node->setSymbolTable(symtab);
+  node->mContext->table_manager->registerTable(symtab);
+}
+
 
 // all global var definitions are implicitly hoisted above function definitions
 // all functions and states have their declarations implicitly hoisted as well.
-class GlobalSymbolResolutionVisitor: public ExprSymbolResolutionVisitor {
+class GlobalSymbolResolutionVisitor: public BaseSymbolResolutionVisitor {
   public:
-    explicit GlobalSymbolResolutionVisitor(ScriptAllocator *allocator) : ExprSymbolResolutionVisitor(allocator) {};
+    explicit GlobalSymbolResolutionVisitor(ScriptAllocator *allocator) : BaseSymbolResolutionVisitor(allocator) {};
     virtual bool visit(LSLGlobalVariable *node) {
       // descend first so we can resolve any symbol references present in the rvalue
       // before we've defined the identifier from the lvalue.
@@ -36,6 +44,7 @@ class GlobalSymbolResolutionVisitor: public ExprSymbolResolutionVisitor {
     };
 
     virtual bool visit(LSLGlobalFunction *node) {
+      replaceSymbolTable(node);
       auto *identifier = (LSLIdentifier *) node->getChild(0);
 
       // define function in parent scope since functions have their own scope
@@ -53,6 +62,7 @@ class GlobalSymbolResolutionVisitor: public ExprSymbolResolutionVisitor {
     };
 
     virtual bool visit(LSLState *node) {
+      replaceSymbolTable(node);
       auto *identifier = (LSLIdentifier *)node->getChild(0);
       identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
           identifier->getName(), identifier->getType(), SYM_STATE, SYM_GLOBAL, identifier->getLoc()
@@ -64,6 +74,7 @@ class GlobalSymbolResolutionVisitor: public ExprSymbolResolutionVisitor {
 };
 
 bool SymbolResolutionVisitor::visit(LSLScript *node) {
+  replaceSymbolTable(node);
   // Walk over just the globals before we descend into function
   // bodies and do general symbol resolution.
   GlobalSymbolResolutionVisitor visitor(_mAllocator);
@@ -125,6 +136,8 @@ bool SymbolResolutionVisitor::visit(LSLGlobalVariable *node) {
 }
 
 bool SymbolResolutionVisitor::visit(LSLEventHandler *node) {
+  replaceSymbolTable(node);
+
   auto *id = (LSLIdentifier *) node->getChild(0);
   // look for a prototype for this event in the builtin namespace
   auto *sym = node->getRoot()->lookupSymbol(id->getName(), SYM_EVENT);
@@ -169,6 +182,11 @@ bool SymbolResolutionVisitor::visit(LSLJumpStatement *node) {
 
 bool SymbolResolutionVisitor::visit(LSLStateStatement *node) {
   ((LSLIdentifier *) node->getChild(0))->resolveSymbol(SYM_STATE);
+  return true;
+}
+
+bool SymbolResolutionVisitor::visit(LSLCompoundStatement *node) {
+  replaceSymbolTable(node);
   return true;
 }
 

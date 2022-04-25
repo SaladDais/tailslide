@@ -56,7 +56,6 @@ void LSLASTNode::setParent(LSLASTNode *newparent) {
     if (!newparent) return;
     assert(0);
   }
-  linkSymbolTables(true);
 
   _mParent = newparent;
   // because children are an intrusive linked list updating one child's parent
@@ -69,9 +68,6 @@ void LSLASTNode::setParent(LSLASTNode *newparent) {
     assert(prev_ptr != this);
     prev_ptr->_mParent = newparent;
   }
-
-  if (newparent)
-    linkSymbolTables();
 }
 
 void LSLASTNode::pushChild(LSLASTNode *child) {

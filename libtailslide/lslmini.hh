@@ -25,6 +25,7 @@ struct ScriptContext {
   ScriptAllocator *allocator = nullptr;
   Logger *logger = nullptr;
   LSLSymbolTable *builtins = nullptr;
+  LSLSymbolTableManager *table_manager = nullptr;
   bool ast_sane = true;
   Tailslide::TailslideLType glloc {0};
 };
@@ -59,9 +60,7 @@ struct Quaternion {
 class LSLScript : public LSLASTNode {
   public:
     LSLScript( ScriptContext *ctx, class LSLASTNodeList *globals, class LSLASTNodeList *states )
-      : LSLASTNode( ctx, 2, globals, states ) {
-      _mSymbolTable = ctx->allocator->newTracked<LSLSymbolTable>();
-    };
+      : LSLASTNode( ctx, 2, globals, states ) {};
 
     virtual const char *getNodeName() { return "script"; };
     virtual LSLNodeType getNodeType() { return NODE_SCRIPT; };
@@ -328,9 +327,7 @@ class LSLQuaternionConstant : public LSLConstant {
 class LSLGlobalFunction : public LSLASTNode {
   public:
     LSLGlobalFunction( ScriptContext *ctx, class LSLIdentifier *identifier, class LSLFunctionDec *decl, class LSLStatement *statement )
-      : LSLASTNode( ctx, 3, identifier, decl, statement ) {
-      _mSymbolTable = ctx->allocator->newTracked<LSLSymbolTable>();
-    };
+      : LSLASTNode( ctx, 3, identifier, decl, statement ) {};
     virtual const char *getNodeName() { return "global func"; }
     virtual LSLNodeType getNodeType() { return NODE_GLOBAL_FUNCTION; };
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
@@ -361,9 +358,7 @@ class LSLEventDec : public LSLParamList {
 class LSLState : public LSLASTNode {
   public:
     LSLState( ScriptContext *ctx, class LSLIdentifier *identifier, class LSLEventHandler *state_body )
-        : LSLASTNode( ctx, 2, identifier, state_body ) {
-      _mSymbolTable = ctx->allocator->newTracked<LSLSymbolTable>();
-    };
+        : LSLASTNode( ctx, 2, identifier, state_body ) {};
     virtual const char *getNodeName() { return "state"; }
     virtual LSLNodeType getNodeType() { return NODE_STATE; };
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
@@ -372,9 +367,7 @@ class LSLState : public LSLASTNode {
 class LSLEventHandler : public LSLASTNode {
   public:
     LSLEventHandler( ScriptContext *ctx, class LSLIdentifier *identifier, class LSLEventDec *decl, class LSLStatement *body )
-      : LSLASTNode(ctx, 3, identifier, decl, body) {
-      _mSymbolTable = ctx->allocator->newTracked<LSLSymbolTable>();
-    };
+      : LSLASTNode(ctx, 3, identifier, decl, body) {};
     virtual const char *getNodeName() { return "event handler"; }
     virtual LSLNodeType getNodeType() { return NODE_EVENT_HANDLER; };
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
@@ -395,9 +388,7 @@ class LSLStatement : public LSLASTNode {
 
 class LSLCompoundStatement : public LSLStatement {
   public:
-    LSLCompoundStatement( ScriptContext *ctx, class LSLStatement *body ) : LSLStatement(ctx, 1, body) {
-      _mSymbolTable = ctx->allocator->newTracked<LSLSymbolTable>();
-    }
+    LSLCompoundStatement( ScriptContext *ctx, class LSLStatement *body ) : LSLStatement(ctx, 1, body) {}
     virtual const char *getNodeName() { return "compound statement"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_COMPOUND_STATEMENT; };
 };

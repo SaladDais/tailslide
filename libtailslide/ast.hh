@@ -160,8 +160,6 @@ class LSLASTNode : public TrackableObject {
     void markStatic() { _mStaticNode = true;}
     bool isStatic() const {return _mStaticNode;}
 
-    void linkSymbolTables (bool unlink=false);
-
     /// passes                  ///
     // generic visitor functions
     void visit(ASTVisitor *visitor);
@@ -177,6 +175,7 @@ class LSLASTNode : public TrackableObject {
     virtual LSLSymbol *lookupSymbol(const char *name, LSLSymbolType type );
     void            defineSymbol(LSLSymbol *symbol );
     LSLSymbolTable *getSymbolTable() { return _mSymbolTable; }
+    void setSymbolTable(LSLSymbolTable *table) {_mSymbolTable = table;}
 
 
     YYLTYPE     *getLoc()     { return &_mLoc; };

@@ -25,7 +25,6 @@ ParserRef runConformance(const char* name, bool allow_syntax_errors)
     }
   } else {
     script->collectSymbols();
-    script->linkSymbolTables();
     script->determineTypes();
     script->recalculateReferenceData();
     script->propagateValues();
@@ -108,7 +107,7 @@ static void checkStringOutput(
     parser->script->optimize(ctx);
   parser->script->validateGlobals(true);
   parser->script->checkSymbols();
-  parser->script->getSymbolTable()->setMangledNames();
+  parser->table_manager.setMangledNames();
 
   std::string prettified = formatter.format(parser->script);
 

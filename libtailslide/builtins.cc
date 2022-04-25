@@ -13,7 +13,7 @@ extern const char *BUILTINS_TXT[];
 static ScriptAllocator gStaticAllocator {};
 
 // holds the symbols for the default builtins
-LSLSymbolTable gGlobalSymbolTable {nullptr}; // NOLINT(cert-err58-cpp)
+LSLSymbolTable gBuiltinsSymbolTable{nullptr}; // NOLINT(cert-err58-cpp)
 
 struct LSLTypeMap {
     const char *name;
@@ -238,7 +238,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
 #undef CONST_PARSE_FAIL
 #undef CONST_SSCANF
 
-      gGlobalSymbolTable.define(sym);
+      gBuiltinsSymbolTable.define(sym);
 
     } else if (!strcmp(ret_type, "event")) {
       name = tailslide_strtok_r(nullptr, " (),", &tokptr);
@@ -258,7 +258,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
         }
       }
 
-      gGlobalSymbolTable.define(gStaticAllocator.newTracked<LSLSymbol>(
+      gBuiltinsSymbolTable.define(gStaticAllocator.newTracked<LSLSymbol>(
           gStaticAllocator.copyStr(name), str_to_type("void"), SYM_EVENT, SYM_BUILTIN, dec
       ));
     } else {
@@ -279,7 +279,7 @@ if(sscanf(value, (fmt), __VA_ARGS__) != num) { \
         }
       }
 
-      gGlobalSymbolTable.define(gStaticAllocator.newTracked<LSLSymbol>(
+      gBuiltinsSymbolTable.define(gStaticAllocator.newTracked<LSLSymbol>(
           gStaticAllocator.copyStr(name), str_to_type(ret_type), SYM_FUNCTION, SYM_BUILTIN, dec
       ));
     }

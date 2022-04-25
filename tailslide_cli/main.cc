@@ -152,7 +152,6 @@ int main(int argc, char **argv) {
 
   if (script) {
     script->collectSymbols();
-    script->linkSymbolTables();
     script->determineTypes();
     script->recalculateReferenceData();
     script->propagateValues();
@@ -171,7 +170,7 @@ int main(int argc, char **argv) {
       script->validateGlobals(true);
       script->checkSymbols();
       if (pretty_print) {
-        script->getSymbolTable()->setMangledNames();
+        parser.table_manager.setMangledNames();
 
         PrettyPrintVisitor print_visitor(pretty_opts);
         script->visit(&print_visitor);

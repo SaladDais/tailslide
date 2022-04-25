@@ -111,6 +111,13 @@ struct CStrEqualTo {
   }
 };
 
+typedef std::unordered_multimap<
+    const char *,
+    LSLSymbol *,
+    CStrHash<const char *>,
+    CStrEqualTo<const char *>
+    > SensitiveSymbolMap;
+
 class LSLSymbolTable: public TrackableObject {
   public:
     explicit LSLSymbolTable(ScriptContext *ctx): TrackableObject(ctx) {};
@@ -118,28 +125,25 @@ class LSLSymbolTable: public TrackableObject {
     void            define( LSLSymbol *symbol );
     bool            remove( LSLSymbol *symbol );
     void            checkSymbols();
-    void            registerSubtable(LSLSymbolTable *table);
-    void            unregisterSubtable(LSLSymbolTable *table);
-    void            resetReferenceData();
-    void            setMangledNames();
+    void resetTracking();
 
   private:
-    typedef std::unordered_multimap<
-        const char *,
-        LSLSymbol *,
-        CStrHash<const char *>,
-        CStrEqualTo<const char *>
-      > SensitiveSymbolMap;
-
     SensitiveSymbolMap _mSymbols;
-
-    // The root table contains pointers to all of the tables
-    // below it. This should be empty for anything else.
-    // TODO: This symbol table parenting logic sucks. replace it.
-    std::vector<LSLSymbolTable *>  _mDescTables;
+    LSLSymbolTable *_mParent = nullptr;
 
   public:
     SensitiveSymbolMap &getMap() {return _mSymbols;}
+};
+
+class LSLSymbolTableManager {
+  public:
+    explicit LSLSymbolTableManager(ScriptAllocator *allocator) {_mAllocator = allocator;};
+    void registerTable(LSLSymbolTable *table) {_mTables.push_back(table);};
+    void setMangledNames();
+    void resetTracking();
+  protected:
+    std::vector<LSLSymbolTable *> _mTables {};
+    ScriptAllocator *_mAllocator;
 };
 
 }
