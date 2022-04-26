@@ -519,13 +519,16 @@ typedef struct {
         case LOPC_PUSHARGQ:
             Quaternion q_arg;
             break;
-        // ???
         case LOPC_PUSHE:
         case LOPC_PUSHEV:
         case LOPC_PUSHEQ:
+            // push the appropriate number of 0 bytes onto the stack for the given type
             break;
         case LOPC_PUSHARGE:
-            int32 arg;
+            // same as above, but allows explicitly specifying how many to push.
+            // used for making space for locals.
+            // technically signed, but negative vals will cause stack corruption.
+            int32 num_bytes;
             break;
         case LOPC_ADD:
         case LOPC_SUB:
@@ -575,13 +578,20 @@ typedef struct {
             LSCRIPTPackedTypes packed_types;
             break;
         case LOPC_STACKTOL:
+            // take this number of `LSCRIPTType, <elem>` pairs off
+            // the stack and create a list on the heap out of them
+            int32 num_elems;
+            break;
         case LOPC_STACKTOS:
-            int32 stack_offset; // maybe?
+            // Pop a character array of given length off the stack
+            // and place it on the heap. Never used.
+            int32 length;
             break;
         case LOPC_PRINT:
             LSCRIPTType type;
             break;
         case LOPC_CALLLIB:
+            // not used, two-byte version always used instead.
             ubyte lib_idx;
             break;
         case LOPC_CALLLIB_TWO_BYTE:
