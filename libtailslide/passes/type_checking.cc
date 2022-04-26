@@ -85,28 +85,37 @@ bool TypeCheckVisitor::visit(LSLStateStatement *node) {
 
 bool TypeCheckVisitor::visit(LSLReturnStatement *node) {
   LSLASTNode *ancestor = node->getParent();
+  LSLASTNode *effective_parent = node->getParent();
 
   // crawl up until we find an event handler or global func
   while (ancestor->getNodeType() != NODE_EVENT_HANDLER &&
       ancestor->getNodeType() != NODE_GLOBAL_FUNCTION)
     ancestor = ancestor->getParent();
+  // figure out if we're directly under an event handler or global func
+  // or nested within a control statement
+  while (effective_parent->getNodeSubType() == NODE_COMPOUND_STATEMENT)
+    effective_parent = effective_parent->getParent();
+  bool func_is_parent = effective_parent->getNodeType() == NODE_EVENT_HANDLER ||
+                        effective_parent->getNodeType() == NODE_GLOBAL_FUNCTION;
 
   auto *ancestor_type = ancestor->getChild(0)->getType();
   auto *ret = node->getChild(0);
-  auto *ret_type = ret->getType();
 
   // if an event handler
   if (ancestor->getNodeType() == NODE_EVENT_HANDLER) {
-    // make sure we're not returning anything
-    if (ret->getNodeType() != NODE_NULL) {
+    // make sure we're not returning a value
+    // returning the result of a void expression is only allowed if
+    // the return is nested in some other statement.
+    if (ret->getIType() != LST_NULL || (ret->getNodeType() != NODE_NULL && func_is_parent)) {
       NODE_ERROR(node, E_RETURN_VALUE_IN_EVENT_HANDLER);
     }
   } else {
     // otherwise it's a function
     // the return type of the function is stored in the identifier which is
     // the first child
+    auto *ret_type = ret->getType();
     if (!ret_type->canCoerce(ancestor_type)
-        || (ret_type == TYPE(LST_NULL) && ret->getNodeType() != NODE_NULL)) {
+        || (ret->getIType() == LST_NULL && (ret->getNodeType() != NODE_NULL && func_is_parent))) {
       NODE_ERROR(node, E_BAD_RETURN_TYPE, ret_type->getNodeName(), ancestor_type->getNodeName());
     }
   }
