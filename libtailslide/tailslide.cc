@@ -22,6 +22,14 @@ ScopedScriptParser::ScopedScriptParser(LSLSymbolTable *builtins) : logger(&alloc
     context.builtins = &gBuiltinsSymbolTable;
 }
 
+// make sure we don't leak an FH if we throw
+class FileCloser {
+  public:
+    explicit FileCloser(FILE *file): _mFile(file) {};
+    ~FileCloser() {fclose(_mFile);};
+    FILE *_mFile;
+};
+
 LSLScript *ScopedScriptParser::parseLSL(const std::string &filename) {
   // can only be used to parse a single script.
   assert(!script);
@@ -29,8 +37,8 @@ LSLScript *ScopedScriptParser::parseLSL(const std::string &filename) {
   if (yyin == nullptr) {
     throw "couldn't open file";
   }
+  FileCloser closer(yyin);
   auto result = parseLSL(yyin);
-  fclose(yyin);
   return result;
 }
 
