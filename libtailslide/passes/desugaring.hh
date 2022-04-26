@@ -11,7 +11,6 @@ class DeSugaringVisitor : public ASTVisitor {
   public:
     explicit DeSugaringVisitor(ScriptAllocator *allocator) : _mAllocator(allocator) {}
   protected:
-    bool visit(LSLConstantExpression *node) override;
     bool visit(LSLBinaryExpression *node) override;
     bool visit(LSLUnaryExpression *node) override;
     bool visit(LSLDeclaration *node) override;
@@ -21,10 +20,22 @@ class DeSugaringVisitor : public ASTVisitor {
     bool visit(LSLReturnStatement *node) override;
     bool visit(LSLLValueExpression *node) override;
 
-    void handleCoordinateNode(LSLASTNode *node);
+    virtual LSLASTNode *rewriteBuiltinLValue(LSLASTNode *node);
+    void handleCoordinateExpression(LSLASTNode *node);
     void maybeInjectCast(LSLExpression *expr, LSLType *to);
 
     ScriptAllocator *_mAllocator;
+};
+
+// Desugaring that also rewrites the tree to match how LL's compiler
+// would have parsed a given node. Results in less optimal bytecode.
+class LLConformantDeSugaringVisitor : public DeSugaringVisitor {
+  public:
+    explicit LLConformantDeSugaringVisitor(ScriptAllocator *allocator) : DeSugaringVisitor(allocator) {};
+  protected:
+    bool visit(LSLConstantExpression *node) override;
+
+    LSLASTNode *rewriteBuiltinLValue(LSLASTNode *node) override;
 };
 
 }

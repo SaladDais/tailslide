@@ -2,43 +2,20 @@
 
 namespace Tailslide {
 
-/// turns -1 literals into -(1). Necessary for matching LL's compiler exactly.
-bool DeSugaringVisitor::visit(LSLConstantExpression *node) {
-  auto *cv = node->getConstantValue();
-  // Only do this to values that were _parsed_ as '-' INTEGER_CONSTANT.
-  // it shouldn't be done to 0xFFffFFff or ALL_SIDES.
-  if (!cv->wasNegated())
-    return false;
-  LSLConstant *new_cv;
-  switch (cv->getIType()) {
-    case LST_INTEGER:
-      new_cv = _mAllocator->newTracked<LSLIntegerConstant>(-((LSLIntegerConstant *) cv)->getValue());
-      break;
-    case LST_FLOATINGPOINT:
-      new_cv = _mAllocator->newTracked<LSLFloatConstant>(-((LSLFloatConstant *) cv)->getValue());
-      break;
-    default:
-      return false;
-  }
-  new_cv->setLoc(cv->getLoc());
-  auto *new_constexpr = _mAllocator->newTracked<LSLConstantExpression>(new_cv);
-  new_constexpr->setLoc(node->getLoc());
-  auto *neg_expr = _mAllocator->newTracked<LSLUnaryExpression>(new_constexpr, '-');
-  neg_expr->setLoc(node->getLoc());
-  neg_expr->setConstantValue(cv);
-  neg_expr->setType(node->getType());
-  LSLASTNode::replaceNode(node, neg_expr);
-  return false;
-}
-
 bool DeSugaringVisitor::visit(LSLBinaryExpression *node) {
-  int decoupled_op = decouple_compound_operation(node->getOperation());
+  int op = node->getOperation();
+  int decoupled_op = decouple_compound_operation(op);
 
   auto *left = (LSLLValueExpression *) node->getChild(0);
   auto *right = (LSLExpression *) node->getChild(1);
 
   if (left->getIType() == LST_ERROR || right->getIType() == LST_ERROR)
     return true;
+
+  // This is effectively NOT syntactic sugar and needs to be handled specially by backends.
+  if (op == MUL_ASSIGN && left->getIType() == LST_INTEGER && right->getIType() == LST_FLOATINGPOINT) {
+    return true;
+  }
 
   if (decoupled_op == '=') {
     maybeInjectCast(right, left->getType());
@@ -50,10 +27,6 @@ bool DeSugaringVisitor::visit(LSLBinaryExpression *node) {
   if (node->getOperation() == decoupled_op)
     return true;
   // some kind of compound operator, desugar it
-  // This is effectively NOT syntactic sugar and needs to be handled specially by backends.
-  if (decoupled_op == '*' && left->getIType() == LST_INTEGER && right->getIType() == LST_FLOATINGPOINT) {
-    return true;
-  }
   // decouple the RHS from the existing expression
   right = (LSLExpression *) node->takeChild(1);
   // turn `lhs += rhs` into `lhs = lhs + rhs`
@@ -133,12 +106,12 @@ void DeSugaringVisitor::maybeInjectCast(LSLExpression* expr, LSLType *to) {
 }
 
 bool DeSugaringVisitor::visit(LSLQuaternionExpression *node) {
-  handleCoordinateNode(node);
+  handleCoordinateExpression(node);
   return true;
 }
 
 bool DeSugaringVisitor::visit(LSLVectorExpression *node) {
-  handleCoordinateNode(node);
+  handleCoordinateExpression(node);
   return true;
 }
 
@@ -187,47 +160,10 @@ bool DeSugaringVisitor::visit(LSLLValueExpression *node) {
     return true;
   if (sym->getSubType() != SYM_BUILTIN)
     return true;
-  LSLConstant *cv = node->getConstantValue();
-  if (!cv)
-    return true;
+  // should always have a value for builtin lvalues by this point
+  assert(node->getConstantValue());
 
-  LSLASTNode *new_expr;
-  auto itype = cv->getIType();
-  if (itype == LST_VECTOR || itype == LST_QUATERNION) {
-    // vector and quaternion builtin constants are a little special in that they'd normally
-    // be parsed as vector expressions within a function context. We don't want to desugar
-    // them as constantexpressions since they get serialized differently from
-    // (potentially non-constant) vectorexpressions.
-    std::vector<float> children;
-    std::vector<LSLConstantExpression *> new_expr_children;
-    if (itype == LST_VECTOR) {
-      auto *vec_val = ((LSLVectorConstant *) cv)->getValue();
-      children.assign({vec_val->x, vec_val->y, vec_val->z});
-    } else {
-      auto *quat_val = ((LSLQuaternionConstant *) cv)->getValue();
-      children.assign({quat_val->x, quat_val->y, quat_val->z, quat_val->s});
-    }
-
-    for (float axis : children) {
-      auto *expr_child = _mAllocator->newTracked<LSLConstantExpression>(
-          _mAllocator->newTracked<LSLFloatConstant>(axis)
-      );
-      expr_child->setLoc(node->getLoc());
-      new_expr_children.push_back(expr_child);
-    }
-    if (itype == LST_VECTOR) {
-      new_expr = _mAllocator->newTracked<LSLVectorExpression>(
-          new_expr_children[0], new_expr_children[1], new_expr_children[2]
-      );
-    } else {
-      new_expr = _mAllocator->newTracked<LSLQuaternionExpression>(
-          new_expr_children[0], new_expr_children[1], new_expr_children[2], new_expr_children[3]
-      );
-    }
-    new_expr->setConstantValue(node->getConstantValue());
-  } else {
-    new_expr = _mAllocator->newTracked<LSLConstantExpression>(cv);
-  }
+  auto *new_expr = rewriteBuiltinLValue(node);
   new_expr->setLoc(node->getLoc());
   LSLASTNode::replaceNode(
       node,
@@ -236,12 +172,86 @@ bool DeSugaringVisitor::visit(LSLLValueExpression *node) {
   return false;
 }
 
-void DeSugaringVisitor::handleCoordinateNode(LSLASTNode *node) {
+LSLASTNode *DeSugaringVisitor::rewriteBuiltinLValue(LSLASTNode *node) {
+  return _mAllocator->newTracked<LSLConstantExpression>(node->getConstantValue());
+}
+
+void DeSugaringVisitor::handleCoordinateExpression(LSLASTNode *node) {
   // we may replace nodes during iteration so we can't use `node->getNext()`
   auto num_children = node->getNumChildren();
   for(auto i=0; i<num_children; ++i) {
     maybeInjectCast((LSLExpression *) node->getChild(i), TYPE(LST_FLOATINGPOINT));
   }
+}
+
+
+
+/// turns -1 literals into -(1). Necessary for matching LL's compiler exactly.
+bool LLConformantDeSugaringVisitor::visit(LSLConstantExpression *node) {
+  auto *cv = node->getConstantValue();
+  // Only do this to values that were _parsed_ as '-' INTEGER_CONSTANT.
+  // it shouldn't be done to 0xFFffFFff or ALL_SIDES.
+  if (!cv->wasNegated())
+    return false;
+  LSLConstant *new_cv;
+  switch (cv->getIType()) {
+    case LST_INTEGER:
+      new_cv = _mAllocator->newTracked<LSLIntegerConstant>(-((LSLIntegerConstant *) cv)->getValue());
+      break;
+    case LST_FLOATINGPOINT:
+      new_cv = _mAllocator->newTracked<LSLFloatConstant>(-((LSLFloatConstant *) cv)->getValue());
+      break;
+    default:
+      return false;
+  }
+  new_cv->setLoc(cv->getLoc());
+  auto *new_constexpr = _mAllocator->newTracked<LSLConstantExpression>(new_cv);
+  new_constexpr->setLoc(node->getLoc());
+  auto *neg_expr = _mAllocator->newTracked<LSLUnaryExpression>(new_constexpr, '-');
+  neg_expr->setLoc(node->getLoc());
+  neg_expr->setConstantValue(cv);
+  neg_expr->setType(node->getType());
+  LSLASTNode::replaceNode(node, neg_expr);
+  return false;
+}
+
+LSLASTNode *LLConformantDeSugaringVisitor::rewriteBuiltinLValue(LSLASTNode *node) {
+  auto cv = node->getConstantValue();
+  auto itype = cv->getIType();
+  if (!(itype == LST_VECTOR || itype == LST_QUATERNION))
+    return DeSugaringVisitor::rewriteBuiltinLValue(node);
+
+  // vector and quaternion builtin constants are a little special in that they'd normally
+  // be parsed as vector expressions within a function context. We don't want to desugar
+  // them as constantexpressions since they get serialized differently from
+  // (potentially non-constant) vectorexpressions.
+  std::vector<float> children;
+  std::vector<LSLConstantExpression *> new_expr_children;
+  if (itype == LST_VECTOR) {
+    auto *vec_val = ((LSLVectorConstant *) cv)->getValue();
+    children.assign({vec_val->x, vec_val->y, vec_val->z});
+  } else {
+    auto *quat_val = ((LSLQuaternionConstant *) cv)->getValue();
+    children.assign({quat_val->x, quat_val->y, quat_val->z, quat_val->s});
+  }
+
+  for (float axis: children) {
+    auto *expr_child = _mAllocator->newTracked<LSLConstantExpression>(
+        _mAllocator->newTracked<LSLFloatConstant>(axis));
+    expr_child->setLoc(node->getLoc());
+    new_expr_children.push_back(expr_child);
+  }
+
+  LSLASTNode *new_expr;
+  if (itype == LST_VECTOR) {
+    new_expr = _mAllocator->newTracked<LSLVectorExpression>(
+        new_expr_children[0], new_expr_children[1], new_expr_children[2]);
+  } else {
+    new_expr = _mAllocator->newTracked<LSLQuaternionExpression>(
+        new_expr_children[0], new_expr_children[1], new_expr_children[2], new_expr_children[3]);
+  }
+  new_expr->setConstantValue(cv);
+  return new_expr;
 }
 
 }

@@ -129,7 +129,7 @@ TEST_CASE("desugaring.lsl") {
   OptimizationOptions ctx{false};
   PrettyPrintOpts pretty_ctx {};
   checkPrettyPrintOutput("desugaring.lsl", ctx, pretty_ctx, [](LSLScript* script) {
-    DeSugaringVisitor visitor(script->mContext->allocator);
+    LLConformantDeSugaringVisitor visitor(script->mContext->allocator);
     script->visit(&visitor);
   });
 }
