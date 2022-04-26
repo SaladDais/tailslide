@@ -142,9 +142,9 @@ void LSLIdentifier::resolveSymbol(LSLSymbolType symbol_type) {
     for (i = 0; DEPRECATED_FUNCTIONS[i][0]; ++i) {
       if (!strcmp(_mName, DEPRECATED_FUNCTIONS[i][0])) {
         if (DEPRECATED_FUNCTIONS[i][1] == nullptr) {
-          NODE_ERROR(this, E_DEPRECATED, _mName);
+          NODE_ERROR(this, W_DEPRECATED, _mName);
         } else {
-          NODE_ERROR(this, E_DEPRECATED_WITH_REPLACEMENT, _mName, DEPRECATED_FUNCTIONS[i][1]);
+          NODE_ERROR(this, W_DEPRECATED_WITH_REPLACEMENT, _mName, DEPRECATED_FUNCTIONS[i][1]);
         }
         _mSymbol = nullptr;
         _mType = TYPE(LST_ERROR);

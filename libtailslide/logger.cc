@@ -243,8 +243,8 @@ const char *Logger::_sErrorMessages[] = {
         "ERROR",
         "Duplicate declaration of `%s'; previously declared at (%d, %d).",
         "Invalid operator: %s %s %s.",
-        "`%s' is deprecated.",
-        "`%s' is deprecated, use %s instead.",
+        "",
+        "",
         "Attempting to use `%s' as a %s, but it is a %s.",
         "`%s' is undeclared.",
         "`%s' is undeclared; did you mean %s?",
@@ -307,7 +307,9 @@ const char *Logger::_sWarningMessages[] = {
         "`i_val *= f_val' can have unpredictable runtime behavior, prefer `i_val = (integer)(i_val * f_val)'",
         "`jump %s;' may jump to the wrong label due to label name clashes within function",
         "label `@%s' is declared multiple times in the same function, which may cause undesired behavior",
-        "== comparison used as a statement"
+        "== comparison used as a statement",
+        "`%s' is deprecated.",
+        "`%s' is deprecated, use %s instead.",
 };
 
 }
