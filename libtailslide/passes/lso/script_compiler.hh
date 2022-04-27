@@ -42,7 +42,9 @@ class LSOScriptCompiler : public ASTVisitor {
 
     void writeRegister(LSORegisters reg, uint32_t val);
     void writeEventRegister(LSORegisters reg, uint64_t val);
+    bool checkStackHeapCollision();
 
+    LSOBitStream _mRegistersBS {ENDIAN_BIG};
     LSOBitStream _mFunctionsBS {ENDIAN_BIG};
     LSOBitStream _mStatesBS {ENDIAN_BIG};
     LSOBitStream _mStateBS {ENDIAN_BIG};

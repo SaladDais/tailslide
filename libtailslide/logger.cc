@@ -279,6 +279,7 @@ const char *Logger::_sErrorMessages[] = {
         "Lists may not contain other lists",
         "May not cast %s to %s",
         "Lists may not contain nulls",
+        "Stack-heap collision"
 };
 
 const char *Logger::_sWarningMessages[] = {
@@ -286,16 +287,16 @@ const char *Logger::_sWarningMessages[] = {
         "Declaration of `%s' in this scope shadows previous declaration at (%d, %d)",
         "Suggest parentheses around assignment used as truth value.",
         "Changing state to current state acts the same as return. (SL1.8.3)\n"
-        "If this is what you intended, consider using return instead.",
+          "If this is what you intended, consider using return instead.",
         "Changing state in a list or string function will corrupt the stack.\n"
-        "Using the return value from this function will cause a run-time bounds check error.\n"
+          "Using the return value from this function will cause a run-time bounds check error.\n"
           "See: http://secondlife.com/badgeo/wakka.php?wakka=FunctionStateChangeHack",
         "Using an if statement to change state in a function is a hack and may have unintended side-effects.\n"
           "See: http://secondlife.com/badgeo/wakka.php?wakka=FunctionStateChangeHack",
         "",
         "Empty if statement.",
         "`%s' treated as %d; this is probably not what you wanted.\n"
-        "Make sure you separate opeartors with spaces.\n"
+          "Make sure you separate opeartors with spaces.\n"
           "See: http://forums.secondlife.com/showthread.php?t=60257",
         "%s `%s' declared but never used.",
         "Unused event parameter `%s'.",

@@ -261,7 +261,7 @@ static bool validate_func_arg_spec(
     if (!param_compatible) {
       NODE_ERROR(node, is_event_handler ? E_ARGUMENT_WRONG_TYPE_EVENT : E_ARGUMENT_WRONG_TYPE,
                  passed_param_id->getType()->getNodeName(),
-            param_num,
+                 param_num,
                  id->getName(),
                  declared_param_id->getType()->getNodeName(),
                  declared_param_id->getName()

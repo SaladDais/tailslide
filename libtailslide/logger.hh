@@ -61,6 +61,7 @@ enum ErrorCode {
     E_LIST_IN_LIST = 10034,
     E_ILLEGAL_CAST = 10035,
     E_NULL_IN_LIST = 10036,
+    E_STACK_HEAP_COLLISION = 10037,
     E_LAST,
 
 

@@ -25,8 +25,7 @@ bool LSOScriptCompiler::visit(LSLScript *node) {
   LSOResourceVisitor resource_visitor(&_mSymData);
   node->visit(&resource_visitor);
 
-  // allocate all of the script memory and fill with zeros
-  mScriptBS.makeSpace(TOTAL_LSO_MEMORY);
+  _mRegistersBS.makeSpace(LSO_REGISTER_OFFSETS[LREG_MAX]);
 
   // figure out if we have any functions, and if so what the highest index is.
   uint32_t num_funcs = 0;
@@ -45,6 +44,11 @@ bool LSOScriptCompiler::visit(LSLScript *node) {
 
   // Collect all the global variables and functions
   visitChildren(node->getChild(0));
+
+  if (checkStackHeapCollision()) {
+    NODE_ERROR(node, E_STACK_HEAP_COLLISION);
+    return false;
+  }
 
   // Nothing should be writing to the heap after handling global vars, write the terminal block.
   _mHeapManager.writeTerminalBlock();
@@ -70,6 +74,10 @@ bool LSOScriptCompiler::visit(LSLScript *node) {
     _mStateBS.resize(0);
     state->visit(this);
     _mStatesBS.writeBitStream(_mStateBS);
+    if (checkStackHeapCollision()) {
+      NODE_ERROR(node, E_STACK_HEAP_COLLISION);
+      return false;
+    }
     state = state->getNext();
   }
 
@@ -83,6 +91,8 @@ bool LSOScriptCompiler::visit(LSLScript *node) {
   // record where the variables start
   // TODO: This will break if we're writing v1 bytecode, the registers end earlier!
   writeRegister(LREG_GVR, LSO_REGISTER_OFFSETS[LREG_MAX]);
+  // allocate all of the script memory and fill with zeros
+  mScriptBS.makeSpace(TOTAL_LSO_MEMORY);
   // Write in the global variables
   mScriptBS.moveTo(LSO_REGISTER_OFFSETS[LREG_MAX]);
   mScriptBS.writeBitStream(_mGlobalVarManager.mGlobalsBS);
@@ -105,10 +115,15 @@ bool LSOScriptCompiler::visit(LSLScript *node) {
   mScriptBS.writeBitStream(_mHeapManager.mHeapBS);
   // mark the top of the heap
   writeRegister(LREG_HP, mScriptBS.pos());
+  // go back and write in the registers
+  mScriptBS.moveTo(0);
+  mScriptBS.writeBitStream(_mRegistersBS);
   return false;
 }
 
 bool LSOScriptCompiler::visit(LSLGlobalVariable *node) {
+  if (checkStackHeapCollision())
+    return false;
   // Weird special case for if we have only an lvalue reference in the rvalue
   // for compatibility with LL's LSO compiler. If the lvalue ultimately references
   // another global that has no rvalue, we must fill the global variable's data field
@@ -165,6 +180,8 @@ bool LSOScriptCompiler::visit(LSLGlobalVariable *node) {
 }
 
 bool LSOScriptCompiler::visit(LSLGlobalFunction *node) {
+  if (checkStackHeapCollision())
+    return false;
   auto *sym = node->getSymbol();
   auto &func_data = _mSymData[sym];
   auto function_start = _mFunctionsBS.pos();
@@ -232,15 +249,26 @@ bool LSOScriptCompiler::visit(LSLEventHandler *node) {
 
 
 
+bool LSOScriptCompiler::checkStackHeapCollision() {
+  auto total_size = (
+      _mRegistersBS.size() +
+      _mGlobalVarManager.mGlobalsBS.size() +
+      _mFunctionsBS.size() +
+      _mStatesBS.size() +
+      _mHeapManager.mHeapBS.size()
+  );
+  return total_size > TOTAL_LSO_MEMORY;
+}
+
 void LSOScriptCompiler::writeRegister(LSORegisters reg, uint32_t val) {
-  ScopedBitStreamSeek seek(mScriptBS, LSO_REGISTER_OFFSETS[reg]);
-  mScriptBS << val;
+  ScopedBitStreamSeek seek(_mRegistersBS, LSO_REGISTER_OFFSETS[reg]);
+  _mRegistersBS << val;
 }
 
 void LSOScriptCompiler::writeEventRegister(LSORegisters reg, uint64_t val) {
   // TODO: v1 compatibility
-  ScopedBitStreamSeek seek(mScriptBS, LSO_REGISTER_OFFSETS[reg]);
-  mScriptBS << val;
+  ScopedBitStreamSeek seek(_mRegistersBS, LSO_REGISTER_OFFSETS[reg]);
+  _mRegistersBS << val;
 }
 
 

@@ -116,6 +116,14 @@ TEST_CASE("Simple Global Var Serialization") {
   CHECK(!memcmp(heap_bs.current(), "foobar", 6));
 }
 
+TEST_CASE("Stack-Heap Collision") {
+  auto script = runConformance("stack_heap_collide.lsl");
+  LSOScriptCompiler visitor(&script->allocator);
+  script->script->visit(&visitor);
+  script->logger.finalize();
+  CHECK_FALSE(script->logger.getErrors());
+}
+
 TEST_SUITE_END();
 
 TEST_SUITE_BEGIN("LSO conformance");
