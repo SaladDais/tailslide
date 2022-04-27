@@ -6,6 +6,7 @@ string quux = ;
 default {
     state_entry() {
         llOwnerSay(baz);
+        llOwnerSay(quux);
         <;
     }
 }

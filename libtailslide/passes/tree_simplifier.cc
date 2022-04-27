@@ -32,28 +32,12 @@ bool TreeSimplifyingVisitor::visit(LSLDeclaration* node) {
   return false;
 }
 
-bool TreeSimplifyingVisitor::visit(LSLGlobalStorage* node) {
-  // GlobalStorages either contain a single var or a single function.
-  LSLASTNode *contained = (node->getChild(0)->getNodeType() != NODE_NULL) ? node->getChild(0) : node->getChild(1);
-  // and they both keep their identifier in the first child!
-  auto *id = (LSLIdentifier *) (contained->getChild(0));
-  assert(id != nullptr && id->getNodeType() == NODE_IDENTIFIER);
+bool TreeSimplifyingVisitor::visit(LSLGlobalFunction* node) {
+  return handleGlobal(node);
+}
 
-  LSLNodeType node_type = contained->getNodeType();
-  auto *sym = id->getSymbol();
-
-  if (((node_type == NODE_GLOBAL_FUNCTION && mOpts.prune_unused_functions) ||
-       (node_type == NODE_GLOBAL_VARIABLE && mOpts.prune_unused_globals))
-      && sym->getReferences() == 1) {
-    ++mFoldedLevel;
-    // these reside in the global scope, look for the root symbol table and the entry
-    LSLASTNode *script = node->getRoot();
-    script->getSymbolTable()->remove(sym);
-    // remove the node itself
-    node->getParent()->removeChild(node);
-    return false;
-  }
-  return true;
+bool TreeSimplifyingVisitor::visit(LSLGlobalVariable *node) {
+  return handleGlobal(node);
 }
 
 bool TreeSimplifyingVisitor::visit(LSLExpression* node) {
@@ -168,6 +152,29 @@ bool TreeSimplifyingVisitor::visit(LSLLValueExpression *node) {
 bool TreeSimplifyingVisitor::visit(LSLConstantExpression *node) {
   // Don't touch these at all, they can't be simplified any more!
   return false;
+}
+
+bool TreeSimplifyingVisitor::handleGlobal(LSLASTNode *node) {
+  // globals are either a single var or a single function.
+  // and they both keep their identifier in the first child!
+  auto *id = (LSLIdentifier *) (node->getChild(0));
+  assert(id != nullptr && id->getNodeType() == NODE_IDENTIFIER);
+
+  LSLNodeType node_type = node->getNodeType();
+  auto *sym = id->getSymbol();
+
+  if (((node_type == NODE_GLOBAL_FUNCTION && mOpts.prune_unused_functions) ||
+       (node_type == NODE_GLOBAL_VARIABLE && mOpts.prune_unused_globals))
+      && sym->getReferences() == 1) {
+    ++mFoldedLevel;
+    // these reside in the global scope, look for the root symbol table and the entry
+    LSLASTNode *script = node->getRoot();
+    script->getSymbolTable()->remove(sym);
+    // remove the node itself
+    node->getParent()->removeChild(node);
+    return false;
+  }
+  return true;
 }
 
 }

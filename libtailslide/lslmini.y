@@ -73,8 +73,8 @@
         class LSLFunctionDec;
         class LSLEventDec;
         class LSLASTNodeList;
+        class LSLASTNode;
         class LSLState;
-        class LSLGlobalStorage;
         class LSLScript;
     }
 }
@@ -95,9 +95,9 @@
     class Tailslide::LSLGlobalFunction    *global_funcs;
     class Tailslide::LSLFunctionDec       *global_decl;
     class Tailslide::LSLEventDec          *global_event_decl;
+    class Tailslide::LSLASTNode           *global_store;
     class Tailslide::LSLASTNodeList       *node_list;
     class Tailslide::LSLState             *state;
-    class Tailslide::LSLGlobalStorage     *global_store;
     class Tailslide::LSLScript            *script;
 };
 
@@ -284,11 +284,11 @@ globals
 global
     : global_variable
     {
-        $$ = ALLOCATOR->newTracked<LSLGlobalStorage>($1, nullptr);
+        $$ = $1;
     }
     | global_function
     {
-        $$ = ALLOCATOR->newTracked<LSLGlobalStorage>(nullptr, $1);
+        $$ = $1;
     }
     ;
 
@@ -310,7 +310,7 @@ global_variable
     }
     | name_type '=' error ';'
     {
-        $$ = nullptr;
+        $$ = ALLOCATOR->newTracked<LSLGlobalVariable>($1, nullptr);
     }
     ;
 

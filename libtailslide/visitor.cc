@@ -14,8 +14,6 @@ bool ASTVisitor::visitSpecific(LSLASTNode *node) {
       return visit((LSLASTNodeList *)node);
     case NODE_SCRIPT:
       return visit((LSLScript *)node);
-    case NODE_GLOBAL_STORAGE:
-      return visit((LSLGlobalStorage *)node);
     case NODE_GLOBAL_FUNCTION:
       return visit((LSLGlobalFunction *)node);
     case NODE_GLOBAL_VARIABLE:

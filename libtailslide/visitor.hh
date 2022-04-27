@@ -13,9 +13,6 @@ class ASTVisitor {
     virtual bool visit(LSLScript *node) {
       return visit((LSLASTNode *)node);
     };
-    virtual bool visit(LSLGlobalStorage *node) {
-      return visit((LSLASTNode *)node);
-    };
     virtual bool visit(LSLIdentifier *node) {
       return visit((LSLASTNode *)node);
     };

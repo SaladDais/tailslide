@@ -551,10 +551,6 @@ bool PrettyPrintVisitor::visit(LSLType* node) {
   return false;
 }
 
-bool PrettyPrintVisitor::visit(LSLGlobalStorage *node) {
-  return true;
-}
-
 bool PrettyPrintVisitor::visit(LSLScript *node) {
   return true;
 }

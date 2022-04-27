@@ -56,7 +56,6 @@ public:
     virtual bool visit(LSLVectorExpression *node);
     virtual bool visit(LSLQuaternionExpression *node);
     virtual bool visit(LSLListExpression *node);
-    virtual bool visit(LSLGlobalStorage *node);
     virtual bool visit(LSLScript *node);
 
     void prettifySiblingsSep(LSLASTNode *node, const char *separator);

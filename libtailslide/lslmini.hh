@@ -71,14 +71,6 @@ class LSLScript : public LSLASTNode {
     void validateGlobals(bool sl_strict);
 };
 
-class LSLGlobalStorage : public LSLASTNode {
-  public:
-    LSLGlobalStorage( ScriptContext *ctx, class LSLGlobalVariable *variables, class LSLGlobalFunction *functions )
-      : LSLASTNode( ctx, 2, variables, functions ) {};
-    virtual const char *getNodeName() { return "global storage"; }
-    virtual LSLNodeType getNodeType() { return NODE_GLOBAL_STORAGE; };
-};
-
 class LSLIdentifier : public LSLASTNode {
   public:
     LSLIdentifier( ScriptContext *ctx, const char *name ) : LSLASTNode(ctx), _mName(name) {};

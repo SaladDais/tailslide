@@ -31,10 +31,8 @@ bool ConstantDeterminingVisitor::visit(LSLScript *node) {
   // global functions may make use of them.
   LSLASTNode *child = node->getChild(0)->getChildren();
   while (child != nullptr) {
-    if (LSLASTNode *gs_child = child->getChild(0)) {
-      if (gs_child->getNodeType() == NODE_GLOBAL_VARIABLE)
-        gs_child->visit(this);
-    }
+    if (child->getNodeType() == NODE_GLOBAL_VARIABLE)
+      child->visit(this);
     child = child->getNext();
   }
   // safe to descend into functions and event handlers now

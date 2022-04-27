@@ -273,7 +273,7 @@ class NodeReferenceUpdatingVisitor : public ASTVisitor {
 
     virtual bool visit(LSLIdentifier *node) {
       LSLASTNode *upper_node = node->getParent();
-      while (upper_node != nullptr && upper_node->getNodeType() != NODE_GLOBAL_STORAGE) {
+      while (upper_node != nullptr) {
         // HACK: recursive calls don't count as a reference, won't handle mutual recursion!
         if (upper_node->getNodeType() == NODE_GLOBAL_FUNCTION) {
           auto *ident = (LSLIdentifier *) upper_node->getChild(0);
