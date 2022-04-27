@@ -33,12 +33,10 @@ int main(int argc, char **argv) {
 
   options.add_options("Obfuscation")
       ("obfuscate", "Standard obfuscation method - uses all methods with no negative performance impact")
-      ("minw", "Minimize whitespace within the script")
       ("mangle-globals", "Mangle and shorten global variable names")
       ("mangle-locals", "Mangle and shorten local variable names")
       ("mangle-funcs", "Mangle and shorten function names")
-      ("show-unmangled", "Put a comment next to instances of mangled identifiers with the original name")
-      ("obfuscate-numbers", "Obfuscate numeric literals");
+      ("show-unmangled", "Put a comment next to instances of mangled identifiers with the original name");
 
   options.add_options("Optimization / Debug")
       ("O1", "Simple optimizations with no risk or effect on readability")
@@ -96,12 +94,10 @@ int main(int argc, char **argv) {
     pretty_print = false;
   } else {
 
-    pretty_opts.minify_whitespace = vm.count("minw") != 0;
     pretty_opts.mangle_global_names = vm.count("mangle-globals") != 0;
     pretty_opts.mangle_local_names = vm.count("mangle-locals") != 0;
     pretty_opts.mangle_func_names = vm.count("mangle-funcs") != 0;
     pretty_opts.show_unmangled = vm.count("show-unmangled") != 0;
-    pretty_opts.obfuscate_numbers = vm.count("obfuscate-numbers") != 0;
     optim_ctx.fold_constants = vm.count("fold-constants") != 0;
     optim_ctx.prune_unused_globals = vm.count("prune-globals") != 0;
     optim_ctx.prune_unused_functions = vm.count("prune-funcs") != 0;
@@ -122,8 +118,6 @@ int main(int argc, char **argv) {
       pretty_opts.mangle_global_names = true;
       pretty_opts.mangle_func_names = true;
       pretty_opts.show_unmangled = true;
-      // stops `-1` from being treated as `unary_minus(1)`
-      pretty_opts.obfuscate_numbers = true;
     }
     if (vm.count("obfuscate")) {
       optim_ctx.prune_unused_globals = true;
@@ -134,8 +128,6 @@ int main(int argc, char **argv) {
       pretty_opts.mangle_func_names = true;
       pretty_opts.mangle_local_names = true;
       pretty_opts.show_unmangled = false;
-      pretty_opts.obfuscate_numbers = true;
-      pretty_opts.minify_whitespace = true;
     }
   }
   tailslide_init_builtins(nullptr);

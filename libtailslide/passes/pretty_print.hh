@@ -8,12 +8,10 @@
 namespace Tailslide {
 
 struct PrettyPrintOpts {
-    bool minify_whitespace;
     bool mangle_local_names;
     bool mangle_func_names;
     bool mangle_global_names;
     bool show_unmangled;
-    bool obfuscate_numbers;
 };
 
 class PrettyPrintVisitor: public ASTVisitor {
