@@ -1,10 +1,19 @@
 #include "desugaring.hh"
+#include <vector>
 
 namespace Tailslide {
+
+// any time an int appears in a binary expression with these it must be promoted
+std::vector<LSLIType> SIBLINGS_CAUSING_INT_PROMOTION = {
+    LST_FLOATINGPOINT,
+    LST_VECTOR,
+    LST_QUATERNION,
+};
 
 bool DeSugaringVisitor::visit(LSLBinaryExpression *node) {
   int op = node->getOperation();
   int decoupled_op = decouple_compound_operation(op);
+  bool compound_assignment = op != decoupled_op;
 
   auto *left = (LSLLValueExpression *) node->getChild(0);
   auto *right = (LSLExpression *) node->getChild(1);
@@ -17,15 +26,35 @@ bool DeSugaringVisitor::visit(LSLBinaryExpression *node) {
     return true;
   }
 
+  // plain '=', just promote to the given type
   if (decoupled_op == '=') {
     maybeInjectCast(right, left->getType());
     return true;
   }
 
-  // note that `int <op> float` and `float <op> int` are NOT just syntactic sugar, they
-  // compile to different opcodes than if you de-sugared to `(float)int <op> float`!
-  if (node->getOperation() == decoupled_op)
+  if (_mMonoSemantics) {
+    // note that `int <op> float` and `float <op> int` are NOT just syntactic sugar in LSO, they
+    // compile to different opcodes than if you de-sugared to `(float)int <op> float`!
+    // but they ARE syntactic sugar in Mono. Mono has no int <op> float functions so we need to promote
+    // in all places where the LSO VM was promoting internally in its opcode handlers.
+    //
+    // This should be fine since by this point there shouldn't be any promotable types on the left side
+    // of an assignment expression.
+    for (auto int_sibling : SIBLINGS_CAUSING_INT_PROMOTION) {
+      if (left->getIType() == int_sibling && right->getIType() == LST_INTEGER) {
+        maybeInjectCast(right, TYPE(LST_FLOATINGPOINT));
+        break;
+      } else if (left->getIType() == LST_INTEGER && right->getIType() == int_sibling) {
+        assert(!compound_assignment || left->getNodeSubType() != NODE_LVALUE_EXPRESSION);
+        maybeInjectCast(left, TYPE(LST_FLOATINGPOINT));
+        break;
+      }
+    }
+  }
+
+  if (!compound_assignment)
     return true;
+
   // some kind of compound operator, desugar it
   // decouple the RHS from the existing expression
   right = (LSLExpression *) node->takeChild(1);
@@ -46,7 +75,13 @@ bool DeSugaringVisitor::visit(LSLUnaryExpression *node) {
   int new_op;
   if (node->getIType() == LST_ERROR)
     return true;
-  // the post operations aren't actually syntactic sugar,
+
+  // these compile to a different form than `foo = foo + 1` in mono,
+  // don't desugar.
+  if (_mMonoSemantics)
+    return true;
+
+  // the post operations are never syntactic sugar,
   // so no way to desugar those.
   switch(node->getOperation()) {
     case INC_PRE_OP: new_op = '+'; break;
@@ -80,6 +115,15 @@ bool DeSugaringVisitor::visit(LSLUnaryExpression *node) {
 }
 
 bool DeSugaringVisitor::visit(LSLDeclaration *node) {
+  auto expr = (LSLExpression *) node->getChild(1);
+  if (expr->getNodeType() != NODE_NULL)
+    maybeInjectCast(expr, node->getChild(0)->getType());
+  return true;
+}
+
+bool DeSugaringVisitor::visit(LSLGlobalVariable *node) {
+  if (!_mMonoSemantics)
+    return true;
   auto expr = (LSLExpression *) node->getChild(1);
   if (expr->getNodeType() != NODE_NULL)
     maybeInjectCast(expr, node->getChild(0)->getType());

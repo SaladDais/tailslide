@@ -1,5 +1,6 @@
 #include "testutils.hh"
 #include "passes/lso/script_compiler.hh"
+#include "passes/mono/script_compiler.hh"
 
 using namespace Tailslide;
 
@@ -81,6 +82,16 @@ class ScriptLSOCompiler: public ScriptFormatter {
       script->visit(&lso_visitor);
       return {(const char*)lso_visitor.mScriptBS.data(), lso_visitor.mScriptBS.size()};
     };
+};
+
+class ScriptCILCompiler: public ScriptFormatter {
+  public:
+  ScriptCILCompiler() {mBinary = false;};
+  virtual std::string format(LSLScript *script) const {
+    MonoScriptCompiler cil_visitor(script->mContext->allocator);
+    script->visit(&cil_visitor);
+    return cil_visitor.mCIL.str();
+  };
 };
 
 static void checkStringOutput(
@@ -183,5 +194,19 @@ void checkLSOOutput(
       opt,
       massager,
       ScriptLSOCompiler()
+  );
+}
+
+void checkCILOutput(
+    const char* name,
+    void (*massager)(LSLScript* script)
+) {
+  OptimizationOptions opt;
+  checkStringOutput(
+      name,
+      "cil",
+      opt,
+      massager,
+      ScriptCILCompiler()
   );
 }

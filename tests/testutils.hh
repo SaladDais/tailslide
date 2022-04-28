@@ -44,4 +44,9 @@ void checkLSOOutput(
     void (*massager)(Tailslide::LSLScript* script) = nullptr
 );
 
+void checkCILOutput(
+    const char* name,
+    void (*massager)(Tailslide::LSLScript* script) = nullptr
+);
+
 #endif

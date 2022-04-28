@@ -8,6 +8,7 @@
 #include "passes/tree_print.hh"
 #include "passes/tree_simplifier.hh"
 #include "passes/lso/script_compiler.hh"
+#include "passes/mono/script_compiler.hh"
 
 using namespace Tailslide;
 
@@ -29,14 +30,16 @@ int main(int argc, char **argv) {
 
   options.add_options("General")
       ("help", "Show this message")
-      ("version", "Display the banner and current version of Tailslide");
+      ("version", "Display the banner and current version of Tailslide")
+  ;
 
   options.add_options("Obfuscation")
       ("obfuscate", "Standard obfuscation method - uses all methods with no negative performance impact")
       ("mangle-globals", "Mangle and shorten global variable names")
       ("mangle-locals", "Mangle and shorten local variable names")
       ("mangle-funcs", "Mangle and shorten function names")
-      ("show-unmangled", "Put a comment next to instances of mangled identifiers with the original name");
+      ("show-unmangled", "Put a comment next to instances of mangled identifiers with the original name")
+  ;
 
   options.add_options("Optimization / Debug")
       ("O1", "Simple optimizations with no risk or effect on readability")
@@ -48,13 +51,17 @@ int main(int argc, char **argv) {
       ("prune-funcs", "Prune unused functions")
       ("lint", "Only lint the file for errors, don't optimize or pretty print.")
       ("show-tree", "Show the AST after optimizations")
-      ("check-asserts", "check assert comments and suppress errors based on matches");
+      ("check-asserts", "check assert comments and suppress errors based on matches")
+  ;
 
-  options.add_options("LSO Compilation")
-      ("lso-compile", "Compile to LSO and write to file", cxxopts::value<std::string>());
+  options.add_options("Compilation")
+      ("lso-compile", "Compile to LSO and write to file", cxxopts::value<std::string>())
+      ("mono-compile", "Compile to Mono CIL and write to file", cxxopts::value<std::string>())
+  ;
 
   options.add_options()
-      ("script", "Input script's filename", cxxopts::value<std::string>());
+      ("script", "Input script's filename", cxxopts::value<std::string>())
+  ;
   options.parse_positional({"script"});
   options.positional_help("<script>");
 
@@ -182,13 +189,24 @@ int main(int argc, char **argv) {
   } else {
     logger->report();
   }
-  if (!logger->getErrors() && vm.count("lso-compile")) {
-    auto lso_dest = vm["lso-compile"].as<std::string>();
-    LSOScriptCompiler lso_visitor(&parser.allocator);
-    script->visit(&lso_visitor);
 
-    std::ofstream f(lso_dest, std::ios::binary);
-    f.write((const char*)lso_visitor.mScriptBS.data(), (std::streamsize)lso_visitor.mScriptBS.size());
+  if (!logger->getErrors()) {
+    if (vm.count("lso-compile")) {
+      auto lso_dest = vm["lso-compile"].as<std::string>();
+      LSOScriptCompiler lso_visitor(&parser.allocator);
+      script->visit(&lso_visitor);
+
+      std::ofstream f(lso_dest, std::ios::binary);
+      f.write((const char *) lso_visitor.mScriptBS.data(), (std::streamsize) lso_visitor.mScriptBS.size());
+    } else if (vm.count("mono-compile")) {
+      auto lso_dest = vm["mono-compile"].as<std::string>();
+      MonoScriptCompiler mono_visitor(&parser.allocator);
+      script->visit(&mono_visitor);
+
+      std::ofstream f(lso_dest, std::ios::binary);
+      std::string cil_code {mono_visitor.mCIL.str()};
+      f.write(cil_code.c_str(), (std::streamsize) cil_code.size());
+    }
   }
   return logger->getErrors();
 }

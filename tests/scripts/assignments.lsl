@@ -7,7 +7,7 @@ rotation gr;
 list gl;
 
 default {
-    state_entry() {
+    touch_start(integer num_detected) {
         integer li;
         float lf;
         string ls;
@@ -23,5 +23,8 @@ default {
         lv = gv = <1.0, 1.0, 1.0>;
         lr = gr = <1.0, 1.0, 1.0, 1.0>;
         ll = gl = [1];
+        lv.x = gv.x = 1.0;
+        li = gi = num_detected;
+        num_detected = 1;
     }
 }

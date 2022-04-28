@@ -9,11 +9,13 @@ namespace Tailslide {
 /// Doesn't currently wrap in parenthesis, so not appropriate for pretty-printing.
 class DeSugaringVisitor : public ASTVisitor {
   public:
-    explicit DeSugaringVisitor(ScriptAllocator *allocator) : _mAllocator(allocator) {}
+    explicit DeSugaringVisitor(ScriptAllocator *allocator, bool mono_semantics)
+        : _mAllocator(allocator), _mMonoSemantics(mono_semantics) {}
   protected:
     bool visit(LSLBinaryExpression *node) override;
     bool visit(LSLUnaryExpression *node) override;
     bool visit(LSLDeclaration *node) override;
+    bool visit(LSLGlobalVariable *node) override;
     bool visit(LSLVectorExpression *node) override;
     bool visit(LSLQuaternionExpression *node) override;
     bool visit(LSLFunctionExpression *node) override;
@@ -25,13 +27,15 @@ class DeSugaringVisitor : public ASTVisitor {
     void maybeInjectCast(LSLExpression *expr, LSLType *to);
 
     ScriptAllocator *_mAllocator;
+    bool _mMonoSemantics;
 };
 
 // Desugaring that also rewrites the tree to match how LL's compiler
 // would have parsed a given node. Results in less optimal bytecode.
 class LLConformantDeSugaringVisitor : public DeSugaringVisitor {
   public:
-    explicit LLConformantDeSugaringVisitor(ScriptAllocator *allocator) : DeSugaringVisitor(allocator) {};
+    explicit LLConformantDeSugaringVisitor(ScriptAllocator *allocator, bool mono_semantics)
+        : DeSugaringVisitor(allocator, mono_semantics) {};
   protected:
     bool visit(LSLConstantExpression *node) override;
 

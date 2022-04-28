@@ -38,6 +38,8 @@ class LSOResourceVisitor : public Tailslide::ASTVisitor {
     bool visit(Tailslide::LSLState *node) override;
     bool visit(Tailslide::LSLDeclaration *node) override;
     bool visit(Tailslide::LSLEventHandler *node) override;
+    // not relevant
+    bool visit(Tailslide::LSLExpression *node) override {return false;};
 
     LSOSymbolData *getSymbolData(Tailslide::LSLSymbol *sym);
     void handleFuncDecl(LSOSymbolData *func_sym_data, LSLASTNode *func_decl);

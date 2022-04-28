@@ -101,6 +101,8 @@ add_library(libtailslide STATIC
         libtailslide/passes/lso/library_funcs.cc
         libtailslide/passes/lso/script_compiler.cc
         libtailslide/passes/lso/resource_collector.cc
+        libtailslide/passes/mono/resource_collector.cc
+        libtailslide/passes/mono/script_compiler.cc
         libtailslide/tailslide.cc
         )
 target_sources(libtailslide PRIVATE
@@ -130,6 +132,8 @@ target_sources(libtailslide PRIVATE
         libtailslide/passes/lso/library_funcs.hh
         libtailslide/passes/lso/script_compiler.hh
         libtailslide/passes/lso/resource_collector.hh
+        libtailslide/passes/mono/resource_collector.hh
+        libtailslide/passes/mono/script_compiler.hh
         libtailslide/tailslide.hh
 )
 
@@ -169,6 +173,7 @@ if (TAILSLIDE_BUILD_TESTS)
           tests/conformance.cc
           tests/ast_rewriting.cc
           tests/lso_compilation.cc
+          tests/cil_compilation.cc
           tests/testutils.cc
           tests/main.cc
           tests/unit_tests.cc
