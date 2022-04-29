@@ -361,7 +361,7 @@ std::string MonoScriptCompiler::getLValueAccessorSpecifier(LSLLValueExpression *
 
 bool MonoScriptCompiler::visit(LSLEventHandler *node) {
   auto *state_sym = node->getParent()->getSymbol();
-  mCIL << ".method public hidebysig instance default void e" << state_sym->getName() << node->getSymbol()->getName();
+  mCIL << ".method public hidebysig instance default void e" << state_sym->getName() << CIL_HANDLER_NAMES[node->getSymbol()->getName()];
   // parameter list will be handled by `buildFunction()`
   buildFunction(node);
   return false;

@@ -33,4 +33,7 @@ class MonoResourceVisitor : public ASTVisitor {
     MonoSymbolData *_mCurrentFunc = nullptr;
     MonoSymbolDataMap *_mSymData = nullptr;
 };
+
+extern std::unordered_map<std::string, std::string> CIL_HANDLER_NAMES;
+
 }
