@@ -19,8 +19,6 @@ class MonoScriptCompiler : public ASTVisitor {
 
     void pushLValueContainer(LSLLValueExpression *lvalue);
     void pushLValue(LSLLValueExpression *lvalue);
-    void pushSymbolValue(LSLSymbol *sym);
-    void pushSymbolAddress(LSLSymbol *sym);
     void pushConstant(LSLConstant *cv);
     void pushFloatLiteral(float value);
     void storeToLValue(LSLLValueExpression *lvalue, bool push_result);

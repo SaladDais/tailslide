@@ -97,7 +97,14 @@ void MonoScriptCompiler::pushLValueContainer(LSLLValueExpression *lvalue) {
   }
   // have an accessor, we need to push the containing object's address!
   if (lvalue->getChild(1)) {
-    pushSymbolAddress(sym);
+    if (sym->getSubType() == SYM_GLOBAL) {
+      mCIL << "ldflda " << getGlobalVarSpecifier(sym) << "\n";
+    } else if (sym->getSubType() == SYM_LOCAL) {
+      mCIL << "ldloca.s " << _mSymData[sym].index << "\n";
+    } else {
+      // event or function param
+      mCIL << "ldarga.s '" << sym->getName() << "'\n";
+    }
   }
 }
 
@@ -110,34 +117,18 @@ void MonoScriptCompiler::pushLValue(LSLLValueExpression *lvalue) {
     // we just have to load the field.
     mCIL << "ldfld " << getLValueAccessorSpecifier(lvalue) << "\n";
   } else {
-    pushSymbolValue(sym);
-  }
-}
-
-void MonoScriptCompiler::pushSymbolValue(LSLSymbol *sym) {
-  if (sym->getSubType() == SYM_GLOBAL) {
-    // LslUserScript `this` should already on the stack, load the given field from `this`.
-    mCIL << "ldfld " << getGlobalVarSpecifier(sym) << "\n";
-  } else if (sym->getSubType() == SYM_LOCAL) {
-    // must be a local, reference by index
-    // Seems that UThreadInjector may rewrite these to ldloc.0, ldloc.1, ...
-    // but we aren't aiming for conformance with its output, only lscript's.
-    mCIL << "ldloc.s " << _mSymData[sym].index << "\n";
-  } else {
-    // event or function param
-    mCIL << "ldarg.s '" << sym->getName() << "'\n";
-  }
-}
-
-/// same as pushSymbolValue(), but pushes the address instead of the value
-void MonoScriptCompiler::pushSymbolAddress(LSLSymbol *sym) {
-  if (sym->getSubType() == SYM_GLOBAL) {
-    mCIL << "ldflda " << getGlobalVarSpecifier(sym) << "\n";
-  } else if (sym->getSubType() == SYM_LOCAL) {
-    mCIL << "ldloca.s " << _mSymData[sym].index << "\n";
-  } else {
-    // event or function param
-    mCIL << "ldarga.s '" << sym->getName() << "'\n";
+    if (sym->getSubType() == SYM_GLOBAL) {
+      // LslUserScript `this` should already on the stack, load the given field from `this`.
+      mCIL << "ldfld " << getGlobalVarSpecifier(sym) << "\n";
+    } else if (sym->getSubType() == SYM_LOCAL) {
+      // must be a local, reference by index
+      // Seems that UThreadInjector may rewrite these to ldloc.0, ldloc.1, ...
+      // but we aren't aiming for conformance with its output, only lscript's.
+      mCIL << "ldloc.s " << _mSymData[sym].index << "\n";
+    } else {
+      // event or function param
+      mCIL << "ldarg.s '" << sym->getName() << "'\n";
+    }
   }
 }
 
