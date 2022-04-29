@@ -146,9 +146,7 @@ void LSLIdentifier::resolveSymbol(LSLSymbolType symbol_type) {
         } else {
           NODE_ERROR(this, W_DEPRECATED_WITH_REPLACEMENT, _mName, DEPRECATED_FUNCTIONS[i][1]);
         }
-        _mSymbol = nullptr;
-        _mType = TYPE(LST_ERROR);
-        return;
+        break;
       }
     }
   }
