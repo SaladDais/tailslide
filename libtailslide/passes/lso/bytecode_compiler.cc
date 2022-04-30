@@ -425,7 +425,7 @@ bool LSOBytecodeCompiler::visit(LSLDeclaration *node) {
     pushConstant(default_type->getDefaultValue());
   }
 
-  // use the appropriate opcode to load the top of the stack into a local offset
+  // use the appropriate opcode to pop the top of the stack and store into a local offset
   mCodeBS << LSO_TYPE_LOAD_LOCAL_OPCODE[var_type->getIType()] << _mSymData[node->getSymbol()].offset;
   return false;
 }
@@ -546,6 +546,7 @@ int32_t LSOBytecodeCompiler::calculateLValueOffset(LSLLValueExpression *node) {
   return offset + accessor_offset;
 }
 
+/// Store the top of the stack into an lvalue, leaving the value on the stack
 void LSOBytecodeCompiler::storeStackToLValue(LSLLValueExpression *lvalue) {
   if (lvalue->getSymbol()->getSubType() == SYM_GLOBAL) {
     switch(lvalue->getIType()) {

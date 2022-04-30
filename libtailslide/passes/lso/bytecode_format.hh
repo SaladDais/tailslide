@@ -274,6 +274,11 @@ const LSOOpCode LSO_TYPE_POP_OPCODE[LST_MAX] = {
     LOPC_NOOP, // error
 };
 
+/// like the LOPC_STORE opcodes, except that LOAD pops the stack
+/// while STORE does not. Technically there are global versions
+/// as well, but they'll never be emitted by LL's compiler, since
+/// LOAD is only really used for retvals and declaration of locals.
+/// "LOAD" is kind of a weird name, I assume it means "load into".
 const LSOOpCode LSO_TYPE_LOAD_LOCAL_OPCODE[LST_MAX] = {
     LOPC_NOOP,   // null
     LOPC_LOADP,  // int
