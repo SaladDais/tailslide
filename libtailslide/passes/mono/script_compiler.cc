@@ -626,12 +626,15 @@ bool MonoScriptCompiler::visit(LSLFunctionExpression *node) {
 }
 
 
-// An operation that is performed via a method call on the UserScript class
+/// An operation that is performed via a method call on the UserScript class
 typedef struct {
   LSLIType left;
   LSLIType right;
 } SimpleBinaryOperationInfo;
 
+/// Cases where the operation is performed via a method call on the UserScript class with
+/// a well-known operation name for the method, and operator overloading for the various types.
+/// Return value is inferred by looking at the return value of the actual expression node.
 const std::map<int, std::pair<const char *, std::vector<SimpleBinaryOperationInfo> > > SIMPLE_BINARY_OPS = {
     {'+', {"Add", {
         {LST_STRING, LST_STRING},
@@ -695,7 +698,8 @@ bool MonoScriptCompiler::visit(LSLBinaryExpression *node) {
     storeToLValue(lvalue, true);
     return false;
   } else if (op == MUL_ASSIGN) {
-    // The only expression that gets left like this is the busted `int *= float` case.
+    // The only expression that gets left as a MUL_ASSIGN is the busted `int *= float` case,
+    // all others get desugared to `lvalue *= rhs` in an earlier compile pass.
     // That expression is busted and not the same as `int = int * float`, obviously,
     // but we need to support it.
     auto *lvalue = (LSLLValueExpression *) left;
@@ -703,13 +707,12 @@ bool MonoScriptCompiler::visit(LSLBinaryExpression *node) {
     right->visit(this);
     lvalue->visit(this);
     // cast the integer lvalue to a float first
-    castTopOfStack(left->getIType(), right->getIType());
+    castTopOfStack(LST_INTEGER, LST_FLOATINGPOINT);
     mCIL << "mul\n";
-    // cast it back to an integer after the operation
-    if (lvalue->getIType() == LST_INTEGER && right->getIType() == LST_FLOATINGPOINT)
-      castTopOfStack(LST_FLOATINGPOINT, LST_INTEGER);
-    // This will return the wrong type because things expect a float. Use of the retval
-    // will probably cause a crash.
+    // cast the result to an integer so we can store it in the lvalue
+    castTopOfStack(LST_FLOATINGPOINT, LST_INTEGER);
+    // This will return the wrong type because things expect this expression to return a float.
+    // Use of the retval will probably cause a crash.
     storeToLValue(lvalue, true);
     return false;
   }
@@ -927,6 +930,8 @@ bool MonoScriptCompiler::visit(LSLUnaryExpression *node) {
     mCIL << "pop\n";
     return false;
   } else if (op == INC_PRE_OP || op == DEC_PRE_OP) {
+    // This appears to generate different code from `lvalue = lvalue + 1`,
+    // so it isn't desugared.
     auto *lvalue = (LSLLValueExpression *) child_expr;
     pushLValueContainer(lvalue);
     pushLValue(lvalue);
@@ -938,35 +943,35 @@ bool MonoScriptCompiler::visit(LSLUnaryExpression *node) {
     }
     storeToLValue(lvalue, true);
     return false;
-  } else {
-    auto child_type = child_expr->getIType();
-    child_expr->visit(this);
-    switch (op) {
-      case '-':
-        switch(child_type) {
-          case LST_INTEGER:
-          case LST_FLOATINGPOINT:
-            mCIL << "neg\n";
-            return false;
-          case LST_QUATERNION:
-          case LST_VECTOR:
-            mCIL << "call " << CIL_TYPE_NAMES[child_type] << " " << CIL_USERSCRIPT_CLASS << "::'Negate'(" << CIL_TYPE_NAMES[child_type] << ")\n";
-            return false;
-          default:
-            assert(0);
-        }
-      case '!': {
-        mCIL << "ldc.i4.0\n"
-             << "ceq\n";
-        return false;
+  }
+
+  auto child_type = child_expr->getIType();
+  child_expr->visit(this);
+  switch (op) {
+    case '-':
+      switch(child_type) {
+        case LST_INTEGER:
+        case LST_FLOATINGPOINT:
+          mCIL << "neg\n";
+          return false;
+        case LST_QUATERNION:
+        case LST_VECTOR:
+          mCIL << "call " << CIL_TYPE_NAMES[child_type] << " " << CIL_USERSCRIPT_CLASS << "::'Negate'(" << CIL_TYPE_NAMES[child_type] << ")\n";
+          return false;
+        default:
+          assert(0);
       }
-      case '~': {
-        mCIL << "not\n";
-        return false;
-      }
-      default:
-        assert(0);
+    case '!': {
+      mCIL << "ldc.i4.0\n"
+           << "ceq\n";
+      return false;
     }
+    case '~': {
+      mCIL << "not\n";
+      return false;
+    }
+    default:
+      assert(0);
   }
   assert(0);
   return false;
