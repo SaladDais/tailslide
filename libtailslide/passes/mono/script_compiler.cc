@@ -738,15 +738,11 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
     }
   }
 
-  // these are the only ones that needs to do codegen interleaved with visitation
-  if (op != BOOLEAN_AND && op != NEQ) {
-    right->visit(this);
-    left->visit(this);
-  }
-
   // handle all the operations that couldn't be handled via templating together a method call
   switch(op) {
     case '+': {
+      right->visit(this);
+      left->visit(this);
       if (right_type == LST_LIST && left_type != LST_LIST) {
         // prepend whatever this is to the right list
         mCIL << CIL_BOXING_INSTRUCTIONS[left_type];
@@ -768,6 +764,8 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
       }
     }
     case '-': {
+      right->visit(this);
+      left->visit(this);
       switch (left_type) {
         case LST_FLOATINGPOINT:
           mCIL << "call float64 " << CIL_USERSCRIPT_CLASS << "::'Subtract'(float64, float64)\n"; return false;
@@ -776,6 +774,8 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
       }
     }
     case '*': {
+      right->visit(this);
+      left->visit(this);
       switch (left_type) {
         case LST_INTEGER:
         case LST_FLOATINGPOINT:
@@ -785,6 +785,8 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
       }
     }
     case '/': {
+      right->visit(this);
+      left->visit(this);
       switch (left_type) {
         case LST_FLOATINGPOINT:
           mCIL << "call float64 " << CIL_USERSCRIPT_CLASS << "::'Divide'(float64, float64)\n"; return false;
@@ -793,6 +795,8 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
       }
     }
     case EQ: {
+      right->visit(this);
+      left->visit(this);
       switch (right_type) {
         case LST_INTEGER:
         case LST_FLOATINGPOINT:
@@ -813,31 +817,40 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
       }
     }
     case NEQ:
+      // EQ will visit right and left in the correct order for us
       compileBinaryExpression(EQ, left, right, ret_type);
       // check if result == 0
       mCIL << "ldc.i4.0\n"
            << "ceq\n";
       return false;
-    // not very nice, but operands are swapped from how CIL would like them
     case GEQ:
+      right->visit(this);
+      left->visit(this);
+      // not very nice, but operands are swapped from how CIL would like them
       mCIL << "cgt\n"
            << "ldc.i4.0\n"
            << "ceq\n";
       return false;
     case LEQ:
+      right->visit(this);
+      left->visit(this);
       mCIL << "clt\n"
            << "ldc.i4.0\n"
            << "ceq\n";
       return false;
     case '>':
+      right->visit(this);
+      left->visit(this);
       mCIL << "clt\n";
       return false;
     case '<':
+      right->visit(this);
+      left->visit(this);
       mCIL << "cgt\n";
       return false;
     case BOOLEAN_AND:
-      // we have to manually visit in this case because we need to interleave
-      // our codegen with the code of the expressions
+      // We need to interleave our codegen with the code of the expressions,
+      // so just visit right to start
       right->visit(this);
       // push whether this returned false
       // necessary because everything EXCEPT 0 is truthy!
@@ -855,6 +868,8 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
            << "ceq\n";
       return false;
     case BOOLEAN_OR:
+      right->visit(this);
+      left->visit(this);
       // binary OR the sides together and compare against zero
       mCIL << "or\n"
            << "ldc.i4.0\n"
@@ -864,12 +879,18 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
            << "ceq\n";
       return false;
     case '&':
+      right->visit(this);
+      left->visit(this);
       mCIL << "and\n";
       return false;
     case '|':
+      right->visit(this);
+      left->visit(this);
       mCIL << "or\n";
       return false;
     case '^':
+      right->visit(this);
+      left->visit(this);
       mCIL << "xor\n";
       return false;
     default:
