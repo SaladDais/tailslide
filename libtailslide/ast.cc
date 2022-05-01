@@ -37,11 +37,18 @@ int LSLASTNode::getParentSlot() {
 
 void LSLASTNode::addChildren(int num, va_list ap) {
   LSLASTNode *node;
+  LSLASTNode *tail = nullptr;
   for (; num--;) {
     node = va_arg(ap, LSLASTNode*);
     if (node == nullptr)
       node = newNullNode();
-    pushChild(node);
+    if (!tail)
+      pushChild(node);
+    else {
+      node->setParent(this);
+      tail->setNext(node);
+    }
+    tail = node;
   }
 }
 

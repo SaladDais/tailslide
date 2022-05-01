@@ -165,10 +165,18 @@ bool LSOScriptCompiler::visit(LSLGlobalVariable *node) {
     // is meant to contain a single integer under LSO, due to the integer rvalue.
     auto *list_children = rvalue->getChildren();
     auto *new_list_cv = _mAllocator->newTracked<LSLListConstant>(nullptr);
+    LSLASTNode *new_list_tail = nullptr;
     while (list_children != nullptr) {
       auto *child_cv = resolve_sa_identifier(list_children)->getConstantValue();
       assert(child_cv);
-      new_list_cv->pushChild(child_cv->copy(_mAllocator));
+      auto *cv_copy = child_cv->copy(_mAllocator);
+      if (!new_list_tail) {
+        new_list_cv->pushChild(cv_copy);
+      } else {
+        cv_copy->setParent(new_list_cv);
+        new_list_tail->setNext(cv_copy);
+      }
+      new_list_tail = cv_copy;
       list_children = list_children->getNext();
     }
     cv = new_list_cv;
