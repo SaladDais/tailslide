@@ -48,14 +48,17 @@ public:
     virtual bool visit(LSLDoStatement *node);
     virtual bool visit(LSLWhileStatement *node);
     virtual bool visit(LSLDeclaration *node);
-    virtual bool visit(LSLExpression *node);
+    virtual bool visit(LSLUnaryExpression *node);
+    virtual bool visit(LSLBinaryExpression *node);
     virtual bool visit(LSLLValueExpression *node);
+    virtual bool visit(LSLConstantExpression *node);
     virtual bool visit(LSLTypecastExpression *node);
     virtual bool visit(LSLPrintExpression *node);
     virtual bool visit(LSLFunctionExpression *node);
     virtual bool visit(LSLVectorExpression *node);
     virtual bool visit(LSLQuaternionExpression *node);
     virtual bool visit(LSLListExpression *node);
+    virtual bool visit(LSLParenthesisExpression *node);
     virtual bool visit(LSLScript *node);
 
     void prettifySiblingsSep(LSLASTNode *node, const char *separator);

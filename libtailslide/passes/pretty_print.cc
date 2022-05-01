@@ -369,43 +369,42 @@ bool PrettyPrintVisitor::visit(LSLForStatement *node) {
 // Expressions
 //
 
-bool PrettyPrintVisitor::visit(LSLExpression *node) {
-  LSLASTNode *left = node->getChild(0);
-  LSLASTNode *right = node->getChild(1);
+bool PrettyPrintVisitor::visit(LSLParenthesisExpression *node) {
+  mStream << '(';
+  node->getChild(0)->visit(this);
+  mStream << ')';
+  return false;
+}
+
+bool PrettyPrintVisitor::visit(LSLUnaryExpression *node) {
+  LSLASTNode *expr = node->getChild(0);
   int operation = node->getOperation();
-
-  if (!operation) {
-    left->visit(this);
-  } else if (right) {
-    left->visit(this);
-    mStream << ' ' << operation_str(operation) << ' ';
-    right->visit(this);
-  } else {
-    if (operation == INC_POST_OP || operation == DEC_POST_OP) {
-      left->visit(this);
-      mStream << operation_str(operation);
-    } else if (operation == '(') {
-      mStream << '(';
-      left->visit(this);
-      mStream << ')';
-
+  if (operation == INC_POST_OP || operation == DEC_POST_OP) {
+    expr->visit(this);
+    mStream << operation_str(operation);
+  } else if (operation == '-') {
     // Make sure we don't end up with `--2147483648` on underflow...
-    } else if (operation == '-') {
-      mStream << '-';
-      bool need_parens = false;
-      if (left->getChild(0)->getNodeSubType() == NODE_INTEGER_CONSTANT) {
-        need_parens = ((LSLIntegerConstant *) left->getChild(0))->getValue() < 0;
-      }
-      if (need_parens)
-        mStream << '(';
-      left->visit(this);
-      if (need_parens)
-        mStream << ')';
-    } else {
-      mStream << operation_str(operation);
-      left->visit(this);
+    bool need_parens = false;
+    if (expr->getChild(0)->getNodeSubType() == NODE_INTEGER_CONSTANT) {
+      need_parens = ((LSLIntegerConstant *) expr->getChild(0))->getValue() < 0;
     }
+    mStream << '-';
+    if (need_parens)
+      mStream << '(';
+    expr->visit(this);
+    if (need_parens)
+      mStream << ')';
+  } else {
+    mStream << operation_str(operation);
+    expr->visit(this);
   }
+  return false;
+}
+
+bool PrettyPrintVisitor::visit(LSLBinaryExpression *node) {
+  node->getChild(0)->visit(this);
+  mStream << ' ' << operation_str(node->getOperation()) << ' ';
+  node->getChild(1)->visit(this);
   return false;
 }
 
@@ -416,6 +415,11 @@ bool PrettyPrintVisitor::visit(LSLLValueExpression *node) {
     mStream << '.';
     member->visit(this);
   }
+  return false;
+}
+
+bool PrettyPrintVisitor::visit(LSLConstantExpression *node) {
+  node->getChild(0)->visit(this);
   return false;
 }
 

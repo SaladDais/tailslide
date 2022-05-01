@@ -727,7 +727,7 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
   auto simple_op = SIMPLE_BINARY_OPS.find(op);
   // this is an operation that uses the simplified method call form
   if (simple_op != SIMPLE_BINARY_OPS.end()) {
-    // walk through the type pairs this method has a method call form for
+    // walk through the type pairs this operation has a method call form for
     for (auto simple_op_combo : ((*simple_op).second.second)) {
       if (left_type != simple_op_combo.left || right_type != simple_op_combo.right)
         continue;
