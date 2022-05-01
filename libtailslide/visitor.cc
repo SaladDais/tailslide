@@ -79,6 +79,8 @@ bool ASTVisitor::visitSpecific(LSLASTNode *node) {
       switch(node->getNodeSubType()) {
         case NODE_TYPECAST_EXPRESSION:
           return visit((LSLTypecastExpression *)node);
+        case NODE_BOOL_CONVERSION_EXPRESSION:
+          return visit((LSLBoolConversionExpression *)node);
         case NODE_PRINT_EXPRESSION:
           return visit((LSLPrintExpression *)node);
         case NODE_FUNCTION_EXPRESSION:

@@ -143,10 +143,20 @@ void DeSugaringVisitor::maybeInjectCast(LSLExpression* expr, LSLType *to) {
       to,
       expr
   );
-  // so consumers can distinguish between explicit casts and ones we injected
-  typecast->setSynthesized(true);
   LSLASTNode::replaceNode(expr_placeholder, typecast);
   typecast->setLoc(expr->getLoc());
+}
+
+void DeSugaringVisitor::maybeInjectBoolConversion(LSLExpression* expr) {
+  // LSO has typed branching instructions already, they do this internally!
+  if (!_mMonoSemantics)
+    return;
+  // this dirties the node for constant value propagation purposes.
+  auto *expr_placeholder = expr->newNullNode();
+  LSLASTNode::replaceNode(expr, expr_placeholder);
+  auto *bool_convert = _mAllocator->newTracked<LSLBoolConversionExpression>(expr);
+  LSLASTNode::replaceNode(expr_placeholder, bool_convert);
+  bool_convert->setLoc(expr->getLoc());
 }
 
 bool DeSugaringVisitor::visit(LSLQuaternionExpression *node) {
@@ -181,21 +191,6 @@ bool DeSugaringVisitor::visit(LSLFunctionExpression *node) {
   return true;
 }
 
-bool DeSugaringVisitor::visit(LSLReturnStatement *node) {
-  auto *expr = (LSLExpression *) node->getChild(0);
-  if (expr->getNodeType() == NODE_NULL)
-    return true;
-  // figure out what function we're in and conditionally cast to the return type
-  for (LSLASTNode *parent = expr->getParent(); parent; parent = parent->getParent()) {
-    if (parent->getNodeType() == NODE_GLOBAL_FUNCTION) {
-      auto *id = parent->getChild(0);
-      maybeInjectCast(expr, id->getType());
-      return true;
-    }
-  }
-  return true;
-}
-
 /// Replace any builtin references with their actual values.
 /// These are lexer tokens in LL's compiler, they aren't "real" globals or locals.
 bool DeSugaringVisitor::visit(LSLLValueExpression *node) {
@@ -214,6 +209,41 @@ bool DeSugaringVisitor::visit(LSLLValueExpression *node) {
       new_expr
   );
   return false;
+}
+
+bool DeSugaringVisitor::visit(LSLReturnStatement *node) {
+  auto *expr = (LSLExpression *) node->getChild(0);
+  if (expr->getNodeType() == NODE_NULL)
+    return true;
+  // figure out what function we're in and conditionally cast to the return type
+  for (LSLASTNode *parent = expr->getParent(); parent; parent = parent->getParent()) {
+    if (parent->getNodeType() == NODE_GLOBAL_FUNCTION) {
+      auto *id = parent->getChild(0);
+      maybeInjectCast(expr, id->getType());
+      return true;
+    }
+  }
+  return true;
+}
+
+bool DeSugaringVisitor::visit(LSLForStatement *node) {
+    maybeInjectBoolConversion((LSLExpression *)node->getChild(1));
+    return true;
+}
+
+bool DeSugaringVisitor::visit(LSLWhileStatement *node) {
+  maybeInjectBoolConversion((LSLExpression *)node->getChild(0));
+  return true;
+}
+
+bool DeSugaringVisitor::visit(LSLDoStatement *node) {
+  maybeInjectBoolConversion((LSLExpression *)node->getChild(1));
+  return true;
+}
+
+bool DeSugaringVisitor::visit(LSLIfStatement *node) {
+  maybeInjectBoolConversion((LSLExpression *)node->getChild(0));
+  return true;
 }
 
 LSLASTNode *DeSugaringVisitor::rewriteBuiltinLValue(LSLASTNode *node) {

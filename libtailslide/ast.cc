@@ -11,8 +11,10 @@ LSLASTNode::LSLASTNode(ScriptContext *ctx) : _mType(nullptr), _mSymbolTable(null
                                              _mDeclarationAllowed(true), _mChildren(nullptr),
                                              _mNext(nullptr), _mPrev(nullptr), _mParent(nullptr), TrackableObject(ctx) {
   _mType = TYPE(LST_NULL);
-  if (ctx)
+  if (ctx) {
     _mLoc = ctx->glloc;
+    _mSynthesized = !ctx->parsing;
+  }
 }
 
 LSLIType LSLASTNode::getIType() {

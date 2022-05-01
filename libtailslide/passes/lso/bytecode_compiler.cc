@@ -436,6 +436,7 @@ bool LSOBytecodeCompiler::visit(LSLReturnStatement *node) {
   // is promotable to the return type but not an exact match. Yuck.
   if (expr->getNodeSubType() == NODE_TYPECAST_EXPRESSION) {
     auto *cast_expr = (LSLTypecastExpression *) expr;
+    // This was synthesized after parsing
     if (cast_expr->getSynthesized())
       expr = cast_expr->getChild(0);
   }

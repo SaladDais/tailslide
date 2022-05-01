@@ -102,12 +102,16 @@ bool TreeSimplifyingVisitor::visit(LSLLValueExpression *node) {
 
       // Need to be careful about which expressions we inline keys under (I.E. list casts and list expressions)
       while (node_ancestor && node_ancestor->getNodeType() == NODE_EXPRESSION) {
-        if (node_ancestor->getNodeSubType() == NODE_LIST_EXPRESSION)
+        auto ancestor_type = node_ancestor->getNodeSubType();
+        if (ancestor_type == NODE_LIST_EXPRESSION)
           return false;
-        if (node_ancestor->getNodeSubType() == NODE_TYPECAST_EXPRESSION && node_ancestor->getIType() == LST_LIST)
+        if (ancestor_type == NODE_TYPECAST_EXPRESSION && node_ancestor->getIType() == LST_LIST)
           return false;
         // key-ness matters for print()!
-        if (node_ancestor->getNodeSubType() == NODE_PRINT_EXPRESSION)
+        if (ancestor_type == NODE_PRINT_EXPRESSION)
+          return false;
+        // string and key have different bool conversion rules
+        if (ancestor_type == NODE_BOOL_CONVERSION_EXPRESSION)
           return false;
         top_expr = node_ancestor;
         node_ancestor = node_ancestor->getParent();

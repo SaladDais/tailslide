@@ -302,46 +302,6 @@ void MonoScriptCompiler::castTopOfStack(LSLIType from_type, LSLIType to_type) {
   }
 }
 
-void MonoScriptCompiler::truthCheckTopOfStack(LSLIType type) {
-  switch(type) {
-    case LST_INTEGER:
-      return;
-    case LST_FLOATINGPOINT:
-      pushConstant(TYPE(LST_FLOATINGPOINT)->getDefaultValue());
-      mCIL << "ceq\n"
-           // TODO: LL's compiler does this, is it necessary?
-           << "ldc.i4.0\n"
-           << "ceq\n";
-      return;
-    case LST_STRING:
-      pushConstant(TYPE(LST_STRING)->getDefaultValue());
-      mCIL << "call bool string::op_Equality(string, string)\n"
-           // TODO: LL's compiler does this, is it necessary?
-           << "ldc.i4.0\n"
-           << "ceq\n";
-      return;
-    case LST_VECTOR:
-    case LST_QUATERNION:
-      pushConstant(TYPE(type)->getDefaultValue());
-      mCIL << "call bool " << CIL_USERSCRIPT_CLASS << "::'Equals'(" << CIL_TYPE_NAMES[type] << ", " << CIL_TYPE_NAMES[type] << ")\n"
-           // TODO: LL's compiler does this, is it necessary?
-           << "ldc.i4.0\n"
-           << "ceq\n";
-      return;
-    case LST_KEY:
-      mCIL << "call bool " << CIL_USERSCRIPT_CLASS <<"::'IsNonNullUuid'(" << CIL_TYPE_NAMES[LST_KEY] << ")\n";
-      return;
-    case LST_LIST:
-      pushConstant(TYPE(LST_LIST)->getDefaultValue());
-      mCIL << "call bool " << CIL_USERSCRIPT_CLASS << "::'Equals'(" << CIL_TYPE_NAMES[LST_LIST] << ", " << CIL_TYPE_NAMES[LST_LIST] << ")\n"
-           << "ldc.i4.0\n"
-           << "ceq\n";
-      return;
-    default:
-      assert(0);
-  }
-}
-
 std::string MonoScriptCompiler::getGlobalVarSpecifier(LSLSymbol *sym) {
   std::stringstream ss;
   ss << CIL_TYPE_NAMES[sym->getIType()] << " " << _mScriptClassName << "::'" << sym->getName() << "'";
@@ -451,15 +411,15 @@ bool MonoScriptCompiler::visit(LSLJumpStatement* node) {
 bool MonoScriptCompiler::visit(LSLIfStatement* node) {
   auto jump_past_true_num = _mJumpNum++;
   uint32_t jump_past_false_num = 0;
+  auto *check_expr = node->getChild(0);
+  auto *true_node = node->getChild(1);
   auto *false_node = node->getChild(2);
   if (false_node->getNodeType() != NODE_NULL)
     jump_past_false_num = _mJumpNum++;
 
-  auto *check_expr = node->getChild(0);
   check_expr->visit(this);
-  truthCheckTopOfStack(check_expr->getIType());
   mCIL << "brfalse LabelTempJump" << jump_past_true_num << "\n";
-  node->getChild(1)->visit(this);
+  true_node->visit(this);
   if (false_node->getNodeType() != NODE_NULL) {
     mCIL << "br LabelTempJump" << jump_past_false_num << "\n";
     mCIL << "LabelTempJump" << jump_past_true_num << ":\n";
@@ -481,9 +441,7 @@ bool MonoScriptCompiler::visit(LSLForStatement* node) {
   auto jump_to_end_num = _mJumpNum++;
   mCIL << "LabelTempJump" << jump_to_start_num << ":\n";
   // run the check expression, exiting the loop if it fails
-  auto *check_expr = node->getChild(1);
-  check_expr->visit(this);
-  truthCheckTopOfStack(check_expr->getIType());
+  node->getChild(1)->visit(this);
   mCIL << "brfalse LabelTempJump" << jump_to_end_num << "\n";
   // run the body of the loop
   node->getChild(3)->visit(this);
@@ -506,7 +464,6 @@ bool MonoScriptCompiler::visit(LSLWhileStatement* node) {
   // run the check expression, exiting the loop if it fails
   auto *check_expr = node->getChild(0);
   check_expr->visit(this);
-  truthCheckTopOfStack(check_expr->getIType());
   mCIL << "brfalse LabelTempJump" << jump_to_end_num << "\n";
   // run the body of the loop
   node->getChild(1)->visit(this);
@@ -524,7 +481,6 @@ bool MonoScriptCompiler::visit(LSLDoStatement* node) {
   // run the check expression, jumping back up if it succeeds
   auto *check_expr = node->getChild(1);
   check_expr->visit(this);
-  truthCheckTopOfStack(check_expr->getIType());
   mCIL << "brtrue LabelTempJump" << jump_to_start_num << "\n";
   return false;
 }
@@ -551,6 +507,49 @@ bool MonoScriptCompiler::visit(LSLTypecastExpression *node) {
   child_expr->visit(this);
   castTopOfStack(child_expr->getIType(), node->getIType());
   return false;
+}
+
+bool MonoScriptCompiler::visit(LSLBoolConversionExpression *node) {
+  auto *child_expr = node->getChild(0);
+  auto type = child_expr->getIType();
+  child_expr->visit(this);
+  switch(type) {
+    case LST_INTEGER:
+      return false;
+    case LST_FLOATINGPOINT:
+      pushConstant(TYPE(LST_FLOATINGPOINT)->getDefaultValue());
+      mCIL << "ceq\n"
+           // TODO: LL's compiler does this, is it necessary?
+           << "ldc.i4.0\n"
+           << "ceq\n";
+      return false;
+    case LST_STRING:
+      pushConstant(TYPE(LST_STRING)->getDefaultValue());
+      mCIL << "call bool string::op_Equality(string, string)\n"
+           // TODO: LL's compiler does this, is it necessary?
+           << "ldc.i4.0\n"
+           << "ceq\n";
+      return false;
+    case LST_VECTOR:
+    case LST_QUATERNION:
+      pushConstant(TYPE(type)->getDefaultValue());
+      mCIL << "call bool " << CIL_USERSCRIPT_CLASS << "::'Equals'(" << CIL_TYPE_NAMES[type] << ", " << CIL_TYPE_NAMES[type] << ")\n"
+           // TODO: LL's compiler does this, is it necessary?
+           << "ldc.i4.0\n"
+           << "ceq\n";
+      return false;
+    case LST_KEY:
+      mCIL << "call bool " << CIL_USERSCRIPT_CLASS <<"::'IsNonNullUuid'(" << CIL_TYPE_NAMES[LST_KEY] << ")\n";
+      return false;
+    case LST_LIST:
+      pushConstant(TYPE(LST_LIST)->getDefaultValue());
+      mCIL << "call bool " << CIL_USERSCRIPT_CLASS << "::'Equals'(" << CIL_TYPE_NAMES[LST_LIST] << ", " << CIL_TYPE_NAMES[LST_LIST] << ")\n"
+           << "ldc.i4.0\n"
+           << "ceq\n";
+      return false;
+    default:
+      assert(0);
+  }
 }
 
 bool MonoScriptCompiler::visit(LSLVectorExpression *node) {

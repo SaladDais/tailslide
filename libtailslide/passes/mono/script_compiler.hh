@@ -23,7 +23,6 @@ class MonoScriptCompiler : public ASTVisitor {
     void pushFloatLiteral(float value);
     void storeToLValue(LSLLValueExpression *lvalue, bool push_result);
     void castTopOfStack(LSLIType from_type, LSLIType to_type);
-    void truthCheckTopOfStack(LSLIType type);
     std::string getGlobalVarSpecifier(LSLSymbol *sym);
     std::string getLValueAccessorSpecifier(LSLLValueExpression *lvalue);
 
@@ -44,6 +43,7 @@ class MonoScriptCompiler : public ASTVisitor {
 
     virtual bool visit(LSLConstantExpression *node);
     virtual bool visit(LSLTypecastExpression *node);
+    virtual bool visit(LSLBoolConversionExpression *node);
     virtual bool visit(LSLVectorExpression *node);
     virtual bool visit(LSLQuaternionExpression *node);
     virtual bool visit(LSLLValueExpression *node);

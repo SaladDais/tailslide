@@ -56,6 +56,7 @@ enum LSLNodeSubType {
   NODE_STATE_STATEMENT,
 
   NODE_TYPECAST_EXPRESSION,
+  NODE_BOOL_CONVERSION_EXPRESSION,
   NODE_PRINT_EXPRESSION,
   NODE_FUNCTION_EXPRESSION,
   NODE_VECTOR_EXPRESSION,
@@ -74,6 +75,7 @@ class ASTVisitor;
 class LSLASTNode : public TrackableObject {
   public:
     explicit LSLASTNode(ScriptContext *ctx);
+
     LSLASTNode( ScriptContext *ctx, YYLTYPE *loc, int num, ... )
       : LSLASTNode(ctx) {
       _mLoc = *loc;
@@ -209,7 +211,11 @@ class LSLASTNode : public TrackableObject {
     virtual bool nodeAllowsFolding() { return false; };
     virtual LSLSymbol *getSymbol() { return nullptr; }
 
+    bool getSynthesized() const { return _mSynthesized; };
+    void setSynthesized(bool synthesized) { _mSynthesized = synthesized; };
+
   protected:
+    bool _mSynthesized = false;
     class LSLType          *_mType;
     LSLSymbolTable         *_mSymbolTable;
     class LSLConstant      *_mConstantValue;

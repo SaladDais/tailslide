@@ -27,6 +27,8 @@ struct ScriptContext {
   LSLSymbolTable *builtins = nullptr;
   LSLSymbolTableManager *table_manager = nullptr;
   bool ast_sane = true;
+  // any nodes created while this is false will be considered synthetic by default
+  bool parsing = false;
   Tailslide::TailslideLType glloc {0};
 };
 
@@ -557,11 +559,16 @@ class LSLTypecastExpression : public LSLExpression {
 
     virtual const char *getNodeName() { return "typecast expression"; }
     virtual LSLNodeSubType getNodeSubType() { return NODE_TYPECAST_EXPRESSION; };
+};
 
-    bool getSynthesized() const { return _mSynthesized; };
-    void setSynthesized(bool synthesized) { _mSynthesized = synthesized; };
-  protected:
-    bool _mSynthesized = false;
+/// synthesized node to represent cases where something must be converted to boolean
+class LSLBoolConversionExpression : public LSLExpression {
+  public:
+  LSLBoolConversionExpression(ScriptContext *ctx, LSLExpression *expression )
+      : LSLExpression(ctx, 1, expression) { _mType = TYPE(LST_INTEGER);};
+
+  virtual const char *getNodeName() { return "boolean conversion"; }
+  virtual LSLNodeSubType getNodeSubType() { return NODE_BOOL_CONVERSION_EXPRESSION; };
 };
 
 class LSLPrintExpression : public LSLExpression {

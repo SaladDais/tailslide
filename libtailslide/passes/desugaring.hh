@@ -19,12 +19,18 @@ class DeSugaringVisitor : public ASTVisitor {
     bool visit(LSLVectorExpression *node) override;
     bool visit(LSLQuaternionExpression *node) override;
     bool visit(LSLFunctionExpression *node) override;
-    bool visit(LSLReturnStatement *node) override;
     bool visit(LSLLValueExpression *node) override;
+
+    bool visit(LSLReturnStatement *node) override;
+    bool visit(LSLForStatement *node) override;
+    bool visit(LSLWhileStatement *node) override;
+    bool visit(LSLDoStatement *node) override;
+    bool visit(LSLIfStatement *node) override;
 
     virtual LSLASTNode *rewriteBuiltinLValue(LSLASTNode *node);
     void handleCoordinateExpression(LSLASTNode *node);
     void maybeInjectCast(LSLExpression *expr, LSLType *to);
+    void maybeInjectBoolConversion(LSLExpression *expr);
 
     ScriptAllocator *_mAllocator;
     bool _mMonoSemantics;

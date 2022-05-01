@@ -57,7 +57,9 @@ LSLScript *ScopedScriptParser::parseLSL(FILE *yyin) {
   tailslide_set_in(yyin, scanner);
 
   // parse
+  context.parsing = true;
   tailslide_parse(scanner);
+  context.parsing = false;
 
   // clean up flex
   tailslide_lex_destroy(scanner);

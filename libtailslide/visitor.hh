@@ -115,6 +115,9 @@ class ASTVisitor {
     virtual bool visit(LSLTypecastExpression *node) {
       return visit((LSLExpression *)node);
     };
+    virtual bool visit(LSLBoolConversionExpression *node) {
+      return visit((LSLExpression *)node);
+    };
     virtual bool visit(LSLPrintExpression *node) {
       return visit((LSLExpression *)node);
     };
