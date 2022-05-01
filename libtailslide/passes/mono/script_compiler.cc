@@ -698,7 +698,7 @@ bool MonoScriptCompiler::visit(LSLBinaryExpression *node) {
     return false;
   } else if (op == MUL_ASSIGN) {
     // The only expression that gets left as a MUL_ASSIGN is the busted `int *= float` case,
-    // all others get desugared to `lvalue *= rhs` in an earlier compile pass.
+    // all others get desugared to `lvalue = lvalue * rhs` in an earlier compile pass.
     // That expression is busted and not the same as `int = int * float`, obviously,
     // but we need to support it.
     auto *lvalue = (LSLLValueExpression *) left;
