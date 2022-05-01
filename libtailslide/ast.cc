@@ -37,18 +37,11 @@ int LSLASTNode::getParentSlot() {
 
 void LSLASTNode::addChildren(int num, va_list ap) {
   LSLASTNode *node;
-  LSLASTNode *tail = nullptr;
   for (; num--;) {
     node = va_arg(ap, LSLASTNode*);
     if (node == nullptr)
       node = newNullNode();
-    if (!tail)
-      pushChild(node);
-    else {
-      node->setParent(this);
-      tail->setNext(node);
-    }
-    tail = node;
+    pushChild(node);
   }
 }
 
@@ -86,13 +79,14 @@ void LSLASTNode::setParent(LSLASTNode *newparent) {
 void LSLASTNode::pushChild(LSLASTNode *child) {
   if (child == nullptr)
     return;
+  child->setParent(this);
   if (_mChildren == nullptr) {
-    _mChildren = child;
+    _mChildrenTail = _mChildren = child;
   } else {
-    _mChildren->addNextSibling(child);
+    _mChildrenTail->setNext(child);
+    _mChildrenTail = child;
   }
   assert (child != this);
-  child->setParent(this);
 }
 
 LSLASTNode *LSLASTNode::takeChild(int child_num) {
@@ -119,6 +113,8 @@ void LSLASTNode::removeChild(LSLASTNode *child) {
 
   if (next_child != nullptr)
     next_child->setPrev(prev_child);
+  else
+    _mChildrenTail = prev_child;
 
   // must be done last so we don't change the parent of siblings
   child->setParent(nullptr);
@@ -148,6 +144,8 @@ void LSLASTNode::addNextSibling(LSLASTNode *sibling) {
   while ((next = last_sibling->_mNext))
     last_sibling = next;
   last_sibling->setNext(sibling);
+  if (_mParent)
+    _mParent->_mChildrenTail = sibling;
 }
 
 void LSLASTNode::replaceNode(LSLASTNode *old_node, LSLASTNode *replacement) {
@@ -156,9 +154,16 @@ void LSLASTNode::replaceNode(LSLASTNode *old_node, LSLASTNode *replacement) {
   replacement->setNext(old_node->getNext());
   auto *parent = old_node->getParent();
 
-  // First child, have to replace `_mChildren` entirely.
-  if (old_node->getPrev() == nullptr && old_node->getParent() != nullptr)
-    old_node->getParent()->_mChildren = replacement;
+  if (parent != nullptr) {
+    // first node, have to replace parent's _mChildren
+    if (parent->_mChildren == old_node) {
+      parent->_mChildren = replacement;
+    }
+    // Last child, have to replace the parent's tail
+    if (parent->_mChildrenTail == old_node) {
+      parent->_mChildrenTail = replacement;
+    }
+  }
   old_node->_mNext = nullptr;
   old_node->_mPrev = nullptr;
   old_node->setParent(nullptr);

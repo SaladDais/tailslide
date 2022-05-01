@@ -199,7 +199,7 @@ bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {
 
 bool ConstantDeterminingVisitor::visit(LSLListExpression *node) {
   LSLASTNode *child = node->getChildren();
-  LSLConstant *new_children = nullptr;
+  auto *new_list_cv = _mAllocator->newTracked<LSLListConstant>(nullptr);
 
   // if we have children
   if (child && child->getNodeType() != NODE_NULL) {
@@ -212,20 +212,13 @@ bool ConstantDeterminingVisitor::visit(LSLListExpression *node) {
     }
 
     // create assignables for them
-    LSLASTNode *new_children_tail = nullptr;
     for (child = node->getChildren(); child; child = child->getNext()) {
-      if (new_children_tail == nullptr) {
-        new_children_tail = new_children = child->getConstantValue()->copy(_mAllocator);
-      } else {
-        auto *new_child = child->getConstantValue()->copy(_mAllocator);
-        new_children_tail->setNext(new_child);
-        new_children_tail = new_child;
-      }
+      new_list_cv->pushChild(child->getConstantValue()->copy(_mAllocator));
     }
   }
 
   // create constant value
-  node->setConstantValue(_mAllocator->newTracked<LSLListConstant>(new_children));
+  node->setConstantValue(new_list_cv);
   return true;
 }
 

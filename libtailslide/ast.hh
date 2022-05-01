@@ -223,7 +223,8 @@ class LSLASTNode : public TrackableObject {
   private:
     YYLTYPE                      _mLoc {0};
 
-    LSLASTNode *_mChildren;
+    LSLASTNode *_mChildren = nullptr;
+    LSLASTNode *_mChildrenTail = nullptr;
     LSLASTNode *_mParent;
     LSLASTNode *_mNext;
     LSLASTNode *_mPrev;
