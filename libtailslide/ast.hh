@@ -142,7 +142,6 @@ class LSLASTNode : public TrackableObject {
     /* Set our previous sibling, and ensure it links back to us. */
     void setPrev(LSLASTNode *newprev);
     void addNextSibling(LSLASTNode *sibling);
-    void addPrevSibling(LSLASTNode *sibling);
     /* remove a child from the list of nodes, shifting other children up */
     void removeChild(LSLASTNode *child);
     /* replace a node from the list of children with null, returning it */

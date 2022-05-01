@@ -64,10 +64,14 @@ void LSLASTNode::setParent(LSLASTNode *newparent) {
   // must update the parent of all of its siblings.
   for (auto* next_ptr = _mNext; next_ptr != nullptr; next_ptr=next_ptr->_mNext) {
     assert(next_ptr != this);
+    if (next_ptr->_mParent == newparent)
+      break;
     next_ptr->_mParent = newparent;
   }
   for (auto* prev_ptr = _mPrev; prev_ptr != nullptr; prev_ptr=prev_ptr->_mPrev) {
     assert(prev_ptr != this);
+    if (prev_ptr->_mParent == newparent)
+      break;
     prev_ptr->_mParent = newparent;
   }
 }
@@ -114,7 +118,7 @@ void LSLASTNode::removeChild(LSLASTNode *child) {
 }
 
 void LSLASTNode::setNext(LSLASTNode *newnext) {
-  DEBUG(LOG_DEBUG_SPAM, nullptr, "%s.setNext(%s)\n", getNodeName(), newnext ? newnext->getNodeName() : "nullptr");
+  // DEBUG(LOG_DEBUG_SPAM, nullptr, "%s.setNext(%s)\n", getNodeName(), newnext ? newnext->getNodeName() : "nullptr");
   _mNext = newnext;
   assert(_mNext != this);
   if (newnext && newnext->getPrev() != this)
@@ -122,7 +126,7 @@ void LSLASTNode::setNext(LSLASTNode *newnext) {
 }
 
 void LSLASTNode::setPrev(LSLASTNode *newprev) {
-  DEBUG(LOG_DEBUG_SPAM, nullptr, "%s.setPrev(%s)\n", getNodeName(), newprev ? newprev->getNodeName() : "nullptr");
+  // DEBUG(LOG_DEBUG_SPAM, nullptr, "%s.setPrev(%s)\n", getNodeName(), newprev ? newprev->getNodeName() : "nullptr");
   _mPrev = newprev;
   if (newprev && newprev->getNext() != this)
     newprev->setNext(this);
@@ -132,19 +136,11 @@ void LSLASTNode::addNextSibling(LSLASTNode *sibling) {
   assert (sibling != _mParent);
   assert (sibling != this);
   if (sibling == nullptr) return;
-  if (_mNext)
-    _mNext->addNextSibling(sibling);
-  else
-    setNext(sibling);
-}
-
-void LSLASTNode::addPrevSibling(LSLASTNode *sibling) {
-  assert (sibling != _mParent);
-  if (sibling == nullptr) return;
-  if (_mPrev)
-    _mPrev->addPrevSibling(sibling);
-  else
-    setPrev(sibling);
+  auto *last_sibling = this;
+  LSLASTNode *next;
+  while ((next = last_sibling->_mNext))
+    last_sibling = next;
+  last_sibling->setNext(sibling);
 }
 
 void LSLASTNode::replaceNode(LSLASTNode *old_node, LSLASTNode *replacement) {
