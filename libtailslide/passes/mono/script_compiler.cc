@@ -550,6 +550,7 @@ bool MonoScriptCompiler::visit(LSLBoolConversionExpression *node) {
     default:
       assert(0);
   }
+  return false;
 }
 
 bool MonoScriptCompiler::visit(LSLVectorExpression *node) {
@@ -720,7 +721,7 @@ bool MonoScriptCompiler::visit(LSLBinaryExpression *node) {
   return false;
 }
 
-bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LSLExpression *right, LSLIType ret_type) {
+void MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LSLExpression *right, LSLIType ret_type) {
   auto left_type = left->getIType();
   auto right_type = right->getIType();
 
@@ -736,7 +737,7 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
       // right is first argument due to reversed order of evaluation in LSL
       mCIL << "call " << CIL_TYPE_NAMES[ret_type] << " " << CIL_USERSCRIPT_CLASS << "::'"
            << simple_op->second.first << "'(" << CIL_TYPE_NAMES[right_type] << ", " << CIL_TYPE_NAMES[left_type] << ")\n";
-      return false;
+      return;
     }
   }
 
@@ -749,18 +750,18 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
         // prepend whatever this is to the right list
         mCIL << CIL_BOXING_INSTRUCTIONS[left_type];
         mCIL << "call " << CIL_TYPE_NAMES[LST_LIST] << " " << CIL_USERSCRIPT_CLASS << "::Prepend(" << CIL_TYPE_NAMES[LST_LIST] << ", object)\n";
-        return false;
+        return;
       } else if (left_type == LST_LIST) {
         // append to the left list (will also join lists)
         mCIL << "call " << CIL_TYPE_NAMES[LST_LIST] << " " << CIL_USERSCRIPT_CLASS << "::Append("
              << CIL_VALUE_TYPE_NAMES[right_type] << ", " << CIL_VALUE_TYPE_NAMES[LST_LIST] << ")\n";
-        return false;
+        return;
       }
 
       switch (left_type) {
         case LST_INTEGER:
         case LST_FLOATINGPOINT:
-          mCIL << "add\n"; return false;
+          mCIL << "add\n"; return;
         default:
           assert(0);
       }
@@ -770,7 +771,7 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
       left->visit(this);
       switch (left_type) {
         case LST_FLOATINGPOINT:
-          mCIL << "call float64 " << CIL_USERSCRIPT_CLASS << "::'Subtract'(float64, float64)\n"; return false;
+          mCIL << "call float64 " << CIL_USERSCRIPT_CLASS << "::'Subtract'(float64, float64)\n"; return;
         default:
           assert(0);
       }
@@ -781,7 +782,7 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
       switch (left_type) {
         case LST_INTEGER:
         case LST_FLOATINGPOINT:
-          mCIL << "mul\n"; return false;
+          mCIL << "mul\n"; return;
         default:
           assert(0);
       }
@@ -791,7 +792,7 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
       left->visit(this);
       switch (left_type) {
         case LST_FLOATINGPOINT:
-          mCIL << "call float64 " << CIL_USERSCRIPT_CLASS << "::'Divide'(float64, float64)\n"; return false;
+          mCIL << "call float64 " << CIL_USERSCRIPT_CLASS << "::'Divide'(float64, float64)\n"; return;
         default:
           assert(0);
       }
@@ -802,18 +803,18 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
       switch (right_type) {
         case LST_INTEGER:
         case LST_FLOATINGPOINT:
-          mCIL << "ceq\n"; return false;
+          mCIL << "ceq\n"; return;
         case LST_STRING:
           // note the key == string and string == key asymmetry here...
           // left is top of stack, so convert left to a string if it isn't one already
           castTopOfStack(left_type, right_type);
           mCIL << "call bool valuetype [mscorlib]System.String::op_Equality(string, string)\n";
-          return false;
+          return;
         case LST_KEY:
           // these really should have been pre-casted if necessary, but this is what LL's compiler does
           castTopOfStack(left_type, right_type);
           mCIL << "call int32 " << CIL_USERSCRIPT_CLASS << "::'Equals'(" << CIL_TYPE_NAMES[LST_KEY] << ", " << CIL_TYPE_NAMES[LST_KEY] << ")\n";
-          return false;
+          return;
         default:
           assert(0);
       }
@@ -824,7 +825,7 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
       // check if result == 0
       mCIL << "ldc.i4.0\n"
            << "ceq\n";
-      return false;
+      return;
     case GEQ:
       right->visit(this);
       left->visit(this);
@@ -832,24 +833,24 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
       mCIL << "cgt\n"
            << "ldc.i4.0\n"
            << "ceq\n";
-      return false;
+      return;
     case LEQ:
       right->visit(this);
       left->visit(this);
       mCIL << "clt\n"
            << "ldc.i4.0\n"
            << "ceq\n";
-      return false;
+      return;
     case '>':
       right->visit(this);
       left->visit(this);
       mCIL << "clt\n";
-      return false;
+      return;
     case '<':
       right->visit(this);
       left->visit(this);
       mCIL << "cgt\n";
-      return false;
+      return;
     case BOOLEAN_AND:
       // We need to interleave our codegen with the code of the expressions,
       // so just visit right to start
@@ -868,7 +869,7 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
       mCIL << "or\n"
            << "ldc.i4.0\n"
            << "ceq\n";
-      return false;
+      return;
     case BOOLEAN_OR:
       right->visit(this);
       left->visit(this);
@@ -879,27 +880,26 @@ bool MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
            // TODO: LL's codegen compares against zero again. Copy & paste error in their code?
            << "ldc.i4.0\n"
            << "ceq\n";
-      return false;
+      return;
     case '&':
       right->visit(this);
       left->visit(this);
       mCIL << "and\n";
-      return false;
+      return;
     case '|':
       right->visit(this);
       left->visit(this);
       mCIL << "or\n";
-      return false;
+      return;
     case '^':
       right->visit(this);
       left->visit(this);
       mCIL << "xor\n";
-      return false;
+      return;
     default:
       assert(0);
   }
   assert(0);
-  return false;
 }
 
 bool MonoScriptCompiler::visit(LSLUnaryExpression *node) {
