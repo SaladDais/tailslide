@@ -1,93 +1,76 @@
 #include "symbol_resolution.hh"
-#include "../lslmini.hh"
 
 namespace Tailslide {
 
 
-bool BaseSymbolResolutionVisitor::visit(LSLLValueExpression *node) {
-  ((LSLIdentifier *) node->getChild(0))->resolveSymbol(SYM_VARIABLE);
-  return false;
-}
+bool SymbolResolutionVisitor::visit(LSLScript *script) {
+  replaceSymbolTable(script);
+  auto *globals = script->getChild(0);
+  // all global var definitions are implicitly hoisted above function definitions
+  // all functions and states have their declarations implicitly hoisted as well.
+  // walk over just the global vars and prototypes of functions.
+  for (auto *global=globals->getChildren(); global; global=global->getNext()) {
+    if (global->getNodeType() == NODE_GLOBAL_VARIABLE) {
+      global->visit(this);
+    } else if (global->getNodeType() == NODE_GLOBAL_FUNCTION) {
+      // just record the prototype of the function and don't descend for now.
+      replaceSymbolTable(global);
+      auto *identifier = (LSLIdentifier *) global->getChild(0);
 
-bool BaseSymbolResolutionVisitor::visit(LSLFunctionExpression *node) {
-  auto *id = (LSLIdentifier *) node->getChild(0);
-  id->resolveSymbol(SYM_FUNCTION);
-  return true;
-}
-
-/// replace the node's old symbol table, registering the new one.
-void BaseSymbolResolutionVisitor::replaceSymbolTable(LSLASTNode *node) {
-  // TODO: unregister old table? need to figure out node copy semantics.
-  auto *symtab = _mAllocator->newTracked<LSLSymbolTable>();
-  node->setSymbolTable(symtab);
-  node->mContext->table_manager->registerTable(symtab);
-}
-
-
-// all global var definitions are implicitly hoisted above function definitions
-// all functions and states have their declarations implicitly hoisted as well.
-class GlobalSymbolResolutionVisitor: public BaseSymbolResolutionVisitor {
-  public:
-    explicit GlobalSymbolResolutionVisitor(ScriptAllocator *allocator) : BaseSymbolResolutionVisitor(allocator) {};
-    virtual bool visit(LSLGlobalVariable *node) {
-      // descend first so we can resolve any symbol references present in the rvalue
-      // before we've defined the identifier from the lvalue.
-      // Necessary so things like `string foo = foo;` will error correctly.
-      visitChildren(node);
-
-      auto *identifier = (LSLIdentifier *) node->getChild(0);
-      identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
-          identifier->getName(), identifier->getType(), SYM_VARIABLE, SYM_GLOBAL, node->getLoc(), nullptr, node
-      ));
-      node->defineSymbol(identifier->getSymbol());
-      return false;
-    };
-
-    virtual bool visit(LSLGlobalFunction *node) {
-      replaceSymbolTable(node);
-      auto *identifier = (LSLIdentifier *) node->getChild(0);
-
-      // define function in parent scope since functions have their own scope
+      // define function in script scope since functions have their own scope
       identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
           identifier->getName(),
           identifier->getType(),
           SYM_FUNCTION,
           SYM_GLOBAL,
-          node->getLoc(),
-          (LSLFunctionDec *) node->getChild(1)
+          global->getLoc(),
+          (LSLFunctionDec *) global->getChild(1)
       ));
-      node->getParent()->defineSymbol(identifier->getSymbol());
-      // don't descend, we only want the declaration.
-      return false;
-    };
+      script->defineSymbol(identifier->getSymbol());
+    }
+  }
 
-    virtual bool visit(LSLState *node) {
-      replaceSymbolTable(node);
-      auto *identifier = (LSLIdentifier *)node->getChild(0);
-      identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
-          identifier->getName(), identifier->getType(), SYM_STATE, SYM_GLOBAL, identifier->getLoc()
-      ));
-      node->getParent()->defineSymbol(identifier->getSymbol());
-      // don't descend, we only want the declaration
-      return false;
-    };
-};
+  // now walk the states to register their prototypes
+  auto *states = script->getChild(1);
+  for (auto *state=states->getChildren(); state; state=state->getNext()) {
+    replaceSymbolTable(state);
+    auto *identifier = (LSLIdentifier *)state->getChild(0);
+    identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
+        identifier->getName(), identifier->getType(), SYM_STATE, SYM_GLOBAL, identifier->getLoc()
+    ));
+    state->getParent()->defineSymbol(identifier->getSymbol());
+  }
 
-bool SymbolResolutionVisitor::visit(LSLScript *node) {
-  replaceSymbolTable(node);
-  // Walk over just the globals before we descend into function
-  // bodies and do general symbol resolution.
-  GlobalSymbolResolutionVisitor visitor(_mAllocator);
-  node->visit(&visitor);
-  return true;
+  // visit function bodies
+  for (auto *global=globals->getChildren(); global; global=global->getNext()) {
+    // we've already descended into global vars, don't re-visit.
+    if (global->getNodeType() == NODE_GLOBAL_VARIABLE)
+      continue;
+    global->visit(this);
+  }
+  // then state bodies
+  states->visit(this);
+  return false;
+}
+
+bool SymbolResolutionVisitor::visit(LSLGlobalVariable *node) {
+  // descend first so we can resolve any symbol references present in the rvalue
+  // before we've defined the identifier from the lvalue.
+  // Necessary so things like `string foo = foo;` will error correctly.
+  node->getChild(1)->visit(this);
+
+  auto *identifier = (LSLIdentifier *) node->getChild(0);
+  identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
+      identifier->getName(), identifier->getType(), SYM_VARIABLE, SYM_GLOBAL, node->getLoc(), nullptr, node
+  ));
+  node->defineSymbol(identifier->getSymbol());
+  return false;
 }
 
 bool SymbolResolutionVisitor::visit(LSLDeclaration *node) {
   // visit the rvalue first so we correctly handle things like
   // `string foo = foo;`
-  LSLASTNode *rvalue = node->getChild(1);
-  if (rvalue)
-    rvalue->visit(this);
+  node->getChild(1)->visit(this);
 
   auto *identifier = (LSLIdentifier *) node->getChild(0);
   identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
@@ -102,36 +85,29 @@ bool SymbolResolutionVisitor::visit(LSLDeclaration *node) {
   return false;
 }
 
-static void register_func_param_symbols(LSLASTNode *proto, bool is_event) {
-  LSLASTNode *child = proto->getChildren();
-  while (child) {
-    auto *identifier = (LSLIdentifier *) child;
-    identifier->setSymbol(proto->mContext->allocator->newTracked<LSLSymbol>(
-        identifier->getName(),
-        identifier->getType(),
-        SYM_VARIABLE,
-        is_event ? SYM_EVENT_PARAMETER : SYM_FUNCTION_PARAMETER,
-        child->getLoc()
-    ));
-    proto->defineSymbol(identifier->getSymbol());
-    child = child->getNext();
-  }
+/// replace the node's old symbol table, registering the new one.
+void SymbolResolutionVisitor::replaceSymbolTable(LSLASTNode *node) {
+  // TODO: unregister old table? need to figure out node copy semantics.
+  auto *symtab = _mAllocator->newTracked<LSLSymbolTable>();
+  node->setSymbolTable(symtab);
+  node->mContext->table_manager->registerTable(symtab);
+}
+
+bool SymbolResolutionVisitor::visit(LSLLValueExpression *node) {
+  ((LSLIdentifier *) node->getChild(0))->resolveSymbol(SYM_VARIABLE);
+  return false;
+}
+
+bool SymbolResolutionVisitor::visit(LSLFunctionExpression *node) {
+  auto *id = (LSLIdentifier *) node->getChild(0);
+  id->resolveSymbol(SYM_FUNCTION);
+  return true;
 }
 
 bool SymbolResolutionVisitor::visit(LSLGlobalFunction *node) {
   assert(_mPendingJumps.empty());
   visitChildren(node);
   resolvePendingJumps();
-  return false;
-}
-
-bool SymbolResolutionVisitor::visit(LSLFunctionDec *node) {
-  register_func_param_symbols(node, false);
-  return true;
-}
-
-bool SymbolResolutionVisitor::visit(LSLGlobalVariable *node) {
-  // Symbol resolution for everything inside is already done, don't descend.
   return false;
 }
 
@@ -154,6 +130,27 @@ bool SymbolResolutionVisitor::visit(LSLEventHandler *node) {
   visitChildren(node);
   resolvePendingJumps();
   return false;
+}
+
+static void register_func_param_symbols(LSLASTNode *proto, bool is_event) {
+  LSLASTNode *child = proto->getChildren();
+  while (child) {
+    auto *identifier = (LSLIdentifier *) child;
+    identifier->setSymbol(proto->mContext->allocator->newTracked<LSLSymbol>(
+        identifier->getName(),
+        identifier->getType(),
+        SYM_VARIABLE,
+        is_event ? SYM_EVENT_PARAMETER : SYM_FUNCTION_PARAMETER,
+        child->getLoc()
+    ));
+    proto->defineSymbol(identifier->getSymbol());
+    child = child->getNext();
+  }
+}
+
+bool SymbolResolutionVisitor::visit(LSLFunctionDec *node) {
+  register_func_param_symbols(node, false);
+  return true;
 }
 
 bool SymbolResolutionVisitor::visit(LSLEventDec *node) {
