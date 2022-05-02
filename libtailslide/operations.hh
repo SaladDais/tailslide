@@ -17,7 +17,7 @@ class LSLVectorConstant;
 class AOperationBehavior {
   public:
     virtual LSLConstant *operation(
-        int oper, LSLConstant *cv, LSLConstant *other_cv, YYLTYPE *lloc) = 0;
+        LSLOperator oper, LSLConstant *cv, LSLConstant *other_cv, YYLTYPE *lloc) = 0;
     virtual LSLConstant *cast(
         LSLType *to_type, LSLConstant *cv, YYLTYPE *lloc) = 0;
 };
@@ -32,16 +32,16 @@ class TailslideOperationBehavior : public AOperationBehavior {
     };
     // dispatch method
     LSLConstant *operation(
-        int operation, LSLConstant *cv, LSLConstant *other_cv, YYLTYPE *lloc) override;
+        LSLOperator operation, LSLConstant *cv, LSLConstant *other_cv, YYLTYPE *lloc) override;
 
     // type-specific operation methods
-    LSLConstant *operation(int operation, LSLIntegerConstant *cv, LSLConstant *other_cv);
-    LSLConstant *operation(int operation, LSLFloatConstant *cv, LSLConstant *other_cv);
-    LSLConstant *operation(int operation, LSLStringConstant *cv, LSLConstant *other_cv);
-    LSLConstant *operation(int operation, LSLKeyConstant *cv, LSLConstant *other_cv);
-    LSLConstant *operation(int operation, LSLListConstant *cv, LSLConstant *other_cv);
-    LSLConstant *operation(int operation, LSLVectorConstant *cv, LSLConstant *other_cv);
-    LSLConstant *operation(int operation, LSLQuaternionConstant *cv, LSLConstant *other_cv);
+    LSLConstant *operation(LSLOperator operation, LSLIntegerConstant *cv, LSLConstant *other_cv);
+    LSLConstant *operation(LSLOperator operation, LSLFloatConstant *cv, LSLConstant *other_cv);
+    LSLConstant *operation(LSLOperator operation, LSLStringConstant *cv, LSLConstant *other_cv);
+    LSLConstant *operation(LSLOperator operation, LSLKeyConstant *cv, LSLConstant *other_cv);
+    LSLConstant *operation(LSLOperator operation, LSLListConstant *cv, LSLConstant *other_cv);
+    LSLConstant *operation(LSLOperator operation, LSLVectorConstant *cv, LSLConstant *other_cv);
+    LSLConstant *operation(LSLOperator operation, LSLQuaternionConstant *cv, LSLConstant *other_cv);
 
     // dispatch method
     LSLConstant *cast(LSLType *to_type, LSLConstant *cv, YYLTYPE *lloc) override;

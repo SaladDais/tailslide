@@ -9,7 +9,7 @@
 #include <functional>
 #include <sstream>
 
-#include "lslmini.tab.hh"
+#include "loctype.hh"
 #include "symtab.hh"
 #include "ast.hh"
 #include "types.hh"
@@ -19,6 +19,7 @@ namespace Tailslide {
 
 typedef int   S32;
 typedef float F32;
+class LSLScript;
 
 struct ScriptContext {
   LSLScript *script = nullptr;
@@ -473,8 +474,8 @@ class LSLDeclaration : public LSLStatement {
 
 class LSLExpression : public LSLASTNode {
 public:
-    explicit LSLExpression(ScriptContext *ctx) : LSLASTNode(ctx, 0), _mOperation(0) {};
-    LSLExpression(ScriptContext *ctx, int num, ...): LSLASTNode(ctx), _mOperation(0) {
+    explicit LSLExpression(ScriptContext *ctx) : LSLASTNode(ctx, 0), _mOperation(OP_NONE) {};
+    LSLExpression(ScriptContext *ctx, int num, ...): LSLASTNode(ctx), _mOperation(OP_NONE) {
       va_list ap;
       va_start(ap, num);
       addChildren(num, ap);
@@ -488,10 +489,10 @@ public:
 
     virtual LSLConstant* getConstantValue();
     virtual bool nodeAllowsFolding() { return true; };
-    int getOperation() const {return _mOperation;};
-    void setOperation(int op) {_mOperation = op;};
+    LSLOperator getOperation() const {return _mOperation;};
+    void setOperation(LSLOperator op) {_mOperation = op;};
   protected:
-    int _mOperation;
+    LSLOperator _mOperation;
 };
 
 
@@ -517,7 +518,7 @@ public:
 class LSLParenthesisExpression: public LSLExpression {
 public:
     LSLParenthesisExpression( ScriptContext *ctx, LSLExpression* expr )
-      : LSLExpression(ctx, 1, expr) { _mOperation = '('; };
+      : LSLExpression(ctx, 1, expr) { _mOperation = OP_PARENS; };
 
     virtual const char *getNodeName() {
       return "parenthesis expression";
@@ -528,7 +529,7 @@ public:
 
 class LSLBinaryExpression : public LSLExpression {
 public:
-    LSLBinaryExpression( ScriptContext *ctx, LSLExpression *lvalue, int oper, LSLExpression *rvalue )
+    LSLBinaryExpression( ScriptContext *ctx, LSLExpression *lvalue, LSLOperator oper, LSLExpression *rvalue )
     : LSLExpression(ctx, 2, lvalue, rvalue) { _mOperation = oper; };
 
     virtual const char *getNodeName() {
@@ -541,7 +542,7 @@ public:
 
 class LSLUnaryExpression : public LSLExpression {
 public:
-    LSLUnaryExpression( ScriptContext *ctx, LSLExpression *lvalue, int oper )
+    LSLUnaryExpression( ScriptContext *ctx, LSLExpression *lvalue, LSLOperator oper )
             : LSLExpression(ctx, 1, lvalue) { _mOperation = oper; };
 
     virtual const char *getNodeName() {

@@ -26,7 +26,7 @@ public:
     // and attach them to the new expression
     auto *new_expr = expr->mContext->allocator->newTracked<LSLBinaryExpression>(
         (LSLExpression *) expr->takeChild(0),
-        '-',
+        OP_MINUS,
         (LSLExpression *) expr->takeChild(1)
     );
     // swap the old expression out with the new one

@@ -1,5 +1,6 @@
 %{
     #include "lslmini.hh"
+    #include "lslmini.tab.hh"
     #include "logger.hh"
     #include <stdio.h>
     #include <string.h>
@@ -730,122 +731,122 @@ expression
     }
     | lvalue '=' expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, '=', $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, OP_ASSIGN, $3 );
     }
     | lvalue ADD_ASSIGN expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, ADD_ASSIGN, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, OP_ADD_ASSIGN, $3 );
     }
     | lvalue SUB_ASSIGN expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, SUB_ASSIGN, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, OP_SUB_ASSIGN, $3 );
     }
     | lvalue MUL_ASSIGN expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, MUL_ASSIGN, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, OP_MUL_ASSIGN, $3 );
     }
     | lvalue DIV_ASSIGN expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, DIV_ASSIGN, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, OP_DIV_ASSIGN, $3 );
     }
     | lvalue MOD_ASSIGN expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, MOD_ASSIGN, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, OP_MOD_ASSIGN, $3 );
     }
     | expression EQ expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, EQ, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, OP_EQ, $3 );
     }
     | expression NEQ expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, NEQ, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, OP_NEQ, $3 );
     }
     | expression LEQ expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, LEQ, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, OP_LEQ, $3 );
     }
     | expression GEQ expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, GEQ, $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, OP_GEQ, $3 );
     }
     | expression '<' expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, '<', $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, OP_LESS, $3 );
     }
     | expression '>' expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, '>', $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, OP_GREATER, $3 );
     }
     | expression '+' expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, '+', $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, OP_PLUS, $3 );
     }
     | expression '-' expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, '-', $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, OP_MINUS, $3 );
     }
     | expression '*' expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, '*', $3 );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>( $1, OP_MUL, $3 );
     }
     | expression '/' expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, '/',  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, OP_DIV,  $3  );
     }
     | expression '%' expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, '%',  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, OP_MOD,  $3  );
     }
     | expression '&' expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, '&',  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, OP_BIT_AND,  $3  );
     }
     | expression '|' expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, '|',  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, OP_BIT_OR,  $3  );
     }
     | expression '^' expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, '^',  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, OP_BIT_XOR,  $3  );
     }
     | expression BOOLEAN_AND expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, BOOLEAN_AND,  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, OP_BOOLEAN_AND,  $3  );
     }
     | expression BOOLEAN_OR expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, BOOLEAN_OR,  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, OP_BOOLEAN_OR,  $3  );
     }
     | expression SHIFT_LEFT expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, SHIFT_LEFT,  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, OP_SHIFT_LEFT,  $3  );
     }
     | expression SHIFT_RIGHT expression
     {
-        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, SHIFT_RIGHT,  $3  );
+        $$ = ALLOCATOR->newTracked<LSLBinaryExpression>(  $1, OP_SHIFT_RIGHT,  $3  );
     }
     ;
 
 unaryexpression
     : '-' expression
     {
-        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>( $2, '-' );
+        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>( $2, OP_MINUS );
     }
     | '!' expression
     {
-        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $2 , '!' );
+        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $2 , OP_BOOLEAN_NOT );
     }
     | '~' expression
     {
-        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $2 , '~' );
+        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $2 , OP_BIT_NOT );
     }
     | INC_OP lvalue
     {
-        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $2 , INC_PRE_OP );
+        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $2 , OP_PRE_INCR );
     }
     | DEC_OP lvalue
     {
-        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $2 , DEC_PRE_OP );
+        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $2 , OP_PRE_DECR );
     }
     | typecast
     {
@@ -875,7 +876,7 @@ typecast
             valid_id_typecast = sym->getSubType() == SYM_BUILTIN && (sym->getIType() == LST_INTEGER || sym->getIType() == LST_FLOATINGPOINT);
 
         auto *lvalue = ALLOCATOR->newTracked<LSLLValueExpression>(MAKEID(LST_NULL, $5, @5));
-        $$ = ALLOCATOR->newTracked<LSLTypecastExpression>($2, ALLOCATOR->newTracked<LSLUnaryExpression>(lvalue, '-'));
+        $$ = ALLOCATOR->newTracked<LSLTypecastExpression>($2, ALLOCATOR->newTracked<LSLUnaryExpression>(lvalue, OP_MINUS));
         if (!valid_id_typecast) {
             tailslide_get_extra(scanner)->logger->error(&@2, E_SYNTAX_ERROR, "Typecast requires parentheses");
         }
@@ -910,11 +911,11 @@ unarypostfixexpression
     }
     | lvalue INC_OP
     {
-        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $1 , INC_POST_OP );
+        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $1 , OP_POST_INCR );
     }
     | lvalue DEC_OP
     {
-        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $1 , DEC_POST_OP );
+        $$ = ALLOCATOR->newTracked<LSLUnaryExpression>(  $1 , OP_POST_DECR );
     }
     | IDENTIFIER '(' funcexpressionlist ')'
     {

@@ -87,7 +87,7 @@ bool LSOBytecodeCompiler::visit(LSLListExpression *node) {
 }
 
 bool LSOBytecodeCompiler::visit(LSLUnaryExpression *node) {
-  int op = node->getOperation();
+  LSLOperator op = node->getOperation();
   auto *lhs = node->getChild(0);
   auto lhs_itype = lhs->getIType();
   auto lhs_type = lhs->getType();
@@ -98,13 +98,13 @@ bool LSOBytecodeCompiler::visit(LSLUnaryExpression *node) {
     // integer-only, doesn't take a type.
     case '!': mCodeBS << LOPC_BOOLNOT; break;
     case '~': mCodeBS << LOPC_BITNOT; break;
-    case DEC_POST_OP:
-    case INC_POST_OP:
+    case OP_POST_DECR:
+    case OP_POST_INCR:
       // Push the representation of "1" for the given type
       pushConstant(lhs_type->getOneValue());
       // need to push another copy onto the stack so we can keep the original
       lhs->visit(this);
-      if (op == INC_POST_OP)
+      if (op == OP_POST_INCR)
         mCodeBS << LOPC_ADD;
       else
         mCodeBS << LOPC_SUB;
@@ -119,7 +119,7 @@ bool LSOBytecodeCompiler::visit(LSLUnaryExpression *node) {
 }
 
 bool LSOBytecodeCompiler::visit(LSLBinaryExpression *node) {
-  int op = node->getOperation();
+  LSLOperator op = node->getOperation();
   auto *lhs = node->getChild(0);
   auto *rhs = node->getChild(1);
   auto lhs_type = lhs->getIType();
@@ -129,7 +129,7 @@ bool LSOBytecodeCompiler::visit(LSLBinaryExpression *node) {
     rhs->visit(this);
     storeStackToLValue((LSLLValueExpression *) lhs);
     return false;
-  } else if (op == MUL_ASSIGN) {
+  } else if (op == OP_MUL_ASSIGN) {
     // Must be that pesky `int *= float` which we can't decouple. Replicate the broken behavior.
     rhs->visit(this);
     lhs->visit(this);
@@ -146,20 +146,20 @@ bool LSOBytecodeCompiler::visit(LSLBinaryExpression *node) {
     case '*': mCodeBS << LOPC_MUL << packed_types; break;
     case '/': mCodeBS << LOPC_DIV << packed_types; break;
     case '%': mCodeBS << LOPC_MOD << packed_types; break;
-    case EQ:  mCodeBS << LOPC_EQ << packed_types;  break;
-    case NEQ: mCodeBS << LOPC_NEQ << packed_types; break;
-    case GEQ: mCodeBS << LOPC_GEQ << packed_types; break;
-    case LEQ: mCodeBS << LOPC_LEQ << packed_types; break;
+    case OP_EQ:  mCodeBS << LOPC_EQ << packed_types;  break;
+    case OP_NEQ: mCodeBS << LOPC_NEQ << packed_types; break;
+    case OP_GEQ: mCodeBS << LOPC_GEQ << packed_types; break;
+    case OP_LEQ: mCodeBS << LOPC_LEQ << packed_types; break;
     case '<': mCodeBS << LOPC_LESS << packed_types; break;
     case '>': mCodeBS << LOPC_GREATER << packed_types; break;
     // these have no type argument since they only work on ints
     case '|': mCodeBS << LOPC_BITOR; break;
     case '&': mCodeBS << LOPC_BITAND; break;
     case '^': mCodeBS << LOPC_BITXOR; break;
-    case SHIFT_LEFT: mCodeBS << LOPC_SHL; break;
-    case SHIFT_RIGHT: mCodeBS << LOPC_SHR; break;
-    case BOOLEAN_AND: mCodeBS << LOPC_BOOLAND; break;
-    case BOOLEAN_OR: mCodeBS << LOPC_BOOLOR; break;
+    case OP_SHIFT_LEFT: mCodeBS << LOPC_SHL; break;
+    case OP_SHIFT_RIGHT: mCodeBS << LOPC_SHR; break;
+    case OP_BOOLEAN_AND: mCodeBS << LOPC_BOOLAND; break;
+    case OP_BOOLEAN_OR: mCodeBS << LOPC_BOOLOR; break;
     default:
       break;
   }

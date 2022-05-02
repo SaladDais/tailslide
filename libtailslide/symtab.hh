@@ -6,7 +6,6 @@
 #include <vector>
 #include <unordered_map>
 
-#include "lslmini.tab.hh"
 #include "allocator.hh"
 
 namespace Tailslide {

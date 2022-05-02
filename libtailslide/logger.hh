@@ -7,7 +7,7 @@
 #include <utility>  // pair
 
 #include "allocator.hh"
-#include "lslmini.tab.hh"
+#include "loctype.hh"
 
 namespace Tailslide {
 

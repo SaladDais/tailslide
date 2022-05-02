@@ -667,25 +667,25 @@ const std::map<int, std::pair<const char *, std::vector<SimpleBinaryOperationInf
         {LST_INTEGER, LST_INTEGER},
         {LST_VECTOR, LST_VECTOR},
     }}},
-    {EQ, {"Equals", {
+    {OP_EQ, {"Equals", {
         {LST_VECTOR, LST_VECTOR},
         {LST_QUATERNION, LST_QUATERNION},
         {LST_LIST, LST_LIST},
     }}},
-    {NEQ, {"NotEquals", {
+    {OP_NEQ, {"NotEquals", {
         // TODO: desugar `a != b` to `!(a == b)` where possible?
         {LST_LIST, LST_LIST},
     }}},
-    {SHIFT_LEFT, {"ShiftLeft", {
+    {OP_SHIFT_LEFT, {"ShiftLeft", {
         {LST_INTEGER, LST_INTEGER},
     }}},
-    {SHIFT_RIGHT, {"ShiftRight", {
+    {OP_SHIFT_RIGHT, {"ShiftRight", {
         {LST_INTEGER, LST_INTEGER},
     }}},
 };
 
 bool MonoScriptCompiler::visit(LSLBinaryExpression *node) {
-  int op = node->getOperation();
+  LSLOperator op = node->getOperation();
   auto *left = (LSLExpression *)node->getChild(0);
   auto *right = (LSLExpression *)node->getChild(1);
 
@@ -697,7 +697,7 @@ bool MonoScriptCompiler::visit(LSLBinaryExpression *node) {
     // store to the lvalue and push the lvalue back onto the stack
     storeToLValue(lvalue, true);
     return false;
-  } else if (op == MUL_ASSIGN) {
+  } else if (op == OP_MUL_ASSIGN) {
     // The only expression that gets left as a MUL_ASSIGN is the busted `int *= float` case,
     // all others get desugared to `lvalue = lvalue * rhs` in an earlier compile pass.
     // That expression is busted and not the same as `int = int * float`, obviously,
@@ -721,7 +721,7 @@ bool MonoScriptCompiler::visit(LSLBinaryExpression *node) {
   return false;
 }
 
-void MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LSLExpression *right, LSLIType ret_type) {
+void MonoScriptCompiler::compileBinaryExpression(LSLOperator op, LSLExpression *left, LSLExpression *right, LSLIType ret_type) {
   auto left_type = left->getIType();
   auto right_type = right->getIType();
 
@@ -797,7 +797,7 @@ void MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
           assert(0);
       }
     }
-    case EQ: {
+    case OP_EQ: {
       right->visit(this);
       left->visit(this);
       switch (right_type) {
@@ -819,14 +819,14 @@ void MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
           assert(0);
       }
     }
-    case NEQ:
+    case OP_NEQ:
       // EQ will visit right and left in the correct order for us
-      compileBinaryExpression(EQ, left, right, ret_type);
+      compileBinaryExpression(OP_EQ, left, right, ret_type);
       // check if result == 0
       mCIL << "ldc.i4.0\n"
            << "ceq\n";
       return;
-    case GEQ:
+    case OP_GEQ:
       right->visit(this);
       left->visit(this);
       // not very nice, but operands are swapped from how CIL would like them
@@ -834,7 +834,7 @@ void MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
            << "ldc.i4.0\n"
            << "ceq\n";
       return;
-    case LEQ:
+    case OP_LEQ:
       right->visit(this);
       left->visit(this);
       mCIL << "clt\n"
@@ -851,7 +851,7 @@ void MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
       left->visit(this);
       mCIL << "cgt\n";
       return;
-    case BOOLEAN_AND:
+    case OP_BOOLEAN_AND:
       // We need to interleave our codegen with the code of the expressions,
       // so just visit right to start
       right->visit(this);
@@ -870,7 +870,7 @@ void MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
            << "ldc.i4.0\n"
            << "ceq\n";
       return;
-    case BOOLEAN_OR:
+    case OP_BOOLEAN_OR:
       right->visit(this);
       left->visit(this);
       // binary OR the sides together and compare against zero
@@ -904,9 +904,9 @@ void MonoScriptCompiler::compileBinaryExpression(int op, LSLExpression *left, LS
 
 bool MonoScriptCompiler::visit(LSLUnaryExpression *node) {
   auto *child_expr = node->getChild(0);
-  int op = node->getOperation();
+  LSLOperator op = node->getOperation();
 
-  if (op == DEC_POST_OP || op == INC_POST_OP) {
+  if (op == OP_POST_DECR || op == OP_POST_INCR) {
     // We need to keep the original value of the expression on the stack.
     auto *lvalue = (LSLLValueExpression *) child_expr;
     pushLValue(lvalue);
@@ -917,7 +917,7 @@ bool MonoScriptCompiler::visit(LSLUnaryExpression *node) {
     pushLValue(lvalue);
     // push "one" for the given type
     pushConstant(lvalue->getType()->getOneValue());
-    if (op == DEC_POST_OP) {
+    if (op == OP_POST_DECR) {
       mCIL << "sub\n";
     } else {
       mCIL << "add\n";
@@ -928,14 +928,14 @@ bool MonoScriptCompiler::visit(LSLUnaryExpression *node) {
     storeToLValue(lvalue, true);
     mCIL << "pop\n";
     return false;
-  } else if (op == INC_PRE_OP || op == DEC_PRE_OP) {
+  } else if (op == OP_PRE_INCR || op == OP_PRE_DECR) {
     // This appears to generate different code from `lvalue = lvalue + 1`,
     // so it isn't desugared.
     auto *lvalue = (LSLLValueExpression *) child_expr;
     pushLValueContainer(lvalue);
     pushLValue(lvalue);
     pushConstant(lvalue->getType()->getOneValue());
-    if (op == DEC_PRE_OP) {
+    if (op == OP_PRE_DECR) {
       mCIL << "sub\n";
     } else {
       mCIL << "add\n";

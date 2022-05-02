@@ -378,8 +378,8 @@ bool PrettyPrintVisitor::visit(LSLParenthesisExpression *node) {
 
 bool PrettyPrintVisitor::visit(LSLUnaryExpression *node) {
   LSLASTNode *expr = node->getChild(0);
-  int operation = node->getOperation();
-  if (operation == INC_POST_OP || operation == DEC_POST_OP) {
+  LSLOperator operation = node->getOperation();
+  if (operation == OP_POST_INCR || operation == OP_POST_DECR) {
     expr->visit(this);
     mStream << operation_str(operation);
   } else if (operation == '-') {

@@ -33,16 +33,16 @@ const static int OPERATOR_RESULTS[][4] = {
 
         // operator   left type           right type          result type
         // ++
-        {INC_PRE_OP,  LST_INTEGER,       LST_NONE,          LST_INTEGER},
-        {INC_PRE_OP,  LST_FLOATINGPOINT, LST_NONE,          LST_FLOATINGPOINT},
-        {INC_POST_OP, LST_INTEGER,       LST_NONE,          LST_INTEGER},
-        {INC_POST_OP, LST_FLOATINGPOINT, LST_NONE,          LST_FLOATINGPOINT},
+        {OP_PRE_INCR,  LST_INTEGER,       LST_NONE,          LST_INTEGER},
+        {OP_PRE_INCR,  LST_FLOATINGPOINT, LST_NONE,          LST_FLOATINGPOINT},
+        {OP_POST_INCR, LST_INTEGER,       LST_NONE,          LST_INTEGER},
+        {OP_POST_INCR, LST_FLOATINGPOINT, LST_NONE,          LST_FLOATINGPOINT},
 
         // --
-        {DEC_PRE_OP,  LST_INTEGER,       LST_NONE,          LST_INTEGER},
-        {DEC_PRE_OP,  LST_FLOATINGPOINT, LST_NONE,          LST_FLOATINGPOINT},
-        {DEC_POST_OP, LST_INTEGER,       LST_NONE,          LST_INTEGER},
-        {DEC_POST_OP, LST_FLOATINGPOINT, LST_NONE,          LST_FLOATINGPOINT},
+        {OP_PRE_DECR,  LST_INTEGER,       LST_NONE,          LST_INTEGER},
+        {OP_PRE_DECR,  LST_FLOATINGPOINT, LST_NONE,          LST_FLOATINGPOINT},
+        {OP_POST_DECR, LST_INTEGER,       LST_NONE,          LST_INTEGER},
+        {OP_POST_DECR, LST_FLOATINGPOINT, LST_NONE,          LST_FLOATINGPOINT},
 
         // =
         {'=',         LST_INTEGER,       LST_INTEGER,       LST_INTEGER},
@@ -121,46 +121,46 @@ const static int OPERATOR_RESULTS[][4] = {
         {'<',         LST_FLOATINGPOINT, LST_FLOATINGPOINT, LST_BOOLEAN},
 
         // <=
-        {LEQ,         LST_INTEGER,       LST_INTEGER,       LST_BOOLEAN},
-        {LEQ,         LST_INTEGER,       LST_FLOATINGPOINT, LST_BOOLEAN},
-        {LEQ,         LST_FLOATINGPOINT, LST_INTEGER,       LST_BOOLEAN},
-        {LEQ,         LST_FLOATINGPOINT, LST_FLOATINGPOINT, LST_BOOLEAN},
+        {OP_LEQ,      LST_INTEGER,       LST_INTEGER,       LST_BOOLEAN},
+        {OP_LEQ,      LST_INTEGER,       LST_FLOATINGPOINT, LST_BOOLEAN},
+        {OP_LEQ,      LST_FLOATINGPOINT, LST_INTEGER,       LST_BOOLEAN},
+        {OP_LEQ,      LST_FLOATINGPOINT, LST_FLOATINGPOINT, LST_BOOLEAN},
 
         // >=
-        {GEQ,         LST_INTEGER,       LST_INTEGER,       LST_BOOLEAN},
-        {GEQ,         LST_INTEGER,       LST_FLOATINGPOINT, LST_BOOLEAN},
-        {GEQ,         LST_FLOATINGPOINT, LST_INTEGER,       LST_BOOLEAN},
-        {GEQ,         LST_FLOATINGPOINT, LST_FLOATINGPOINT, LST_BOOLEAN},
+        {OP_GEQ,      LST_INTEGER,       LST_INTEGER,       LST_BOOLEAN},
+        {OP_GEQ,      LST_INTEGER,       LST_FLOATINGPOINT, LST_BOOLEAN},
+        {OP_GEQ,      LST_FLOATINGPOINT, LST_INTEGER,       LST_BOOLEAN},
+        {OP_GEQ,      LST_FLOATINGPOINT, LST_FLOATINGPOINT, LST_BOOLEAN},
 
         // ==
-        {EQ,          LST_INTEGER,       LST_INTEGER,       LST_BOOLEAN},
-        {EQ,          LST_INTEGER,       LST_FLOATINGPOINT, LST_BOOLEAN},
-        {EQ,          LST_FLOATINGPOINT, LST_INTEGER,       LST_BOOLEAN},
-        {EQ,          LST_FLOATINGPOINT, LST_FLOATINGPOINT, LST_BOOLEAN},
-        {EQ,          LST_VECTOR,        LST_VECTOR,        LST_BOOLEAN},
-        {EQ,          LST_QUATERNION,    LST_QUATERNION,    LST_BOOLEAN},
-        {EQ,          LST_STRING,        LST_STRING,        LST_BOOLEAN},
-        {EQ,          LST_STRING,        LST_KEY,           LST_BOOLEAN},
-        {EQ,          LST_KEY,           LST_STRING,        LST_BOOLEAN},
-        {EQ,          LST_KEY,           LST_KEY,           LST_BOOLEAN},
-        {EQ,          LST_LIST,          LST_LIST,          LST_BOOLEAN},
+        {OP_EQ,       LST_INTEGER,       LST_INTEGER,       LST_BOOLEAN},
+        {OP_EQ,       LST_INTEGER,       LST_FLOATINGPOINT, LST_BOOLEAN},
+        {OP_EQ,       LST_FLOATINGPOINT, LST_INTEGER,       LST_BOOLEAN},
+        {OP_EQ,       LST_FLOATINGPOINT, LST_FLOATINGPOINT, LST_BOOLEAN},
+        {OP_EQ,       LST_VECTOR,        LST_VECTOR,        LST_BOOLEAN},
+        {OP_EQ,       LST_QUATERNION,    LST_QUATERNION,    LST_BOOLEAN},
+        {OP_EQ,       LST_STRING,        LST_STRING,        LST_BOOLEAN},
+        {OP_EQ,       LST_STRING,        LST_KEY,           LST_BOOLEAN},
+        {OP_EQ,       LST_KEY,           LST_STRING,        LST_BOOLEAN},
+        {OP_EQ,       LST_KEY,           LST_KEY,           LST_BOOLEAN},
+        {OP_EQ,       LST_LIST,          LST_LIST,          LST_BOOLEAN},
 
         // !=
-        {NEQ,         LST_INTEGER,       LST_INTEGER,       LST_BOOLEAN},
-        {NEQ,         LST_INTEGER,       LST_FLOATINGPOINT, LST_BOOLEAN},
-        {NEQ,         LST_FLOATINGPOINT, LST_INTEGER,       LST_BOOLEAN},
-        {NEQ,         LST_FLOATINGPOINT, LST_FLOATINGPOINT, LST_BOOLEAN},
-        {NEQ,         LST_VECTOR,        LST_VECTOR,        LST_BOOLEAN},
-        {NEQ,         LST_QUATERNION,    LST_QUATERNION,    LST_BOOLEAN},
+        {OP_NEQ,      LST_INTEGER,       LST_INTEGER,       LST_BOOLEAN},
+        {OP_NEQ,      LST_INTEGER,       LST_FLOATINGPOINT, LST_BOOLEAN},
+        {OP_NEQ,      LST_FLOATINGPOINT, LST_INTEGER,       LST_BOOLEAN},
+        {OP_NEQ,      LST_FLOATINGPOINT, LST_FLOATINGPOINT, LST_BOOLEAN},
+        {OP_NEQ,      LST_VECTOR,        LST_VECTOR,        LST_BOOLEAN},
+        {OP_NEQ,      LST_QUATERNION,    LST_QUATERNION,    LST_BOOLEAN},
         // This seriously returns an int, see lscript_execute:list_list_operation()
-        // and lsa_cmp_lists. NEQ returns `(len(a) - len(b))`.
+        // and lsa_cmp_lists. OP_NEQ returns `(len(a) - len(b))`.
         // `(list1 != list2)` is not the same as `!(list1 == list2)`.
-        {NEQ,         LST_STRING,        LST_STRING,        LST_INTEGER},
-        {NEQ,         LST_STRING,        LST_KEY,           LST_INTEGER},
-        {NEQ,         LST_KEY,           LST_STRING,        LST_INTEGER},
-        {NEQ,         LST_KEY,           LST_KEY,           LST_INTEGER},
+        {OP_NEQ,      LST_STRING,        LST_STRING,        LST_INTEGER},
+        {OP_NEQ,      LST_STRING,        LST_KEY,           LST_INTEGER},
+        {OP_NEQ,      LST_KEY,           LST_STRING,        LST_INTEGER},
+        {OP_NEQ,      LST_KEY,           LST_KEY,           LST_INTEGER},
         // Similar to above, but the same under LSO2 and Mono
-        {NEQ,         LST_LIST,          LST_LIST,          LST_INTEGER},
+        {OP_NEQ,      LST_LIST,          LST_LIST,          LST_INTEGER},
 
         // bitwise operators
         {'&',         LST_INTEGER,       LST_INTEGER,       LST_INTEGER},
@@ -170,12 +170,12 @@ const static int OPERATOR_RESULTS[][4] = {
 
         // boolean opeartors
         {'!',         LST_INTEGER,       LST_NONE,          LST_BOOLEAN},
-        {BOOLEAN_AND, LST_INTEGER,       LST_INTEGER,       LST_BOOLEAN},
-        {BOOLEAN_OR,  LST_INTEGER,       LST_INTEGER,       LST_BOOLEAN},
+        {OP_BOOLEAN_AND, LST_INTEGER,       LST_INTEGER,       LST_BOOLEAN},
+        {OP_BOOLEAN_OR,  LST_INTEGER,       LST_INTEGER,       LST_BOOLEAN},
 
         // shift operators
-        {SHIFT_LEFT,  LST_INTEGER,       LST_INTEGER,       LST_INTEGER},
-        {SHIFT_RIGHT, LST_INTEGER,       LST_INTEGER,       LST_INTEGER},
+        {OP_SHIFT_LEFT,  LST_INTEGER,       LST_INTEGER,       LST_INTEGER},
+        {OP_SHIFT_RIGHT, LST_INTEGER,       LST_INTEGER,       LST_INTEGER},
 
         // end
         {-1,          -1,                -1,                -1},
@@ -212,7 +212,7 @@ bool LSLType::canCoerce(LSLType *to) {
   return false;
 }
 
-class LSLType *LSLType::getResultType(int op, LSLType *right) {
+class LSLType *LSLType::getResultType(LSLOperator op, LSLType *right) {
   int i;
 
   // error on either side is always error
@@ -270,7 +270,7 @@ class LSLType *LSLType::getResultType(int op, LSLType *right) {
       // In Mono it causes a runtime VM error due to invalid IL if you actually try to use
       // the retval in something like `llOwnerSay((string)(int_val *= float_val))`.
       // For now let's just warn and pretend it returns a float, because it sort of does in LSO.
-      if (getIType() == LST_INTEGER && right && right->getIType() == LST_FLOATINGPOINT && op == '*') {
+      if (op == OP_MUL && getIType() == LST_INTEGER && right && right->getIType() == LST_FLOATINGPOINT) {
         return TYPE(LST_FLOATINGPOINT);
       }
       return nullptr;
@@ -280,63 +280,63 @@ class LSLType *LSLType::getResultType(int op, LSLType *right) {
   return nullptr;
 }
 
-bool operation_mutates(int operation) {
+bool operation_mutates(LSLOperator operation) {
   switch (operation) {
     case '=':
-    case INC_PRE_OP:
-    case INC_POST_OP:
-    case DEC_PRE_OP:
-    case DEC_POST_OP:
-    case ADD_ASSIGN:
-    case SUB_ASSIGN:
-    case MUL_ASSIGN:
-    case DIV_ASSIGN:
-    case MOD_ASSIGN:
+    case OP_PRE_INCR:
+    case OP_POST_INCR:
+    case OP_PRE_DECR:
+    case OP_POST_DECR:
+    case OP_ADD_ASSIGN:
+    case OP_SUB_ASSIGN:
+    case OP_MUL_ASSIGN:
+    case OP_DIV_ASSIGN:
+    case OP_MOD_ASSIGN:
       return true;
     default:
       return false;
   }
 }
 
-const char *operation_str(int operation) {
+const char *operation_str(LSLOperator operation) {
   switch (operation) {
     case 0:
       return "<constant>";
     case '=':
       return "=";
-    case NEQ:
+    case OP_NEQ:
       return "!=";
-    case EQ:
+    case OP_EQ:
       return "==";
-    case GEQ:
+    case OP_GEQ:
       return ">=";
-    case LEQ:
+    case OP_LEQ:
       return "<=";
-    case INC_PRE_OP:
+    case OP_PRE_INCR:
       return "++";
-    case DEC_PRE_OP:
+    case OP_PRE_DECR:
       return "--";
-    case INC_POST_OP:
+    case OP_POST_INCR:
       return "++";
-    case DEC_POST_OP:
+    case OP_POST_DECR:
       return "--";
-    case BOOLEAN_AND:
+    case OP_BOOLEAN_AND:
       return "&&";
-    case BOOLEAN_OR:
+    case OP_BOOLEAN_OR:
       return "||";
-    case SHIFT_LEFT:
+    case OP_SHIFT_LEFT:
       return "<<";
-    case SHIFT_RIGHT:
+    case OP_SHIFT_RIGHT:
       return ">>";
-    case ADD_ASSIGN:
+    case OP_ADD_ASSIGN:
       return "+=";
-    case SUB_ASSIGN:
+    case OP_SUB_ASSIGN:
       return "-=";
-    case MUL_ASSIGN:
+    case OP_MUL_ASSIGN:
       return "*=";
-    case DIV_ASSIGN:
+    case OP_DIV_ASSIGN:
       return "/=";
-    case MOD_ASSIGN:
+    case OP_MOD_ASSIGN:
       return "%=";
     case '+':
       return "+";
@@ -369,15 +369,15 @@ const char *operation_str(int operation) {
   }
 }
 
-const char *operation_repr_str(int operation) {
+const char *operation_repr_str(LSLOperator operation) {
   switch(operation) {
-    case INC_POST_OP:
+    case OP_POST_INCR:
       return "++ (post)";
-    case INC_PRE_OP:
+    case OP_PRE_INCR:
       return "++ (pre)";
-    case DEC_POST_OP:
+    case OP_POST_DECR:
       return "-- (post)";
-    case DEC_PRE_OP:
+    case OP_PRE_DECR:
       return "-- (pre)";
     default:
       return operation_str(operation);
@@ -388,14 +388,14 @@ bool is_cast_legal(LSLIType from, LSLIType to) {
   return LEGAL_CAST_TABLE[from][to] == 1;
 }
 
-int decouple_compound_operation(int operation) {
+LSLOperator decouple_compound_operation(LSLOperator operation) {
   // *_ASSIGN is usually just syntactic sugar. `foo *= 3` is the same as `foo = foo * 3`
   switch (operation) {
-    case ADD_ASSIGN: operation = '+'; break;
-    case SUB_ASSIGN: operation = '-'; break;
-    case MUL_ASSIGN: operation = '*'; break;
-    case DIV_ASSIGN: operation = '/'; break;
-    case MOD_ASSIGN: operation = '%'; break;
+    case OP_ADD_ASSIGN: operation = OP_PLUS; break;
+    case OP_SUB_ASSIGN: operation = OP_MINUS; break;
+    case OP_MUL_ASSIGN: operation = OP_MUL; break;
+    case OP_DIV_ASSIGN: operation = OP_DIV; break;
+    case OP_MOD_ASSIGN: operation = OP_MOD; break;
     default:
       break;
   }

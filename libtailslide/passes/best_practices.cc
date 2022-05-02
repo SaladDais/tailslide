@@ -104,21 +104,23 @@ bool BestPracticesVisitor::visit(LSLBinaryExpression *node) {
   auto *right_lcv = (LSLListConstant *)right_cv;
 
   switch (node->getOperation()) {
-    case NEQ:
-    case EQ: {
+    case OP_NEQ:
+    case OP_EQ: {
       // warn on list == list unless it's against an empty list constant,
       // integer len = (list_val != []) is a common pattern for getting the length of a list.
       if (left_lcv->getLength() != 0 && right_lcv->getLength() != 0) {
         NODE_ERROR(node, W_LIST_COMPARE);
       }
     }
+    default:
+      break;
   }
   return true;
 }
 
 bool BestPracticesVisitor::visit(LSLExpressionStatement *node) {
   auto *expr = (LSLExpression *)node->getChild(0);
-  if (expr->getOperation() == EQ) {
+  if (expr->getOperation() == OP_EQ) {
     NODE_ERROR(node, W_EQ_AS_STATEMENT);
   }
   return true;

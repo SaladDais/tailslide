@@ -1,6 +1,7 @@
 #include <string>
 
 #include "tailslide.hh"
+#include "lslmini.tab.hh"
 
 int tailslide_lex_init_extra(Tailslide::ScriptContext *, void **);
 

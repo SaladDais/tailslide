@@ -5,6 +5,42 @@
 
 namespace Tailslide {
 
+
+enum LSLOperator : uint8_t {
+  OP_NONE = '\0',
+  OP_PARENS = '(',
+  OP_PLUS = '+',
+  OP_MINUS = '-',
+  OP_MUL = '*',
+  OP_DIV = '/',
+  OP_MOD = '%',
+  OP_ASSIGN = '=',
+  OP_BIT_NOT = '~',
+  OP_BIT_XOR = '^',
+  OP_BIT_AND = '&',
+  OP_BIT_OR = '|',
+  OP_BOOLEAN_NOT = '!',
+  OP_LESS = '<',
+  OP_GREATER = '>',
+  OP_BOOLEAN_AND = 128,
+  OP_BOOLEAN_OR ,
+  OP_PRE_INCR,
+  OP_PRE_DECR,
+  OP_POST_INCR,
+  OP_POST_DECR,
+  OP_ADD_ASSIGN,
+  OP_SUB_ASSIGN,
+  OP_MUL_ASSIGN,
+  OP_DIV_ASSIGN,
+  OP_MOD_ASSIGN,
+  OP_SHIFT_LEFT,
+  OP_SHIFT_RIGHT,
+  OP_LEQ,
+  OP_GEQ,
+  OP_EQ,
+  OP_NEQ,
+};
+
 class LSLType : public LSLASTNode {
   public:
     explicit LSLType(LSLIType type, bool static_def=false) : LSLASTNode(nullptr), _mIType(type) {
@@ -16,7 +52,7 @@ class LSLType : public LSLASTNode {
       return &_sTypes[type];
     }
     bool canCoerce(LSLType *to );
-    LSLType *getResultType(int op, LSLType *right);
+    LSLType *getResultType(LSLOperator op, LSLType *right);
 
 
     LSLIType getIType() { return _mIType; };
@@ -52,11 +88,13 @@ inline LSLType *TYPE(LSLIType type) {
   return LSLType::get(type);
 }
 
-int decouple_compound_operation(int operation);
-bool operation_mutates(int operation);
-const char* operation_str(int operation);
-const char* operation_repr_str(int operation);
+LSLOperator decouple_compound_operation(LSLOperator operation);
+bool operation_mutates(LSLOperator operation);
+const char* operation_str(LSLOperator operation);
+const char* operation_repr_str(LSLOperator operation);
 bool is_cast_legal(LSLIType from, LSLIType to);
+
+
 }
 
 #endif /* not _TYPES_HH */

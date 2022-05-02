@@ -50,7 +50,7 @@ class MonoScriptCompiler : public ASTVisitor {
     virtual bool visit(LSLListExpression *node);
     virtual bool visit(LSLFunctionExpression *node);
     virtual bool visit(LSLBinaryExpression *node);
-    void compileBinaryExpression(int op, LSLExpression *left, LSLExpression *right, LSLIType ret_type);
+    void compileBinaryExpression(LSLOperator op, LSLExpression *left, LSLExpression *right, LSLIType ret_type);
     virtual bool visit(LSLUnaryExpression *node);
     virtual bool visit(LSLPrintExpression *node);
 

@@ -11,8 +11,8 @@ std::vector<LSLIType> SIBLINGS_CAUSING_INT_PROMOTION = {
 };
 
 bool DeSugaringVisitor::visit(LSLBinaryExpression *node) {
-  int op = node->getOperation();
-  int decoupled_op = decouple_compound_operation(op);
+  LSLOperator op = node->getOperation();
+  LSLOperator decoupled_op = decouple_compound_operation(op);
   bool compound_assignment = op != decoupled_op;
 
   auto *left = (LSLLValueExpression *) node->getChild(0);
@@ -22,7 +22,7 @@ bool DeSugaringVisitor::visit(LSLBinaryExpression *node) {
     return true;
 
   // This is effectively NOT syntactic sugar and needs to be handled specially by backends.
-  if (op == MUL_ASSIGN && left->getIType() == LST_INTEGER && right->getIType() == LST_FLOATINGPOINT) {
+  if (op == OP_MUL_ASSIGN && left->getIType() == LST_INTEGER && right->getIType() == LST_FLOATINGPOINT) {
     return true;
   }
 
@@ -67,12 +67,12 @@ bool DeSugaringVisitor::visit(LSLBinaryExpression *node) {
   new_right_node->setType(node->getType());
   new_right_node->setLoc(node->getLoc());
   LSLASTNode::replaceNode(node->getChild(1), new_right_node);
-  node->setOperation('=');
+  node->setOperation(OP_ASSIGN);
   return true;
 }
 
 bool DeSugaringVisitor::visit(LSLUnaryExpression *node) {
-  int new_op;
+  LSLOperator new_op;
   if (node->getIType() == LST_ERROR)
     return true;
 
@@ -84,8 +84,8 @@ bool DeSugaringVisitor::visit(LSLUnaryExpression *node) {
   // the post operations are never syntactic sugar,
   // so no way to desugar those.
   switch(node->getOperation()) {
-    case INC_PRE_OP: new_op = '+'; break;
-    case DEC_PRE_OP: new_op = '-'; break;
+    case OP_PRE_INCR: new_op = OP_PLUS; break;
+    case OP_PRE_DECR: new_op = OP_MINUS; break;
     default:
       return true;
   }
@@ -106,7 +106,7 @@ bool DeSugaringVisitor::visit(LSLUnaryExpression *node) {
   new_rvalue->setType(node->getType());
   auto *assign_expr = _mAllocator->newTracked<LSLBinaryExpression>(
       lvalue,
-      '=',
+      OP_ASSIGN,
       new_rvalue
   );
   assign_expr->setType(node->getType());
@@ -281,7 +281,7 @@ bool LLConformantDeSugaringVisitor::visit(LSLConstantExpression *node) {
   new_cv->setLoc(cv->getLoc());
   auto *new_constexpr = _mAllocator->newTracked<LSLConstantExpression>(new_cv);
   new_constexpr->setLoc(node->getLoc());
-  auto *neg_expr = _mAllocator->newTracked<LSLUnaryExpression>(new_constexpr, '-');
+  auto *neg_expr = _mAllocator->newTracked<LSLUnaryExpression>(new_constexpr, OP_MINUS);
   neg_expr->setLoc(node->getLoc());
   neg_expr->setConstantValue(cv);
   neg_expr->setType(node->getType());

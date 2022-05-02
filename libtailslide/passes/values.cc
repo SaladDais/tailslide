@@ -69,7 +69,7 @@ void ConstantDeterminingVisitor::handleDeclaration(LSLASTNode *node) {
 }
 
 bool ConstantDeterminingVisitor::visit(LSLExpression *node) {
-  int operation = node->getOperation();
+  LSLOperator operation = node->getOperation();
   LSLConstant *constant_value = node->getConstantValue();
   DEBUG(
       LOG_DEBUG_SPAM,

@@ -169,7 +169,7 @@ bool TypeCheckVisitor::visit(LSLWhileStatement *node) {
 
 
 bool TypeCheckVisitor::visit(LSLExpression *node) {
-  int operation = node->getOperation();
+  LSLOperator operation = node->getOperation();
   LSLType *type;
   LSLASTNode *left = node->getChild(0);
   LSLASTNode *right = node->getChild(1);
@@ -194,7 +194,7 @@ bool TypeCheckVisitor::visit(LSLExpression *node) {
       // We don't know what type this expression is supposed to result in,
       // either because this operation is unsupported.
       type = TYPE(LST_ERROR);
-    } else if (l_type == TYPE(LST_INTEGER) && r_type == TYPE(LST_FLOATINGPOINT) && operation == MUL_ASSIGN) {
+    } else if (operation == OP_MUL_ASSIGN && l_type == TYPE(LST_INTEGER) && r_type == TYPE(LST_FLOATINGPOINT)) {
       // see note in `LSLType::getResultType` for details on this case.
       NODE_ERROR(node, W_INT_FLOAT_MUL_ASSIGN);
     }
