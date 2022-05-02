@@ -222,17 +222,15 @@ LSLASTNode *LSLASTNode::findPreviousInScope(std::function<bool(LSLASTNode *)> co
 
 // find statements under this node that are still in the same scope
 LSLASTNode *LSLASTNode::findDescInScope(std::function<bool(LSLASTNode *)> const &checker) {
-  LSLASTNode *child = getChildren();
   if (checker(this))
     return this;
-  while (child) {
+  for (auto *child : *this) {
     // don't descend into statements that make new scopes
     if (child->getNodeSubType() != NODE_COMPOUND_STATEMENT) {
       LSLASTNode *found_node = child->findDescInScope(checker);
       if (found_node != nullptr)
         return found_node;
     }
-    child = child->getNext();
   }
   return nullptr;
 }

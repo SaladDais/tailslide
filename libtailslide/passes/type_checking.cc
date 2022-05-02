@@ -204,20 +204,17 @@ bool TypeCheckVisitor::visit(LSLExpression *node) {
 }
 
 bool TypeCheckVisitor::visit(LSLListConstant *node) {
-  LSLASTNode *val_c = node->getValue();
-  while (val_c != nullptr) {
+  for (auto *val_c : *node) {
     if (val_c->getType() == TYPE(LST_LIST)) {
       NODE_ERROR(node, E_LIST_IN_LIST);
       val_c->setType(TYPE(LST_ERROR));
     }
-    val_c = val_c->getNext();
   }
   return true;
 }
 
 bool TypeCheckVisitor::visit(LSLListExpression *node) {
-  LSLASTNode *val_c = node->getChildren();
-  while (val_c != nullptr) {
+  for (auto *val_c : *node) {
     auto child_type = val_c->getIType();
     if (child_type == LST_LIST) {
       NODE_ERROR(node, E_LIST_IN_LIST);
@@ -229,7 +226,6 @@ bool TypeCheckVisitor::visit(LSLListExpression *node) {
       NODE_ERROR(node, E_NULL_IN_LIST);
       val_c->setType(TYPE(LST_ERROR));
     }
-    val_c = val_c->getNext();
   }
   return true;
 }
@@ -427,8 +423,7 @@ bool TypeCheckVisitor::visit(LSLTypecastExpression *node) {
 }
 
 bool TypeCheckVisitor::visit(LSLVectorExpression *node) {
-  LSLASTNode *child = node->getChildren();
-  for (; child; child = child->getNext()) {
+  for (auto *child : *node) {
     if (!child->getType()->canCoerce(TYPE(LST_FLOATINGPOINT))) {
       NODE_ERROR(node, E_WRONG_TYPE_IN_MEMBER_ASSIGNMENT, "vector",
                  child->getType()->getNodeName());
@@ -439,8 +434,7 @@ bool TypeCheckVisitor::visit(LSLVectorExpression *node) {
 }
 
 bool TypeCheckVisitor::visit(LSLQuaternionExpression *node) {
-  LSLASTNode *child = node->getChildren();
-  for (; child; child = child->getNext()) {
+  for (auto *child : *node) {
     if (!child->getType()->canCoerce(TYPE(LST_FLOATINGPOINT))) {
       NODE_ERROR(node, E_WRONG_TYPE_IN_MEMBER_ASSIGNMENT, "quaternion",
                  child->getType()->getNodeName());

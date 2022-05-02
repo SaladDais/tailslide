@@ -60,8 +60,7 @@ bool LSOScriptCompiler::visit(LSLScript *node) {
   // skip past the table for state offset and handled events bitfield for each state
   _mStatesBS.moveTo((int32_t)state_table_pos(num_states), true);
 
-  auto *state = states->getChildren();
-  while(state) {
+  for (auto *state : *states) {
     auto state_pos = _mStatesBS.pos();
     auto state_data = &_mSymData[state->getSymbol()];
     // Temporarily seek back to our entry in the state table and write info about the state
@@ -78,7 +77,6 @@ bool LSOScriptCompiler::visit(LSLScript *node) {
       NODE_ERROR(node, E_STACK_HEAP_COLLISION);
       return false;
     }
-    state = state->getNext();
   }
 
   // Write in the registers and the separate bitstreams for different sections of the bytecode
@@ -163,13 +161,11 @@ bool LSOScriptCompiler::visit(LSLGlobalVariable *node) {
     //
     // This is needed to handle cases like `float f = 1; list l = [f];` where the list
     // is meant to contain a single integer under LSO, due to the integer rvalue.
-    auto *list_children = rvalue->getChildren();
     auto *new_list_cv = _mAllocator->newTracked<LSLListConstant>(nullptr);
-    while (list_children != nullptr) {
-      auto *child_cv = resolve_sa_identifier(list_children)->getConstantValue();
+    for (auto *child : *rvalue) {
+      auto *child_cv = resolve_sa_identifier(child)->getConstantValue();
       assert(child_cv);
       new_list_cv->pushChild(child_cv->copy(_mAllocator));
-      list_children = list_children->getNext();
     }
     cv = new_list_cv;
   }
@@ -374,11 +370,9 @@ uint32_t LSOHeapManager::writeConstant(LSLConstant *constant) {
       mHeapBS.moveBy((int32_t) children_required_bytes, true);
 
       std::vector<uint32_t> child_idxs;
-      auto *child = list_val->getValue();
-      while(child != nullptr) {
+      for (auto *child : *list_val) {
         // write the child, noting where on the heap it was written
-        child_idxs.emplace_back(writeConstant(child));
-        child = (LSLConstant*) child->getNext();
+        child_idxs.emplace_back(writeConstant((LSLConstant *) child));
       }
 
       {

@@ -183,13 +183,11 @@ bool PrettyPrintVisitor::visit(LSLGlobalFunction *node) {
 }
 
 bool PrettyPrintVisitor::visit(LSLParamList *node) {
-  LSLASTNode *child_node = node->getChildren();
-  while (child_node && child_node->getNodeType() != NODE_NULL ) {
+  for (auto *child_node : *node) {
     child_node->getType()->visit(this);
     mStream << ' ';
     child_node->visit(this);
-    child_node = child_node->getNext();
-    if (child_node)
+    if (child_node->getNext())
       mStream << ", ";
   }
   return false;

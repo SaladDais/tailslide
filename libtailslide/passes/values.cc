@@ -29,11 +29,9 @@ bool ConstantDeterminingVisitor::beforeDescend(LSLASTNode *node) {
 bool ConstantDeterminingVisitor::visit(LSLScript *node) {
   // need to iterate over global vars FIRST since expressions in
   // global functions may make use of them.
-  LSLASTNode *child = node->getChild(0)->getChildren();
-  while (child != nullptr) {
+  for (auto *child : *node->getChild(0)) {
     if (child->getNodeType() == NODE_GLOBAL_VARIABLE)
       child->visit(this);
-    child = child->getNext();
   }
   // safe to descend into functions and event handlers now
   visitChildren(node);
@@ -198,13 +196,12 @@ bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {
 }
 
 bool ConstantDeterminingVisitor::visit(LSLListExpression *node) {
-  LSLASTNode *child = node->getChildren();
   auto *new_list_cv = _mAllocator->newTracked<LSLListConstant>(nullptr);
 
   // if we have children
-  if (child && child->getNodeType() != NODE_NULL) {
+  if (node->getChildren()) {
     // make sure they are all constant
-    for (child = node->getChildren(); child; child = child->getNext()) {
+    for (auto *child : *node) {
       if (!child->isConstant()) {
         node->setConstantPrecluded(child->getConstantPrecluded());
         return true;
@@ -212,7 +209,7 @@ bool ConstantDeterminingVisitor::visit(LSLListExpression *node) {
     }
 
     // create assignables for them
-    for (child = node->getChildren(); child; child = child->getNext()) {
+    for (auto *child : *node) {
       new_list_cv->pushChild(child->getConstantValue()->copy(_mAllocator));
     }
   }
@@ -226,7 +223,7 @@ bool ConstantDeterminingVisitor::visit(LSLVectorExpression *node) {
   float v[3];
   int cv = 0;
 
-  for (LSLASTNode *child = node->getChildren(); child; child = child->getNext()) {
+  for (auto *child : *node) {
     // if we have too many children, make sure we don't overflow cv
     if (cv >= 3)
       return true;
@@ -265,7 +262,7 @@ bool ConstantDeterminingVisitor::visit(LSLQuaternionExpression *node) {
   float v[4];
   int cv = 0;
 
-  for (LSLASTNode *child = node->getChildren(); child; child = child->getNext()) {
+  for (auto *child : *node) {
     // if we have too many children, make sure we don't overflow cv
     if (cv >= 4)
       return true;

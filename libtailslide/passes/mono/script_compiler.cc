@@ -30,8 +30,8 @@ bool MonoScriptCompiler::visit(LSLScript *node) {
           "{\n";
 
   // declare the global variables first
-  auto *globals = node->getChild(0)->getChildren();
-  for (auto *global = globals; global; global = global->getNext()) {
+  auto *globals = node->getChild(0);
+  for (auto *global : *globals) {
     if (global->getNodeType() != NODE_GLOBAL_VARIABLE)
       continue;
     auto *id = (LSLIdentifier *) global->getChild(0);
@@ -44,7 +44,7 @@ bool MonoScriptCompiler::visit(LSLScript *node) {
           ".maxstack 500\n";
 
   _mInGlobalExpr = true;
-  for (auto *global = globals; global; global = global->getNext()) {
+  for (auto *global: *globals) {
     if (global->getNodeType() != NODE_GLOBAL_VARIABLE)
       continue;
     global->visit(this);
@@ -58,7 +58,7 @@ bool MonoScriptCompiler::visit(LSLScript *node) {
           "}\n";
 
   // now go over the globals _again_ to pick up all the functions
-  for (auto *global = globals; global; global = global->getNext()) {
+  for (auto *global : *globals) {
     if (global->getNodeType() != NODE_GLOBAL_FUNCTION)
       continue;
     global->visit(this);
@@ -432,7 +432,8 @@ bool MonoScriptCompiler::visit(LSLIfStatement* node) {
 }
 
 bool MonoScriptCompiler::visit(LSLForStatement* node) {
-  for(auto *init_expr=node->getChild(0)->getChildren(); init_expr; init_expr=init_expr->getNext()) {
+  // execute instructions to initialize vars
+  for(auto *init_expr : *node->getChild(0)) {
     init_expr->visit(this);
     if (init_expr->getIType() != LST_NULL)
       mCIL << "pop\n";
@@ -446,7 +447,7 @@ bool MonoScriptCompiler::visit(LSLForStatement* node) {
   // run the body of the loop
   node->getChild(3)->visit(this);
   // run the increment expressions
-  for(auto *incr_expr=node->getChild(2)->getChildren(); incr_expr; incr_expr=incr_expr->getNext()) {
+  for(auto *incr_expr : *node->getChild(2)) {
     incr_expr->visit(this);
     if (incr_expr->getIType() != LST_NULL)
       mCIL << "pop\n";
@@ -576,20 +577,20 @@ bool MonoScriptCompiler::visit(LSLListExpression *node) {
   // match their behavior so it's less annoying to compare output.
   if (_mInGlobalExpr) {
     mCIL << CIL_LIST_INITIALIZER << "\n";
-    for (auto *child = node->getChildren(); child; child = child->getNext()) {
+    for (auto child : *node) {
       child->visit(this);
       mCIL << CIL_BOXING_INSTRUCTIONS[child->getIType()]
            << "call " << CIL_TYPE_NAMES[LST_LIST] << " " << CIL_USERSCRIPT_CLASS << "::Append(" << CIL_TYPE_NAMES[LST_LIST] << ", object)\n";
     }
   } else {
     // list elements get evaluated and pushed FIRST
-    for (auto *child = node->getChildren(); child; child = child->getNext()) {
+    for (auto *child : *node) {
       child->visit(this);
       mCIL << CIL_BOXING_INSTRUCTIONS[child->getIType()];
     }
     // then they get added to the list
     mCIL << CIL_LIST_INITIALIZER << "\n";
-    for (auto *child = node->getChildren(); child; child = child->getNext()) {
+    for (auto *child : *node) {
       mCIL << "call " << CIL_TYPE_NAMES[LST_LIST] << " " << CIL_USERSCRIPT_CLASS << "::Prepend(object, " << CIL_TYPE_NAMES[LST_LIST] << ")\n";
     }
   }

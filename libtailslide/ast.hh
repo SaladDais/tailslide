@@ -232,6 +232,38 @@ class LSLASTNode : public TrackableObject {
   protected:
     bool                        _mDeclarationAllowed;
     bool                        _mStaticNode = false;
+
+  public:
+    struct iterator
+    {
+      public:
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type   = std::ptrdiff_t;
+        using value_type        = LSLASTNode*;
+        // TODO: this might be horrible. The ownership story is still very weird for
+        //  the AST, and all consumers expect pointers right now, so leaving it as is.
+        using pointer           = value_type;
+        using reference         = value_type;
+
+        explicit iterator(pointer ptr) : _mPtr(ptr) {}
+        LSLASTNode *operator*() const { return _mPtr; }
+        LSLASTNode *operator->() { return _mPtr; }
+
+        iterator& operator++() {
+          _mPtr = _mPtr->getNext();
+          return *this;
+        }
+
+        iterator operator++(int) {iterator tmp = *this; ++(*this); return tmp; }
+
+        friend bool operator== (const iterator& a, const iterator& b) { return a._mPtr == b._mPtr; };
+        friend bool operator!= (const iterator& a, const iterator& b) { return a._mPtr != b._mPtr; };
+
+      private:
+        pointer _mPtr;
+    };
+    iterator begin() { return iterator(_mChildren); }
+    iterator end()   { return iterator(nullptr); }
 };
 
 class LSLASTNullNode : public LSLASTNode {

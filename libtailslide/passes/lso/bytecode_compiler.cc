@@ -76,11 +76,9 @@ bool LSOBytecodeCompiler::visit(LSLQuaternionExpression *node) {
 }
 
 bool LSOBytecodeCompiler::visit(LSLListExpression *node) {
-  auto *child = node->getChildren();
-  while (child) {
+  for (auto *child : *node) {
     child->visit(this);
     mCodeBS << LOPC_PUSHARGB << child->getIType();
-    child = child->getNext();
   }
   mCodeBS << LOPC_STACKTOL << (uint32_t)node->getNumChildren();
   return false;
@@ -339,13 +337,11 @@ bool LSOBytecodeCompiler::visit(LSLIfStatement* node) {
 
 bool LSOBytecodeCompiler::visit(LSLForStatement *node) {
   // initializer expressions come first and are run unconditionally
-  auto *init_expr = node->getChild(0)->getChildren();
-  while (init_expr != nullptr) {
+  for(auto *init_expr : *node->getChild(0)) {
     init_expr->visit(this);
     // nothing consumes the result of these expressions, pop if applicable.
     if (auto pop_opcode = LSO_TYPE_POP_OPCODE[init_expr->getIType()])
       mCodeBS << pop_opcode;
-    init_expr = init_expr->getNext();
   }
 
   // top of the loop has conditional jump to break the loop
@@ -360,12 +356,10 @@ bool LSOBytecodeCompiler::visit(LSLForStatement *node) {
   node->getChild(3)->visit(this);
 
   // followed by the increment expression list
-  auto *incr_expr = node->getChild(2)->getChildren();
-  while (incr_expr != nullptr) {
+  for (auto *incr_expr : *node->getChild(2)) {
     incr_expr->visit(this);
     if (auto pop_opcode = LSO_TYPE_POP_OPCODE[incr_expr->getIType()])
       mCodeBS << pop_opcode;
-    incr_expr = incr_expr->getNext();
   }
 
   // then the jump back to the check expression at the top
@@ -482,12 +476,10 @@ void LSOBytecodeCompiler::pushConstant(LSLConstant *constant) {
       break;
     case LST_LIST: {
       auto *list_cv = (LSLListConstant *)constant;
-      auto *list_child = constant->getChildren();
-      while (list_child != nullptr) {
+      for (auto *list_child : *list_cv) {
         // push the constant, then its type so STACKTOL knows what's actually on the stack.
         pushConstant((LSLConstant *)list_child);
         mCodeBS << LOPC_PUSHARGB << list_child->getIType();
-        list_child = list_child->getNext();
       }
       mCodeBS << LOPC_STACKTOL << (uint32_t)list_cv->getLength();
       break;

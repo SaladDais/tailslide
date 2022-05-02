@@ -9,7 +9,7 @@ bool SymbolResolutionVisitor::visit(LSLScript *script) {
   // all global var definitions are implicitly hoisted above function definitions
   // all functions and states have their declarations implicitly hoisted as well.
   // walk over just the global vars and prototypes of functions.
-  for (auto *global=globals->getChildren(); global; global=global->getNext()) {
+  for (auto *global : *globals) {
     if (global->getNodeType() == NODE_GLOBAL_VARIABLE) {
       global->visit(this);
     } else if (global->getNodeType() == NODE_GLOBAL_FUNCTION) {
@@ -32,7 +32,7 @@ bool SymbolResolutionVisitor::visit(LSLScript *script) {
 
   // now walk the states to register their prototypes
   auto *states = script->getChild(1);
-  for (auto *state=states->getChildren(); state; state=state->getNext()) {
+  for (auto *state : *states) {
     replaceSymbolTable(state);
     auto *identifier = (LSLIdentifier *)state->getChild(0);
     identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
@@ -42,7 +42,7 @@ bool SymbolResolutionVisitor::visit(LSLScript *script) {
   }
 
   // visit function bodies
-  for (auto *global=globals->getChildren(); global; global=global->getNext()) {
+  for (auto *global : *globals) {
     // we've already descended into global vars, don't re-visit.
     if (global->getNodeType() == NODE_GLOBAL_VARIABLE)
       continue;
@@ -133,8 +133,7 @@ bool SymbolResolutionVisitor::visit(LSLEventHandler *node) {
 }
 
 static void register_func_param_symbols(LSLASTNode *proto, bool is_event) {
-  LSLASTNode *child = proto->getChildren();
-  while (child) {
+  for (auto *child : *proto) {
     auto *identifier = (LSLIdentifier *) child;
     identifier->setSymbol(proto->mContext->allocator->newTracked<LSLSymbol>(
         identifier->getName(),
@@ -144,7 +143,6 @@ static void register_func_param_symbols(LSLASTNode *proto, bool is_event) {
         child->getLoc()
     ));
     proto->defineSymbol(identifier->getSymbol());
-    child = child->getNext();
   }
 }
 
