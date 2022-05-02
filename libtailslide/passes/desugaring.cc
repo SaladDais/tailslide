@@ -178,12 +178,12 @@ bool DeSugaringVisitor::visit(LSLFunctionExpression *node) {
     return true;
   }
 
+  auto *params = node->getChild(1);
   // we may replace nodes during iteration so we can't use `node->getNext()`
-  // function exprs' children are identifier, [param, ...]
-  auto num_children = node->getNumChildren() - 1;
-  for(auto i=0; i<num_children; ++i) {
+  auto num_params = params->getNumChildren();
+  for(auto i=0; i<num_params; ++i) {
     auto expected_param = func_decl->getChild(i);
-    auto param = node->getChild(i + 1);
+    auto param = params->getChild(i);
     if (!param || !expected_param)
       return true;
     maybeInjectCast((LSLExpression *) param, expected_param->getType());

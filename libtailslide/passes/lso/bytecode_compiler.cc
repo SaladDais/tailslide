@@ -260,12 +260,9 @@ bool LSOBytecodeCompiler::visit(LSLFunctionExpression *node) {
   mCodeBS << LOPC_PUSHE;
   // keep old base pointer on stack so caller can pop it on return
   mCodeBS << LOPC_PUSHBP;
-  // function calls are `identifier, [arg1, arg2, ...]`
-  auto *child_expr = node->getChild(1);
-  while (child_expr != nullptr) {
-    // push arguments on to the stack
+  // push the arguments onto the stack
+  for (auto *child_expr : *node->getChild(1)) {
     child_expr->visit(this);
-    child_expr = child_expr->getNext();
   }
   // make space for locals
   mCodeBS << LOPC_PUSHARGE << (func_sym_data.size - func_sym_data.offset);

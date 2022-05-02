@@ -97,12 +97,12 @@ bool LSOResourceVisitor::visit(LSLEventHandler *node) {
 void LSOResourceVisitor::handleFuncDecl(LSOSymbolData *func_sym_data, LSLASTNode *func_decl) {
   if (!func_decl || func_decl->getNodeType() == NODE_NULL)
     return;
-  auto *params = (LSLIdentifier *) func_decl->getChildren();
-  while (params) {
-    auto param_type = params->getIType();
+
+  for (auto *param : *func_decl) {
+    auto param_type = param->getIType();
     auto param_size = LSO_TYPE_DATA_SIZES[param_type];
     // may not have a symbol if this is a builtin function!
-    auto *param_sym = params->getSymbol();
+    auto *param_sym = param->getSymbol();
     if (param_sym) {
       auto *param_sym_data = getSymbolData(param_sym);
       param_sym_data->offset = func_sym_data->offset;
@@ -111,7 +111,6 @@ void LSOResourceVisitor::handleFuncDecl(LSOSymbolData *func_sym_data, LSLASTNode
 
     func_sym_data->offset += param_size;
     func_sym_data->function_args.push_back(param_type);
-    params = (LSLIdentifier *) params->getNext();
   }
   // function size is parameters + locals, add the parameter sizes
   // before we start looking at the locals

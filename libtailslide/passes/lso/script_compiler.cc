@@ -215,8 +215,8 @@ bool LSOScriptCompiler::visit(LSLState *node) {
   _mStateBS << jump_table_base << '\0';
   // skip past the jump tables to the start of the first state data struct
   _mStateBS.moveBy((int32_t)(jump_table_size * state_data->handlers.size()), true);
-  auto *event_handler = node->getChild(1);
-  while (event_handler != nullptr) {
+
+  for (auto *event_handler : *node->getChild(1)) {
     auto *event_data = &_mSymData[event_handler->getSymbol()];
     // the jump table is in handler enum order, figure out our position within it
     auto table_iter = state_data->handlers.find((LSOHandlerType)event_data->index);
@@ -229,7 +229,6 @@ bool LSOScriptCompiler::visit(LSLState *node) {
       _mStateBS << (uint32_t)(event_start_pos - jump_table_base) << (uint32_t)event_data->size;
     }
     event_handler->visit(this);
-    event_handler = event_handler->getNext();
   }
   return false;
 }

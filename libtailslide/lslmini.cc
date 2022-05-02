@@ -236,11 +236,10 @@ LSLASTNode *LSLASTNode::findDescInScope(std::function<bool(LSLASTNode *)> const 
 }
 
 void LSLASTNode::checkSymbols() {
-  LSLASTNode *node;
   if (getSymbolTable() != nullptr)
     getSymbolTable()->checkSymbols();
 
-  for (node = getChildren(); node; node = node->getNext())
+  for (auto *node : *this)
     node->checkSymbols();
 }
 

@@ -276,7 +276,10 @@ class LSLASTNullNode : public LSLASTNode {
 class LSLASTNodeList : public LSLASTNode {
   public:
     explicit LSLASTNodeList(ScriptContext *ctx) : LSLASTNode(ctx, 0) {};
-    LSLASTNodeList(ScriptContext *ctx, class LSLASTNode *nodes ) : LSLASTNode(ctx, 1, nodes) {};
+    LSLASTNodeList(ScriptContext *ctx, class LSLASTNode *nodes ) : LSLASTNode(ctx, 0) {
+      if (nodes)
+        pushChild(nodes);
+    };
     virtual const char *getNodeName() { return "ast node list"; }
     virtual LSLNodeType getNodeType() { return NODE_AST_NODE_LIST; };
 };

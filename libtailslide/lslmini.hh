@@ -328,10 +328,10 @@ class LSLGlobalFunction : public LSLASTNode {
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
 };
 
-class LSLParamList : public LSLASTNode {
+class LSLParamList : public LSLASTNodeList {
   public:
-    explicit LSLParamList( ScriptContext *ctx ) : LSLASTNode(ctx, 0) {};
-    LSLParamList( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLASTNode(ctx, 1, identifier) {};
+    explicit LSLParamList( ScriptContext *ctx ) : LSLASTNodeList(ctx, nullptr) {};
+    LSLParamList( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLASTNodeList(ctx, identifier) {};
 };
 
 class LSLFunctionDec : public LSLParamList {
@@ -352,8 +352,8 @@ class LSLEventDec : public LSLParamList {
 
 class LSLState : public LSLASTNode {
   public:
-    LSLState( ScriptContext *ctx, class LSLIdentifier *identifier, class LSLEventHandler *state_body )
-        : LSLASTNode( ctx, 2, identifier, state_body ) {};
+    LSLState( ScriptContext *ctx, class LSLIdentifier *identifier, class LSLASTNodeList *event_handlers)
+        : LSLASTNode( ctx, 2, identifier, event_handlers) {};
     virtual const char *getNodeName() { return "state"; }
     virtual LSLNodeType getNodeType() { return NODE_STATE; };
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
@@ -582,9 +582,7 @@ class LSLPrintExpression : public LSLExpression {
 
 class LSLFunctionExpression : public LSLExpression {
   public:
-    LSLFunctionExpression( ScriptContext *ctx, LSLIdentifier *identifier )
-      : LSLExpression( ctx, 1, identifier ) {};
-    LSLFunctionExpression( ScriptContext *ctx, LSLIdentifier *identifier, LSLExpression *arguments )
+    LSLFunctionExpression( ScriptContext *ctx, LSLIdentifier *identifier, LSLASTNodeList *arguments )
       : LSLExpression( ctx, 2, identifier, arguments) {};
     virtual const char *getNodeName() { return "function call"; }
     virtual LSLNodeSubType getNodeSubType() { return NODE_FUNCTION_EXPRESSION; };

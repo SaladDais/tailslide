@@ -10,15 +10,15 @@ namespace Tailslide {
 
 class ScopedTabSetter {
 public:
-  ScopedTabSetter(PrettyPrintVisitor *visitor, int tabs): visitor(visitor), old_tabs(visitor->mTabs) {
-    visitor->mTabs = tabs;
+  ScopedTabSetter(PrettyPrintVisitor *visitor, int tabs): _mVisitor(visitor), _mOldTabs(visitor->mTabs) {
+    _mVisitor->mTabs = tabs;
   };
   ~ScopedTabSetter() {
-    visitor->mTabs = old_tabs;
+    _mVisitor->mTabs = _mOldTabs;
   }
 private:
-  int old_tabs;
-  PrettyPrintVisitor *visitor;
+  int _mOldTabs;
+  PrettyPrintVisitor *_mVisitor;
 };
 
 static bool cast_requires_parens(LSLTypecastExpression* node) {
@@ -48,11 +48,10 @@ static int is_braceless(LSLASTNode *node) {
   return (node->getNodeSubType() != NODE_COMPOUND_STATEMENT);
 }
 
-void PrettyPrintVisitor::prettifySiblingsSep(LSLASTNode* node, const char* separator) {
-  while ( node != nullptr ) {
+void PrettyPrintVisitor::prettifyChildrenSep(LSLASTNode* parent, const char* separator) {
+  for (auto *node : *parent) {
     node->visit(this);
-    node = node->getNext();
-    if (node)
+    if (node->getNext())
       mStream << separator;
   }
 }
@@ -63,7 +62,7 @@ void PrettyPrintVisitor::prettifySiblingsSep(LSLASTNode* node, const char* separ
 void PrettyPrintVisitor::prettifyCoordinateMembers(LSLASTNode *node) {
   std::stringstream orig_stream(std::move(mStream));
   mStream = std::stringstream();
-  prettifySiblingsSep(node, ", ");
+  prettifyChildrenSep(node, ", ");
   std::string innards {mStream.str()};
   mStream = std::move(orig_stream);
   if (innards.front() == '<')
@@ -123,11 +122,10 @@ bool PrettyPrintVisitor::visit(LSLState *node) {
 
   mStream << "\n{\n";
 
-  // Ick. Seems like these should all be under one node.
-  // All children from this point on are event handlers.
+  // Print all of the event handlers under this state
   {
     ScopedTabSetter setter(this, mTabs + 1);
-    prettifySiblingsSep(node->getChild(1), "\n");
+    prettifyChildrenSep(node->getChild(1), "\n");
   }
   doTabs();
   mStream << "}\n";
@@ -203,8 +201,7 @@ bool PrettyPrintVisitor::visit(LSLParamList *node) {
 
 bool PrettyPrintVisitor::visit(LSLStatement *node) {
   doTabs();
-  // Not sure about the separator, but looks like that's what lscript does?
-  prettifySiblingsSep(node->getChildren(), ", ");
+  node->getChild(0)->visit(this);
   mStream << ";\n";
   return false;
 }
@@ -346,11 +343,11 @@ bool PrettyPrintVisitor::visit(LSLDoStatement *node) {
 bool PrettyPrintVisitor::visit(LSLForStatement *node) {
   doTabs();
   mStream << "for (";
-  prettifySiblingsSep(node->getChild(0)->getChildren(), ", ");
+  prettifyChildrenSep(node->getChild(0), ", ");
   mStream << "; ";
   node->getChild(1)->visit(this);
   mStream << "; ";
-  prettifySiblingsSep(node->getChild(2)->getChildren(), ", ");
+  prettifyChildrenSep(node->getChild(2), ", ");
   mStream << ")\n";
 
   LSLASTNode *body = node->getChild(3);
@@ -424,7 +421,7 @@ bool PrettyPrintVisitor::visit(LSLConstantExpression *node) {
 bool PrettyPrintVisitor::visit(LSLFunctionExpression *node) {
   node->getChild(0)->visit(this);
   mStream << '(';
-  prettifySiblingsSep(node->getChild(1), ", ");
+  prettifyChildrenSep(node->getChild(1), ", ");
   mStream << ')';
   return false;
 }
@@ -444,14 +441,14 @@ bool PrettyPrintVisitor::visit(LSLTypecastExpression *node) {
 
 bool PrettyPrintVisitor::visit(LSLVectorExpression *node) {
   mStream << '<';
-  prettifyCoordinateMembers(node->getChildren());
+  prettifyCoordinateMembers(node);
   mStream << '>';
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLQuaternionExpression *node) {
   mStream << '<';
-  prettifyCoordinateMembers(node->getChildren());
+  prettifyCoordinateMembers(node);
   mStream << '>';
   return false;
 }
@@ -508,14 +505,14 @@ bool PrettyPrintVisitor::visit(LSLQuaternionConstant *node) {
 
 bool PrettyPrintVisitor::visit(LSLListExpression *node) {
   mStream << '[';
-  prettifySiblingsSep(node->getChildren(), ", ");
+  prettifyChildrenSep(node, ", ");
   mStream << ']';
   return false;
 }
 
 bool PrettyPrintVisitor::visit(LSLListConstant *node) {
   mStream << '[';
-  prettifySiblingsSep(node->getValue(), ", ");
+  prettifyChildrenSep(node, ", ");
   mStream << ']';
   return false;
 }

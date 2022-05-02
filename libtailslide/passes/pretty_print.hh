@@ -61,7 +61,7 @@ public:
     virtual bool visit(LSLParenthesisExpression *node);
     virtual bool visit(LSLScript *node);
 
-    void prettifySiblingsSep(LSLASTNode *node, const char *separator);
+    void prettifyChildrenSep(LSLASTNode *node, const char *separator);
     void prettifyCoordinateMembers(LSLASTNode *node);
     void doTabs();
     std::stringstream mStream {};

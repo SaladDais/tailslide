@@ -476,24 +476,36 @@ other_states
 default
     : STATE_DEFAULT '{' state_body '}'
     {
-        $$ = ALLOCATOR->newTracked<LSLState>( MAKEID(LST_NULL, $1, @1), $3 );
+        $$ = ALLOCATOR->newTracked<LSLState>(
+            MAKEID(LST_NULL, $1, @1),
+            ALLOCATOR->newTracked<LSLASTNodeList>($3)
+        );
     }
     | STATE_DEFAULT '{' '}'
     {
         tailslide_get_extra(scanner)->logger->error( &@1, E_NO_EVENT_HANDLERS );
-        $$ = ALLOCATOR->newTracked<LSLState>( MAKEID(LST_NULL, $1, @1), nullptr );
+        $$ = ALLOCATOR->newTracked<LSLState>(
+            MAKEID(LST_NULL, $1, @1),
+            ALLOCATOR->newTracked<LSLASTNodeList>(nullptr)
+        );
     }
     ;
 
 state
     : STATE IDENTIFIER '{' state_body '}'
     {
-        $$ = ALLOCATOR->newTracked<LSLState>( MAKEID(LST_NULL, $2, @2), $4 );
+        $$ = ALLOCATOR->newTracked<LSLState>(
+            MAKEID(LST_NULL, $2, @2),
+            ALLOCATOR->newTracked<LSLASTNodeList>($4)
+        );
     }
     | STATE IDENTIFIER '{' '}'
     {
         tailslide_get_extra(scanner)->logger->error( &@1, E_NO_EVENT_HANDLERS );
-        $$ = ALLOCATOR->newTracked<LSLState>( MAKEID(LST_NULL, $2, @2), nullptr );
+        $$ = ALLOCATOR->newTracked<LSLState>(
+            MAKEID(LST_NULL, $2, @2),
+            ALLOCATOR->newTracked<LSLASTNodeList>(nullptr)
+        );
     }
     ;
 
@@ -919,12 +931,10 @@ unarypostfixexpression
     }
     | IDENTIFIER '(' funcexpressionlist ')'
     {
-        if ( $3 != nullptr ) {
-            $$ = ALLOCATOR->newTracked<LSLFunctionExpression>( ALLOCATOR->newTracked<LSLIdentifier>($1), $3 );
-        } else {
-            $$ = ALLOCATOR->newTracked<LSLFunctionExpression>( ALLOCATOR->newTracked<LSLIdentifier>($1) );
-        }
-
+        $$ = ALLOCATOR->newTracked<LSLFunctionExpression>(
+            ALLOCATOR->newTracked<LSLIdentifier>($1),
+            ALLOCATOR->newTracked<LSLASTNodeList>($3)
+        );
     }
     | PRINT '(' expression ')'
     {

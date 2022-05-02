@@ -78,7 +78,7 @@ bool MonoScriptCompiler::visit(LSLGlobalVariable *node) {
   auto *sym = node->getSymbol();
   auto *rhs = node->getChild(1);
   if (rhs->getNodeType() != NODE_NULL) {
-    node->getChild(1)->visit(this);
+    rhs->visit(this);
   } else {
     pushConstant(sym->getType()->getDefaultValue());
   }
@@ -320,7 +320,9 @@ std::string MonoScriptCompiler::getLValueAccessorSpecifier(LSLLValueExpression *
 
 
 bool MonoScriptCompiler::visit(LSLEventHandler *node) {
-  auto *state_sym = node->getParent()->getSymbol();
+  // Need a reference to the state this belongs to for conformant name mangling
+  // We're parented to a node list which is parented to the state.
+  auto *state_sym = node->getParent()->getParent()->getSymbol();
   mCIL << ".method public hidebysig instance default void e" << state_sym->getName() << CIL_HANDLER_NAMES[node->getSymbol()->getName()];
   // parameter list will be handled by `buildFunction()`
   buildFunction(node);
@@ -340,7 +342,7 @@ void MonoScriptCompiler::buildFunction(LSLASTNode *node) {
   auto *func_sym = node->getSymbol();
   auto *func_decl = func_sym->getFunctionDecl();
   mCIL << "(";
-  for (auto *func_param=func_decl->getChildren(); func_param; func_param = func_param->getNext()) {
+  for (auto *func_param : *func_decl) {
     auto *param_sym = func_param->getSymbol();
     mCIL << CIL_TYPE_NAMES[param_sym->getIType()] << " '" << param_sym->getName() << "'";
     if (func_param->getNext())
@@ -603,8 +605,10 @@ bool MonoScriptCompiler::visit(LSLFunctionExpression *node) {
   if (func_sym->getSubType() != SYM_BUILTIN)
     mCIL << "ldarg.0\n";
 
-  // push the argument expressions
-  visitChildren(node);
+  // push the arguments onto the stack
+  for (auto *child_expr : *node->getChild(1)) {
+    child_expr->visit(this);
+  }
 
   if (func_sym->getSubType() == SYM_BUILTIN) {
     mCIL << "call " << CIL_TYPE_NAMES[node->getIType()] << " "
@@ -617,7 +621,7 @@ bool MonoScriptCompiler::visit(LSLFunctionExpression *node) {
   // write in the functions' expected parameter types
   auto *func_decl = func_sym->getFunctionDecl();
   mCIL << "(";
-  for (auto *func_param=func_decl->getChildren(); func_param; func_param = func_param->getNext()) {
+  for (auto *func_param : *func_decl) {
     mCIL << CIL_TYPE_NAMES[func_param->getIType()];
     if (func_param->getNext())
       mCIL << ", ";
