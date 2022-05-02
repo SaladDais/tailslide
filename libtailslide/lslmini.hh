@@ -596,7 +596,6 @@ class LSLVectorExpression : public LSLExpression {
     LSLVectorExpression(ScriptContext *ctx, LSLExpression *x, LSLExpression *y, LSLExpression *z )
       : LSLExpression(ctx, 3, x, y, z) { _mType = TYPE(LST_VECTOR); }
     explicit LSLVectorExpression(ScriptContext *ctx) : LSLExpression(ctx,0) {
-      _mConstantValue = ctx->allocator->newTracked<LSLVectorConstant>(0.0f, 0.0f, 0.0f);
       _mType = TYPE(LST_VECTOR);
     }
     virtual const char *getNodeName() { return "vector expression"; }
@@ -608,7 +607,6 @@ class LSLQuaternionExpression : public LSLExpression {
     LSLQuaternionExpression(ScriptContext *ctx, LSLExpression *x, LSLExpression *y, LSLExpression *z, LSLExpression *s )
       : LSLExpression(ctx, 4, x, y, z, s) { _mType = TYPE(LST_QUATERNION); };
     explicit LSLQuaternionExpression(ScriptContext *ctx) : LSLExpression(ctx,0) {
-      _mConstantValue = ctx->allocator->newTracked<LSLQuaternionConstant>(0.0f, 0.0f, 0.0f, 0.0f);
       _mType = TYPE(LST_QUATERNION);
     };
     virtual const char *getNodeName() { return "quaternion expression"; };
