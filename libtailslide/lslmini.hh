@@ -252,10 +252,8 @@ class LSLListConstant : public LSLConstant {
     virtual LSLConstant* copy(ScriptAllocator *allocator) {
       auto* new_const = allocator->newTracked<LSLListConstant>(nullptr);
       // need to copy the children since they're going to be re-parented to the copy
-      auto *old_children = getValue();
-      while (old_children != nullptr) {
-        new_const->pushChild(old_children->copy(allocator));
-        old_children = (LSLConstant *)old_children->getNext();
+      for (auto *old_child : *this) {
+        new_const->pushChild(((LSLConstant *)old_child)->copy(allocator));
       }
       return new_const;
     };

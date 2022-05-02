@@ -111,14 +111,15 @@ bool ASTVisitor::visitSpecific(LSLASTNode *node) {
 }
 
 void ASTVisitor::visitChildren(LSLASTNode *node) {
-  LSLASTNode *child = node->getChildren();
+  auto child_iter = node->begin();
+  auto end = node->end();
 
-  while (child != nullptr) {
-    LSLASTNode *next = child->getNext();
-    assert(child != next);
+  while (child_iter != end) {
+    auto *child = *child_iter;
+    // increment before visiting, we may swap this node's siblings!
+    ++child_iter;
     assert(child != node);
     child->visit(this);
-    child = next;
   }
 }
 
