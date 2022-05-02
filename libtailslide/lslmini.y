@@ -273,7 +273,7 @@ globals
     {
         if ( $1 ) {
             DEBUG( LOG_DEBUG_SPAM, nullptr, "** global [%p,%p] globals [%p,%p]\n", $1->getPrev(), $1->getNext(), $2->getPrev(), $2->getNext());
-            $1->addNextSibling($2);
+            $1->setNext($2);
             $$ = $1;
         } else {
             $$ = $2;
@@ -446,7 +446,7 @@ states
     {
         if ( $1 ) {
             DEBUG( LOG_DEBUG_SPAM, nullptr, "---- default [%p,%p] other_states [%p,%p]\n", $1->getPrev(), $1->getNext(), $2->getPrev(), $2->getNext());
-            $1->addNextSibling($2);
+            $1->setNext($2);
             $$ = $1;
         } else {
             $$ = $2;
@@ -464,7 +464,7 @@ other_states
     {
         //DEBUG(200,"--(%d)-- state other_states\n", yylloc.first_line);
         if ( $1 ) {
-            $1->addNextSibling($2);
+            $1->setNext($2);
             $$ = $1;
         } else {
             $$ = $2;
@@ -504,7 +504,7 @@ state_body
     | event state_body
     {
         if ( $1 ) {
-            $1->addNextSibling($2);
+            $1->setNext($2);
             $$ = $1;
         } else {
             $$ = $2;
@@ -543,6 +543,8 @@ statements
     | statements statement
     {
         if ( $1 ) {
+            // Not setNext() due to left recursion. potentially expensive because the list
+            // tail is owned by a parent that we don't have.
             $1->addNextSibling($2);
             $$ = $1;
         } else {
@@ -656,7 +658,7 @@ nextforexpressionlist
     | expression ',' nextforexpressionlist
     {
         if ( $1 ) {
-            $1->addNextSibling($3);
+            $1->setNext($3);
             $$ = $1;
         } else {
             $$ = $3;
@@ -684,7 +686,7 @@ nextfuncexpressionlist
     | expression ',' nextfuncexpressionlist
     {
         if ( $1 ) {
-            $1->addNextSibling($3);
+            $1->setNext($3);
             $$ = $1;
         } else {
             $$ = $3;
@@ -713,7 +715,7 @@ nextlistexpressionlist
     | expression ',' nextlistexpressionlist
     {
         if ($1) {
-            $1->addNextSibling($3);
+            $1->setNext($3);
             $$ = $1;
         } else {
             $$ = $3;
