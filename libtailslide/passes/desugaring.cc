@@ -227,8 +227,8 @@ bool DeSugaringVisitor::visit(LSLReturnStatement *node) {
 }
 
 bool DeSugaringVisitor::visit(LSLForStatement *node) {
-    maybeInjectBoolConversion((LSLExpression *)node->getChild(1));
-    return true;
+  maybeInjectBoolConversion((LSLExpression *)node->getChild(1));
+  return true;
 }
 
 bool DeSugaringVisitor::visit(LSLWhileStatement *node) {
@@ -292,7 +292,9 @@ bool LLConformantDeSugaringVisitor::visit(LSLConstantExpression *node) {
 LSLASTNode *LLConformantDeSugaringVisitor::rewriteBuiltinLValue(LSLASTNode *node) {
   auto cv = node->getConstantValue();
   auto itype = cv->getIType();
-  if (!(itype == LST_VECTOR || itype == LST_QUATERNION))
+
+  // this case can use the default desugaring logic
+  if (itype != LST_VECTOR && itype != LST_QUATERNION)
     return DeSugaringVisitor::rewriteBuiltinLValue(node);
 
   // vector and quaternion builtin constants are a little special in that they'd normally
