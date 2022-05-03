@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.8)
 project(Tailslide LANGUAGES CXX)
 if (MSVC)
   # MSVC requires C++20 be enabled to allow designated initializers
@@ -16,11 +16,13 @@ option(TAILSLIDE_BUILD_CLI "Build CLI" ON)
 option(TAILSLIDE_BUILD_TESTS "Build Tests" ON)
 option(TAILSLIDE_BUILD_FUZZER "Build Fuzzer" OFF)
 option(TAILSLIDE_SANITIZE "Use ASAN" OFF)
+option(TAILSLIDE_FUZZER_INSTRUMENTATION "Add instrumentation for libFuzzer" OFF)
 option(TAILSLIDE_COVERAGE "Track coverage data in tests" OFF)
 
 
 if (TAILSLIDE_BUILD_FUZZER)
   set(TAILSLIDE_SANITIZE ON)
+  set(TAILSLIDE_FUZZER_INSTRUMENTATION ON)
 endif ()
 
 # On macOS, search Homebrew for keg-only versions of Bison and Flex. Xcode does
@@ -58,14 +60,15 @@ if(UNIX AND NOT APPLE)
 endif()
 
 if (TAILSLIDE_SANITIZE)
-  if (TAILSLIDE_BUILD_FUZZER)
-    # Everything needs to be compiled with the tracing info for the coverage-based fuzzer
-    add_compile_options("-fsanitize=address,fuzzer" "-O1")
-  else()
-    add_compile_options("-fsanitize=address" "-O1")
-  endif()
-  # Only the fuzzer harnesses gets linked with -fsanitize=fuzzer, though
+  add_compile_options("-fsanitize=address" "-O1")
   add_link_options("-fsanitize=address")
+endif()
+
+if (TAILSLIDE_FUZZER_INSTRUMENTATION)
+  add_compile_options("-fsanitize=fuzzer")
+  if (NOT TAILSLIDE_SANITIZE)
+    add_link_options("-fsanitize=fuzzer-no-link")
+  endif()
 endif()
 
 if (TAILSLIDE_COVERAGE)
