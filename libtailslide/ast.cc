@@ -124,28 +124,15 @@ void LSLASTNode::setNext(LSLASTNode *newnext) {
   // DEBUG(LOG_DEBUG_SPAM, nullptr, "%s.setNext(%s)\n", getNodeName(), newnext ? newnext->getNodeName() : "nullptr");
   _mNext = newnext;
   assert(_mNext != this);
-  if (newnext && newnext->getPrev() != this)
+  if (newnext && newnext->_mPrev != this)
     newnext->setPrev(this);
 }
 
 void LSLASTNode::setPrev(LSLASTNode *newprev) {
   // DEBUG(LOG_DEBUG_SPAM, nullptr, "%s.setPrev(%s)\n", getNodeName(), newprev ? newprev->getNodeName() : "nullptr");
   _mPrev = newprev;
-  if (newprev && newprev->getNext() != this)
+  if (newprev && newprev->_mNext != this)
     newprev->setNext(this);
-}
-
-void LSLASTNode::addNextSibling(LSLASTNode *sibling) {
-  assert (sibling != _mParent);
-  assert (sibling != this);
-  if (sibling == nullptr) return;
-  auto *last_sibling = this;
-  LSLASTNode *next;
-  while ((next = last_sibling->_mNext))
-    last_sibling = next;
-  last_sibling->setNext(sibling);
-  if (_mParent)
-    _mParent->_mChildrenTail = sibling;
 }
 
 void LSLASTNode::replaceNode(LSLASTNode *old_node, LSLASTNode *replacement) {

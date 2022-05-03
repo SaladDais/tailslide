@@ -543,7 +543,12 @@ compound_statement
     }
     | '{' statements '}'
     {
-        $$ = ALLOCATOR->newTracked<LSLCompoundStatement>($2);
+        // $2 is the tail of the statement list, walk back to find the head.
+        auto *head = $2;
+        while (auto *prev_head=(LSLStatement*)head->getPrev()) {
+            head = prev_head;
+        }
+        $$ = ALLOCATOR->newTracked<LSLCompoundStatement>(head);
     }
     ;
 
@@ -556,10 +561,10 @@ statements
     | statements statement
     {
         if ( $1 ) {
-            // Not setNext() due to left recursion. potentially expensive because the list
-            // tail is owned by a parent that we don't have.
-            $1->addNextSibling($2);
-            $$ = $1;
+            // Not setNext() due to left recursion, we keep track of the tail of the list instead
+            // and walk back to find the head once we've added all statements.
+            $2->setPrev($1);
+            $$ = $2;
         } else {
             $$ = $2;
         }
