@@ -86,7 +86,7 @@ class LSLScript : public LSLASTNode {
 
     void optimize(const OptimizationOptions &ctx);
     void recalculateReferenceData();
-    void validateGlobals(bool sl_strict);
+    void validateGlobals(bool mono_semantics);
 };
 
 class LSLIdentifier : public LSLASTNode {

@@ -89,7 +89,7 @@ bool SimpleAssignableValidatingVisitor::visit(LSLLValueExpression *node) {
     return false;
   }
   // SALists don't allow SAIdentifiers with no rvalue in their declaration.
-  if (node->getParent()->getNodeSubType() == NODE_LIST_EXPRESSION) {
+  if (!_mMonoSemantics && node->getParent()->getNodeSubType() == NODE_LIST_EXPRESSION) {
     LSLASTNode *rvalue = node;
     while (rvalue && rvalue->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
       auto *sym = rvalue->getSymbol();

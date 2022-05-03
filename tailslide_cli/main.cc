@@ -141,6 +141,7 @@ int main(int argc, char **argv) {
   // set up the allocator and logger
   ScopedScriptParser parser(nullptr);
   Logger *logger = &parser.logger;
+  bool mono_semantics = !vm.count("lso-compile");
 
   if (check_assertions)
     logger->setCheckAssertions(true);
@@ -166,7 +167,7 @@ int main(int argc, char **argv) {
 
       // do these last since symbol usage and expressions may change
       // when rewriting the tree
-      script->validateGlobals(true);
+      script->validateGlobals(mono_semantics);
       script->checkSymbols();
       if (pretty_print) {
         parser.table_manager.setMangledNames();
@@ -176,7 +177,7 @@ int main(int argc, char **argv) {
         std::cout << print_visitor.mStream.str() << "\n";
       }
     } else {
-      script->validateGlobals(true);
+      script->validateGlobals(mono_semantics);
       script->checkSymbols();
     }
     logger->report();

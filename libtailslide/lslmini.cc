@@ -307,14 +307,9 @@ void LSLScript::optimize(const OptimizationOptions &ctx) {
 }
 
 
-void LSLScript::validateGlobals(bool sl_strict) {
-  if (sl_strict) {
-    SimpleAssignableValidatingVisitor visitor;
-    visit(&visitor);
-  } else {
-    GlobalExprValidatingVisitor visitor;
-    visit(&visitor);
-  }
+void LSLScript::validateGlobals(bool mono_semantics) {
+  SimpleAssignableValidatingVisitor visitor(mono_semantics);
+  visit(&visitor);
 }
 
 

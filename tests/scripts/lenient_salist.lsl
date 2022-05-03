@@ -1,7 +1,7 @@
 string foo;
 string bar = foo;
 string quux = "";
-list baz = [bar]; // must have an initializer for all SAIdentifiers in SALists under lso mode $[E10021]
+list baz = [bar]; // ok to not have an initializer for SAIdentifiers in SALists under mono semantics
 list bazzy = [quux];
 
 default {

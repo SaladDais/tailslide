@@ -24,10 +24,14 @@ class GlobalExprValidatingVisitor: public ASTVisitor {
 // expressions for global variable assignments as LL's implementation.
 // Useful if you care about linting with SL in mind.
 class SimpleAssignableValidatingVisitor: public GlobalExprValidatingVisitor {
+  public:
+    explicit SimpleAssignableValidatingVisitor(bool mono_semantics)
+        : GlobalExprValidatingVisitor(), _mMonoSemantics(mono_semantics) {}
   protected:
     virtual bool visit(LSLExpression *node);
     virtual bool visit(LSLUnaryExpression *node);
     virtual bool visit(LSLLValueExpression *node);
+    bool _mMonoSemantics;
 };
 
 }

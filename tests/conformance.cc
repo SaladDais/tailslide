@@ -63,7 +63,14 @@ SIMPLE_LINT_TEST_CASE("scope2.lsl")
 SIMPLE_LINT_TEST_CASE("scope3.lsl")
 SIMPLE_LINT_TEST_CASE("scope4.lsl")
 SIMPLE_LINT_TEST_CASE("streamcomment.lsl")
-SIMPLE_LINT_TEST_CASE("strict_salist.lsl")
+TEST_CASE("strict_salist.lsl") {
+  auto parser = runConformance("strict_salist.lsl");
+  // assert should be satisfied by validating globals with LSO semantics
+  parser->script->validateGlobals(false);
+  parser->logger.finalize();
+  CHECK(parser->logger.getErrors() == 0);
+}
+SIMPLE_LINT_TEST_CASE("lenient_salist.lsl")
 SIMPLE_LINT_TEST_CASE("test1.lsl")
 SIMPLE_LINT_TEST_CASE("test2.lsl")
 SIMPLE_LINT_TEST_CASE("unixtime.lsl")
