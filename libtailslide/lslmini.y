@@ -1,4 +1,6 @@
 %{
+// Based on a grammar file LL provided to the community before the viewer was open-sourced,
+// which was used in LSLint. Presumably public domain.
     #include "lslmini.hh"
     #include "lslmini.tab.hh"
     #include "logger.hh"
@@ -10,8 +12,7 @@
     extern int tailslide_lex (TAILSLIDE_STYPE * yylval_param, TailslideLType * yylloc_param , void *yyscanner);
     extern ScriptContext *tailslide_get_extra(void *scanner);
     #define ALLOCATOR tailslide_get_extra(scanner)->allocator
-%}
-%{
+
     int yyerror( YYLTYPE*, void *, const char * );
     #define MAKEID(type,id,pos) ALLOCATOR->newTracked<LSLIdentifier>(TYPE(type), (id), &(pos))
     // Anything larger is liable to make MSVC explode with the default compile options
@@ -94,8 +95,6 @@
     class Tailslide::LSLExpression        *expression;
     class Tailslide::LSLStatement         *statement;
     class Tailslide::LSLGlobalFunction    *global_funcs;
-    class Tailslide::LSLFunctionDec       *global_decl;
-    class Tailslide::LSLEventDec          *global_event_decl;
     class Tailslide::LSLASTNode           *global_store;
     class Tailslide::LSLASTNodeList       *node_list;
     class Tailslide::LSLState             *state;
@@ -169,10 +168,10 @@
 %type <constant>          constant
 %type <type>              typename
 %type <global_funcs>      global_function
-%type <global_decl>       function_parameters
-%type <global_decl>       function_parameter
-%type <global_event_decl> event_parameters
-%type <global_event_decl> event_parameter
+%type <identifier>        function_parameters
+%type <identifier>        function_parameter
+%type <identifier>        event_parameters
+%type <identifier>        event_parameter
 %type <state>             states
 %type <state>             other_states
 %type <state>             default
@@ -382,11 +381,19 @@ global_function
     }
     | IDENTIFIER '(' function_parameters ')' compound_statement
     {
-        $$ = ALLOCATOR->newTracked<LSLGlobalFunction>( MAKEID(LST_NULL, $1, @1), $3, $5 );
+        $$ = ALLOCATOR->newTracked<LSLGlobalFunction>(
+            MAKEID(LST_NULL, $1, @1),
+            ALLOCATOR->newTracked<LSLFunctionDec>($3),
+            $5
+        );
     }
     | name_type '(' function_parameters ')' compound_statement
     {
-        $$ = ALLOCATOR->newTracked<LSLGlobalFunction>( $1, $3, $5 );
+        $$ = ALLOCATOR->newTracked<LSLGlobalFunction>(
+            $1,
+            ALLOCATOR->newTracked<LSLFunctionDec>($3),
+            $5
+        );
     }
     ;
 
@@ -398,8 +405,7 @@ function_parameters
     | function_parameter ',' function_parameters
     {
         if ( $1 ) {
-            $1->pushChild($3->getChild(0));
-            // delete $3;
+            $1->setNext($3);
             $$ = $1;
         } else {
             $$ = $3;
@@ -410,7 +416,7 @@ function_parameters
 function_parameter
     : typename IDENTIFIER
     {
-        $$ = ALLOCATOR->newTracked<LSLFunctionDec>( ALLOCATOR->newTracked<LSLIdentifier>($1, $2, &@2) );
+        $$ = ALLOCATOR->newTracked<LSLIdentifier>($1, $2, &@2);
     }
     ;
 
@@ -422,8 +428,7 @@ event_parameters
     | event_parameter ',' event_parameters
     {
         if ( $1 ) {
-            $1->pushChild($3->getChild(0));
-            // delete $3;
+            $1->setNext($3);
             $$ = $1;
         } else {
             $$ = $3;
@@ -434,7 +439,7 @@ event_parameters
 event_parameter
     : typename IDENTIFIER
     {
-        $$ = ALLOCATOR->newTracked<LSLEventDec>( ALLOCATOR->newTracked<LSLIdentifier>($1, $2, &@2) );
+        $$ = ALLOCATOR->newTracked<LSLIdentifier>($1, $2, &@2);
     }
     ;
 
@@ -532,7 +537,11 @@ event
     }
     | IDENTIFIER '(' event_parameters ')' compound_statement
     {
-        $$ = ALLOCATOR->newTracked<LSLEventHandler>(MAKEID(LST_NULL, $1, @1), $3, $5);
+        $$ = ALLOCATOR->newTracked<LSLEventHandler>(
+            MAKEID(LST_NULL, $1, @1),
+            ALLOCATOR->newTracked<LSLEventDec>($3),
+            $5
+        );
     }
    ;
 
