@@ -66,7 +66,7 @@ bool DeSugaringVisitor::visit(LSLBinaryExpression *node) {
   );
   new_right_node->setType(node->getType());
   new_right_node->setLoc(node->getLoc());
-  LSLASTNode::replaceNode(node->getChild(1), new_right_node);
+  node->setChild(1, new_right_node);
   node->setOperation(OP_ASSIGN);
   return true;
 }

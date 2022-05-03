@@ -40,8 +40,6 @@ bool TypeCheckVisitor::visit(LSLDeclaration *node) {
 bool TypeCheckVisitor::visit(LSLStateStatement *node) {
   // TODO: probably makes more sense in the best practices visitor?
   //  not really related to type-checking.
-  auto *id = (LSLIdentifier *) node->getChild(0);
-
   // see if we're in a state or function, and if we're inside of an if
   bool is_in_if = false;
 
@@ -53,7 +51,7 @@ bool TypeCheckVisitor::visit(LSLStateStatement *node) {
         break;
       case NODE_STATE:
         // we're in a state, see if it's the same one we're calling
-        if (!strcmp(((LSLIdentifier *) ancestor->getChild(0))->getName(), id->getName())) {
+        if (!strcmp(((LSLIdentifier *) ancestor->getChild(0))->getName(), node->getIdentifier()->getName())) {
           NODE_ERROR(node, W_CHANGE_TO_CURRENT_STATE);
         }
         // if we've hit a state there's no sense ascending further
@@ -99,23 +97,29 @@ bool TypeCheckVisitor::visit(LSLReturnStatement *node) {
                         effective_parent->getNodeType() == NODE_GLOBAL_FUNCTION;
 
   auto *ancestor_type = ancestor->getChild(0)->getType();
-  auto *ret = node->getChild(0);
+  auto *ret_expr = node->getExpr();
+  auto *ret_type = ret_expr ? ret_expr->getType() : TYPE(LST_NULL);
+
+  // It's an error if we have no return expression and this isn't a void func
+  if (!ret_expr && ancestor_type->getIType() != LST_NULL) {
+    NODE_ERROR(node, E_BAD_RETURN_TYPE, TYPE(LST_NULL)->getNodeName(), ancestor_type->getNodeName());
+    return true;
+  }
 
   // if an event handler
   if (ancestor->getNodeType() == NODE_EVENT_HANDLER) {
     // make sure we're not returning a value
     // returning the result of a void expression is only allowed if
-    // the return is nested in some other statement.
-    if (ret->getIType() != LST_NULL || (ret->getNodeType() != NODE_NULL && func_is_parent)) {
+    // the return is nested in some other control statement.
+    if ((ret_expr && func_is_parent) || ret_type->getIType() != LST_NULL) {
       NODE_ERROR(node, E_RETURN_VALUE_IN_EVENT_HANDLER);
     }
   } else {
     // otherwise it's a function
-    // the return type of the function is stored in the identifier which is
-    // the first child
-    auto *ret_type = ret->getType();
+    // types that can be coerced to the return type are allowed, but returning returning the
+    // result of a void expression follows the same rules as event handlers.
     if (!ret_type->canCoerce(ancestor_type)
-        || (ret->getIType() == LST_NULL && (ret->getNodeType() != NODE_NULL && func_is_parent))) {
+        || (ret_expr && ret_expr->getIType() == LST_NULL && func_is_parent)) {
       NODE_ERROR(node, E_BAD_RETURN_TYPE, ret_type->getNodeName(), ancestor_type->getNodeName());
     }
   }
@@ -141,8 +145,8 @@ bool TypeCheckVisitor::visit(LSLIfStatement *node) {
   node->setType(TYPE(LST_NULL));
   // warn if main branch is an empty statement and secondary branch is null
   // or empty
-  if (is_branch_empty(node->getChild(1)) && is_branch_empty(node->getChild(2))) {
-    NODE_ERROR(node->getChild(0), W_EMPTY_IF);
+  if (is_branch_empty(node->getTrueBranch()) && is_branch_empty(node->getFalseBranch())) {
+    NODE_ERROR(node->getCheckExpr(), W_EMPTY_IF);
   }
   return true;
 }
@@ -409,10 +413,7 @@ bool TypeCheckVisitor::visit(LSLLValueExpression *node) {
 }
 
 bool TypeCheckVisitor::visit(LSLTypecastExpression *node) {
-  auto *child = node->getChild(0);
-  if(!child)
-    return true;
-  auto *from_type = child->getType();
+  auto *from_type = node->getChildExpr()->getType();
   auto *to_type = node->getType();
   if(!is_cast_legal(from_type->getIType(), to_type->getIType())) {
     // this is just an error bubbling up

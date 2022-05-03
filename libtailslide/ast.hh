@@ -108,6 +108,17 @@ class LSLASTNode : public TrackableObject {
       return c;
     }
 
+    void setChild(int i, LSLASTNode *new_val) {
+      LSLASTNode *c = _mChildren;
+      while (i-- && c) {
+        c = c->getNext();
+      }
+      assert(c);
+      if (!new_val)
+        new_val = newNullNode();
+      LSLASTNode::replaceNode(c, new_val);
+    }
+
     size_t getNumChildren() const {
       LSLASTNode *c = _mChildren;
       size_t num = 0;
@@ -228,10 +239,6 @@ class LSLASTNode : public TrackableObject {
   private:
     YYLTYPE                      _mLoc {0};
 
-    // only set for struct-like nodes
-    size_t _mNumChildren = 0;
-    LSLASTNode **_mStructChildren = nullptr;
-    // these are set for all types of nodes to keep node traversal symmetrical.
     LSLASTNode *_mParent;
     LSLASTNode *_mNext;
     LSLASTNode *_mPrev;

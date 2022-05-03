@@ -21,6 +21,19 @@ typedef int   S32;
 typedef float F32;
 class LSLScript;
 
+/// Add a getter / setter field pair to an LSLASTNode subclass
+#define NODE_FIELD_GS(_typ, _name, _index)       \
+    _typ *get##_name() {                         \
+      LSLASTNode *child = getChild((_index));    \
+      assert(child);                             \
+      if (child->getNodeType() == NODE_NULL)     \
+        return nullptr;                          \
+      return (_typ*)(child);                     \
+    };                                           \
+    void set##_name(_typ *new_val) {             \
+      setChild(_index, (LSLASTNode*)(new_val));  \
+    }
+
 struct ScriptContext {
   LSLScript *script = nullptr;
   ScriptAllocator *allocator = nullptr;
@@ -64,6 +77,8 @@ class LSLScript : public LSLASTNode {
   public:
     LSLScript( ScriptContext *ctx, class LSLASTNodeList *globals, class LSLASTNodeList *states )
       : LSLASTNode( ctx, 2, globals, states ) {};
+    NODE_FIELD_GS(LSLASTNodeList, Globals, 0)
+    NODE_FIELD_GS(LSLASTNodeList, States, 1)
 
     virtual const char *getNodeName() { return "script"; };
     virtual LSLNodeType getNodeType() { return NODE_SCRIPT; };
@@ -106,6 +121,9 @@ class LSLGlobalVariable : public LSLASTNode {
   public:
     LSLGlobalVariable( ScriptContext *ctx, class LSLIdentifier *identifier, class LSLExpression *value )
       : LSLASTNode(ctx, 2, identifier, value) { DEBUG( LOG_DEBUG_SPAM, nullptr, "made a global var\n"); };
+    NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
+    NODE_FIELD_GS(class LSLExpression, Initializer, 1)
+
     virtual const char *getNodeName() { return "global var"; }
     virtual LSLNodeType getNodeType() { return NODE_GLOBAL_VARIABLE; };
 
@@ -321,6 +339,10 @@ class LSLGlobalFunction : public LSLASTNode {
   public:
     LSLGlobalFunction( ScriptContext *ctx, class LSLIdentifier *identifier, class LSLFunctionDec *decl, class LSLStatement *statement )
       : LSLASTNode( ctx, 3, identifier, decl, statement ) {};
+    NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
+    NODE_FIELD_GS(LSLFunctionDec, Arguments, 1)
+    NODE_FIELD_GS(LSLStatement, Statements, 2)
+
     virtual const char *getNodeName() { return "global func"; }
     virtual LSLNodeType getNodeType() { return NODE_GLOBAL_FUNCTION; };
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
@@ -344,6 +366,7 @@ class LSLEventDec : public LSLParamList {
   public:
     explicit LSLEventDec(ScriptContext *ctx) : LSLParamList(ctx) {};
     LSLEventDec( ScriptContext *ctx, class LSLIdentifier *identifiers ) : LSLParamList(ctx, identifiers) {};
+
     virtual const char *getNodeName() { return "event decl"; }
     virtual LSLNodeType getNodeType() { return NODE_EVENT_DEC; };
 };
@@ -352,6 +375,9 @@ class LSLState : public LSLASTNode {
   public:
     LSLState( ScriptContext *ctx, class LSLIdentifier *identifier, class LSLASTNodeList *event_handlers)
         : LSLASTNode( ctx, 2, identifier, event_handlers) {};
+    NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
+    NODE_FIELD_GS(LSLASTNodeList, EventHandlers, 1)
+
     virtual const char *getNodeName() { return "state"; }
     virtual LSLNodeType getNodeType() { return NODE_STATE; };
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
@@ -361,6 +387,10 @@ class LSLEventHandler : public LSLASTNode {
   public:
     LSLEventHandler( ScriptContext *ctx, class LSLIdentifier *identifier, class LSLEventDec *decl, class LSLStatement *body )
       : LSLASTNode(ctx, 3, identifier, decl, body) {};
+    NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
+    NODE_FIELD_GS(LSLFunctionDec, Arguments, 1)
+    NODE_FIELD_GS(LSLStatement, Statements, 2)
+
     virtual const char *getNodeName() { return "event handler"; }
     virtual LSLNodeType getNodeType() { return NODE_EVENT_HANDLER; };
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
@@ -399,6 +429,8 @@ class LSLCompoundStatement : public LSLStatement {
 class LSLExpressionStatement : public LSLStatement {
   public:
   LSLExpressionStatement( ScriptContext *ctx, class LSLExpression *expr ) : LSLStatement(ctx, 1, expr) {}
+  NODE_FIELD_GS(LSLExpression, Expr, 0)
+
   virtual const char *getNodeName() { return "expression statement"; };
   virtual LSLNodeSubType getNodeSubType() { return NODE_EXPRESSION_STATEMENT; };
 };
@@ -406,6 +438,8 @@ class LSLExpressionStatement : public LSLStatement {
 class LSLStateStatement : public LSLStatement {
   public:
     LSLStateStatement( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLStatement(ctx, 1, identifier) {};
+    NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
+
     virtual const char *getNodeName() { return "setstate"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_STATE_STATEMENT; };
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
@@ -414,6 +448,8 @@ class LSLStateStatement : public LSLStatement {
 class LSLJumpStatement : public LSLStatement {
   public:
     LSLJumpStatement( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLStatement(ctx, 1, identifier) {};
+    NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
+
     virtual const char *getNodeName() { return "jump"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_JUMP_STATEMENT; };
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
@@ -422,6 +458,8 @@ class LSLJumpStatement : public LSLStatement {
 class LSLLabel : public LSLStatement {
   public:
     LSLLabel( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLStatement(ctx, 1, identifier) {};
+    NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
+
     virtual const char *getNodeName() { return "label"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_LABEL; };
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
@@ -430,6 +468,8 @@ class LSLLabel : public LSLStatement {
 class LSLReturnStatement : public LSLStatement {
   public:
     LSLReturnStatement( ScriptContext *ctx, class LSLExpression *expression ) : LSLStatement(ctx, 1, expression) {};
+    NODE_FIELD_GS(LSLExpression, Expr, 0)
+
     virtual const char *getNodeName() { return "return"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_RETURN_STATEMENT; };
 };
@@ -438,6 +478,10 @@ class LSLIfStatement : public LSLStatement {
   public:
     LSLIfStatement( ScriptContext *ctx, class LSLExpression *expression, class LSLStatement *true_branch, class LSLStatement *false_branch)
       : LSLStatement( ctx, 3, expression, true_branch, false_branch ) {};
+    NODE_FIELD_GS(LSLExpression, CheckExpr, 0)
+    NODE_FIELD_GS(LSLStatement, TrueBranch, 1)
+    NODE_FIELD_GS(LSLStatement, FalseBranch, 2)
+
     virtual const char *getNodeName() { return "if"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_IF_STATEMENT; };
 };
@@ -447,6 +491,11 @@ class LSLForStatement : public LSLStatement {
     LSLForStatement(ScriptContext *ctx, class LSLASTNodeList *init, class LSLExpression *condition,
                     class LSLASTNodeList *cont, class LSLStatement *body)
       : LSLStatement( ctx, 4, init, condition, cont, body ) {};
+    NODE_FIELD_GS(LSLASTNodeList, InitExprs, 0)
+    NODE_FIELD_GS(LSLExpression, CheckExpr, 1)
+    NODE_FIELD_GS(LSLASTNodeList, IncrExprs, 2)
+    NODE_FIELD_GS(LSLStatement, Body, 3)
+
     virtual const char *getNodeName() { return "for"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_FOR_STATEMENT; };
 };
@@ -455,6 +504,9 @@ class LSLDoStatement : public LSLStatement {
   public:
     LSLDoStatement( ScriptContext *ctx, class LSLStatement *body, class LSLExpression *condition )
       : LSLStatement(ctx, 2, body, condition) {};
+    NODE_FIELD_GS(LSLStatement, Body, 0)
+    NODE_FIELD_GS(LSLExpression, CheckExpr, 1)
+
     virtual const char *getNodeName() { return "do"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_DO_STATEMENT; };
 };
@@ -463,6 +515,9 @@ class LSLWhileStatement : public LSLStatement {
   public:
     LSLWhileStatement( ScriptContext *ctx, class LSLExpression *condition, class LSLStatement *body )
       : LSLStatement(ctx, 2, condition, body) {};
+    NODE_FIELD_GS(LSLExpression, CheckExpr, 0)
+    NODE_FIELD_GS(LSLStatement, Body, 1)
+
     virtual const char *getNodeName() { return "while"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_WHILE_STATEMENT; };
 };
@@ -472,6 +527,9 @@ class LSLDeclaration : public LSLStatement {
   public:
     LSLDeclaration(ScriptContext *ctx, class LSLIdentifier *identifier, class LSLExpression *value)
       : LSLStatement(ctx, 2, identifier, value) { };
+    NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
+    NODE_FIELD_GS(LSLExpression, Initializer, 1)
+
     virtual const char *getNodeName() { return "declaration"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_DECLARATION; };
 
@@ -526,6 +584,7 @@ class LSLParenthesisExpression: public LSLExpression {
 public:
     LSLParenthesisExpression( ScriptContext *ctx, LSLExpression* expr )
       : LSLExpression(ctx, 1, expr) { _mOperation = OP_PARENS; };
+    NODE_FIELD_GS(LSLExpression, ChildExpr, 0)
 
     virtual const char *getNodeName() {
       return "parenthesis expression";
@@ -538,6 +597,8 @@ class LSLBinaryExpression : public LSLExpression {
 public:
     LSLBinaryExpression( ScriptContext *ctx, LSLExpression *lvalue, LSLOperator oper, LSLExpression *rvalue )
     : LSLExpression(ctx, 2, lvalue, rvalue) { _mOperation = oper; };
+    NODE_FIELD_GS(LSLExpression, LHS, 0)
+    NODE_FIELD_GS(LSLExpression, RHS, 1)
 
     virtual const char *getNodeName() {
       static thread_local char buf[256];
@@ -551,6 +612,7 @@ class LSLUnaryExpression : public LSLExpression {
 public:
     LSLUnaryExpression( ScriptContext *ctx, LSLExpression *lvalue, LSLOperator oper )
             : LSLExpression(ctx, 1, lvalue) { _mOperation = oper; };
+    NODE_FIELD_GS(LSLExpression, ChildExpr, 0)
 
     virtual const char *getNodeName() {
       static thread_local char buf[256];
@@ -564,6 +626,7 @@ class LSLTypecastExpression : public LSLExpression {
   public:
     LSLTypecastExpression(ScriptContext *ctx, LSLType *type, LSLExpression *expression )
       : LSLExpression(ctx, 1, expression) { _mType = type;};
+    NODE_FIELD_GS(LSLExpression, ChildExpr, 0)
 
     virtual const char *getNodeName() { return "typecast expression"; }
     virtual LSLNodeSubType getNodeSubType() { return NODE_TYPECAST_EXPRESSION; };
@@ -574,6 +637,7 @@ class LSLBoolConversionExpression : public LSLExpression {
   public:
   LSLBoolConversionExpression(ScriptContext *ctx, LSLExpression *expression )
       : LSLExpression(ctx, 1, expression) { _mType = TYPE(LST_INTEGER);};
+  NODE_FIELD_GS(LSLExpression, ChildExpr, 0)
 
   virtual const char *getNodeName() { return "boolean conversion"; }
   virtual LSLNodeSubType getNodeSubType() { return NODE_BOOL_CONVERSION_EXPRESSION; };
@@ -583,6 +647,8 @@ class LSLPrintExpression : public LSLExpression {
   public:
     LSLPrintExpression( ScriptContext *ctx, LSLExpression *expression )
       : LSLExpression( ctx, 1, expression ) { _mType = TYPE(LST_NULL); };
+    NODE_FIELD_GS(LSLExpression, ChildExpr, 0)
+
     virtual const char *getNodeName() { return "print() call"; }
     virtual LSLNodeSubType getNodeSubType() { return NODE_PRINT_EXPRESSION; };
 };
@@ -591,6 +657,9 @@ class LSLFunctionExpression : public LSLExpression {
   public:
     LSLFunctionExpression( ScriptContext *ctx, LSLIdentifier *identifier, LSLASTNodeList *arguments )
       : LSLExpression( ctx, 2, identifier, arguments) {};
+    NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
+    NODE_FIELD_GS(LSLASTNodeList, Arguments, 1)
+
     virtual const char *getNodeName() { return "function call"; }
     virtual LSLNodeSubType getNodeSubType() { return NODE_FUNCTION_EXPRESSION; };
 
@@ -602,6 +671,10 @@ class LSLVectorExpression : public LSLExpression {
   public:
     LSLVectorExpression(ScriptContext *ctx, LSLExpression *x, LSLExpression *y, LSLExpression *z )
       : LSLExpression(ctx, 3, x, y, z) { _mType = TYPE(LST_VECTOR); }
+    NODE_FIELD_GS(LSLExpression, X, 0)
+    NODE_FIELD_GS(LSLExpression, Y, 1)
+    NODE_FIELD_GS(LSLExpression, Z, 2)
+
     virtual const char *getNodeName() { return "vector expression"; }
     virtual LSLNodeSubType getNodeSubType() { return NODE_VECTOR_EXPRESSION; };
 };
@@ -610,6 +683,11 @@ class LSLQuaternionExpression : public LSLExpression {
   public:
     LSLQuaternionExpression(ScriptContext *ctx, LSLExpression *x, LSLExpression *y, LSLExpression *z, LSLExpression *s )
       : LSLExpression(ctx, 4, x, y, z, s) { _mType = TYPE(LST_QUATERNION); };
+    NODE_FIELD_GS(LSLExpression, X, 0)
+    NODE_FIELD_GS(LSLExpression, Y, 1)
+    NODE_FIELD_GS(LSLExpression, Z, 2)
+    NODE_FIELD_GS(LSLExpression, S, 3)
+
     virtual const char *getNodeName() { return "quaternion expression"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_QUATERNION_EXPRESSION; };
 };
@@ -630,6 +708,9 @@ class LSLLValueExpression : public LSLExpression {
   public:
     LSLLValueExpression( ScriptContext *ctx, LSLIdentifier *identifier, LSLIdentifier *member )
       : LSLExpression(ctx, 2, identifier, member), _mIsFoldable(false) {};
+    NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
+    NODE_FIELD_GS(LSLIdentifier, Member, 1)
+
     virtual const char *getNodeName() {
       static thread_local char buf[256];
       snprintf(buf, 256, "lvalue expression {%sfoldable}", _mIsFoldable ? "" : "not ");
@@ -650,5 +731,8 @@ class LSLLValueExpression : public LSLExpression {
 void tailslide_init_builtins(const char *builtins_file);
 
 }
+
+// make sure our define doesn't leak into the public API
+#undef NODE_FIELD_GS
 
 #endif

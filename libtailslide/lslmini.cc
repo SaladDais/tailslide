@@ -250,8 +250,7 @@ class NodeReferenceUpdatingVisitor : public ASTVisitor {
       if (operation_mutates(node->getOperation())) {
         LSLASTNode *child = node->getChild(0);
         // add assignment
-        if (child->getNodeSubType() == NODE_LVALUE_EXPRESSION &&
-            child->getChild(0)->getNodeType() == NODE_IDENTIFIER) {
+        if (child->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
           auto *id = (LSLIdentifier *) child->getChild(0);
           if (id->getSymbol()) {
             if (id->getSymbol()->getSubType() == SYM_BUILTIN) {
