@@ -248,7 +248,6 @@ tlml(string t)
 
 clear()
 {
-    integer n;
     llMessageLinked(LINK_ALL_OTHERS, 8999, "nevermind", "00000000-0000-0000-0000-000000000000");
     max_prim_used = 0;
 }

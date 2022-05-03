@@ -18,16 +18,15 @@ class AllPathsReturnVisitor: public ASTVisitor {
       return false;
     };
     virtual bool visit(LSLIfStatement *node) {
-      auto* true_branch = node->getChild(1);
-      auto* false_branch = node->getChild(2);
+      auto* false_branch = node->getFalseBranch();
 
       // no false path, so all paths within `if` _couldn't_ return.
-      if (false_branch->getNodeType() == NODE_NULL) {
+      if (!false_branch) {
         mAllReturn = false;
         return false;
       }
 
-      true_branch->visit(this);
+      node->getTrueBranch()->visit(this);
       bool true_ret = mAllReturn;
       false_branch->visit(this);
       bool false_ret = mAllReturn;
@@ -39,11 +38,10 @@ class AllPathsReturnVisitor: public ASTVisitor {
 };
 
 bool BestPracticesVisitor::visit(LSLGlobalFunction* node) {
-  auto *id = (LSLIdentifier *) node->getChild(0);
-  auto *statement = (LSLStatement *) node->getChild(2);
-
   AllPathsReturnVisitor visitor;
-  statement->visit(&visitor);
+  node->getStatements()->visit(&visitor);
+
+  auto *id = node->getIdentifier();
   // this function has a non-null return type, it requires explicit returns.
   if (id->getIType() != LST_NULL && !visitor.mAllReturn) {
     NODE_ERROR(id, E_NOT_ALL_PATHS_RETURN);
@@ -55,9 +53,8 @@ bool BestPracticesVisitor::visit(LSLGlobalFunction* node) {
 }
 
 bool BestPracticesVisitor::visit(LSLEventHandler *node) {
-  auto *statement = (LSLStatement *) node->getChild(2);
   AllPathsReturnVisitor visitor;
-  statement->visit(&visitor);
+  node->getStatements()->visit(&visitor);
   if (auto *sym = node->getSymbol()) {
     sym->setAllPathsReturn(visitor.mAllReturn);
   }
@@ -66,7 +63,7 @@ bool BestPracticesVisitor::visit(LSLEventHandler *node) {
 
 bool BestPracticesVisitor::visit(LSLIfStatement *node) {
   // see if expression is constant
-  LSLASTNode *cond = node->getChild(0);
+  LSLASTNode *cond = node->getCheckExpr();
   if (cond->getConstantValue() != nullptr) {
     // TODO: can conditions be something other than integer?
     // ^ Yep, `key`s for one, and probably a bunch of others.
@@ -91,8 +88,8 @@ bool BestPracticesVisitor::visit(LSLIfStatement *node) {
 }
 
 bool BestPracticesVisitor::visit(LSLBinaryExpression *node) {
-  LSLConstant *left_cv = node->getChild(0)->getConstantValue();
-  LSLConstant *right_cv = node->getChild(1)->getConstantValue();
+  LSLConstant *left_cv = node->getLHS()->getConstantValue();
+  LSLConstant *right_cv = node->getRHS()->getConstantValue();
 
   if (!left_cv || !right_cv)
     return true;
@@ -119,8 +116,7 @@ bool BestPracticesVisitor::visit(LSLBinaryExpression *node) {
 }
 
 bool BestPracticesVisitor::visit(LSLExpressionStatement *node) {
-  auto *expr = (LSLExpression *)node->getChild(0);
-  if (expr->getOperation() == OP_EQ) {
+  if (node->getExpr()->getOperation() == OP_EQ) {
     NODE_ERROR(node, W_EQ_AS_STATEMENT);
   }
   return true;

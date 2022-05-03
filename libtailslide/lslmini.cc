@@ -249,17 +249,19 @@ class NodeReferenceUpdatingVisitor : public ASTVisitor {
     virtual bool visit(LSLExpression *node) {
       if (operation_mutates(node->getOperation())) {
         LSLASTNode *child = node->getChild(0);
-        // add assignment
+        // track the assignment
         if (child->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
-          auto *id = (LSLIdentifier *) child->getChild(0);
-          if (id->getSymbol()) {
-            if (id->getSymbol()->getSubType() == SYM_BUILTIN) {
-              NODE_ERROR(node, E_BUILTIN_LVALUE, id->getSymbol()->getName());
-              // make sure we don't muck with the assignment count on a builtin symbol!
-              return true;
-            }
-            id->getSymbol()->addAssignment();
+          auto *sym = child->getSymbol();
+          if (!sym)
+            return true;
+
+          // TODO: This should be moved to one of the other passes.
+          if (sym->getSubType() == SYM_BUILTIN) {
+            NODE_ERROR(node, E_BUILTIN_LVALUE, sym->getName());
+            // make sure we don't muck with the assignment count on a builtin symbol!
+            return true;
           }
+          sym->addAssignment();
         }
       }
       return true;
@@ -268,10 +270,10 @@ class NodeReferenceUpdatingVisitor : public ASTVisitor {
     virtual bool visit(LSLIdentifier *node) {
       LSLASTNode *upper_node = node->getParent();
       while (upper_node != nullptr) {
-        // HACK: recursive calls don't count as a reference, won't handle mutual recursion!
+        // HACK: Make recursive calls not count as a reference, won't handle mutual recursion!
         if (upper_node->getNodeType() == NODE_GLOBAL_FUNCTION) {
           auto *ident = (LSLIdentifier *) upper_node->getChild(0);
-          if (ident != node && (ident)->getSymbol() == node->getSymbol())
+          if (ident != node && ident->getSymbol() == node->getSymbol())
             return false;
         }
         upper_node = upper_node->getParent();
@@ -326,16 +328,14 @@ LSLConstant *LSLIdentifier::getConstantValue() {
 LSLConstant *LSLGlobalVariable::getConstantValue() {
   // It's not really constant if it gets mutated more than once, is it?
   // note that initialization during declaration doesn't count.
-  auto *id = (LSLIdentifier *) getChild(0);
-  if (id->getSymbol()->getAssignments() == 0) {
+  if (getSymbol()->getAssignments() == 0) {
     return _mConstantValue;
   }
   return nullptr;
 }
 
 LSLConstant *LSLDeclaration::getConstantValue() {
-  auto *id = (LSLIdentifier *) getChild(0);
-  if (id->getSymbol()->getAssignments() == 0) {
+  if (getSymbol()->getAssignments() == 0) {
     return _mConstantValue;
   }
   return nullptr;
@@ -400,10 +400,10 @@ LSLIdentifier *LSLIdentifier::clone() {
 
 LSLLValueExpression *LSLLValueExpression::clone() {
   // TODO: this isn't very nice, need to think about copy constructors.
-  auto *id = (LSLIdentifier *) getChild(0);
-  auto *accessor = (LSLIdentifier *) getChild(1);
+  auto *id = getIdentifier();
+  auto *accessor = getMember();
   id = id->clone();
-  if (accessor && accessor->getNodeType() == NODE_IDENTIFIER)
+  if (accessor)
     accessor = accessor->clone();
   auto *new_expr = mContext->allocator->newTracked<LSLLValueExpression>(id, accessor);
   new_expr->setLoc(getLoc());

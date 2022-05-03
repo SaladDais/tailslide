@@ -17,7 +17,7 @@ uint64_t pack_handled_events(LSOSymbolData *state_data) {
   return handled_events;
 }
 
-LSLASTNode *resolve_sa_identifier(LSLASTNode *rvalue);
+LSLExpression *resolve_sa_identifier(LSLExpression *rvalue);
 
 bool LSOScriptCompiler::visit(LSLScript *node) {
   LLConformantDeSugaringVisitor de_sugaring_visitor(_mAllocator, false);
@@ -43,7 +43,7 @@ bool LSOScriptCompiler::visit(LSLScript *node) {
   }
 
   // Collect all the global variables and functions
-  visitChildren(node->getChild(0));
+  node->getGlobals()->visit(this);
 
   if (checkStackHeapCollision()) {
     NODE_ERROR(node, E_STACK_HEAP_COLLISION);
@@ -53,7 +53,7 @@ bool LSOScriptCompiler::visit(LSLScript *node) {
   // Nothing should be writing to the heap after handling global vars, write the terminal block.
   _mHeapManager.writeTerminalBlock();
 
-  auto *states = node->getChild(1);
+  auto *states = node->getStates();
   auto num_states = (uint32_t)states->getNumChildren();
   _mStatesBS << num_states;
 
@@ -136,38 +136,41 @@ bool LSOScriptCompiler::visit(LSLGlobalVariable *node) {
   //  always true / always false warnings may be wrong otherwise.
   //  otherwise LSO compilation must always have optimization off and use SL-strict
   //  global validation because the semantics are closer to Mono. That might be an OK tradeoff.
-  auto *rvalue = node->getChild(1);
   auto *sym = node->getSymbol();
   // Specifically take the symbol constant value by default and not the rvalue's since it
   // should have any automatic casts applied.
   auto *cv = sym->getConstantValue();
-  if (rvalue->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
-    rvalue = resolve_sa_identifier(rvalue);
 
-    // After following the lvalues all the way up the chain we hit a global
-    // declaration with no rvalue
-    if (!rvalue || rvalue->getNodeType() == NODE_NULL) {
-      // invoke the stupid special case that fills the variable with all zeros
-      // and skips to the next field. For heap types, this will crash your script
-      // if you ever try to use the value since 0 is not a valid heap index.
-      _mGlobalVarManager.writePlaceholder(sym->getIType());
-      return false;
+  // only need to take the weird rvalue resolution path if we _have_ an rvalue
+  if (auto *rvalue = node->getInitializer()) {
+    if (rvalue->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
+      rvalue = resolve_sa_identifier(rvalue);
+
+      // After following the lvalues all the way up the chain we hit a global
+      // declaration with no rvalue
+      if (!rvalue) {
+        // invoke the stupid special case that fills the variable with all zeros
+        // and skips to the next field. For heap types, this will crash your script
+        // if you ever try to use the value since 0 is not a valid heap index.
+        _mGlobalVarManager.writePlaceholder(sym->getIType());
+        return false;
+      }
+    } else if (rvalue->getNodeSubType() == NODE_LIST_EXPRESSION) {
+      // Need to do similar logic to resolve SAIdentifiers inside lists, which means
+      // we can't use the existing list constant value, it might not be correct according
+      // to our SAIdentifier propagation rules! Note that we can skip the "undefined rvalue"
+      // case above because SAIdentifiers with no rvalue are not allowed in lists.
+      //
+      // This is needed to handle cases like `float f = 1; list l = [f];` where the list
+      // is meant to contain a single integer under LSO, due to the integer rvalue.
+      auto *new_list_cv = _mAllocator->newTracked<LSLListConstant>(nullptr);
+      for (auto *child: *rvalue) {
+        auto *child_cv = resolve_sa_identifier((LSLExpression *) child)->getConstantValue();
+        assert(child_cv);
+        new_list_cv->pushChild(child_cv->copy(_mAllocator));
+      }
+      cv = new_list_cv;
     }
-  } else if (rvalue->getNodeSubType() == NODE_LIST_EXPRESSION) {
-    // Need to do similar logic to resolve SAIdentifiers inside lists, which means
-    // we can't use the existing list constant value, it might not be correct according
-    // to our SAIdentifier propagation rules! Note that we can skip the "undefined rvalue"
-    // case above because SAIdentifiers with no rvalue are not allowed in lists.
-    //
-    // This is needed to handle cases like `float f = 1; list l = [f];` where the list
-    // is meant to contain a single integer under LSO, due to the integer rvalue.
-    auto *new_list_cv = _mAllocator->newTracked<LSLListConstant>(nullptr);
-    for (auto *child : *rvalue) {
-      auto *child_cv = resolve_sa_identifier(child)->getConstantValue();
-      assert(child_cv);
-      new_list_cv->pushChild(child_cv->copy(_mAllocator));
-    }
-    cv = new_list_cv;
   }
 
   _mGlobalVarManager.writeVar(cv, sym->getName());
@@ -216,7 +219,7 @@ bool LSOScriptCompiler::visit(LSLState *node) {
   // skip past the jump tables to the start of the first state data struct
   _mStateBS.moveBy((int32_t)(jump_table_size * state_data->handlers.size()), true);
 
-  for (auto *event_handler : *node->getChild(1)) {
+  for (auto *event_handler : *node->getEventHandlers()) {
     auto *event_data = &_mSymData[event_handler->getSymbol()];
     // the jump table is in handler enum order, figure out our position within it
     auto table_iter = state_data->handlers.find((LSOHandlerType)event_data->index);
@@ -267,18 +270,18 @@ void LSOScriptCompiler::writeEventRegister(LSORegisters reg, uint64_t val) {
 }
 
 
-LSLASTNode *resolve_sa_identifier(LSLASTNode *rvalue) {
+LSLExpression *resolve_sa_identifier(LSLExpression *rvalue) {
   // try to figure out where the rvalue in the lvalue was actually declared
   while (rvalue && rvalue->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
     auto *sym = rvalue->getSymbol();
     // these should have been cleared out by the de-sugaring pass
     assert(sym->getSubType() != SYM_BUILTIN);
     // get the node where the referenced symbol was declared
-    auto *decl_node = sym->getVarDecl();
+    auto *decl_node = (LSLGlobalVariable *)sym->getVarDecl();
     // this should always be set except in the builtin case, which we handled.
     assert(decl_node);
     // get the rvalue of the node where this global was declared.
-    rvalue = decl_node->getChild(1);
+    rvalue = decl_node->getInitializer();
   }
   return rvalue;
 }

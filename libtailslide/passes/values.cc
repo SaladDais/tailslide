@@ -29,7 +29,7 @@ bool ConstantDeterminingVisitor::beforeDescend(LSLASTNode *node) {
 bool ConstantDeterminingVisitor::visit(LSLScript *node) {
   // need to iterate over global vars FIRST since expressions in
   // global functions may make use of them.
-  for (auto *child : *node->getChild(0)) {
+  for (auto *child : *node->getGlobals()) {
     if (child->getNodeType() == NODE_GLOBAL_VARIABLE)
       child->visit(this);
   }
@@ -132,10 +132,9 @@ bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {
     return true;
   }
 
-  auto *member_id = (LSLIdentifier*) node->getChild(1);
   const char *member_name = nullptr;
-  if (member_id && member_id->getNodeType() == NODE_IDENTIFIER)
-    member_name = member_id->getName();
+  if (auto *member = node->getMember())
+    member_name = member->getName();
 
   LSLConstant *constant_value = nullptr;
   DEBUG(LOG_DEBUG_SPAM, nullptr, "id %s assigned %d times\n", symbol->getName(), symbol->getAssignments());

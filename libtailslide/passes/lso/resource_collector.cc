@@ -95,7 +95,7 @@ bool LSOResourceVisitor::visit(LSLEventHandler *node) {
 
 // shared by functions and event handlers
 void LSOResourceVisitor::handleFuncDecl(LSOSymbolData *func_sym_data, LSLASTNode *func_decl) {
-  if (!func_decl || func_decl->getNodeType() == NODE_NULL)
+  if (!func_decl || !func_decl->hasChildren())
     return;
 
   for (auto *param : *func_decl) {

@@ -134,8 +134,7 @@ static bool is_branch_empty(LSLASTNode *node) {
   if (node->getNodeSubType() == NODE_NOP_STATEMENT)
     return true;
   if (node->getNodeSubType() == NODE_COMPOUND_STATEMENT) {
-    auto *child = node->getChild(0);
-    return !child || child->getNodeType() == NODE_NULL;
+    return !node->hasChildren();
   }
 
   return false;
@@ -152,21 +151,21 @@ bool TypeCheckVisitor::visit(LSLIfStatement *node) {
 }
 
 bool TypeCheckVisitor::visit(LSLForStatement *node) {
-  if (is_branch_empty(node->getChild(3))) {
+  if (is_branch_empty(node->getBody())) {
     NODE_ERROR(node, W_EMPTY_LOOP);
   }
   return true;
 }
 
 bool TypeCheckVisitor::visit(LSLDoStatement *node) {
-  if (is_branch_empty(node->getChild(0))) {
+  if (is_branch_empty(node->getBody())) {
     NODE_ERROR(node, W_EMPTY_LOOP);
   }
   return true;
 }
 
 bool TypeCheckVisitor::visit(LSLWhileStatement *node) {
-  if (is_branch_empty(node->getChild(1))) {
+  if (is_branch_empty(node->getBody())) {
     NODE_ERROR(node, W_EMPTY_LOOP);
   }
   return true;
@@ -285,34 +284,35 @@ static bool validate_func_arg_spec(
 }
 
 bool TypeCheckVisitor::visit(LSLFunctionExpression *node) {
-  auto *id = (LSLIdentifier *) node->getChild(0);
+  auto *id = node->getIdentifier();
+  auto *sym = node->getSymbol();
   node->setType(id->getType());
 
   // can't check types if function is undeclared
-  if (id->getSymbol() == nullptr) {
+  if (sym == nullptr) {
     node->setType(TYPE(LST_ERROR));
     return true;
   }
 
-  validate_func_arg_spec(id, node, node->getChild(1), id->getSymbol()->getFunctionDecl());
+  validate_func_arg_spec(id, node, node->getArguments(), sym->getFunctionDecl());
   return true;
 }
 
 bool TypeCheckVisitor::visit(LSLEventHandler *node) {
-  auto *id = (LSLIdentifier *) node->getChild(0);
+  auto *id = node->getIdentifier();
   // can't check arg spec if event handler isn't valid
   if (id->getSymbol() == nullptr)
     return true;
 
   // get the expected event handler prototype from the builtins
   auto *function_decl = node->mContext->builtins->lookup(id->getName(), SYM_EVENT)->getFunctionDecl();
-  validate_func_arg_spec(id, node, node->getChild(1), function_decl);
+  validate_func_arg_spec(id, node, node->getArguments(), function_decl);
   return true;
 }
 
 bool TypeCheckVisitor::visit(LSLLValueExpression *node) {
-  auto *id = (LSLIdentifier *) node->getChild(0);
-  LSLASTNode *member_node = node->getChild(1);
+  auto *id = node->getIdentifier();
+  auto *member_node = node->getMember();
   node->setType(id->getType());
 
   auto *symbol = id->getSymbol();
@@ -324,7 +324,7 @@ bool TypeCheckVisitor::visit(LSLLValueExpression *node) {
   auto symbol_type = symbol->getSymbolType();
 
   /// If we're requesting a member, like var.x or var.y
-  if (member_node && member_node->getNodeType() == NODE_IDENTIFIER) {
+  if (member_node) {
     const char *name = id->getName();
     const char *member = ((LSLIdentifier *) member_node)->getName();
 

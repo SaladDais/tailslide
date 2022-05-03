@@ -583,7 +583,7 @@ default
                         advertised_urls += [llDeleteSubString(msg, 0, 0)];
                     }
                     else if(debug)  // always false: $[E20013]
-                        llOwnerSay("Incomplete broadcasted URL"); 
+                        llOwnerSay("Incomplete broadcasted URL");
                 }
             }
         } else {
@@ -594,7 +594,7 @@ default
                     parse(msg, "");
             } else {
                 source = id;
-                parse(msg, "");    
+                parse(msg, "");
             }
         }
     }

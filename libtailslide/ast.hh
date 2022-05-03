@@ -130,6 +130,10 @@ class LSLASTNode : public TrackableObject {
       return num;
     };
 
+    bool hasChildren() const {
+      return _mChildren != nullptr;
+    }
+
     // Get the topmost node in the tree
     LSLASTNode *getRoot() {
       LSLASTNode *last_node = this;

@@ -185,7 +185,7 @@
 %type <statement>         ';'
 %type <statement>         '@'
 %type <expression>        nextforexpressionlist
-%type <node_list>         forexpressionlist
+%type <expression>        forexpressionlist
 %type <expression>        nextfuncexpressionlist
 %type <expression>        funcexpressionlist
 %type <expression>        nextlistexpressionlist
@@ -373,11 +373,19 @@ typename
 global_function
     : IDENTIFIER '(' ')' compound_statement
     {
-        $$ = ALLOCATOR->newTracked<LSLGlobalFunction>( MAKEID(LST_NULL, $1, @1), nullptr, $4 );
+        $$ = ALLOCATOR->newTracked<LSLGlobalFunction>(
+            MAKEID(LST_NULL, $1, @1),
+            ALLOCATOR->newTracked<LSLFunctionDec>(nullptr),
+            $4
+        );
     }
     | name_type '(' ')' compound_statement
     {
-        $$ = ALLOCATOR->newTracked<LSLGlobalFunction>( $1, nullptr, $4 );
+        $$ = ALLOCATOR->newTracked<LSLGlobalFunction>(
+            $1,
+            ALLOCATOR->newTracked<LSLFunctionDec>(nullptr),
+            $4
+        );
     }
     | IDENTIFIER '(' function_parameters ')' compound_statement
     {
@@ -533,7 +541,11 @@ state_body
 event
     : IDENTIFIER '(' ')' compound_statement
     {
-        $$ = ALLOCATOR->newTracked<LSLEventHandler>(MAKEID(LST_NULL, $1, @1), nullptr, $4);
+        $$ = ALLOCATOR->newTracked<LSLEventHandler>(
+            MAKEID(LST_NULL, $1, @1),
+            ALLOCATOR->newTracked<LSLEventDec>(nullptr),
+            $4
+        );
     }
     | IDENTIFIER '(' event_parameters ')' compound_statement
     {
@@ -634,7 +646,12 @@ statement
     }
     | FOR '(' forexpressionlist ';' expression ';' forexpressionlist ')' statement
     {
-        $$ = ALLOCATOR->newTracked<LSLForStatement>($3, $5, $7, $9);
+        $$ = ALLOCATOR->newTracked<LSLForStatement>(
+            ALLOCATOR->newTracked<LSLASTNodeList>($3),
+            $5,
+            ALLOCATOR->newTracked<LSLASTNodeList>($7),
+            $9
+        );
         $9->setDeclarationAllowed(false);
     }
     | DO statement WHILE '(' expression ')' ';'
@@ -673,7 +690,7 @@ forexpressionlist
     }
     | nextforexpressionlist
     {
-        $$ = ALLOCATOR->newTracked<LSLASTNodeList>($1);
+        $$ = $1;
     }
     ;
 

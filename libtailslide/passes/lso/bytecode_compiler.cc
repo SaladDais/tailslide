@@ -60,7 +60,7 @@ bool LSOBytecodeCompiler::visit(LSLGlobalFunction *node) {
 }
 
 bool LSOBytecodeCompiler::visit(LSLConstantExpression *node) {
-  pushConstant(node->getChild(0)->getConstantValue());
+  pushConstant(node->getConstantValue());
   return false;
 }
 
@@ -86,30 +86,29 @@ bool LSOBytecodeCompiler::visit(LSLListExpression *node) {
 
 bool LSOBytecodeCompiler::visit(LSLUnaryExpression *node) {
   LSLOperator op = node->getOperation();
-  auto *lhs = node->getChild(0);
-  auto lhs_itype = lhs->getIType();
-  auto lhs_type = lhs->getType();
+  auto *expr = node->getChildExpr();
+  auto expr_itype = expr->getIType();
 
-  lhs->visit(this);
+  expr->visit(this);
   switch(op) {
-    case '-': mCodeBS << LOPC_NEG << lhs_itype; break;
+    case '-': mCodeBS << LOPC_NEG << expr_itype; break;
     // integer-only, doesn't take a type.
     case '!': mCodeBS << LOPC_BOOLNOT; break;
     case '~': mCodeBS << LOPC_BITNOT; break;
     case OP_POST_DECR:
     case OP_POST_INCR:
       // Push the representation of "1" for the given type
-      pushConstant(lhs_type->getOneValue());
+      pushConstant(expr->getType()->getOneValue());
       // need to push another copy onto the stack so we can keep the original
-      lhs->visit(this);
+      expr->visit(this);
       if (op == OP_POST_INCR)
         mCodeBS << LOPC_ADD;
       else
         mCodeBS << LOPC_SUB;
-      mCodeBS << pack_lso_types(lhs_itype, lhs_itype);
-      storeStackToLValue((LSLLValueExpression *) lhs);
+      mCodeBS << pack_lso_types(expr_itype, expr_itype);
+      storeStackToLValue((LSLLValueExpression *) expr);
       // pop the mutated lvalue off the stack, old lvalue should now be on top.
-      mCodeBS << LSO_TYPE_POP_OPCODE[lhs_itype];
+      mCodeBS << LSO_TYPE_POP_OPCODE[expr_itype];
     default:
       return false;
   }
@@ -118,8 +117,8 @@ bool LSOBytecodeCompiler::visit(LSLUnaryExpression *node) {
 
 bool LSOBytecodeCompiler::visit(LSLBinaryExpression *node) {
   LSLOperator op = node->getOperation();
-  auto *lhs = node->getChild(0);
-  auto *rhs = node->getChild(1);
+  auto *lhs = node->getLHS();
+  auto *rhs = node->getRHS();
   auto lhs_type = lhs->getIType();
   auto rhs_type = rhs->getIType();
   auto packed_types = pack_lso_types(lhs_type, rhs_type);
@@ -219,14 +218,14 @@ bool LSOBytecodeCompiler::visit(LSLLValueExpression *node) {
 }
 
 bool LSOBytecodeCompiler::visit(LSLTypecastExpression *node) {
-  auto *expr = node->getChild(0);
+  auto *expr = node->getChildExpr();
   expr->visit(this);
   mCodeBS << LOPC_CAST << pack_lso_types(expr->getIType(), node->getIType());
   return false;
 }
 
 bool LSOBytecodeCompiler::visit(LSLPrintExpression *node) {
-  auto *expr = node->getChild(0);
+  auto *expr = node->getChildExpr();
   expr->visit(this);
   mCodeBS << LOPC_PRINT << expr->getIType();
   return false;
@@ -261,7 +260,7 @@ bool LSOBytecodeCompiler::visit(LSLFunctionExpression *node) {
   // keep old base pointer on stack so caller can pop it on return
   mCodeBS << LOPC_PUSHBP;
   // push the arguments onto the stack
-  for (auto *child_expr : *node->getChild(1)) {
+  for (auto *child_expr : *node->getArguments()) {
     child_expr->visit(this);
   }
   // make space for locals
@@ -279,7 +278,7 @@ bool LSOBytecodeCompiler::visit(LSLFunctionExpression *node) {
 }
 
 bool LSOBytecodeCompiler::visit(LSLExpressionStatement *node) {
-  auto *expr = node->getChild(0);
+  auto *expr = node->getExpr();
   expr->visit(this);
   if (auto pop_opcode = LSO_TYPE_POP_OPCODE[expr->getIType()])
     mCodeBS << pop_opcode;
@@ -302,9 +301,8 @@ bool LSOBytecodeCompiler::visit(LSLLabel *node) {
 }
 
 bool LSOBytecodeCompiler::visit(LSLIfStatement* node) {
-  auto *expr = node->getChild(0);
-  auto *true_branch = node->getChild(1);
-  auto *false_branch = node->getChild(2);
+  auto *expr = node->getCheckExpr();
+  auto *false_branch = node->getFalseBranch();
 
   expr->visit(this);
   mCodeBS << LOPC_JUMPNIF << expr->getIType();
@@ -312,9 +310,9 @@ bool LSOBytecodeCompiler::visit(LSLIfStatement* node) {
   // fill with 0 until we know where the branch ends.
   mCodeBS << (int32_t)0;
 
-  true_branch->visit(this);
+  node->getTrueBranch()->visit(this);
 
-  if (false_branch->getNodeType() != NODE_NULL) {
+  if (false_branch) {
     // need to jump over the code for the false case after hitting the end of true
     mCodeBS << LOPC_JUMP;
     LSOStructuredJumpPatcher jump_past_false_patcher(mCodeBS);
@@ -334,7 +332,7 @@ bool LSOBytecodeCompiler::visit(LSLIfStatement* node) {
 
 bool LSOBytecodeCompiler::visit(LSLForStatement *node) {
   // initializer expressions come first and are run unconditionally
-  for(auto *init_expr : *node->getChild(0)) {
+  for(auto *init_expr : *node->getInitExprs()) {
     init_expr->visit(this);
     // nothing consumes the result of these expressions, pop if applicable.
     if (auto pop_opcode = LSO_TYPE_POP_OPCODE[init_expr->getIType()])
@@ -343,17 +341,17 @@ bool LSOBytecodeCompiler::visit(LSLForStatement *node) {
 
   // top of the loop has conditional jump to break the loop
   auto check_pos = mCodeBS.pos();
-  auto *check_expr = node->getChild(1);
+  auto *check_expr = node->getCheckExpr();
   check_expr->visit(this);
   mCodeBS << LOPC_JUMPNIF << check_expr->getIType();
   LSOStructuredJumpPatcher loop_end_jump(mCodeBS);
   mCodeBS << (int32_t)0;
 
   // followed by the body
-  node->getChild(3)->visit(this);
+  node->getBody()->visit(this);
 
   // followed by the increment expression list
-  for (auto *incr_expr : *node->getChild(2)) {
+  for (auto *incr_expr : *node->getIncrExprs()) {
     incr_expr->visit(this);
     if (auto pop_opcode = LSO_TYPE_POP_OPCODE[incr_expr->getIType()])
       mCodeBS << pop_opcode;
@@ -371,14 +369,14 @@ bool LSOBytecodeCompiler::visit(LSLForStatement *node) {
 bool LSOBytecodeCompiler::visit(LSLWhileStatement *node) {
   // top of the loop has conditional jump to break the loop
   auto check_pos = mCodeBS.pos();
-  auto *check_expr = node->getChild(0);
+  auto *check_expr = node->getCheckExpr();
   check_expr->visit(this);
   mCodeBS << LOPC_JUMPNIF << check_expr->getIType();
   LSOStructuredJumpPatcher loop_end_jump(mCodeBS);
   mCodeBS << (int32_t)0;
 
   // followed by the body
-  node->getChild(1)->visit(this);
+  node->getBody()->visit(this);
 
   // then the jump back to the check expression at the top
   mCodeBS << LOPC_JUMP << calculate_jump_operand(mCodeBS.pos(), check_pos);
@@ -392,9 +390,9 @@ bool LSOBytecodeCompiler::visit(LSLWhileStatement *node) {
 bool LSOBytecodeCompiler::visit(LSLDoStatement *node) {
   auto start_pos = mCodeBS.pos();
   // body first
-  node->getChild(0)->visit(this);
+  node->getBody()->visit(this);
   // then evaluate the condition
-  auto *check_expr = node->getChild(1);
+  auto *check_expr = node->getCheckExpr();
   check_expr->visit(this);
   // then the conditional jump back to the top of the body
   mCodeBS << LOPC_JUMPIF << check_expr->getIType() << calculate_jump_operand(mCodeBS.pos(), start_pos);
@@ -402,10 +400,10 @@ bool LSOBytecodeCompiler::visit(LSLDoStatement *node) {
 }
 
 bool LSOBytecodeCompiler::visit(LSLDeclaration *node) {
-  auto *expr = node->getChild(1);
+  auto *init_expr = node->getInitializer();
   auto *var_type = node->getSymbol()->getType();
-  if (expr->getNodeType() != NODE_NULL) {
-    expr->visit(this);
+  if (init_expr) {
+    init_expr->visit(this);
   } else {
     auto *default_type = var_type;
     // This gets pushed as an int in the default case, even though it
@@ -422,21 +420,22 @@ bool LSOBytecodeCompiler::visit(LSLDeclaration *node) {
 }
 
 bool LSOBytecodeCompiler::visit(LSLReturnStatement *node) {
-  auto *expr = node->getChild(0);
-  // To match LL's LSO compiler we need to _not_ auto-cast when the expression
-  // is promotable to the return type but not an exact match. Yuck.
-  if (expr->getNodeSubType() == NODE_TYPECAST_EXPRESSION) {
-    auto *cast_expr = (LSLTypecastExpression *) expr;
-    // This was synthesized after parsing
-    if (cast_expr->getSynthesized())
-      expr = cast_expr->getChild(0);
-  }
-  auto var_size = LSO_TYPE_DATA_SIZES[expr->getIType()];
-  if (var_size) {
-    expr->visit(this);
-    // write in the retval above the locals
-    int32_t retval_offset = -8 - (int32_t)var_size;
-    mCodeBS << LSO_TYPE_LOAD_LOCAL_OPCODE[expr->getIType()] << retval_offset;
+  if (auto *expr = node->getExpr()) {
+    // To match LL's LSO compiler we need to _not_ auto-cast when the expression
+    // is promotable to the return type but not an exact match. Yuck.
+    if (expr->getNodeSubType() == NODE_TYPECAST_EXPRESSION) {
+      auto *cast_expr = (LSLTypecastExpression *) expr;
+      // This was synthesized after parsing
+      if (cast_expr->getSynthesized())
+        expr = cast_expr->getChildExpr();
+    }
+    auto var_size = LSO_TYPE_DATA_SIZES[expr->getIType()];
+    if (var_size) {
+      expr->visit(this);
+      // write in the retval above the locals
+      int32_t retval_offset = -8 - (int32_t) var_size;
+      mCodeBS << LSO_TYPE_LOAD_LOCAL_OPCODE[expr->getIType()] << retval_offset;
+    }
   }
   writeReturn();
   return false;
@@ -510,8 +509,7 @@ int32_t LSOBytecodeCompiler::calculateLValueOffset(LSLLValueExpression *node) {
   auto &sym_data = _mSymData[sym];
   auto offset = (int32_t)sym_data.offset;
 
-  auto *accessor_id = (LSLIdentifier *) node->getChild(1);
-  if (accessor_id && accessor_id->getNodeType() == NODE_IDENTIFIER)
+  if (auto *accessor_id = node->getMember())
     accessor = accessor_id->getName()[0];
   else
     return offset;

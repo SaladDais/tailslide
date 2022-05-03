@@ -4,8 +4,8 @@ namespace Tailslide {
 
 bool GlobalExprValidatingVisitor::visit(LSLGlobalVariable *node) {
   _mValidRValue = true;
-  LSLASTNode *rvalue = node->getChild(1);
-  if (rvalue && rvalue->getNodeType() != NODE_NULL && !rvalue->isConstant()) {
+  auto *rvalue = node->getInitializer();
+  if (rvalue && !rvalue->isConstant()) {
     // don't bother complaining if the rvalue isn't constant due to a type or symbol
     // resolution error that we've already reported.
     if (rvalue->getConstantPrecluded()) {
@@ -16,7 +16,7 @@ bool GlobalExprValidatingVisitor::visit(LSLGlobalVariable *node) {
   }
   // Worth checking the children specifically to see if there's anything other
   // than non-constness that'd make the rvalue invalid.
-  if (_mValidRValue)
+  if (rvalue && _mValidRValue)
     rvalue->visit(this);
 
   if (!_mValidRValue) {
@@ -54,13 +54,12 @@ bool SimpleAssignableValidatingVisitor::visit(LSLUnaryExpression *node) {
     return false;
   }
   // and only for certain builtins, by virtue of them _actually_ being lexer tokens
-  LSLASTNode *rvalue = node->getChild(0);
+  auto *rvalue = node->getChildExpr();
   if (rvalue->getNodeSubType() != NODE_LVALUE_EXPRESSION) {
     _mValidRValue = false;
     return false;
   }
-  auto *id = (LSLIdentifier*) rvalue->getChild(0);
-  auto *sym = id->getSymbol();
+  auto *sym = rvalue->getSymbol();
   // Don't check, but also don't re-error if a type or symbol error occurred earlier.
   if (!sym || sym->getIType() == LST_ERROR) {
     return false;
@@ -85,8 +84,7 @@ bool SimpleAssignableValidatingVisitor::visit(LSLUnaryExpression *node) {
 
 bool SimpleAssignableValidatingVisitor::visit(LSLLValueExpression *node) {
   // no member accessors allowed!
-  auto *member = node->getChild(1);
-  if (member && member->getNodeType() != NODE_NULL) {
+  if (node->getMember()) {
     _mValidRValue = false;
     return false;
   }

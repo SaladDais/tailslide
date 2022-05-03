@@ -15,8 +15,8 @@ bool DeSugaringVisitor::visit(LSLBinaryExpression *node) {
   LSLOperator decoupled_op = decouple_compound_operation(op);
   bool compound_assignment = op != decoupled_op;
 
-  auto *left = (LSLLValueExpression *) node->getChild(0);
-  auto *right = (LSLExpression *) node->getChild(1);
+  auto *left = node->getLHS();
+  auto *right = node->getRHS();
 
   if (left->getIType() == LST_ERROR || right->getIType() == LST_ERROR)
     return true;
@@ -56,17 +56,20 @@ bool DeSugaringVisitor::visit(LSLBinaryExpression *node) {
     return true;
 
   // some kind of compound operator, desugar it
+
   // decouple the RHS from the existing expression
-  right = (LSLExpression *) node->takeChild(1);
+  // TODO: some kind of take() on the node itself that leaves a null node in its place
+  LSLASTNode::replaceNode(right, node->newNullNode());
+
   // turn `lhs += rhs` into `lhs = lhs + rhs`
   auto *new_right_node = _mAllocator->newTracked<LSLBinaryExpression>(
-      left->clone(),
+      ((LSLLValueExpression *) left)->clone(),
       decoupled_op,
       right
   );
   new_right_node->setType(node->getType());
   new_right_node->setLoc(node->getLoc());
-  node->setChild(1, new_right_node);
+  node->setRHS(new_right_node);
   node->setOperation(OP_ASSIGN);
   return true;
 }
@@ -115,18 +118,17 @@ bool DeSugaringVisitor::visit(LSLUnaryExpression *node) {
 }
 
 bool DeSugaringVisitor::visit(LSLDeclaration *node) {
-  auto expr = (LSLExpression *) node->getChild(1);
-  if (expr->getNodeType() != NODE_NULL)
-    maybeInjectCast(expr, node->getChild(0)->getType());
+  if (auto expr = node->getInitializer())
+    maybeInjectCast(expr, node->getIdentifier()->getType());
   return true;
 }
 
 bool DeSugaringVisitor::visit(LSLGlobalVariable *node) {
+  // LSO has its own special handling for global var casting.
   if (!_mMonoSemantics)
     return true;
-  auto expr = (LSLExpression *) node->getChild(1);
-  if (expr->getNodeType() != NODE_NULL)
-    maybeInjectCast(expr, node->getChild(0)->getType());
+  if (auto expr = node->getInitializer())
+    maybeInjectCast(expr, node->getIdentifier()->getType());
   return true;
 }
 
@@ -174,11 +176,11 @@ bool DeSugaringVisitor::visit(LSLFunctionExpression *node) {
   if (!sym || sym->getIType() == LST_ERROR)
     return true;
   auto *func_decl = sym->getFunctionDecl();
-  if (!func_decl) {
+  if (!func_decl || !func_decl->hasChildren()) {
     return true;
   }
 
-  auto *params = node->getChild(1);
+  auto *params = node->getArguments();
   // we may replace nodes during iteration so we can't use `node->getNext()`
   auto num_params = params->getNumChildren();
   for(auto i=0; i<num_params; ++i) {
@@ -212,13 +214,13 @@ bool DeSugaringVisitor::visit(LSLLValueExpression *node) {
 }
 
 bool DeSugaringVisitor::visit(LSLReturnStatement *node) {
-  auto *expr = (LSLExpression *) node->getChild(0);
-  if (expr->getNodeType() == NODE_NULL)
+  auto *expr = node->getExpr();
+  if (!expr)
     return true;
   // figure out what function we're in and conditionally cast to the return type
   for (LSLASTNode *parent = expr->getParent(); parent; parent = parent->getParent()) {
     if (parent->getNodeType() == NODE_GLOBAL_FUNCTION) {
-      auto *id = parent->getChild(0);
+      auto *id = ((LSLGlobalVariable *) parent)->getIdentifier();
       maybeInjectCast(expr, id->getType());
       return true;
     }
@@ -227,22 +229,22 @@ bool DeSugaringVisitor::visit(LSLReturnStatement *node) {
 }
 
 bool DeSugaringVisitor::visit(LSLForStatement *node) {
-  maybeInjectBoolConversion((LSLExpression *)node->getChild(1));
+  maybeInjectBoolConversion(node->getCheckExpr());
   return true;
 }
 
 bool DeSugaringVisitor::visit(LSLWhileStatement *node) {
-  maybeInjectBoolConversion((LSLExpression *)node->getChild(0));
+  maybeInjectBoolConversion(node->getCheckExpr());
   return true;
 }
 
 bool DeSugaringVisitor::visit(LSLDoStatement *node) {
-  maybeInjectBoolConversion((LSLExpression *)node->getChild(1));
+  maybeInjectBoolConversion(node->getCheckExpr());
   return true;
 }
 
 bool DeSugaringVisitor::visit(LSLIfStatement *node) {
-  maybeInjectBoolConversion((LSLExpression *)node->getChild(0));
+  maybeInjectBoolConversion(node->getCheckExpr());
   return true;
 }
 

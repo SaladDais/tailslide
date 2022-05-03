@@ -6,7 +6,7 @@ script [none] (cv=) (1,1)
       ast node list [none] (cv=) (1,1)
         event handler [none] (cv=) (2,5)
           identifier "state_entry" [none] (cv=) (2,5)
-          null
+          event decl [none] (cv=) (2,5)
           compound statement [none] (cv=) (2,19)
             declaration [none] (cv=) (3,9)
               identifier "i" [integer] (cv=) (3,17)

@@ -30,11 +30,11 @@ bool MonoScriptCompiler::visit(LSLScript *node) {
           "{\n";
 
   // declare the global variables first
-  auto *globals = node->getChild(0);
+  auto *globals = node->getGlobals();
   for (auto *global : *globals) {
     if (global->getNodeType() != NODE_GLOBAL_VARIABLE)
       continue;
-    auto *id = (LSLIdentifier *) global->getChild(0);
+    auto *id = ((LSLGlobalVariable *) global)->getIdentifier();
     mCIL << ".field public " << CIL_TYPE_NAMES[id->getIType()] << " '" << id->getName() << "'\n";
   }
 
@@ -65,7 +65,7 @@ bool MonoScriptCompiler::visit(LSLScript *node) {
   }
 
   // now look at the event handlers
-  node->getChild(1)->visit(this);
+  node->getStates()->visit(this);
 
   mCIL << "}\n";
 
@@ -76,9 +76,8 @@ bool MonoScriptCompiler::visit(LSLGlobalVariable *node) {
   // push a reference to `this` for the later stfld
   mCIL << "ldarg.0\n";
   auto *sym = node->getSymbol();
-  auto *rhs = node->getChild(1);
-  if (rhs->getNodeType() != NODE_NULL) {
-    rhs->visit(this);
+  if (auto *initializer = node->getInitializer()) {
+    initializer->visit(this);
   } else {
     pushConstant(sym->getType()->getDefaultValue());
   }
@@ -96,8 +95,7 @@ void MonoScriptCompiler::pushLValueContainer(LSLLValueExpression *lvalue) {
     mCIL << "ldarg.0\n";
   }
   // have an accessor, we need to push the containing object's address!
-  auto *accessor = lvalue->getChild(1);
-  if (accessor && accessor->getNodeType() != NODE_NULL) {
+  if (lvalue->getMember()) {
     if (sym->getSubType() == SYM_GLOBAL) {
       mCIL << "ldflda " << getGlobalVarSpecifier(sym) << "\n";
     } else if (sym->getSubType() == SYM_LOCAL) {
@@ -113,8 +111,7 @@ void MonoScriptCompiler::pushLValueContainer(LSLLValueExpression *lvalue) {
 void MonoScriptCompiler::pushLValue(LSLLValueExpression *lvalue) {
   pushLValueContainer(lvalue);
   auto *sym = lvalue->getSymbol();
-  auto *accessor = lvalue->getChild(1);
-  if (accessor && accessor->getNodeType() != NODE_NULL) {
+  if (lvalue->getMember()) {
     // accessor case, containing object is already on the stack and
     // we just have to load the field.
     mCIL << "ldfld " << getLValueAccessorSpecifier(lvalue) << "\n";
@@ -210,8 +207,7 @@ void MonoScriptCompiler::pushFloatLiteral(float value) {
 void MonoScriptCompiler::storeToLValue(LSLLValueExpression *lvalue, bool push_result) {
   auto *sym = lvalue->getSymbol();
   // coordinate accessor case
-  auto *accessor = lvalue->getChild(1);
-  if (accessor && accessor->getNodeType() != NODE_NULL) {
+  if (auto *accessor = lvalue->getMember()) {
     mCIL << "stfld " << getLValueAccessorSpecifier(lvalue) << "\n";
     // Expression assignments need to return their result, load what we just stored onto the stack
     // TODO: This seems really wasteful in many cases, but this is how LL's compiler does it.
@@ -313,7 +309,7 @@ std::string MonoScriptCompiler::getGlobalVarSpecifier(LSLSymbol *sym) {
 
 /// return a specifier that allows referencing the field for the accessor with ldfld or stfld
 std::string MonoScriptCompiler::getLValueAccessorSpecifier(LSLLValueExpression *lvalue) {
-  auto *accessor = lvalue->getChild(1);
+  auto *accessor = lvalue->getMember();
   auto *accessor_type_name = CIL_TYPE_NAMES[lvalue->getIType()];
   auto *obj_type_name = CIL_TYPE_NAMES[lvalue->getSymbol()->getIType()];
   auto *accessor_name = ((LSLIdentifier *) accessor)->getName();
@@ -334,7 +330,7 @@ bool MonoScriptCompiler::visit(LSLEventHandler *node) {
 
 bool MonoScriptCompiler::visit(LSLGlobalFunction *node) {
   auto *node_sym = node->getSymbol();
-  mCIL << ".method public hidebysig instance default " << CIL_TYPE_NAMES[node->getChild(0)->getIType()]
+  mCIL << ".method public hidebysig instance default " << CIL_TYPE_NAMES[node->getIdentifier()->getIType()]
        << " 'g" << node_sym->getName() << "'";
   buildFunction(node);
   return false;
@@ -375,9 +371,8 @@ void MonoScriptCompiler::buildFunction(LSLASTNode *node) {
 
 bool MonoScriptCompiler::visit(LSLDeclaration *node) {
   auto *sym = node->getSymbol();
-  auto *rhs = node->getChild(1);
-  if (rhs->getNodeType() != NODE_NULL) {
-    node->getChild(1)->visit(this);
+  if (auto *initializer = node->getInitializer()) {
+    initializer->visit(this);
   } else {
     pushConstant(sym->getType()->getDefaultValue());
   }
@@ -386,7 +381,7 @@ bool MonoScriptCompiler::visit(LSLDeclaration *node) {
 }
 
 bool MonoScriptCompiler::visit(LSLExpressionStatement* node) {
-  auto *expr = node->getChild(0);
+  auto *expr = node->getExpr();
   expr->visit(this);
   if (expr->getIType())
     mCIL << "pop\n";
@@ -394,7 +389,8 @@ bool MonoScriptCompiler::visit(LSLExpressionStatement* node) {
 }
 
 bool MonoScriptCompiler::visit(LSLReturnStatement* node) {
-  node->getChild(0)->visit(this);
+  if (auto *expr = node->getExpr())
+    expr->visit(this);
   mCIL << "ret\n";
   return false;
 }
@@ -416,16 +412,14 @@ bool MonoScriptCompiler::visit(LSLJumpStatement* node) {
 bool MonoScriptCompiler::visit(LSLIfStatement* node) {
   auto jump_past_true_num = _mJumpNum++;
   uint32_t jump_past_false_num = 0;
-  auto *check_expr = node->getChild(0);
-  auto *true_node = node->getChild(1);
-  auto *false_node = node->getChild(2);
-  if (false_node->getNodeType() != NODE_NULL)
+  auto *false_node = node->getFalseBranch();
+  if (false_node)
     jump_past_false_num = _mJumpNum++;
 
-  check_expr->visit(this);
+  node->getCheckExpr()->visit(this);
   mCIL << "brfalse LabelTempJump" << jump_past_true_num << "\n";
-  true_node->visit(this);
-  if (false_node->getNodeType() != NODE_NULL) {
+  node->getTrueBranch()->visit(this);
+  if (false_node) {
     mCIL << "br LabelTempJump" << jump_past_false_num << "\n";
     mCIL << "LabelTempJump" << jump_past_true_num << ":\n";
     false_node->visit(this);
@@ -438,7 +432,7 @@ bool MonoScriptCompiler::visit(LSLIfStatement* node) {
 
 bool MonoScriptCompiler::visit(LSLForStatement* node) {
   // execute instructions to initialize vars
-  for(auto *init_expr : *node->getChild(0)) {
+  for(auto *init_expr : *node->getInitExprs()) {
     init_expr->visit(this);
     if (init_expr->getIType() != LST_NULL)
       mCIL << "pop\n";
@@ -447,12 +441,12 @@ bool MonoScriptCompiler::visit(LSLForStatement* node) {
   auto jump_to_end_num = _mJumpNum++;
   mCIL << "LabelTempJump" << jump_to_start_num << ":\n";
   // run the check expression, exiting the loop if it fails
-  node->getChild(1)->visit(this);
+  node->getCheckExpr()->visit(this);
   mCIL << "brfalse LabelTempJump" << jump_to_end_num << "\n";
   // run the body of the loop
-  node->getChild(3)->visit(this);
+  node->getBody()->visit(this);
   // run the increment expressions
-  for(auto *incr_expr : *node->getChild(2)) {
+  for(auto *incr_expr : *node->getIncrExprs()) {
     incr_expr->visit(this);
     if (incr_expr->getIType() != LST_NULL)
       mCIL << "pop\n";
@@ -468,11 +462,10 @@ bool MonoScriptCompiler::visit(LSLWhileStatement* node) {
   auto jump_to_end_num = _mJumpNum++;
   mCIL << "LabelTempJump" << jump_to_start_num << ":\n";
   // run the check expression, exiting the loop if it fails
-  auto *check_expr = node->getChild(0);
-  check_expr->visit(this);
+  node->getCheckExpr()->visit(this);
   mCIL << "brfalse LabelTempJump" << jump_to_end_num << "\n";
   // run the body of the loop
-  node->getChild(1)->visit(this);
+  node->getBody()->visit(this);
   // jump back up to the check expression at the top
   mCIL << "br LabelTempJump" << jump_to_start_num << "\n";
   mCIL << "LabelTempJump" << jump_to_end_num << ":\n";
@@ -483,10 +476,9 @@ bool MonoScriptCompiler::visit(LSLDoStatement* node) {
   auto jump_to_start_num = _mJumpNum++;
   mCIL << "LabelTempJump" << jump_to_start_num << ":\n";
   // run the body of the loop
-  node->getChild(0)->visit(this);
+  node->getBody()->visit(this);
   // run the check expression, jumping back up if it succeeds
-  auto *check_expr = node->getChild(1);
-  check_expr->visit(this);
+  node->getCheckExpr()->visit(this);
   mCIL << "brtrue LabelTempJump" << jump_to_start_num << "\n";
   return false;
 }
@@ -508,7 +500,7 @@ bool MonoScriptCompiler::visit(LSLConstantExpression *node) {
 }
 
 bool MonoScriptCompiler::visit(LSLTypecastExpression *node) {
-  auto *child_expr = node->getChild(0);
+  auto *child_expr = node->getChildExpr();
   assert(child_expr);
   child_expr->visit(this);
   castTopOfStack(child_expr->getIType(), node->getIType());
@@ -516,7 +508,7 @@ bool MonoScriptCompiler::visit(LSLTypecastExpression *node) {
 }
 
 bool MonoScriptCompiler::visit(LSLBoolConversionExpression *node) {
-  auto *child_expr = node->getChild(0);
+  auto *child_expr = node->getChildExpr();
   auto type = child_expr->getIType();
   child_expr->visit(this);
   switch(type) {
@@ -609,7 +601,7 @@ bool MonoScriptCompiler::visit(LSLFunctionExpression *node) {
     mCIL << "ldarg.0\n";
 
   // push the arguments onto the stack
-  for (auto *child_expr : *node->getChild(1)) {
+  for (auto *child_expr : *node->getArguments()) {
     child_expr->visit(this);
   }
 
@@ -694,8 +686,8 @@ const std::map<int, std::pair<const char *, std::vector<SimpleBinaryOperationInf
 
 bool MonoScriptCompiler::visit(LSLBinaryExpression *node) {
   LSLOperator op = node->getOperation();
-  auto *left = (LSLExpression *)node->getChild(0);
-  auto *right = (LSLExpression *)node->getChild(1);
+  auto *left = node->getLHS();
+  auto *right = node->getRHS();
 
   if (op == '=') {
     // we're going to store, so we may need a reference to `this` on top of the stack
@@ -911,7 +903,7 @@ void MonoScriptCompiler::compileBinaryExpression(LSLOperator op, LSLExpression *
 }
 
 bool MonoScriptCompiler::visit(LSLUnaryExpression *node) {
-  auto *child_expr = node->getChild(0);
+  auto *child_expr = node->getChildExpr();
   LSLOperator op = node->getOperation();
 
   if (op == OP_POST_DECR || op == OP_POST_INCR) {
@@ -985,7 +977,7 @@ bool MonoScriptCompiler::visit(LSLUnaryExpression *node) {
 }
 
 bool MonoScriptCompiler::visit(LSLPrintExpression *node) {
-  auto *child_expr = (LSLExpression *) node->getChild(0);
+  auto *child_expr = node->getChildExpr();
   child_expr->visit(this);
   // TOOD: void expressions????
   castTopOfStack(child_expr->getIType(), LST_STRING);
