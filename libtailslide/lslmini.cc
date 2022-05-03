@@ -404,13 +404,9 @@ LSLLValueExpression *LSLLValueExpression::clone() {
   auto *id = (LSLIdentifier *) getChild(0);
   auto *accessor = (LSLIdentifier *) getChild(1);
   id = id->clone();
-  LSLLValueExpression *new_expr;
-  if (accessor) {
+  if (accessor && accessor->getNodeType() == NODE_IDENTIFIER)
     accessor = accessor->clone();
-    new_expr = mContext->allocator->newTracked<LSLLValueExpression>(id, accessor);
-  } else {
-    new_expr = mContext->allocator->newTracked<LSLLValueExpression>(id);
-  }
+  auto *new_expr = mContext->allocator->newTracked<LSLLValueExpression>(id, accessor);
   new_expr->setLoc(getLoc());
   new_expr->setType(getType());
   new_expr->setIsFoldable(getIsFoldable());

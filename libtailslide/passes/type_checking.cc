@@ -127,7 +127,9 @@ static bool is_branch_empty(LSLASTNode *node) {
     return true;
   if (node->getNodeType() != NODE_STATEMENT)
     return false;
-  if(node->getNodeSubType() == NODE_NO_SUB_TYPE || node->getNodeSubType() == NODE_COMPOUND_STATEMENT) {
+  if (node->getNodeSubType() == NODE_NOP_STATEMENT)
+    return true;
+  if (node->getNodeSubType() == NODE_COMPOUND_STATEMENT) {
     auto *child = node->getChild(0);
     return !child || child->getNodeType() == NODE_NULL;
   }

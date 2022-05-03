@@ -119,6 +119,7 @@ void ASTVisitor::visitChildren(LSLASTNode *node) {
     // increment before visiting, we may swap this node's siblings!
     ++child_iter;
     assert(child != node);
+    assert(child);
     child->visit(this);
   }
 }

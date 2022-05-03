@@ -96,7 +96,8 @@ void MonoScriptCompiler::pushLValueContainer(LSLLValueExpression *lvalue) {
     mCIL << "ldarg.0\n";
   }
   // have an accessor, we need to push the containing object's address!
-  if (lvalue->getChild(1)) {
+  auto *accessor = lvalue->getChild(1);
+  if (accessor && accessor->getNodeType() != NODE_NULL) {
     if (sym->getSubType() == SYM_GLOBAL) {
       mCIL << "ldflda " << getGlobalVarSpecifier(sym) << "\n";
     } else if (sym->getSubType() == SYM_LOCAL) {
@@ -112,7 +113,8 @@ void MonoScriptCompiler::pushLValueContainer(LSLLValueExpression *lvalue) {
 void MonoScriptCompiler::pushLValue(LSLLValueExpression *lvalue) {
   pushLValueContainer(lvalue);
   auto *sym = lvalue->getSymbol();
-  if (lvalue->getChild(1)) {
+  auto *accessor = lvalue->getChild(1);
+  if (accessor && accessor->getNodeType() != NODE_NULL) {
     // accessor case, containing object is already on the stack and
     // we just have to load the field.
     mCIL << "ldfld " << getLValueAccessorSpecifier(lvalue) << "\n";
@@ -208,7 +210,8 @@ void MonoScriptCompiler::pushFloatLiteral(float value) {
 void MonoScriptCompiler::storeToLValue(LSLLValueExpression *lvalue, bool push_result) {
   auto *sym = lvalue->getSymbol();
   // coordinate accessor case
-  if (lvalue->getChild(1)) {
+  auto *accessor = lvalue->getChild(1);
+  if (accessor && accessor->getNodeType() != NODE_NULL) {
     mCIL << "stfld " << getLValueAccessorSpecifier(lvalue) << "\n";
     // Expression assignments need to return their result, load what we just stored onto the stack
     // TODO: This seems really wasteful in many cases, but this is how LL's compiler does it.

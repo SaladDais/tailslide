@@ -511,7 +511,7 @@ int32_t LSOBytecodeCompiler::calculateLValueOffset(LSLLValueExpression *node) {
   auto offset = (int32_t)sym_data.offset;
 
   auto *accessor_id = (LSLIdentifier *) node->getChild(1);
-  if (accessor_id)
+  if (accessor_id && accessor_id->getNodeType() == NODE_IDENTIFIER)
     accessor = accessor_id->getName()[0];
   else
     return offset;

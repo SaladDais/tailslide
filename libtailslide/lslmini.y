@@ -583,7 +583,7 @@ statements
 statement
     : ';'
     {
-        $$ = ALLOCATOR->newTracked<LSLStatement>(nullptr);
+        $$ = ALLOCATOR->newTracked<LSLNopStatement>();
     }
     | STATE IDENTIFIER ';'
     {
@@ -649,7 +649,7 @@ statement
     }
     | error ';'
     {
-        $$ = ALLOCATOR->newTracked<LSLStatement>(nullptr);
+        $$ = ALLOCATOR->newTracked<LSLNopStatement>();
     }
     ;
 
@@ -901,7 +901,7 @@ typecast
         if (auto *sym = tailslide_get_extra(scanner)->builtins->lookup($5, SYM_VARIABLE))
             valid_id_typecast = sym->getSubType() == SYM_BUILTIN && (sym->getIType() == LST_INTEGER || sym->getIType() == LST_FLOATINGPOINT);
 
-        auto *lvalue = ALLOCATOR->newTracked<LSLLValueExpression>(MAKEID(LST_NULL, $5, @5));
+        auto *lvalue = ALLOCATOR->newTracked<LSLLValueExpression>(MAKEID(LST_NULL, $5, @5), nullptr);
         $$ = ALLOCATOR->newTracked<LSLTypecastExpression>($2, ALLOCATOR->newTracked<LSLUnaryExpression>(lvalue, OP_MINUS));
         if (!valid_id_typecast) {
             tailslide_get_extra(scanner)->logger->error(&@2, E_SYNTAX_ERROR, "Typecast requires parentheses");
@@ -986,7 +986,10 @@ list_initializer
 lvalue
     : IDENTIFIER
     {
-        $$ = ALLOCATOR->newTracked<LSLLValueExpression>(ALLOCATOR->newTracked<LSLIdentifier>($1));
+        $$ = ALLOCATOR->newTracked<LSLLValueExpression>(
+            ALLOCATOR->newTracked<LSLIdentifier>($1),
+            nullptr
+        );
     }
     | IDENTIFIER PERIOD IDENTIFIER
     {

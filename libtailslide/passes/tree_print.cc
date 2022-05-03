@@ -4,7 +4,7 @@
 namespace Tailslide {
 
 
-bool TreePrintingVisitor::visit(LSLASTNode* node) {
+bool TreePrintingVisitor::visit(LSLASTNode *node) {
   auto lloc = node->getLoc();
   auto type = node->getType();
   auto constant_value = node->getConstantValue();
@@ -20,6 +20,14 @@ bool TreePrintingVisitor::visit(LSLASTNode* node) {
   ++mWalkLevel;
   visitChildren(node);
   --mWalkLevel;
+  return false;
+}
+
+bool TreePrintingVisitor::visit(LSLASTNullNode *node) {
+  for (int i = 0; i < mWalkLevel; i++) {
+    mStream << "  ";
+  }
+  mStream << "null\n";
   return false;
 }
 

@@ -201,7 +201,9 @@ bool PrettyPrintVisitor::visit(LSLParamList *node) {
 
 bool PrettyPrintVisitor::visit(LSLStatement *node) {
   doTabs();
-  node->getChild(0)->visit(this);
+  auto *child = node->getChild(0);
+  if (child)
+    child->visit(this);
   mStream << ";\n";
   return false;
 }

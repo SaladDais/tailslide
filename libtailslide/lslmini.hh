@@ -329,13 +329,13 @@ class LSLGlobalFunction : public LSLASTNode {
 class LSLParamList : public LSLASTNodeList {
   public:
     explicit LSLParamList( ScriptContext *ctx ) : LSLASTNodeList(ctx, nullptr) {};
-    LSLParamList( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLASTNodeList(ctx, identifier) {};
+    LSLParamList( ScriptContext *ctx, class LSLIdentifier *identifiers ) : LSLASTNodeList(ctx, identifiers) {};
 };
 
 class LSLFunctionDec : public LSLParamList {
   public:
     explicit LSLFunctionDec(ScriptContext *ctx) : LSLParamList(ctx) {};
-    LSLFunctionDec( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLParamList(ctx, identifier) {};
+    LSLFunctionDec( ScriptContext *ctx, class LSLIdentifier *identifiers ) : LSLParamList(ctx, identifiers) {};
     virtual const char *getNodeName() { return "function decl"; }
     virtual LSLNodeType getNodeType() { return NODE_FUNCTION_DEC; };
 };
@@ -343,7 +343,7 @@ class LSLFunctionDec : public LSLParamList {
 class LSLEventDec : public LSLParamList {
   public:
     explicit LSLEventDec(ScriptContext *ctx) : LSLParamList(ctx) {};
-    LSLEventDec( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLParamList(ctx, identifier) {};
+    LSLEventDec( ScriptContext *ctx, class LSLIdentifier *identifiers ) : LSLParamList(ctx, identifiers) {};
     virtual const char *getNodeName() { return "event decl"; }
     virtual LSLNodeType getNodeType() { return NODE_EVENT_DEC; };
 };
@@ -368,20 +368,30 @@ class LSLEventHandler : public LSLASTNode {
 
 class LSLStatement : public LSLASTNode {
   public:
+    explicit LSLStatement( ScriptContext *ctx ): LSLASTNode(ctx) {}
     LSLStatement( ScriptContext *ctx, int num, ... ): LSLASTNode(ctx) {
       va_list ap;
       va_start(ap, num);
       addChildren(num, ap);
       va_end(ap);
     };
-    LSLStatement( ScriptContext *ctx, class LSLExpression *expression ) : LSLASTNode(ctx, 1, expression) {};
     virtual const char *getNodeName() { return "statement"; }
     virtual LSLNodeType getNodeType() { return NODE_STATEMENT; };
 };
 
+class LSLNopStatement : public LSLStatement {
+  public:
+    explicit LSLNopStatement( ScriptContext *ctx) : LSLStatement(ctx, 0) {}
+    virtual const char *getNodeName() { return "nop statement"; };
+    virtual LSLNodeSubType getNodeSubType() { return NODE_NOP_STATEMENT; };
+};
+
 class LSLCompoundStatement : public LSLStatement {
   public:
-    LSLCompoundStatement( ScriptContext *ctx, class LSLStatement *body ) : LSLStatement(ctx, 1, body) {}
+    LSLCompoundStatement( ScriptContext *ctx, class LSLStatement *statements ) : LSLStatement(ctx) {
+      if (statements)
+        pushChild(statements);
+    }
     virtual const char *getNodeName() { return "compound statement"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_COMPOUND_STATEMENT; };
 };
@@ -395,7 +405,6 @@ class LSLExpressionStatement : public LSLStatement {
 
 class LSLStateStatement : public LSLStatement {
   public:
-    explicit LSLStateStatement(ScriptContext *ctx) : LSLStatement(ctx, 0) {};
     LSLStateStatement( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLStatement(ctx, 1, identifier) {};
     virtual const char *getNodeName() { return "setstate"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_STATE_STATEMENT; };
@@ -593,9 +602,6 @@ class LSLVectorExpression : public LSLExpression {
   public:
     LSLVectorExpression(ScriptContext *ctx, LSLExpression *x, LSLExpression *y, LSLExpression *z )
       : LSLExpression(ctx, 3, x, y, z) { _mType = TYPE(LST_VECTOR); }
-    explicit LSLVectorExpression(ScriptContext *ctx) : LSLExpression(ctx,0) {
-      _mType = TYPE(LST_VECTOR);
-    }
     virtual const char *getNodeName() { return "vector expression"; }
     virtual LSLNodeSubType getNodeSubType() { return NODE_VECTOR_EXPRESSION; };
 };
@@ -604,9 +610,6 @@ class LSLQuaternionExpression : public LSLExpression {
   public:
     LSLQuaternionExpression(ScriptContext *ctx, LSLExpression *x, LSLExpression *y, LSLExpression *z, LSLExpression *s )
       : LSLExpression(ctx, 4, x, y, z, s) { _mType = TYPE(LST_QUATERNION); };
-    explicit LSLQuaternionExpression(ScriptContext *ctx) : LSLExpression(ctx,0) {
-      _mType = TYPE(LST_QUATERNION);
-    };
     virtual const char *getNodeName() { return "quaternion expression"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_QUATERNION_EXPRESSION; };
 };
@@ -625,10 +628,8 @@ class LSLListExpression : public LSLExpression {
 
 class LSLLValueExpression : public LSLExpression {
   public:
-    LSLLValueExpression( ScriptContext *ctx, LSLIdentifier *identifier )
-      : LSLExpression(ctx, 1, identifier), _mIsFoldable(false) {};
     LSLLValueExpression( ScriptContext *ctx, LSLIdentifier *identifier, LSLIdentifier *member )
-        : LSLExpression(ctx, 2, identifier, member), _mIsFoldable(false) {};
+      : LSLExpression(ctx, 2, identifier, member), _mIsFoldable(false) {};
     virtual const char *getNodeName() {
       static thread_local char buf[256];
       snprintf(buf, 256, "lvalue expression {%sfoldable}", _mIsFoldable ? "" : "not ");

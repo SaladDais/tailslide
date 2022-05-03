@@ -11,7 +11,7 @@ class TreePrintingVisitor: public ASTVisitor {
   public:
     virtual bool visit(LSLASTNode *node);
     // Don't skip by null or list nodes, they're important parts of the tree we need to show.
-    virtual bool visit(LSLASTNullNode *node) { return visit((LSLASTNode *)node); }
+    virtual bool visit(LSLASTNullNode *node);
     virtual bool visit(LSLASTNodeList *node) { return visit((LSLASTNode *)node); }
 
     int mWalkLevel = 0;
