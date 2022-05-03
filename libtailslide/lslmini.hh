@@ -245,7 +245,7 @@ class LSLListConstant : public LSLConstant {
 
     virtual LSLNodeSubType getNodeSubType() { return NODE_LIST_CONSTANT; }
 
-    class LSLConstant *getValue() { return (LSLConstant*) getChildren(); }
+    class LSLConstant *getValue() { return (LSLConstant*) _mChildren; }
 
     int getLength() { return (int) getNumChildren(); }
 

@@ -98,7 +98,6 @@ class LSLASTNode : public TrackableObject {
 
     LSLASTNode *getNext() { return _mNext; }
     LSLASTNode *getPrev() { return _mPrev; }
-    LSLASTNode *getChildren() { return _mChildren; }
     LSLASTNode *getParent() { return _mParent; }
 
     LSLASTNode *getChild(int i) {
@@ -219,11 +218,19 @@ class LSLASTNode : public TrackableObject {
     class LSLConstant      *_mConstantValue;
     bool                   _mConstantPrecluded = false;
 
+  protected:
+    // head of the linked-list, only set for list-like nodes
+    LSLASTNode *_mChildren = nullptr;
+    // only set for list-like nodes
+    LSLASTNode *_mChildrenTail = nullptr;
+
   private:
     YYLTYPE                      _mLoc {0};
 
-    LSLASTNode *_mChildren = nullptr;
-    LSLASTNode *_mChildrenTail = nullptr;
+    // only set for struct-like nodes
+    size_t _mNumChildren = 0;
+    LSLASTNode **_mStructChildren = nullptr;
+    // these are set for all types of nodes to keep node traversal symmetrical.
     LSLASTNode *_mParent;
     LSLASTNode *_mNext;
     LSLASTNode *_mPrev;

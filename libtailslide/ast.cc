@@ -24,12 +24,10 @@ LSLIType LSLASTNode::getIType() {
 int LSLASTNode::getParentSlot() {
   if (!_mParent)
     return -1;
-  auto *child = _mParent->getChildren();
   int idx = 0;
-  while(child != nullptr) {
+  for (auto *child: *_mParent) {
     if (child == this)
       return idx;
-    child = child->getNext();
     ++idx;
   }
   return -1;

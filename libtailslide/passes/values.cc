@@ -198,20 +198,17 @@ bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {
 bool ConstantDeterminingVisitor::visit(LSLListExpression *node) {
   auto *new_list_cv = _mAllocator->newTracked<LSLListConstant>(nullptr);
 
-  // if we have children
-  if (node->getChildren()) {
-    // make sure they are all constant
-    for (auto *child : *node) {
-      if (!child->isConstant()) {
-        node->setConstantPrecluded(child->getConstantPrecluded());
-        return true;
-      }
+  // make sure they are all constant
+  for (auto *child : *node) {
+    if (!child->isConstant()) {
+      node->setConstantPrecluded(child->getConstantPrecluded());
+      return true;
     }
+  }
 
-    // create assignables for them
-    for (auto *child : *node) {
-      new_list_cv->pushChild(child->getConstantValue()->copy(_mAllocator));
-    }
+  // create assignables for them
+  for (auto *child : *node) {
+    new_list_cv->pushChild(child->getConstantValue()->copy(_mAllocator));
   }
 
   // create constant value

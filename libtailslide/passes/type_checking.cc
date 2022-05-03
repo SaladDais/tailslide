@@ -127,8 +127,11 @@ static bool is_branch_empty(LSLASTNode *node) {
     return true;
   if (node->getNodeType() != NODE_STATEMENT)
     return false;
-  if(node->getNodeSubType() == NODE_NO_SUB_TYPE || node->getNodeSubType() == NODE_COMPOUND_STATEMENT)
-    return node->getChildren() == nullptr || node->getChildren()->getNodeType() == NODE_NULL;
+  if(node->getNodeSubType() == NODE_NO_SUB_TYPE || node->getNodeSubType() == NODE_COMPOUND_STATEMENT) {
+    auto *child = node->getChild(0);
+    return !child || child->getNodeType() == NODE_NULL;
+  }
+
   return false;
 }
 
@@ -138,9 +141,6 @@ bool TypeCheckVisitor::visit(LSLIfStatement *node) {
   // or empty
   if (is_branch_empty(node->getChild(1)) && is_branch_empty(node->getChild(2))) {
     NODE_ERROR(node->getChild(0), W_EMPTY_IF);
-    DEBUG(LOG_DEBUG_SPAM, nullptr, "TYPE=%d SUBTYPE=%d CHILDREN=%p n=%s\n",
-          node->getChild(1)->getNodeType(), node->getChild(1)->getNodeSubType(),
-          node->getChild(1)->getChildren(), node->getChild(1)->getNodeName());
   }
   return true;
 }
@@ -243,8 +243,8 @@ static bool validate_func_arg_spec(
   LSLIdentifier *passed_param_id;
   int param_num = 1;
 
-  declared_param_id = (LSLIdentifier *) function_decl->getChildren();
-  passed_param_id = (LSLIdentifier *)params->getChildren();
+  declared_param_id = (LSLIdentifier *) function_decl->getChild(0);
+  passed_param_id = (LSLIdentifier *)params->getChild(0);
 
   while (declared_param_id != nullptr && passed_param_id != nullptr) {
     bool param_compatible;

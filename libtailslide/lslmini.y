@@ -398,7 +398,7 @@ function_parameters
     | function_parameter ',' function_parameters
     {
         if ( $1 ) {
-            $1->pushChild($3->getChildren());
+            $1->pushChild($3->getChild(0));
             // delete $3;
             $$ = $1;
         } else {
@@ -422,7 +422,7 @@ event_parameters
     | event_parameter ',' event_parameters
     {
         if ( $1 ) {
-            $1->pushChild($3->getChildren());
+            $1->pushChild($3->getChild(0));
             // delete $3;
             $$ = $1;
         } else {
