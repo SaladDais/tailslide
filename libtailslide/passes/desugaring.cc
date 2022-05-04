@@ -229,8 +229,20 @@ bool DeSugaringVisitor::visit(LSLReturnStatement *ret_stmt) {
 }
 
 bool DeSugaringVisitor::visit(LSLForStatement *for_stmt) {
+  // visit children first in case we'll end up replacing any nodes
+  visitChildren(for_stmt);
+
+  // don't need the result of the top level of any of these exprs
+  // allows compilers to decide to omit a push of the result that
+  // we'll just end up popping.
   maybeInjectBoolConversion(for_stmt->getCheckExpr());
-  return true;
+
+  for (auto *expr : *for_stmt->getInitExprs())
+    ((LSLExpression *)expr)->setResultNeeded(false);
+  for (auto *expr : *for_stmt->getIncrExprs())
+    ((LSLExpression *)expr)->setResultNeeded(false);
+
+  return false;
 }
 
 bool DeSugaringVisitor::visit(LSLWhileStatement *while_stmt) {
@@ -246,6 +258,14 @@ bool DeSugaringVisitor::visit(LSLDoStatement *do_stmt) {
 bool DeSugaringVisitor::visit(LSLIfStatement *if_stmt) {
   maybeInjectBoolConversion(if_stmt->getCheckExpr());
   return true;
+}
+
+bool DeSugaringVisitor::visit(LSLExpressionStatement *expr_stmt) {
+  expr_stmt->getExpr()->visit(this);
+  // child expr might have been replaced, use the getter again
+  // to mark this new expression as having an unneeded result.
+  expr_stmt->getExpr()->setResultNeeded(false);
+  return false;
 }
 
 LSLASTNode *DeSugaringVisitor::rewriteBuiltinLValue(LSLLValueExpression *lvalue) {

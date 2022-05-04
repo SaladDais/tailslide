@@ -11,7 +11,9 @@ namespace Tailslide {
 
 class MonoScriptCompiler : public ASTVisitor {
   public:
-    explicit MonoScriptCompiler(ScriptAllocator *allocator) : _mAllocator(allocator) {};
+    explicit MonoScriptCompiler(ScriptAllocator *allocator, bool may_omit_pushes=false) :
+        _mMayOmitPushes(may_omit_pushes), _mAllocator(allocator) {};
+
     std::stringstream mCIL {};
   protected:
     virtual bool visit(LSLScript *script);
@@ -54,11 +56,21 @@ class MonoScriptCompiler : public ASTVisitor {
     virtual bool visit(LSLUnaryExpression *unary_expr);
     virtual bool visit(LSLPrintExpression *print_expr);
 
+    bool maybeOmitPush(LSLExpression *expr) {
+        bool need_push = !_mMayOmitPushes || expr->getResultNeeded();
+        // tell our parent the push was omitted, it must clear this flag!
+        if (!need_push)
+          _mPushOmitted = true;
+        return need_push;
+    }
+
     ScriptAllocator *_mAllocator;
     MonoSymbolDataMap _mSymData {};
     LSLSymbol *_mCurrentFuncSym = nullptr;
     std::string _mScriptClassName;
     bool _mInGlobalExpr = false;
+    bool _mMayOmitPushes = false;
+    bool _mPushOmitted = false;
     uint32_t _mJumpNum = 0;
 };
 

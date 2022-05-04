@@ -556,8 +556,11 @@ public:
     virtual bool nodeAllowsFolding() { return true; };
     LSLOperator getOperation() const {return _mOperation;};
     void setOperation(LSLOperator op) {_mOperation = op;};
+    void setResultNeeded(bool result_needed) { _mResultNeeded = result_needed; };
+    bool getResultNeeded() { return _mResultNeeded; }
   protected:
     LSLOperator _mOperation;
+    bool _mResultNeeded = true;
 };
 
 

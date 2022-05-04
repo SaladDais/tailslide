@@ -215,9 +215,7 @@ void MonoScriptCompiler::storeToLValue(LSLLValueExpression *lvalue, bool push_re
     // Expression assignments need to return their result, load what we just stored onto the stack
     // TODO: This seems really wasteful in many cases, but this is how LL's compiler does it.
     //  I guess `dup` isn't an option because of the `this` reference, but wouldn't creating a
-    //  scratch local be better? Most assignments' retvals aren't used at all either,
-    //  so some heuristic to elide this entirely would be nice. Common case of assignment
-    //  expression directly parented to an ExpressionStatement?
+    //  scratch local be better?
     if (push_result)
       pushLValue(lvalue);
   } else if (sym->getSubType() == SYM_GLOBAL) {
@@ -386,8 +384,9 @@ bool MonoScriptCompiler::visit(LSLDeclaration *decl_stmt) {
 bool MonoScriptCompiler::visit(LSLExpressionStatement *expr_stmt) {
   auto *expr = expr_stmt->getExpr();
   expr->visit(this);
-  if (expr->getIType())
+  if (expr->getIType() && !_mPushOmitted)
     mCIL << "pop\n";
+  _mPushOmitted = false;
   return false;
 }
 
@@ -437,8 +436,9 @@ bool MonoScriptCompiler::visit(LSLForStatement*for_stmt) {
   // execute instructions to initialize vars
   for(auto *init_expr : *for_stmt->getInitExprs()) {
     init_expr->visit(this);
-    if (init_expr->getIType() != LST_NULL)
+    if (init_expr->getIType() && !_mPushOmitted)
       mCIL << "pop\n";
+    _mPushOmitted = false;
   }
   auto jump_to_start_num = _mJumpNum++;
   auto jump_to_end_num = _mJumpNum++;
@@ -451,8 +451,9 @@ bool MonoScriptCompiler::visit(LSLForStatement*for_stmt) {
   // run the increment expressions
   for(auto *incr_expr : *for_stmt->getIncrExprs()) {
     incr_expr->visit(this);
-    if (incr_expr->getIType() != LST_NULL)
+    if (incr_expr->getIType() && !_mPushOmitted)
       mCIL << "pop\n";
+    _mPushOmitted = false;
   }
   // jump back up to the check expression at the top
   mCIL << "br LabelTempJump" << jump_to_start_num << "\n";
@@ -698,7 +699,9 @@ bool MonoScriptCompiler::visit(LSLBinaryExpression *bin_expr) {
     pushLValueContainer(lvalue);
     right->visit(this);
     // store to the lvalue and push the lvalue back onto the stack
-    storeToLValue(lvalue, true);
+    // if we're assigning in an expression context. For something in
+    // an expressionstatement context like `foo = 1` we omit the push.
+    storeToLValue(lvalue, maybeOmitPush(bin_expr));
     return false;
   } else if (op == OP_MUL_ASSIGN) {
     // The only expression that gets left as a MUL_ASSIGN is the busted `int *= float` case,
@@ -716,7 +719,7 @@ bool MonoScriptCompiler::visit(LSLBinaryExpression *bin_expr) {
     castTopOfStack(LST_FLOATINGPOINT, LST_INTEGER);
     // This will return the wrong type because things expect this expression to return a float.
     // Use of the retval will probably cause a crash.
-    storeToLValue(lvalue, true);
+    storeToLValue(lvalue, maybeOmitPush(bin_expr));
     return false;
   }
 
@@ -920,9 +923,11 @@ bool MonoScriptCompiler::visit(LSLUnaryExpression *unary_expr) {
   LSLOperator op = unary_expr->getOperation();
 
   if (op == OP_POST_DECR || op == OP_POST_INCR) {
-    // We need to keep the original value of the expression on the stack.
     auto *lvalue = (LSLLValueExpression *) child_expr;
-    pushLValue(lvalue);
+    // We need to keep the original value of the expression on the stack,
+    // but only if the result of the expr will actually be used
+    if (maybeOmitPush(unary_expr))
+      pushLValue(lvalue);
 
     // may need the containing object ref for for the subsequent store
     pushLValueContainer(lvalue);
@@ -936,10 +941,13 @@ bool MonoScriptCompiler::visit(LSLUnaryExpression *unary_expr) {
       mCIL << "add\n";
     }
 
-    // TODO: this store + push, then subsequent pop is totally unnecessary, but matches what LL's
-    //  compiler does. investigate using no-push form of storeToLValue().
-    storeToLValue(lvalue, true);
-    mCIL << "pop\n";
+    // This store + push, then subsequent pop is totally unnecessary, but matches what LL's
+    //  compiler does. Only do it if we're not allowed to omit pushes.
+    if (!_mMayOmitPushes) {
+      storeToLValue(lvalue, true);
+      mCIL << "pop\n";
+    }
+
     return false;
   } else if (op == OP_PRE_INCR || op == OP_PRE_DECR) {
     // This appears to generate different code from `lvalue = lvalue + 1`,
@@ -953,7 +961,8 @@ bool MonoScriptCompiler::visit(LSLUnaryExpression *unary_expr) {
     } else {
       mCIL << "add\n";
     }
-    storeToLValue(lvalue, true);
+
+    storeToLValue(lvalue, maybeOmitPush(unary_expr));
     return false;
   }
 

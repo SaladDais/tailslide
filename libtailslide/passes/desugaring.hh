@@ -26,6 +26,7 @@ class DeSugaringVisitor : public ASTVisitor {
     bool visit(LSLWhileStatement *while_stmt) override;
     bool visit(LSLDoStatement *do_stmt) override;
     bool visit(LSLIfStatement *if_stmt) override;
+    bool visit(LSLExpressionStatement *expr_stmt) override;
 
     virtual LSLASTNode *rewriteBuiltinLValue(LSLLValueExpression *lvalue);
     void handleCoordinateExpression(LSLASTNode *coord_expr);
