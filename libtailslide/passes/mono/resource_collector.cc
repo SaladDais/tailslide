@@ -44,28 +44,28 @@ std::unordered_map<std::string, std::string> CIL_HANDLER_NAMES {
     {"experience_permissions_denied", "experience_permissions_denied"}
 };
 
-bool MonoResourceVisitor::visit(LSLGlobalFunction *node) {
-  auto *sym = node->getSymbol();
+bool MonoResourceVisitor::visit(LSLGlobalFunction *glob_func) {
+  auto *sym = glob_func->getSymbol();
   auto *func_sym_data = getSymbolData(sym);
   _mCurrentFunc = func_sym_data;
   // pick up local declarations
-  visitChildren(node);
+  visitChildren(glob_func);
   _mCurrentFunc = nullptr;
   return false;
 }
 
-bool MonoResourceVisitor::visit(LSLEventHandler *node) {
-  auto *sym = node->getSymbol();
+bool MonoResourceVisitor::visit(LSLEventHandler *handler) {
+  auto *sym = handler->getSymbol();
   auto *handler_sym_data = getSymbolData(sym);
   _mCurrentFunc = handler_sym_data;
   // pick up local declarations
-  visitChildren(node);
+  visitChildren(handler);
   _mCurrentFunc = nullptr;
   return false;
 }
 
-bool MonoResourceVisitor::visit(LSLDeclaration *node) {
-  auto *sym = node->getSymbol();
+bool MonoResourceVisitor::visit(LSLDeclaration *decl_stmt) {
+  auto *sym = decl_stmt->getSymbol();
   auto *sym_data = getSymbolData(sym);
   sym_data->index = _mCurrentFunc->locals.size();
   _mCurrentFunc->locals.push_back(sym->getIType());

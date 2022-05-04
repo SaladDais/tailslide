@@ -2,9 +2,9 @@
 
 namespace Tailslide {
 
-bool GlobalExprValidatingVisitor::visit(LSLGlobalVariable *node) {
+bool GlobalExprValidatingVisitor::visit(LSLGlobalVariable *glob_var) {
   _mValidRValue = true;
-  auto *rvalue = node->getInitializer();
+  auto *rvalue = glob_var->getInitializer();
   if (rvalue && !rvalue->isConstant()) {
     // don't bother complaining if the rvalue isn't constant due to a type or symbol
     // resolution error that we've already reported.
@@ -27,15 +27,15 @@ bool GlobalExprValidatingVisitor::visit(LSLGlobalVariable *node) {
   return false;
 }
 
-bool GlobalExprValidatingVisitor::visit(LSLFunctionExpression *node) {
+bool GlobalExprValidatingVisitor::visit(LSLFunctionExpression *func_expr) {
   _mValidRValue = false;
   return false;
 }
 
-bool SimpleAssignableValidatingVisitor::visit(LSLExpression *node) {
+bool SimpleAssignableValidatingVisitor::visit(LSLExpression *expr) {
   // other expression types that don't really need their own visitors, but
   // may not be valid in SA context
-  switch(node->getNodeSubType()) {
+  switch(expr->getNodeSubType()) {
     case NODE_CONSTANT_EXPRESSION:
     case NODE_VECTOR_EXPRESSION:
     case NODE_QUATERNION_EXPRESSION:
@@ -47,14 +47,14 @@ bool SimpleAssignableValidatingVisitor::visit(LSLExpression *node) {
   }
 }
 
-bool SimpleAssignableValidatingVisitor::visit(LSLUnaryExpression *node) {
+bool SimpleAssignableValidatingVisitor::visit(LSLUnaryExpression *unary_expr) {
   // only unary minus is allowed
-  if (node->getOperation() != '-') {
+  if (unary_expr->getOperation() != '-') {
     _mValidRValue = false;
     return false;
   }
   // and only for certain builtins, by virtue of them _actually_ being lexer tokens
-  auto *rvalue = node->getChildExpr();
+  auto *rvalue = unary_expr->getChildExpr();
   if (rvalue->getNodeSubType() != NODE_LVALUE_EXPRESSION) {
     _mValidRValue = false;
     return false;
@@ -82,15 +82,15 @@ bool SimpleAssignableValidatingVisitor::visit(LSLUnaryExpression *node) {
   return true;
 }
 
-bool SimpleAssignableValidatingVisitor::visit(LSLLValueExpression *node) {
+bool SimpleAssignableValidatingVisitor::visit(LSLLValueExpression *lvalue) {
   // no member accessors allowed!
-  if (node->getMember()) {
+  if (lvalue->getMember()) {
     _mValidRValue = false;
     return false;
   }
   // SALists don't allow SAIdentifiers with no rvalue in their declaration.
-  if (!_mMonoSemantics && node->getParent()->getNodeSubType() == NODE_LIST_EXPRESSION) {
-    LSLASTNode *rvalue = node;
+  if (!_mMonoSemantics && lvalue->getParent()->getNodeSubType() == NODE_LIST_EXPRESSION) {
+    LSLASTNode *rvalue = lvalue;
     while (rvalue && rvalue->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
       auto *sym = rvalue->getSymbol();
       if (!sym)

@@ -10,13 +10,13 @@ std::vector<LSLIType> SIBLINGS_CAUSING_INT_PROMOTION = {
     LST_QUATERNION,
 };
 
-bool DeSugaringVisitor::visit(LSLBinaryExpression *node) {
-  LSLOperator op = node->getOperation();
+bool DeSugaringVisitor::visit(LSLBinaryExpression *bin_expr) {
+  LSLOperator op = bin_expr->getOperation();
   LSLOperator decoupled_op = decouple_compound_operation(op);
   bool compound_assignment = op != decoupled_op;
 
-  auto *left = node->getLHS();
-  auto *right = node->getRHS();
+  auto *left = bin_expr->getLHS();
+  auto *right = bin_expr->getRHS();
 
   if (left->getIType() == LST_ERROR || right->getIType() == LST_ERROR)
     return true;
@@ -59,7 +59,7 @@ bool DeSugaringVisitor::visit(LSLBinaryExpression *node) {
 
   // decouple the RHS from the existing expression
   // TODO: some kind of take() on the node itself that leaves a null node in its place
-  LSLASTNode::replaceNode(right, node->newNullNode());
+  LSLASTNode::replaceNode(right, bin_expr->newNullNode());
 
   // turn `lhs += rhs` into `lhs = lhs + rhs`
   auto *new_right_node = _mAllocator->newTracked<LSLBinaryExpression>(
@@ -67,16 +67,16 @@ bool DeSugaringVisitor::visit(LSLBinaryExpression *node) {
       decoupled_op,
       right
   );
-  new_right_node->setType(node->getType());
-  new_right_node->setLoc(node->getLoc());
-  node->setRHS(new_right_node);
-  node->setOperation(OP_ASSIGN);
+  new_right_node->setType(bin_expr->getType());
+  new_right_node->setLoc(bin_expr->getLoc());
+  bin_expr->setRHS(new_right_node);
+  bin_expr->setOperation(OP_ASSIGN);
   return true;
 }
 
-bool DeSugaringVisitor::visit(LSLUnaryExpression *node) {
+bool DeSugaringVisitor::visit(LSLUnaryExpression *unary_expr) {
   LSLOperator new_op;
-  if (node->getIType() == LST_ERROR)
+  if (unary_expr->getIType() == LST_ERROR)
     return true;
 
   // these compile to a different form than `foo = foo + 1` in mono,
@@ -86,14 +86,14 @@ bool DeSugaringVisitor::visit(LSLUnaryExpression *node) {
 
   // the post operations are never syntactic sugar,
   // so no way to desugar those.
-  switch(node->getOperation()) {
+  switch(unary_expr->getOperation()) {
     case OP_PRE_INCR: new_op = OP_PLUS; break;
     case OP_PRE_DECR: new_op = OP_MINUS; break;
     default:
       return true;
   }
 
-  auto *lvalue = (LSLLValueExpression*) node->takeChild(0);
+  auto *lvalue = (LSLLValueExpression*) unary_expr->takeChild(0);
   auto *lvalue_copy = lvalue->clone();
   // "1" for the given type
   LSLConstant *cv = lvalue->getType()->getOneValue();
@@ -106,29 +106,29 @@ bool DeSugaringVisitor::visit(LSLUnaryExpression *node) {
       new_op,
       rhs_operand
   );
-  new_rvalue->setType(node->getType());
+  new_rvalue->setType(unary_expr->getType());
   auto *assign_expr = _mAllocator->newTracked<LSLBinaryExpression>(
       lvalue,
       OP_ASSIGN,
       new_rvalue
   );
-  assign_expr->setType(node->getType());
-  LSLASTNode::replaceNode(node, assign_expr);
+  assign_expr->setType(unary_expr->getType());
+  LSLASTNode::replaceNode(unary_expr, assign_expr);
   return true;
 }
 
-bool DeSugaringVisitor::visit(LSLDeclaration *node) {
-  if (auto expr = node->getInitializer())
-    maybeInjectCast(expr, node->getIdentifier()->getType());
+bool DeSugaringVisitor::visit(LSLDeclaration *decl_stmt) {
+  if (auto expr = decl_stmt->getInitializer())
+    maybeInjectCast(expr, decl_stmt->getIdentifier()->getType());
   return true;
 }
 
-bool DeSugaringVisitor::visit(LSLGlobalVariable *node) {
+bool DeSugaringVisitor::visit(LSLGlobalVariable *glob_var) {
   // LSO has its own special handling for global var casting.
   if (!_mMonoSemantics)
     return true;
-  if (auto expr = node->getInitializer())
-    maybeInjectCast(expr, node->getIdentifier()->getType());
+  if (auto expr = glob_var->getInitializer())
+    maybeInjectCast(expr, glob_var->getIdentifier()->getType());
   return true;
 }
 
@@ -161,18 +161,18 @@ void DeSugaringVisitor::maybeInjectBoolConversion(LSLExpression* expr) {
   bool_convert->setLoc(expr->getLoc());
 }
 
-bool DeSugaringVisitor::visit(LSLQuaternionExpression *node) {
-  handleCoordinateExpression(node);
+bool DeSugaringVisitor::visit(LSLQuaternionExpression *quat_expr) {
+  handleCoordinateExpression(quat_expr);
   return true;
 }
 
-bool DeSugaringVisitor::visit(LSLVectorExpression *node) {
-  handleCoordinateExpression(node);
+bool DeSugaringVisitor::visit(LSLVectorExpression *vec_expr) {
+  handleCoordinateExpression(vec_expr);
   return true;
 }
 
-bool DeSugaringVisitor::visit(LSLFunctionExpression *node) {
-  auto *sym = node->getSymbol();
+bool DeSugaringVisitor::visit(LSLFunctionExpression *func_expr) {
+  auto *sym = func_expr->getSymbol();
   if (!sym || sym->getIType() == LST_ERROR)
     return true;
   auto *func_decl = sym->getFunctionDecl();
@@ -180,7 +180,7 @@ bool DeSugaringVisitor::visit(LSLFunctionExpression *node) {
     return true;
   }
 
-  auto *params = node->getArguments();
+  auto *params = func_expr->getArguments();
   // we may replace nodes during iteration so we can't use `node->getNext()`
   auto num_params = params->getNumChildren();
   for(auto i=0; i<num_params; ++i) {
@@ -195,26 +195,26 @@ bool DeSugaringVisitor::visit(LSLFunctionExpression *node) {
 
 /// Replace any builtin references with their actual values.
 /// These are lexer tokens in LL's compiler, they aren't "real" globals or locals.
-bool DeSugaringVisitor::visit(LSLLValueExpression *node) {
-  auto *sym = node->getSymbol();
+bool DeSugaringVisitor::visit(LSLLValueExpression *lvalue) {
+  auto *sym = lvalue->getSymbol();
   if (sym->getSymbolType() != SYM_VARIABLE)
     return true;
   if (sym->getSubType() != SYM_BUILTIN)
     return true;
   // should always have a value for builtin lvalues by this point
-  assert(node->getConstantValue());
+  assert(lvalue->getConstantValue());
 
-  auto *new_expr = rewriteBuiltinLValue(node);
-  new_expr->setLoc(node->getLoc());
+  auto *new_expr = rewriteBuiltinLValue(lvalue);
+  new_expr->setLoc(lvalue->getLoc());
   LSLASTNode::replaceNode(
-      node,
+      lvalue,
       new_expr
   );
   return false;
 }
 
-bool DeSugaringVisitor::visit(LSLReturnStatement *node) {
-  auto *expr = node->getExpr();
+bool DeSugaringVisitor::visit(LSLReturnStatement *ret_stmt) {
+  auto *expr = ret_stmt->getExpr();
   if (!expr)
     return true;
   // figure out what function we're in and conditionally cast to the return type
@@ -228,43 +228,43 @@ bool DeSugaringVisitor::visit(LSLReturnStatement *node) {
   return true;
 }
 
-bool DeSugaringVisitor::visit(LSLForStatement *node) {
-  maybeInjectBoolConversion(node->getCheckExpr());
+bool DeSugaringVisitor::visit(LSLForStatement *for_stmt) {
+  maybeInjectBoolConversion(for_stmt->getCheckExpr());
   return true;
 }
 
-bool DeSugaringVisitor::visit(LSLWhileStatement *node) {
-  maybeInjectBoolConversion(node->getCheckExpr());
+bool DeSugaringVisitor::visit(LSLWhileStatement *while_stmt) {
+  maybeInjectBoolConversion(while_stmt->getCheckExpr());
   return true;
 }
 
-bool DeSugaringVisitor::visit(LSLDoStatement *node) {
-  maybeInjectBoolConversion(node->getCheckExpr());
+bool DeSugaringVisitor::visit(LSLDoStatement *do_stmt) {
+  maybeInjectBoolConversion(do_stmt->getCheckExpr());
   return true;
 }
 
-bool DeSugaringVisitor::visit(LSLIfStatement *node) {
-  maybeInjectBoolConversion(node->getCheckExpr());
+bool DeSugaringVisitor::visit(LSLIfStatement *if_stmt) {
+  maybeInjectBoolConversion(if_stmt->getCheckExpr());
   return true;
 }
 
-LSLASTNode *DeSugaringVisitor::rewriteBuiltinLValue(LSLASTNode *node) {
-  return _mAllocator->newTracked<LSLConstantExpression>(node->getConstantValue());
+LSLASTNode *DeSugaringVisitor::rewriteBuiltinLValue(LSLLValueExpression *lvalue) {
+  return _mAllocator->newTracked<LSLConstantExpression>(lvalue->getConstantValue());
 }
 
-void DeSugaringVisitor::handleCoordinateExpression(LSLASTNode *node) {
+void DeSugaringVisitor::handleCoordinateExpression(LSLASTNode *coord_expr) {
   // we may replace nodes during iteration so we can't use `node->getNext()`
-  auto num_children = node->getNumChildren();
+  auto num_children = coord_expr->getNumChildren();
   for(auto i=0; i<num_children; ++i) {
-    maybeInjectCast((LSLExpression *) node->getChild(i), TYPE(LST_FLOATINGPOINT));
+    maybeInjectCast((LSLExpression *) coord_expr->getChild(i), TYPE(LST_FLOATINGPOINT));
   }
 }
 
 
 
 /// turns -1 literals into -(1). Necessary for matching LL's compiler exactly.
-bool LLConformantDeSugaringVisitor::visit(LSLConstantExpression *node) {
-  auto *cv = node->getConstantValue();
+bool LLConformantDeSugaringVisitor::visit(LSLConstantExpression *constant_expr) {
+  auto *cv = constant_expr->getConstantValue();
   // Only do this to values that were _parsed_ as '-' INTEGER_CONSTANT.
   // it shouldn't be done to 0xFFffFFff or ALL_SIDES.
   if (!cv->wasNegated())
@@ -282,22 +282,22 @@ bool LLConformantDeSugaringVisitor::visit(LSLConstantExpression *node) {
   }
   new_cv->setLoc(cv->getLoc());
   auto *new_constexpr = _mAllocator->newTracked<LSLConstantExpression>(new_cv);
-  new_constexpr->setLoc(node->getLoc());
+  new_constexpr->setLoc(constant_expr->getLoc());
   auto *neg_expr = _mAllocator->newTracked<LSLUnaryExpression>(new_constexpr, OP_MINUS);
-  neg_expr->setLoc(node->getLoc());
+  neg_expr->setLoc(constant_expr->getLoc());
   neg_expr->setConstantValue(cv);
-  neg_expr->setType(node->getType());
-  LSLASTNode::replaceNode(node, neg_expr);
+  neg_expr->setType(constant_expr->getType());
+  LSLASTNode::replaceNode(constant_expr, neg_expr);
   return false;
 }
 
-LSLASTNode *LLConformantDeSugaringVisitor::rewriteBuiltinLValue(LSLASTNode *node) {
-  auto cv = node->getConstantValue();
+LSLASTNode *LLConformantDeSugaringVisitor::rewriteBuiltinLValue(LSLLValueExpression *lvalue) {
+  auto cv = lvalue->getConstantValue();
   auto itype = cv->getIType();
 
   // this case can use the default desugaring logic
   if (itype != LST_VECTOR && itype != LST_QUATERNION)
-    return DeSugaringVisitor::rewriteBuiltinLValue(node);
+    return DeSugaringVisitor::rewriteBuiltinLValue(lvalue);
 
   // vector and quaternion builtin constants are a little special in that they'd normally
   // be parsed as vector expressions within a function context. We don't want to desugar
@@ -316,7 +316,7 @@ LSLASTNode *LLConformantDeSugaringVisitor::rewriteBuiltinLValue(LSLASTNode *node
   for (float axis: children) {
     auto *expr_child = _mAllocator->newTracked<LSLConstantExpression>(
         _mAllocator->newTracked<LSLFloatConstant>(axis));
-    expr_child->setLoc(node->getLoc());
+    expr_child->setLoc(lvalue->getLoc());
     new_expr_children.push_back(expr_child);
   }
 

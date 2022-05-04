@@ -32,14 +32,14 @@ class LSOResourceVisitor : public Tailslide::ASTVisitor {
     explicit LSOResourceVisitor(LSOSymbolDataMap *sym_data) : _mSymData(sym_data) {}
 
   protected:
-    bool visit(Tailslide::LSLScript *node) override;
-    bool visit(Tailslide::LSLGlobalFunction *node) override;
-    bool visit(Tailslide::LSLGlobalVariable *node) override;
-    bool visit(Tailslide::LSLState *node) override;
-    bool visit(Tailslide::LSLDeclaration *node) override;
-    bool visit(Tailslide::LSLEventHandler *node) override;
+    bool visit(Tailslide::LSLScript *script) override;
+    bool visit(Tailslide::LSLGlobalFunction *glob_func) override;
+    bool visit(Tailslide::LSLGlobalVariable *glob_var) override;
+    bool visit(Tailslide::LSLState *state) override;
+    bool visit(Tailslide::LSLDeclaration *decl_stmt) override;
+    bool visit(Tailslide::LSLEventHandler *handler) override;
     // not relevant
-    bool visit(Tailslide::LSLExpression *node) override {return false;};
+    bool visit(Tailslide::LSLExpression *expr) override {return false;};
 
     LSOSymbolData *getSymbolData(Tailslide::LSLSymbol *sym);
     void handleFuncDecl(LSOSymbolData *func_sym_data, LSLASTNode *func_decl);

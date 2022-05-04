@@ -2,21 +2,21 @@
 
 namespace Tailslide {
 
-bool TreeSimplifyingVisitor::visit(LSLDeclaration* node) {
+bool TreeSimplifyingVisitor::visit(LSLDeclaration*decl_stmt) {
   if (!mOpts.prune_unused_locals)
     return true;
 
-  auto *sym = node->getSymbol();
+  auto *sym = decl_stmt->getSymbol();
   if (!sym || sym->getReferences() != 1 || sym->getAssignments() != 0)
     return true;
-  LSLASTNode *rvalue = node->getInitializer();
+  LSLASTNode *rvalue = decl_stmt->getInitializer();
   // rvalue can't be reduced to a constant, don't know that we don't need
   // the side-effects of evaluating the expression.
   if(rvalue && !rvalue->getConstantValue())
     return true;
 
   ++mFoldedLevel;
-  LSLASTNode *ancestor = node;
+  LSLASTNode *ancestor = decl_stmt;
   // walk up and remove it from whatever symbol table it's in
   while (ancestor != nullptr) {
     if (ancestor->getSymbolTable() != nullptr) {
@@ -25,25 +25,25 @@ bool TreeSimplifyingVisitor::visit(LSLDeclaration* node) {
     }
     ancestor = ancestor->getParent();
   }
-  assert(node->getParent() != nullptr);
-  node->getParent()->removeChild(node);
+  assert(decl_stmt->getParent() != nullptr);
+  decl_stmt->getParent()->removeChild(decl_stmt);
   // child is totally gone now, can't recurse.
   return false;
 }
 
-bool TreeSimplifyingVisitor::visit(LSLGlobalFunction* node) {
-  return handleGlobal(node);
+bool TreeSimplifyingVisitor::visit(LSLGlobalFunction *glob_func) {
+  return handleGlobal(glob_func);
 }
 
-bool TreeSimplifyingVisitor::visit(LSLGlobalVariable *node) {
-  return handleGlobal(node);
+bool TreeSimplifyingVisitor::visit(LSLGlobalVariable *glob_var) {
+  return handleGlobal(glob_var);
 }
 
-bool TreeSimplifyingVisitor::visit(LSLExpression* node) {
+bool TreeSimplifyingVisitor::visit(LSLExpression *expr) {
   if (!mOpts.fold_constants)
     return true;
 
-  LSLConstant *cv = node->getConstantValue();
+  LSLConstant *cv = expr->getConstantValue();
   if(!cv)
     return true;
   auto c_type = cv->getIType();
@@ -66,19 +66,19 @@ bool TreeSimplifyingVisitor::visit(LSLExpression* node) {
 
   // We're going to change its parent / sibling connections,
   // so we need a copy.
-  auto *new_expr = node->mContext->allocator->newTracked<LSLConstantExpression>(cv);
-  new_expr->setLoc(node->getLoc());
-  LSLASTNode::replaceNode(node, new_expr);
+  auto *new_expr = expr->mContext->allocator->newTracked<LSLConstantExpression>(cv);
+  new_expr->setLoc(expr->getLoc());
+  LSLASTNode::replaceNode(expr, new_expr);
   ++mFoldedLevel;
 
   return false;
 }
 
-bool TreeSimplifyingVisitor::visit(LSLLValueExpression *node) {
+bool TreeSimplifyingVisitor::visit(LSLLValueExpression *lvalue) {
   if (!mOpts.fold_constants)
     return false;
 
-  auto *sym = node->getSymbol();
+  auto *sym = lvalue->getSymbol();
   if (!sym)
     return false;
   // Is this a builtin constant? Don't bother replacing it.
@@ -93,8 +93,8 @@ bool TreeSimplifyingVisitor::visit(LSLLValueExpression *node) {
 
   // Keys have special inlining rules so key-ness isn't lost.
   if (sym->getIType() == LST_KEY) {
-    auto *node_ancestor = node->getParent();
-    LSLASTNode *top_expr = node;
+    auto *node_ancestor = lvalue->getParent();
+    LSLASTNode *top_expr = lvalue;
 
     // Need to be careful about which expressions we inline keys under (I.E. list casts and list expressions)
     while (node_ancestor && node_ancestor->getNodeType() == NODE_EXPRESSION) {
@@ -134,12 +134,12 @@ bool TreeSimplifyingVisitor::visit(LSLLValueExpression *node) {
       }
     }
   }
-  LSLConstant *cv = node->getConstantValue();
+  LSLConstant *cv = lvalue->getConstantValue();
   if (cv && !cv->containsNaN()) {
-    auto *new_expr = node->mContext->allocator->newTracked<LSLConstantExpression>(cv);
-    new_expr->setLoc(node->getLoc());
+    auto *new_expr = lvalue->mContext->allocator->newTracked<LSLConstantExpression>(cv);
+    new_expr->setLoc(lvalue->getLoc());
     LSLASTNode::replaceNode(
-        node,
+        lvalue,
         new_expr
     );
     ++mFoldedLevel;
@@ -148,18 +148,18 @@ bool TreeSimplifyingVisitor::visit(LSLLValueExpression *node) {
   return false;
 }
 
-bool TreeSimplifyingVisitor::visit(LSLConstantExpression *node) {
+bool TreeSimplifyingVisitor::visit(LSLConstantExpression *constant_expr) {
   // Don't touch these at all, they can't be simplified any more!
   return false;
 }
 
-bool TreeSimplifyingVisitor::handleGlobal(LSLASTNode *node) {
+bool TreeSimplifyingVisitor::handleGlobal(LSLASTNode *glob) {
   // globals are either a single var or a single function.
   // and they both keep their identifier in the first child!
-  auto *id = (LSLIdentifier *) (node->getChild(0));
+  auto *id = (LSLIdentifier *) (glob->getChild(0));
   assert(id != nullptr && id->getNodeType() == NODE_IDENTIFIER);
 
-  LSLNodeType node_type = node->getNodeType();
+  LSLNodeType node_type = glob->getNodeType();
   auto *sym = id->getSymbol();
 
   if (((node_type == NODE_GLOBAL_FUNCTION && mOpts.prune_unused_functions) ||
@@ -167,10 +167,10 @@ bool TreeSimplifyingVisitor::handleGlobal(LSLASTNode *node) {
       && sym->getReferences() == 1) {
     ++mFoldedLevel;
     // these reside in the global scope, look for the root symbol table and the entry
-    LSLASTNode *script = node->getRoot();
+    LSLASTNode *script = glob->getRoot();
     script->getSymbolTable()->remove(sym);
     // remove the node itself
-    node->getParent()->removeChild(node);
+    glob->getParent()->removeChild(glob);
     return false;
   }
   return true;

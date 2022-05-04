@@ -246,9 +246,9 @@ void LSLASTNode::checkSymbols() {
 
 class NodeReferenceUpdatingVisitor : public ASTVisitor {
   public:
-    virtual bool visit(LSLExpression *node) {
-      if (operation_mutates(node->getOperation())) {
-        LSLASTNode *child = node->getChild(0);
+    virtual bool visit(LSLExpression *expr) {
+      if (operation_mutates(expr->getOperation())) {
+        LSLASTNode *child = expr->getChild(0);
         // track the assignment
         if (child->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
           auto *sym = child->getSymbol();
@@ -257,7 +257,7 @@ class NodeReferenceUpdatingVisitor : public ASTVisitor {
 
           // TODO: This should be moved to one of the other passes.
           if (sym->getSubType() == SYM_BUILTIN) {
-            NODE_ERROR(node, E_BUILTIN_LVALUE, sym->getName());
+            NODE_ERROR(expr, E_BUILTIN_LVALUE, sym->getName());
             // make sure we don't muck with the assignment count on a builtin symbol!
             return true;
           }
@@ -267,18 +267,18 @@ class NodeReferenceUpdatingVisitor : public ASTVisitor {
       return true;
     };
 
-    virtual bool visit(LSLIdentifier *node) {
-      LSLASTNode *upper_node = node->getParent();
+    virtual bool visit(LSLIdentifier *id) {
+      LSLASTNode *upper_node = id->getParent();
       while (upper_node != nullptr) {
         // HACK: Make recursive calls not count as a reference, won't handle mutual recursion!
         if (upper_node->getNodeType() == NODE_GLOBAL_FUNCTION) {
           auto *ident = (LSLIdentifier *) upper_node->getChild(0);
-          if (ident != node && ident->getSymbol() == node->getSymbol())
+          if (ident != id && ident->getSymbol() == id->getSymbol())
             return false;
         }
         upper_node = upper_node->getParent();
       }
-      if (auto *symbol = node->getSymbol())
+      if (auto *symbol = id->getSymbol())
         symbol->addReference();
       return false;
     };

@@ -34,11 +34,11 @@ class LSOScriptCompiler : public ASTVisitor {
     explicit LSOScriptCompiler(ScriptAllocator *allocator) : _mAllocator(allocator) {};
     LSOBitStream mScriptBS {ENDIAN_BIG};
   protected:
-    virtual bool visit(LSLScript *node);
-    virtual bool visit(LSLGlobalVariable *node);
-    virtual bool visit(LSLState *node);
-    virtual bool visit(LSLEventHandler *node);
-    virtual bool visit(LSLGlobalFunction *node);
+    virtual bool visit(LSLScript *script);
+    virtual bool visit(LSLGlobalVariable *glob_var);
+    virtual bool visit(LSLState *state);
+    virtual bool visit(LSLEventHandler *handler);
+    virtual bool visit(LSLGlobalFunction *glob_func);
 
     void writeRegister(LSORegisters reg, uint32_t val);
     void writeEventRegister(LSORegisters reg, uint64_t val);

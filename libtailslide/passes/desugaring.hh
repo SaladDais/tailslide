@@ -12,23 +12,23 @@ class DeSugaringVisitor : public ASTVisitor {
     explicit DeSugaringVisitor(ScriptAllocator *allocator, bool mono_semantics)
         : _mAllocator(allocator), _mMonoSemantics(mono_semantics) {}
   protected:
-    bool visit(LSLBinaryExpression *node) override;
-    bool visit(LSLUnaryExpression *node) override;
-    bool visit(LSLDeclaration *node) override;
-    bool visit(LSLGlobalVariable *node) override;
-    bool visit(LSLVectorExpression *node) override;
-    bool visit(LSLQuaternionExpression *node) override;
-    bool visit(LSLFunctionExpression *node) override;
-    bool visit(LSLLValueExpression *node) override;
+    bool visit(LSLBinaryExpression *bin_expr) override;
+    bool visit(LSLUnaryExpression *unary_expr) override;
+    bool visit(LSLDeclaration *decl_stmt) override;
+    bool visit(LSLGlobalVariable *glob_var) override;
+    bool visit(LSLVectorExpression *vec_expr) override;
+    bool visit(LSLQuaternionExpression *quat_expr) override;
+    bool visit(LSLFunctionExpression *func_expr) override;
+    bool visit(LSLLValueExpression *lvalue) override;
 
-    bool visit(LSLReturnStatement *node) override;
-    bool visit(LSLForStatement *node) override;
-    bool visit(LSLWhileStatement *node) override;
-    bool visit(LSLDoStatement *node) override;
-    bool visit(LSLIfStatement *node) override;
+    bool visit(LSLReturnStatement *ret_stmt) override;
+    bool visit(LSLForStatement *for_stmt) override;
+    bool visit(LSLWhileStatement *while_stmt) override;
+    bool visit(LSLDoStatement *do_stmt) override;
+    bool visit(LSLIfStatement *if_stmt) override;
 
-    virtual LSLASTNode *rewriteBuiltinLValue(LSLASTNode *node);
-    void handleCoordinateExpression(LSLASTNode *node);
+    virtual LSLASTNode *rewriteBuiltinLValue(LSLLValueExpression *lvalue);
+    void handleCoordinateExpression(LSLASTNode *coord_expr);
     void maybeInjectCast(LSLExpression *expr, LSLType *to);
     void maybeInjectBoolConversion(LSLExpression *expr);
 
@@ -43,9 +43,9 @@ class LLConformantDeSugaringVisitor : public DeSugaringVisitor {
     explicit LLConformantDeSugaringVisitor(ScriptAllocator *allocator, bool mono_semantics)
         : DeSugaringVisitor(allocator, mono_semantics) {};
   protected:
-    bool visit(LSLConstantExpression *node) override;
+    bool visit(LSLConstantExpression *constant_expr) override;
 
-    LSLASTNode *rewriteBuiltinLValue(LSLASTNode *node) override;
+    LSLASTNode *rewriteBuiltinLValue(LSLLValueExpression *lvalue) override;
 };
 
 }

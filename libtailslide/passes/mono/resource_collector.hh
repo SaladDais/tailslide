@@ -22,11 +22,11 @@ class MonoResourceVisitor : public ASTVisitor {
     explicit MonoResourceVisitor(MonoSymbolDataMap *sym_data) : _mSymData(sym_data) {}
 
   protected:
-    bool visit(Tailslide::LSLGlobalFunction *node) override;
-    bool visit(Tailslide::LSLEventHandler *node) override;
-    bool visit(Tailslide::LSLDeclaration *node) override;
+    bool visit(Tailslide::LSLGlobalFunction *glob_func) override;
+    bool visit(Tailslide::LSLEventHandler *handler) override;
+    bool visit(Tailslide::LSLDeclaration *decl_stmt) override;
     // not relevant
-    bool visit(Tailslide::LSLExpression *node) override { return false; };
+    bool visit(Tailslide::LSLExpression *expr) override { return false; };
 
     MonoSymbolData *getSymbolData(Tailslide::LSLSymbol *sym);
 

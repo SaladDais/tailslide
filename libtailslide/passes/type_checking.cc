@@ -10,9 +10,9 @@ bool TypeCheckVisitor::visit(LSLASTNode *node) {
 
 // both LSLGlobalVariable and LSLDeclaration have the same child layout
 // so they can have a common visitor.
-void TypeCheckVisitor::handleDeclaration(LSLASTNode *node) {
-  auto *id = (LSLIdentifier *) node->getChild(0);
-  LSLASTNode *rvalue = node->getChild(1);
+void TypeCheckVisitor::handleDeclaration(LSLASTNode *decl_node) {
+  auto *id = (LSLIdentifier *) decl_node->getChild(0);
+  LSLASTNode *rvalue = decl_node->getChild(1);
   // already have our expected type from the declaration
   if (rvalue == nullptr || rvalue->getNodeType() == NODE_NULL)
     return;
@@ -21,29 +21,29 @@ void TypeCheckVisitor::handleDeclaration(LSLASTNode *node) {
   if (rvalue->getType() == TYPE(LST_ERROR))
     return;
   if (!rvalue->getType()->canCoerce(id->getType())) {
-    NODE_ERROR(node, E_WRONG_TYPE_IN_ASSIGNMENT, id->getType()->getNodeName(),
+    NODE_ERROR(decl_node, E_WRONG_TYPE_IN_ASSIGNMENT, id->getType()->getNodeName(),
                id->getName(), rvalue->getType()->getNodeName());
   }
 }
 
-bool TypeCheckVisitor::visit(LSLGlobalVariable *node) {
-  handleDeclaration(node);
+bool TypeCheckVisitor::visit(LSLGlobalVariable *glob_var) {
+  handleDeclaration(glob_var);
   return true;
 }
 
-bool TypeCheckVisitor::visit(LSLDeclaration *node) {
-  handleDeclaration(node);
+bool TypeCheckVisitor::visit(LSLDeclaration *decl_stmt) {
+  handleDeclaration(decl_stmt);
   return true;
 }
 
 
-bool TypeCheckVisitor::visit(LSLStateStatement *node) {
+bool TypeCheckVisitor::visit(LSLStateStatement *state_stmt) {
   // TODO: probably makes more sense in the best practices visitor?
   //  not really related to type-checking.
   // see if we're in a state or function, and if we're inside of an if
   bool is_in_if = false;
 
-  for (LSLASTNode *ancestor = node->getParent(); ancestor; ancestor = ancestor->getParent()) {
+  for (LSLASTNode *ancestor = state_stmt->getParent(); ancestor; ancestor = ancestor->getParent()) {
     switch (ancestor->getNodeType()) {
       case NODE_STATEMENT:
         if (ancestor->getNodeSubType() == NODE_IF_STATEMENT)
@@ -51,8 +51,8 @@ bool TypeCheckVisitor::visit(LSLStateStatement *node) {
         break;
       case NODE_STATE:
         // we're in a state, see if it's the same one we're calling
-        if (!strcmp(((LSLIdentifier *) ancestor->getChild(0))->getName(), node->getIdentifier()->getName())) {
-          NODE_ERROR(node, W_CHANGE_TO_CURRENT_STATE);
+        if (!strcmp(((LSLIdentifier *) ancestor->getChild(0))->getName(), state_stmt->getIdentifier()->getName())) {
+          NODE_ERROR(state_stmt, W_CHANGE_TO_CURRENT_STATE);
         }
         // if we've hit a state there's no sense ascending further
         return true;
@@ -62,14 +62,14 @@ bool TypeCheckVisitor::visit(LSLStateStatement *node) {
           switch (ancestor->getChild(0)->getIType()) {
             case LST_LIST:
             case LST_STRING:
-              NODE_ERROR(node, W_CHANGE_STATE_HACK_CORRUPT);
+              NODE_ERROR(state_stmt, W_CHANGE_STATE_HACK_CORRUPT);
               break;
             default:
-              NODE_ERROR(node, W_CHANGE_STATE_HACK);
+              NODE_ERROR(state_stmt, W_CHANGE_STATE_HACK);
               break;
           }
         } else {
-          NODE_ERROR(node, E_CHANGE_STATE_IN_FUNCTION);
+          NODE_ERROR(state_stmt, E_CHANGE_STATE_IN_FUNCTION);
         }
         // if we've hit a function there's no sense ascending further
         return true;
@@ -81,9 +81,9 @@ bool TypeCheckVisitor::visit(LSLStateStatement *node) {
 }
 
 
-bool TypeCheckVisitor::visit(LSLReturnStatement *node) {
-  LSLASTNode *ancestor = node->getParent();
-  LSLASTNode *effective_parent = node->getParent();
+bool TypeCheckVisitor::visit(LSLReturnStatement *ret_stmt) {
+  LSLASTNode *ancestor = ret_stmt->getParent();
+  LSLASTNode *effective_parent = ret_stmt->getParent();
 
   // crawl up until we find an event handler or global func
   while (ancestor->getNodeType() != NODE_EVENT_HANDLER &&
@@ -97,12 +97,12 @@ bool TypeCheckVisitor::visit(LSLReturnStatement *node) {
                         effective_parent->getNodeType() == NODE_GLOBAL_FUNCTION;
 
   auto *ancestor_type = ancestor->getChild(0)->getType();
-  auto *ret_expr = node->getExpr();
+  auto *ret_expr = ret_stmt->getExpr();
   auto *ret_type = ret_expr ? ret_expr->getType() : TYPE(LST_NULL);
 
   // It's an error if we have no return expression and this isn't a void func
   if (!ret_expr && ancestor_type->getIType() != LST_NULL) {
-    NODE_ERROR(node, E_BAD_RETURN_TYPE, TYPE(LST_NULL)->getNodeName(), ancestor_type->getNodeName());
+    NODE_ERROR(ret_stmt, E_BAD_RETURN_TYPE, TYPE(LST_NULL)->getNodeName(), ancestor_type->getNodeName());
     return true;
   }
 
@@ -112,7 +112,7 @@ bool TypeCheckVisitor::visit(LSLReturnStatement *node) {
     // returning the result of a void expression is only allowed if
     // the return is nested in some other control statement.
     if ((ret_expr && func_is_parent) || ret_type->getIType() != LST_NULL) {
-      NODE_ERROR(node, E_RETURN_VALUE_IN_EVENT_HANDLER);
+      NODE_ERROR(ret_stmt, E_RETURN_VALUE_IN_EVENT_HANDLER);
     }
   } else {
     // otherwise it's a function
@@ -120,63 +120,63 @@ bool TypeCheckVisitor::visit(LSLReturnStatement *node) {
     // result of a void expression follows the same rules as event handlers.
     if (!ret_type->canCoerce(ancestor_type)
         || (ret_expr && ret_expr->getIType() == LST_NULL && func_is_parent)) {
-      NODE_ERROR(node, E_BAD_RETURN_TYPE, ret_type->getNodeName(), ancestor_type->getNodeName());
+      NODE_ERROR(ret_stmt, E_BAD_RETURN_TYPE, ret_type->getNodeName(), ancestor_type->getNodeName());
     }
   }
   return true;
 }
 
-static bool is_branch_empty(LSLASTNode *node) {
-  if (node == nullptr || node->getNodeType() == NODE_NULL)
+static bool is_branch_empty(LSLASTNode *branch) {
+  if (branch == nullptr || branch->getNodeType() == NODE_NULL)
     return true;
-  if (node->getNodeType() != NODE_STATEMENT)
+  if (branch->getNodeType() != NODE_STATEMENT)
     return false;
-  if (node->getNodeSubType() == NODE_NOP_STATEMENT)
+  if (branch->getNodeSubType() == NODE_NOP_STATEMENT)
     return true;
-  if (node->getNodeSubType() == NODE_COMPOUND_STATEMENT) {
-    return !node->hasChildren();
+  if (branch->getNodeSubType() == NODE_COMPOUND_STATEMENT) {
+    return !branch->hasChildren();
   }
 
   return false;
 }
 
-bool TypeCheckVisitor::visit(LSLIfStatement *node) {
-  node->setType(TYPE(LST_NULL));
+bool TypeCheckVisitor::visit(LSLIfStatement *if_stmt) {
+  if_stmt->setType(TYPE(LST_NULL));
   // warn if main branch is an empty statement and secondary branch is null
   // or empty
-  if (is_branch_empty(node->getTrueBranch()) && is_branch_empty(node->getFalseBranch())) {
-    NODE_ERROR(node->getCheckExpr(), W_EMPTY_IF);
+  if (is_branch_empty(if_stmt->getTrueBranch()) && is_branch_empty(if_stmt->getFalseBranch())) {
+    NODE_ERROR(if_stmt->getCheckExpr(), W_EMPTY_IF);
   }
   return true;
 }
 
-bool TypeCheckVisitor::visit(LSLForStatement *node) {
-  if (is_branch_empty(node->getBody())) {
-    NODE_ERROR(node, W_EMPTY_LOOP);
+bool TypeCheckVisitor::visit(LSLForStatement *for_stmt) {
+  if (is_branch_empty(for_stmt->getBody())) {
+    NODE_ERROR(for_stmt, W_EMPTY_LOOP);
   }
   return true;
 }
 
-bool TypeCheckVisitor::visit(LSLDoStatement *node) {
-  if (is_branch_empty(node->getBody())) {
-    NODE_ERROR(node, W_EMPTY_LOOP);
+bool TypeCheckVisitor::visit(LSLDoStatement *do_stmt) {
+  if (is_branch_empty(do_stmt->getBody())) {
+    NODE_ERROR(do_stmt, W_EMPTY_LOOP);
   }
   return true;
 }
 
-bool TypeCheckVisitor::visit(LSLWhileStatement *node) {
-  if (is_branch_empty(node->getBody())) {
-    NODE_ERROR(node, W_EMPTY_LOOP);
+bool TypeCheckVisitor::visit(LSLWhileStatement *while_stmt) {
+  if (is_branch_empty(while_stmt->getBody())) {
+    NODE_ERROR(while_stmt, W_EMPTY_LOOP);
   }
   return true;
 }
 
 
-bool TypeCheckVisitor::visit(LSLExpression *node) {
-  LSLOperator operation = node->getOperation();
+bool TypeCheckVisitor::visit(LSLExpression *expr) {
+  LSLOperator operation = expr->getOperation();
   LSLType *type;
-  LSLASTNode *left = node->getChild(0);
-  LSLASTNode *right = node->getChild(1);
+  LSLASTNode *left = expr->getChild(0);
+  LSLASTNode *right = expr->getChild(1);
   LSLType *l_type = left->getType();
   LSLType *r_type = right ? right->getType() : nullptr;
   if (operation == 0 || operation == '(') {
@@ -189,7 +189,7 @@ bool TypeCheckVisitor::visit(LSLExpression *node) {
     type = l_type->getResultType(operation, r_type);
     if (type == nullptr) {
       NODE_ERROR(
-          node,
+          expr,
           E_INVALID_OPERATOR,
           l_type->getNodeName(),
           operation_str(operation),
@@ -200,34 +200,34 @@ bool TypeCheckVisitor::visit(LSLExpression *node) {
       type = TYPE(LST_ERROR);
     } else if (operation == OP_MUL_ASSIGN && l_type == TYPE(LST_INTEGER) && r_type == TYPE(LST_FLOATINGPOINT)) {
       // see note in `LSLType::getResultType` for details on this case.
-      NODE_ERROR(node, W_INT_FLOAT_MUL_ASSIGN);
+      NODE_ERROR(expr, W_INT_FLOAT_MUL_ASSIGN);
     }
   }
-  node->setType(type);
+  expr->setType(type);
   return true;
 }
 
-bool TypeCheckVisitor::visit(LSLListConstant *node) {
-  for (auto *val_c : *node) {
+bool TypeCheckVisitor::visit(LSLListConstant *list_const) {
+  for (auto *val_c : *list_const) {
     if (val_c->getType() == TYPE(LST_LIST)) {
-      NODE_ERROR(node, E_LIST_IN_LIST);
+      NODE_ERROR(list_const, E_LIST_IN_LIST);
       val_c->setType(TYPE(LST_ERROR));
     }
   }
   return true;
 }
 
-bool TypeCheckVisitor::visit(LSLListExpression *node) {
-  for (auto *val_c : *node) {
+bool TypeCheckVisitor::visit(LSLListExpression *list_expr) {
+  for (auto *val_c : *list_expr) {
     auto child_type = val_c->getIType();
     if (child_type == LST_LIST) {
-      NODE_ERROR(node, E_LIST_IN_LIST);
+      NODE_ERROR(list_expr, E_LIST_IN_LIST);
       val_c->setType(TYPE(LST_ERROR));
     } else if (child_type == LST_NULL) {
       // not technically illegal in LL's compiler, but doesn't ever make sense,
       // mono crashes on compile and LSO results in weird type confusion bugs
       // and eventual heap corruption.
-      NODE_ERROR(node, E_NULL_IN_LIST);
+      NODE_ERROR(list_expr, E_NULL_IN_LIST);
       val_c->setType(TYPE(LST_ERROR));
     }
   }
@@ -238,11 +238,11 @@ bool TypeCheckVisitor::visit(LSLListExpression *node) {
 // and event handler definitions
 static bool validate_func_arg_spec(
     LSLIdentifier *id,
-    LSLASTNode *node,
+    LSLASTNode *func_node,
     LSLASTNode *params,
     LSLParamList *function_decl
 ) {
-  bool is_event_handler = node->getNodeType() == NODE_EVENT_HANDLER;
+  bool is_event_handler = func_node->getNodeType() == NODE_EVENT_HANDLER;
 
   LSLIdentifier *declared_param_id;
   LSLIdentifier *passed_param_id;
@@ -259,7 +259,7 @@ static bool validate_func_arg_spec(
       param_compatible = passed_param_id->getType()->canCoerce(declared_param_id->getType());
 
     if (!param_compatible) {
-      NODE_ERROR(node, is_event_handler ? E_ARGUMENT_WRONG_TYPE_EVENT : E_ARGUMENT_WRONG_TYPE,
+      NODE_ERROR(func_node, is_event_handler ? E_ARGUMENT_WRONG_TYPE_EVENT : E_ARGUMENT_WRONG_TYPE,
                  passed_param_id->getType()->getNodeName(),
                  param_num,
                  id->getName(),
@@ -274,50 +274,50 @@ static bool validate_func_arg_spec(
   }
 
   if (passed_param_id != nullptr) {
-    NODE_ERROR(node, is_event_handler ? E_TOO_MANY_ARGUMENTS_EVENT : E_TOO_MANY_ARGUMENTS, id->getName());
+    NODE_ERROR(func_node, is_event_handler ? E_TOO_MANY_ARGUMENTS_EVENT : E_TOO_MANY_ARGUMENTS, id->getName());
     return false;
   } else if (declared_param_id != nullptr) {
-    NODE_ERROR(node, is_event_handler ? E_TOO_FEW_ARGUMENTS_EVENT : E_TOO_FEW_ARGUMENTS, id->getName());
+    NODE_ERROR(func_node, is_event_handler ? E_TOO_FEW_ARGUMENTS_EVENT : E_TOO_FEW_ARGUMENTS, id->getName());
     return false;
   }
   return true;
 }
 
-bool TypeCheckVisitor::visit(LSLFunctionExpression *node) {
-  auto *id = node->getIdentifier();
-  auto *sym = node->getSymbol();
-  node->setType(id->getType());
+bool TypeCheckVisitor::visit(LSLFunctionExpression *func_expr) {
+  auto *id = func_expr->getIdentifier();
+  auto *sym = func_expr->getSymbol();
+  func_expr->setType(id->getType());
 
   // can't check types if function is undeclared
   if (sym == nullptr) {
-    node->setType(TYPE(LST_ERROR));
+    func_expr->setType(TYPE(LST_ERROR));
     return true;
   }
 
-  validate_func_arg_spec(id, node, node->getArguments(), sym->getFunctionDecl());
+  validate_func_arg_spec(id, func_expr, func_expr->getArguments(), sym->getFunctionDecl());
   return true;
 }
 
-bool TypeCheckVisitor::visit(LSLEventHandler *node) {
-  auto *id = node->getIdentifier();
+bool TypeCheckVisitor::visit(LSLEventHandler *handler) {
+  auto *id = handler->getIdentifier();
   // can't check arg spec if event handler isn't valid
   if (id->getSymbol() == nullptr)
     return true;
 
   // get the expected event handler prototype from the builtins
-  auto *function_decl = node->mContext->builtins->lookup(id->getName(), SYM_EVENT)->getFunctionDecl();
-  validate_func_arg_spec(id, node, node->getArguments(), function_decl);
+  auto *function_decl = handler->mContext->builtins->lookup(id->getName(), SYM_EVENT)->getFunctionDecl();
+  validate_func_arg_spec(id, handler, handler->getArguments(), function_decl);
   return true;
 }
 
-bool TypeCheckVisitor::visit(LSLLValueExpression *node) {
-  auto *id = node->getIdentifier();
-  auto *member_node = node->getMember();
-  node->setType(id->getType());
+bool TypeCheckVisitor::visit(LSLLValueExpression *lvalue) {
+  auto *id = lvalue->getIdentifier();
+  auto *member_node = lvalue->getMember();
+  lvalue->setType(id->getType());
 
   auto *symbol = id->getSymbol();
   if (!symbol) {
-    node->setType(TYPE(LST_ERROR));
+    lvalue->setType(TYPE(LST_ERROR));
     return false;
   }
 
@@ -331,22 +331,22 @@ bool TypeCheckVisitor::visit(LSLLValueExpression *node) {
     if (member != nullptr) {
       // all members must be single letters
       if (member[1] != 0) {
-        NODE_ERROR(node, E_INVALID_MEMBER, name, member);
-        node->setType(TYPE(LST_ERROR));
+        NODE_ERROR(lvalue, E_INVALID_MEMBER, name, member);
+        lvalue->setType(TYPE(LST_ERROR));
         return false;
       }
 
       /// Make sure it's a variable
       if (symbol_type != SYM_VARIABLE) {
-        NODE_ERROR(node, E_MEMBER_NOT_VARIABLE, name, member, LSLSymbol::getTypeName(symbol_type));
-        node->setType(TYPE(LST_ERROR));
+        NODE_ERROR(lvalue, E_MEMBER_NOT_VARIABLE, name, member, LSLSymbol::getTypeName(symbol_type));
+        lvalue->setType(TYPE(LST_ERROR));
         return false;
       }
 
       // ZERO_VECTOR.x is not valid, because it's really `<0,0,0>.x` which is not allowed!
       if (symbol->getSubType() == SYM_BUILTIN) {
-        NODE_ERROR(node, E_INVALID_MEMBER, name, member);
-        node->setType(TYPE(LST_ERROR));
+        NODE_ERROR(lvalue, E_INVALID_MEMBER, name, member);
+        lvalue->setType(TYPE(LST_ERROR));
         return false;
       }
 
@@ -354,7 +354,7 @@ bool TypeCheckVisitor::visit(LSLLValueExpression *node) {
       switch (symbol->getIType()) {
         case LST_QUATERNION:
           if (member[0] == 's') {
-            node->setType(TYPE(LST_FLOATINGPOINT));
+            lvalue->setType(TYPE(LST_FLOATINGPOINT));
             break;
           }
           // FALL THROUGH
@@ -363,17 +363,17 @@ bool TypeCheckVisitor::visit(LSLLValueExpression *node) {
             case 'x':
             case 'y':
             case 'z':
-              node->setType(TYPE(LST_FLOATINGPOINT));
+              lvalue->setType(TYPE(LST_FLOATINGPOINT));
               break;
             default:
-              NODE_ERROR(node, E_INVALID_MEMBER, name, member);
-              node->setType(TYPE(LST_ERROR));
+              NODE_ERROR(lvalue, E_INVALID_MEMBER, name, member);
+              lvalue->setType(TYPE(LST_ERROR));
               break;
           }
           break;
         default:
-          NODE_ERROR(node, E_MEMBER_WRONG_TYPE, name, member);
-          node->setType(TYPE(LST_ERROR));
+          NODE_ERROR(lvalue, E_MEMBER_WRONG_TYPE, name, member);
+          lvalue->setType(TYPE(LST_ERROR));
           break;
       }
     }
@@ -385,7 +385,7 @@ bool TypeCheckVisitor::visit(LSLLValueExpression *node) {
     LSLASTNode *local_decl = symbol->getVarDecl();
 
     // walk up and find the statement at the top of this expression;
-    LSLASTNode *upper_node = node->getParent();
+    LSLASTNode *upper_node = lvalue->getParent();
     while (upper_node != nullptr && upper_node->getNodeType() != NODE_STATEMENT) {
       upper_node = upper_node->getParent();
     }
@@ -404,30 +404,30 @@ bool TypeCheckVisitor::visit(LSLLValueExpression *node) {
       // we could be smarter about this, but it's probably not worth it.
       // we could check if there was also a jump to that label somewhere
       // before us in the same scope (before the declaration obviously.)
-      node->setIsFoldable(found_stmt && (found_stmt->getNodeSubType() != NODE_LABEL));
+      lvalue->setIsFoldable(found_stmt && (found_stmt->getNodeSubType() != NODE_LABEL));
       return false;
     }
   }
-  node->setIsFoldable(true);
+  lvalue->setIsFoldable(true);
   return false;
 }
 
-bool TypeCheckVisitor::visit(LSLTypecastExpression *node) {
-  auto *from_type = node->getChildExpr()->getType();
-  auto *to_type = node->getType();
+bool TypeCheckVisitor::visit(LSLTypecastExpression *cast_expr) {
+  auto *from_type = cast_expr->getChildExpr()->getType();
+  auto *to_type = cast_expr->getType();
   if(!is_cast_legal(from_type->getIType(), to_type->getIType())) {
     // this is just an error bubbling up
     if (from_type->getIType() != LST_ERROR) {
-      NODE_ERROR(node, E_ILLEGAL_CAST, from_type->getNodeName(), to_type->getNodeName());
+      NODE_ERROR(cast_expr, E_ILLEGAL_CAST, from_type->getNodeName(), to_type->getNodeName());
     }
   }
   return true;
 }
 
-bool TypeCheckVisitor::visit(LSLVectorExpression *node) {
-  for (auto *child : *node) {
+bool TypeCheckVisitor::visit(LSLVectorExpression *vec_expr) {
+  for (auto *child : *vec_expr) {
     if (!child->getType()->canCoerce(TYPE(LST_FLOATINGPOINT))) {
-      NODE_ERROR(node, E_WRONG_TYPE_IN_MEMBER_ASSIGNMENT, "vector",
+      NODE_ERROR(vec_expr, E_WRONG_TYPE_IN_MEMBER_ASSIGNMENT, "vector",
                  child->getType()->getNodeName());
       return true;
     }
@@ -435,10 +435,10 @@ bool TypeCheckVisitor::visit(LSLVectorExpression *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LSLQuaternionExpression *node) {
-  for (auto *child : *node) {
+bool TypeCheckVisitor::visit(LSLQuaternionExpression *quat_expr) {
+  for (auto *child : *quat_expr) {
     if (!child->getType()->canCoerce(TYPE(LST_FLOATINGPOINT))) {
-      NODE_ERROR(node, E_WRONG_TYPE_IN_MEMBER_ASSIGNMENT, "quaternion",
+      NODE_ERROR(quat_expr, E_WRONG_TYPE_IN_MEMBER_ASSIGNMENT, "quaternion",
                  child->getType()->getNodeName());
       return true;
     }
@@ -446,10 +446,10 @@ bool TypeCheckVisitor::visit(LSLQuaternionExpression *node) {
   return true;
 }
 
-bool TypeCheckVisitor::visit(LSLPrintExpression *node) {
+bool TypeCheckVisitor::visit(LSLPrintExpression *print_expr) {
   // No passing void expressions to `print()`
-  if (node->getChildExpr()->getIType() == LST_NULL) {
-    NODE_ERROR(node, E_ARGUMENT_WRONG_TYPE,
+  if (print_expr->getChildExpr()->getIType() == LST_NULL) {
+    NODE_ERROR(print_expr, E_ARGUMENT_WRONG_TYPE,
                "null",
                1,
                "print",

@@ -7,25 +7,25 @@ namespace Tailslide {
 class TypeCheckVisitor: public DepthFirstASTVisitor {
   protected:
     virtual bool visit(LSLASTNode *node);
-    virtual bool visit(LSLGlobalVariable *node);
-    virtual bool visit(LSLDeclaration *node);
-    virtual bool visit(LSLStateStatement *node);
-    virtual bool visit(LSLReturnStatement *node);
-    virtual bool visit(LSLIfStatement *node);
-    virtual bool visit(LSLForStatement *node);
-    virtual bool visit(LSLDoStatement *node);
-    virtual bool visit(LSLWhileStatement *node);
-    virtual bool visit(LSLExpression *node);
-    virtual bool visit(LSLEventHandler *node);
-    virtual bool visit(LSLFunctionExpression *node);
-    virtual bool visit(LSLLValueExpression *node);
-    virtual bool visit(LSLTypecastExpression *node);
-    virtual bool visit(LSLVectorExpression *node);
-    virtual bool visit(LSLQuaternionExpression *node);
-    virtual bool visit(LSLListConstant *node);
-    virtual bool visit(LSLListExpression *node);
-    virtual bool visit(LSLPrintExpression *node);
+    virtual bool visit(LSLGlobalVariable *glob_var);
+    virtual bool visit(LSLDeclaration *decl_stmt);
+    virtual bool visit(LSLStateStatement *state_stmt);
+    virtual bool visit(LSLReturnStatement *ret_stmt);
+    virtual bool visit(LSLIfStatement *if_stmt);
+    virtual bool visit(LSLForStatement *for_stmt);
+    virtual bool visit(LSLDoStatement *do_stmt);
+    virtual bool visit(LSLWhileStatement *while_stmt);
+    virtual bool visit(LSLExpression *expr);
+    virtual bool visit(LSLEventHandler *handler);
+    virtual bool visit(LSLFunctionExpression *func_expr);
+    virtual bool visit(LSLLValueExpression *lvalue);
+    virtual bool visit(LSLTypecastExpression *cast_expr);
+    virtual bool visit(LSLVectorExpression *vec_expr);
+    virtual bool visit(LSLQuaternionExpression *quat_expr);
+    virtual bool visit(LSLListConstant *list_const);
+    virtual bool visit(LSLListExpression *list_expr);
+    virtual bool visit(LSLPrintExpression *print_expr);
     
-    void handleDeclaration(LSLASTNode *node);
+    void handleDeclaration(LSLASTNode *decl_node);
 };
 }

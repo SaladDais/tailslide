@@ -54,36 +54,34 @@ bool SymbolResolutionVisitor::visit(LSLScript *script) {
   return false;
 }
 
-bool SymbolResolutionVisitor::visit(LSLGlobalVariable *node) {
+bool SymbolResolutionVisitor::visit(LSLGlobalVariable *glob_var) {
   // descend first so we can resolve any symbol references present in the rvalue
   // before we've defined the identifier from the lvalue.
   // Necessary so things like `string foo = foo;` will error correctly.
-  if (auto *initializer = node->getInitializer())
+  if (auto *initializer = glob_var->getInitializer())
     initializer->visit(this);
 
-  auto *identifier = node->getIdentifier();
+  auto *identifier = glob_var->getIdentifier();
   identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
-      identifier->getName(), identifier->getType(), SYM_VARIABLE, SYM_GLOBAL, node->getLoc(), nullptr, node
-  ));
-  node->defineSymbol(identifier->getSymbol());
+      identifier->getName(), identifier->getType(), SYM_VARIABLE, SYM_GLOBAL, glob_var->getLoc(), nullptr, glob_var));
+  glob_var->defineSymbol(identifier->getSymbol());
   return false;
 }
 
-bool SymbolResolutionVisitor::visit(LSLDeclaration *node) {
+bool SymbolResolutionVisitor::visit(LSLDeclaration *decl_stmt) {
   // visit the rvalue first so we correctly handle things like
   // `string foo = foo;`
-  if (auto *initializer = node->getInitializer())
+  if (auto *initializer = decl_stmt->getInitializer())
     initializer->visit(this);
 
-  auto *identifier = node->getIdentifier();
+  auto *identifier = decl_stmt->getIdentifier();
   identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
-      identifier->getName(), identifier->getType(), SYM_VARIABLE, SYM_LOCAL, node->getLoc(), nullptr, node
-  ));
-  node->defineSymbol(identifier->getSymbol());
+      identifier->getName(), identifier->getType(), SYM_VARIABLE, SYM_LOCAL, decl_stmt->getLoc(), nullptr, decl_stmt));
+  decl_stmt->defineSymbol(identifier->getSymbol());
 
   // if (1) string foo; isn't valid!
-  if (!node->getDeclarationAllowed()) {
-    NODE_ERROR(node, E_DECLARATION_INVALID_HERE, identifier->getSymbol()->getName());
+  if (!decl_stmt->getDeclarationAllowed()) {
+    NODE_ERROR(decl_stmt, E_DECLARATION_INVALID_HERE, identifier->getSymbol()->getName());
   }
   return false;
 }
@@ -96,40 +94,40 @@ void SymbolResolutionVisitor::replaceSymbolTable(LSLASTNode *node) {
   node->mContext->table_manager->registerTable(symtab);
 }
 
-bool SymbolResolutionVisitor::visit(LSLLValueExpression *node) {
-  node->getIdentifier()->resolveSymbol(SYM_VARIABLE);
+bool SymbolResolutionVisitor::visit(LSLLValueExpression *lvalue) {
+  lvalue->getIdentifier()->resolveSymbol(SYM_VARIABLE);
   return false;
 }
 
-bool SymbolResolutionVisitor::visit(LSLFunctionExpression *node) {
-  node->getIdentifier()->resolveSymbol(SYM_FUNCTION);
+bool SymbolResolutionVisitor::visit(LSLFunctionExpression *func_expr) {
+  func_expr->getIdentifier()->resolveSymbol(SYM_FUNCTION);
   return true;
 }
 
-bool SymbolResolutionVisitor::visit(LSLGlobalFunction *node) {
+bool SymbolResolutionVisitor::visit(LSLGlobalFunction *glob_func) {
   assert(_mPendingJumps.empty());
-  visitChildren(node);
+  visitChildren(glob_func);
   resolvePendingJumps();
   return false;
 }
 
-bool SymbolResolutionVisitor::visit(LSLEventHandler *node) {
-  replaceSymbolTable(node);
+bool SymbolResolutionVisitor::visit(LSLEventHandler *handler) {
+  replaceSymbolTable(handler);
 
-  auto *id = node->getIdentifier();
+  auto *id = handler->getIdentifier();
   // look for a prototype for this event in the builtin namespace
-  auto *sym = node->getRoot()->lookupSymbol(id->getName(), SYM_EVENT);
+  auto *sym = handler->getRoot()->lookupSymbol(id->getName(), SYM_EVENT);
   if (sym) {
     id->setSymbol(_mAllocator->newTracked<LSLSymbol>(
-        id->getName(), id->getType(), SYM_EVENT, SYM_BUILTIN, node->getLoc(), node->getArguments()
+        id->getName(), id->getType(), SYM_EVENT, SYM_BUILTIN, handler->getLoc(), handler->getArguments()
     ));
-    node->getParent()->defineSymbol(id->getSymbol());
+    handler->getParent()->defineSymbol(id->getSymbol());
   } else {
-    NODE_ERROR(node, E_INVALID_EVENT, id->getName());
+    NODE_ERROR(handler, E_INVALID_EVENT, id->getName());
   }
 
   assert(_mPendingJumps.empty());
-  visitChildren(node);
+  visitChildren(handler);
   resolvePendingJumps();
   return false;
 }
@@ -148,42 +146,42 @@ static void register_func_param_symbols(LSLASTNode *proto, bool is_event) {
   }
 }
 
-bool SymbolResolutionVisitor::visit(LSLFunctionDec *node) {
-  register_func_param_symbols(node, false);
+bool SymbolResolutionVisitor::visit(LSLFunctionDec *func_dec) {
+  register_func_param_symbols(func_dec, false);
   return true;
 }
 
-bool SymbolResolutionVisitor::visit(LSLEventDec *node) {
-  register_func_param_symbols(node, true);
+bool SymbolResolutionVisitor::visit(LSLEventDec *event_dec) {
+  register_func_param_symbols(event_dec, true);
   return true;
 }
 
-bool SymbolResolutionVisitor::visit(LSLLabel *node) {
-  auto *identifier = node->getIdentifier();
+bool SymbolResolutionVisitor::visit(LSLLabel *label_stmt) {
+  auto *identifier = label_stmt->getIdentifier();
   identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
-      identifier->getName(), identifier->getType(), SYM_LABEL, SYM_LOCAL, node->getLoc()
+      identifier->getName(), identifier->getType(), SYM_LABEL, SYM_LOCAL, label_stmt->getLoc()
   ));
-  node->defineSymbol(identifier->getSymbol());
+  label_stmt->defineSymbol(identifier->getSymbol());
   _mCollectedLabels.emplace_back(identifier);
   return true;
 }
 
-bool SymbolResolutionVisitor::visit(LSLJumpStatement *node) {
+bool SymbolResolutionVisitor::visit(LSLJumpStatement *jump_stmt) {
   // Jumps are special. Since they can jump forwards in the control flow, we
   // can only resolve the labels they refer to after we leave the enclosing
   // function or event handler, having passed the last place the label it
   // refers to could have been defined.
-  _mPendingJumps.emplace_back(node->getIdentifier());
+  _mPendingJumps.emplace_back(jump_stmt->getIdentifier());
   return true;
 }
 
-bool SymbolResolutionVisitor::visit(LSLStateStatement *node) {
-  node->getIdentifier()->resolveSymbol(SYM_STATE);
+bool SymbolResolutionVisitor::visit(LSLStateStatement *state_stmt) {
+  state_stmt->getIdentifier()->resolveSymbol(SYM_STATE);
   return true;
 }
 
-bool SymbolResolutionVisitor::visit(LSLCompoundStatement *node) {
-  replaceSymbolTable(node);
+bool SymbolResolutionVisitor::visit(LSLCompoundStatement *compound_stmt) {
+  replaceSymbolTable(compound_stmt);
   return true;
 }
 

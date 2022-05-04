@@ -26,27 +26,27 @@ bool ConstantDeterminingVisitor::beforeDescend(LSLASTNode *node) {
   return true;
 }
 
-bool ConstantDeterminingVisitor::visit(LSLScript *node) {
+bool ConstantDeterminingVisitor::visit(LSLScript *script) {
   // need to iterate over global vars FIRST since expressions in
   // global functions may make use of them.
-  for (auto *child : *node->getGlobals()) {
+  for (auto *child : *script->getGlobals()) {
     if (child->getNodeType() == NODE_GLOBAL_VARIABLE)
       child->visit(this);
   }
   // safe to descend into functions and event handlers now
-  visitChildren(node);
+  visitChildren(script);
   return false;
 }
 
-bool ConstantDeterminingVisitor::visit(LSLDeclaration *node) {
-  handleDeclaration(node);
+bool ConstantDeterminingVisitor::visit(LSLDeclaration *decl_stmt) {
+  handleDeclaration(decl_stmt);
   return false;
 }
 
-void ConstantDeterminingVisitor::handleDeclaration(LSLASTNode *node) {
+void ConstantDeterminingVisitor::handleDeclaration(LSLASTNode *decl_node) {
   // if it's initialized, set its constant value
-  auto *sym = node->getSymbol();
-  LSLASTNode *rvalue = node->getChild(1);
+  auto *sym = decl_node->getSymbol();
+  LSLASTNode *rvalue = decl_node->getChild(1);
   if (rvalue && rvalue->getNodeType() != NODE_NULL) {
     sym->setConstantPrecluded(rvalue->getConstantPrecluded());
     if (rvalue->getConstantPrecluded()) {
@@ -66,28 +66,28 @@ void ConstantDeterminingVisitor::handleDeclaration(LSLASTNode *node) {
   }
 }
 
-bool ConstantDeterminingVisitor::visit(LSLExpression *node) {
-  LSLOperator operation = node->getOperation();
-  LSLConstant *constant_value = node->getConstantValue();
+bool ConstantDeterminingVisitor::visit(LSLExpression *expr) {
+  LSLOperator operation = expr->getOperation();
+  LSLConstant *constant_value = expr->getConstantValue();
   DEBUG(
       LOG_DEBUG_SPAM,
       nullptr,
       "expression.determine_value() op=%d cv=%s st=%d\n",
       operation,
       constant_value ? constant_value->getNodeName() : nullptr,
-      node->getNodeSubType()
+      expr->getNodeSubType()
   );
 
-  LSLASTNode *left = node->getChild(0);
-  LSLASTNode *right = node->getChild(1);
+  LSLASTNode *left = expr->getChild(0);
+  LSLASTNode *right = expr->getChild(1);
 
   if (left->getType() == TYPE(LST_ERROR) || (right && right->getType() == TYPE(LST_ERROR))) {
-    node->setConstantPrecluded(true);
+    expr->setConstantPrecluded(true);
     return true;
   }
 
   // only check normal expressions
-  switch (node->getNodeSubType()) {
+  switch (expr->getNodeSubType()) {
     case NODE_NO_SUB_TYPE:
     case NODE_CONSTANT_EXPRESSION:
     case NODE_PARENTHESIS_EXPRESSION:
@@ -109,31 +109,31 @@ bool ConstantDeterminingVisitor::visit(LSLExpression *node) {
 
     // we need a constant value from the c_left, and if we have a c_right side, it MUST have a constant value too
     if (c_left && (right == nullptr || c_right != nullptr))
-      constant_value = _mOperationBehavior->operation(operation, c_left, c_right, node->getLoc());
+      constant_value = _mOperationBehavior->operation(operation, c_left, c_right, expr->getLoc());
     else
       constant_value = nullptr;
   }
-  node->setConstantValue(constant_value);
+  expr->setConstantValue(constant_value);
   return true;
 }
 
-bool ConstantDeterminingVisitor::visit(LSLGlobalVariable *node) {
-  handleDeclaration(node);
+bool ConstantDeterminingVisitor::visit(LSLGlobalVariable *glob_var) {
+  handleDeclaration(glob_var);
   return false;
 }
 
-bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {
-  LSLSymbol *symbol = node->getSymbol();
+bool ConstantDeterminingVisitor::visit(LSLLValueExpression *lvalue) {
+  LSLSymbol *symbol = lvalue->getSymbol();
 
   // can't determine value if we don't have a symbol
   if (symbol == nullptr) {
-    node->setConstantValue(nullptr);
-    node->setConstantPrecluded(true);
+    lvalue->setConstantValue(nullptr);
+    lvalue->setConstantPrecluded(true);
     return true;
   }
 
   const char *member_name = nullptr;
-  if (auto *member = node->getMember())
+  if (auto *member = lvalue->getMember())
     member_name = member->getName();
 
   LSLConstant *constant_value = nullptr;
@@ -190,43 +190,43 @@ bool ConstantDeterminingVisitor::visit(LSLLValueExpression *node) {
       }
     }
   }
-  node->setConstantValue(constant_value);
+  lvalue->setConstantValue(constant_value);
   return true;
 }
 
-bool ConstantDeterminingVisitor::visit(LSLListExpression *node) {
+bool ConstantDeterminingVisitor::visit(LSLListExpression *list_expr) {
   auto *new_list_cv = _mAllocator->newTracked<LSLListConstant>(nullptr);
 
   // make sure they are all constant
-  for (auto *child : *node) {
+  for (auto *child : *list_expr) {
     if (!child->isConstant()) {
-      node->setConstantPrecluded(child->getConstantPrecluded());
+      list_expr->setConstantPrecluded(child->getConstantPrecluded());
       return true;
     }
   }
 
   // create assignables for them
-  for (auto *child : *node) {
+  for (auto *child : *list_expr) {
     new_list_cv->pushChild(child->getConstantValue()->copy(_mAllocator));
   }
 
   // create constant value
-  node->setConstantValue(new_list_cv);
+  list_expr->setConstantValue(new_list_cv);
   return true;
 }
 
-bool ConstantDeterminingVisitor::visit(LSLVectorExpression *node) {
+bool ConstantDeterminingVisitor::visit(LSLVectorExpression *vec_expr) {
   float v[3];
   int cv = 0;
 
-  for (auto *child : *node) {
+  for (auto *child : *vec_expr) {
     // if we have too many children, make sure we don't overflow cv
     if (cv >= 3)
       return true;
 
     // all children must be constant
     if (!child->isConstant()) {
-      node->setConstantPrecluded(child->getConstantPrecluded());
+      vec_expr->setConstantPrecluded(child->getConstantPrecluded());
       return true;
     }
 
@@ -239,7 +239,7 @@ bool ConstantDeterminingVisitor::visit(LSLVectorExpression *node) {
         v[cv++] = (F32) ((LSLIntegerConstant *) child->getConstantValue())->getValue();
         break;
       default:
-        node->setConstantPrecluded(true);
+        vec_expr->setConstantPrecluded(true);
         return true;
     }
   }
@@ -249,23 +249,23 @@ bool ConstantDeterminingVisitor::visit(LSLVectorExpression *node) {
     return true;
 
   // create constant value
-  node->setConstantValue(_mAllocator->newTracked<LSLVectorConstant>(v[0], v[1], v[2]));
+  vec_expr->setConstantValue(_mAllocator->newTracked<LSLVectorConstant>(v[0], v[1], v[2]));
   return true;
 }
 
 
-bool ConstantDeterminingVisitor::visit(LSLQuaternionExpression *node) {
+bool ConstantDeterminingVisitor::visit(LSLQuaternionExpression *quat_expr) {
   float v[4];
   int cv = 0;
 
-  for (auto *child : *node) {
+  for (auto *child : *quat_expr) {
     // if we have too many children, make sure we don't overflow cv
     if (cv >= 4)
       return true;
 
     // all children must be constant
     if (!child->isConstant()) {
-      node->setConstantPrecluded(child->getConstantPrecluded());
+      quat_expr->setConstantPrecluded(child->getConstantPrecluded());
       return true;
     }
 
@@ -278,7 +278,7 @@ bool ConstantDeterminingVisitor::visit(LSLQuaternionExpression *node) {
         v[cv++] = (F32) ((LSLIntegerConstant *) child->getConstantValue())->getValue();
         break;
       default:
-        node->setConstantPrecluded(true);
+        quat_expr->setConstantPrecluded(true);
         return true;
     }
   }
@@ -288,21 +288,21 @@ bool ConstantDeterminingVisitor::visit(LSLQuaternionExpression *node) {
     return true;
 
   // create constant value
-  node->setConstantValue(_mAllocator->newTracked<LSLQuaternionConstant>(v[0], v[1], v[2], v[3]));
+  quat_expr->setConstantValue(_mAllocator->newTracked<LSLQuaternionConstant>(v[0], v[1], v[2], v[3]));
   return true;
 }
 
-bool ConstantDeterminingVisitor::visit(LSLTypecastExpression *node) {
-  // what are we casting to
-  auto *child = node->getChild(0);
-  auto *val = child->getConstantValue();
-  node->setConstantValue(nullptr);
+bool ConstantDeterminingVisitor::visit(LSLTypecastExpression *cast_expr) {
+  // what are we casting
+  auto *child_expr = cast_expr->getChildExpr();
+  auto *val = child_expr->getConstantValue();
+  cast_expr->setConstantValue(nullptr);
   if (!val) {
-    node->setConstantPrecluded(child->getConstantPrecluded());
+    cast_expr->setConstantPrecluded(child_expr->getConstantPrecluded());
     return true;
   }
-  auto to_type = node->getType();
-  node->setConstantValue(_mOperationBehavior->cast(to_type, val, val->getLoc()));
+  auto to_type = cast_expr->getType();
+  cast_expr->setConstantValue(_mOperationBehavior->cast(to_type, val, val->getLoc()));
   return true;
 }
 

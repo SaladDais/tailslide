@@ -19,11 +19,11 @@ uint64_t pack_handled_events(LSOSymbolData *state_data) {
 
 LSLExpression *resolve_sa_identifier(LSLExpression *rvalue);
 
-bool LSOScriptCompiler::visit(LSLScript *node) {
+bool LSOScriptCompiler::visit(LSLScript *script) {
   LLConformantDeSugaringVisitor de_sugaring_visitor(_mAllocator, false);
-  node->visit(&de_sugaring_visitor);
+  script->visit(&de_sugaring_visitor);
   LSOResourceVisitor resource_visitor(&_mSymData);
-  node->visit(&resource_visitor);
+  script->visit(&resource_visitor);
 
   _mRegistersBS.makeSpace(LSO_REGISTER_OFFSETS[LREG_MAX]);
 
@@ -43,17 +43,17 @@ bool LSOScriptCompiler::visit(LSLScript *node) {
   }
 
   // Collect all the global variables and functions
-  node->getGlobals()->visit(this);
+  script->getGlobals()->visit(this);
 
   if (checkStackHeapCollision()) {
-    NODE_ERROR(node, E_STACK_HEAP_COLLISION);
+    NODE_ERROR(script, E_STACK_HEAP_COLLISION);
     return false;
   }
 
   // Nothing should be writing to the heap after handling global vars, write the terminal block.
   _mHeapManager.writeTerminalBlock();
 
-  auto *states = node->getStates();
+  auto *states = script->getStates();
   auto num_states = (uint32_t)states->getNumChildren();
   _mStatesBS << num_states;
 
@@ -74,7 +74,7 @@ bool LSOScriptCompiler::visit(LSLScript *node) {
     state->visit(this);
     _mStatesBS.writeBitStream(_mStateBS);
     if (checkStackHeapCollision()) {
-      NODE_ERROR(node, E_STACK_HEAP_COLLISION);
+      NODE_ERROR(script, E_STACK_HEAP_COLLISION);
       return false;
     }
   }
@@ -119,7 +119,7 @@ bool LSOScriptCompiler::visit(LSLScript *node) {
   return false;
 }
 
-bool LSOScriptCompiler::visit(LSLGlobalVariable *node) {
+bool LSOScriptCompiler::visit(LSLGlobalVariable *glob_var) {
   if (checkStackHeapCollision())
     return false;
   // Weird special case for if we have only an lvalue reference in the rvalue
@@ -136,13 +136,13 @@ bool LSOScriptCompiler::visit(LSLGlobalVariable *node) {
   //  always true / always false warnings may be wrong otherwise.
   //  otherwise LSO compilation must always have optimization off and use SL-strict
   //  global validation because the semantics are closer to Mono. That might be an OK tradeoff.
-  auto *sym = node->getSymbol();
+  auto *sym = glob_var->getSymbol();
   // Specifically take the symbol constant value by default and not the rvalue's since it
   // should have any automatic casts applied.
   auto *cv = sym->getConstantValue();
 
   // only need to take the weird rvalue resolution path if we _have_ an rvalue
-  if (auto *rvalue = node->getInitializer()) {
+  if (auto *rvalue = glob_var->getInitializer()) {
     if (rvalue->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
       rvalue = resolve_sa_identifier(rvalue);
 
@@ -178,10 +178,10 @@ bool LSOScriptCompiler::visit(LSLGlobalVariable *node) {
   return false;
 }
 
-bool LSOScriptCompiler::visit(LSLGlobalFunction *node) {
+bool LSOScriptCompiler::visit(LSLGlobalFunction *glob_func) {
   if (checkStackHeapCollision())
     return false;
-  auto *sym = node->getSymbol();
+  auto *sym = glob_func->getSymbol();
   auto &func_data = _mSymData[sym];
   auto function_start = _mFunctionsBS.pos();
   {
@@ -204,22 +204,22 @@ bool LSOScriptCompiler::visit(LSLGlobalFunction *node) {
     _mFunctionsBS << (uint32_t)(func_header_end - function_start);
   }
   LSOBytecodeCompiler visitor(_mSymData);
-  node->visit(&visitor);
+  glob_func->visit(&visitor);
   _mFunctionsBS.writeBitStream(visitor.mCodeBS);
   return false;
 }
 
-bool LSOScriptCompiler::visit(LSLState *node) {
+bool LSOScriptCompiler::visit(LSLState *state) {
   // offset to jump table, we don't put in the state name for now.
   const uint32_t jump_table_base = 5;
   const uint32_t jump_table_size = sizeof(uint32_t) + sizeof(uint32_t);
-  auto *state_data = &_mSymData[node->getSymbol()];
+  auto *state_data = &_mSymData[state->getSymbol()];
 
   _mStateBS << jump_table_base << '\0';
   // skip past the jump tables to the start of the first state data struct
   _mStateBS.moveBy((int32_t)(jump_table_size * state_data->handlers.size()), true);
 
-  for (auto *event_handler : *node->getEventHandlers()) {
+  for (auto *event_handler : *state->getEventHandlers()) {
     auto *event_data = &_mSymData[event_handler->getSymbol()];
     // the jump table is in handler enum order, figure out our position within it
     auto table_iter = state_data->handlers.find((LSOHandlerType)event_data->index);
@@ -236,11 +236,11 @@ bool LSOScriptCompiler::visit(LSLState *node) {
   return false;
 }
 
-bool LSOScriptCompiler::visit(LSLEventHandler *node) {
+bool LSOScriptCompiler::visit(LSLEventHandler *handler) {
   // offset to code + empty name
   _mStateBS << (uint32_t)5 << '\0';
   LSOBytecodeCompiler visitor(_mSymData);
-  node->visit(&visitor);
+  handler->visit(&visitor);
   _mStateBS.writeBitStream(visitor.mCodeBS);
   return false;
 }

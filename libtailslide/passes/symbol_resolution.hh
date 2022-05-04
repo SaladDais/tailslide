@@ -14,19 +14,19 @@ class SymbolResolutionVisitor : public ASTVisitor {
       : _mLindenJumpSemantics(linden_jump_semantics), _mAllocator(allocator) {}
 
   protected:
-    virtual bool visit(LSLDeclaration *node);
-    virtual bool visit(LSLGlobalVariable *node);
-    virtual bool visit(LSLGlobalFunction *node);
-    virtual bool visit(LSLLValueExpression *node);
-    virtual bool visit(LSLFunctionExpression *node);
-    virtual bool visit(LSLScript *node);
-    virtual bool visit(LSLFunctionDec *node);
-    virtual bool visit(LSLEventHandler *node);
-    virtual bool visit(LSLEventDec *node);
-    virtual bool visit(LSLLabel *node);
-    virtual bool visit(LSLJumpStatement *node);
-    virtual bool visit(LSLStateStatement *node);
-    virtual bool visit(LSLCompoundStatement *node);
+    virtual bool visit(LSLDeclaration *decl_stmt);
+    virtual bool visit(LSLGlobalVariable *glob_var);
+    virtual bool visit(LSLGlobalFunction *glob_func);
+    virtual bool visit(LSLLValueExpression *lvalue);
+    virtual bool visit(LSLFunctionExpression *func_expr);
+    virtual bool visit(LSLScript *script);
+    virtual bool visit(LSLFunctionDec *func_dec);
+    virtual bool visit(LSLEventHandler *handler);
+    virtual bool visit(LSLEventDec *event_dec);
+    virtual bool visit(LSLLabel *label_stmt);
+    virtual bool visit(LSLJumpStatement *jump_stmt);
+    virtual bool visit(LSLStateStatement *state_stmt);
+    virtual bool visit(LSLCompoundStatement *compound_stmt);
 
     void replaceSymbolTable(LSLASTNode *node);
 

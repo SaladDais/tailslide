@@ -22,14 +22,14 @@ class TreeSimplifyingVisitor: public ASTVisitor {
     OptimizationOptions mOpts;
     int mFoldedLevel = 0;
 
-    virtual bool visit(LSLDeclaration* node);
-    virtual bool visit(LSLGlobalVariable* node);
-    virtual bool visit(LSLGlobalFunction* node);
-    virtual bool visit(LSLExpression* node);
-    virtual bool visit(LSLLValueExpression *node);
-    virtual bool visit(LSLConstantExpression *node);
+    virtual bool visit(LSLDeclaration *decl_stmt);
+    virtual bool visit(LSLGlobalVariable *glob_var);
+    virtual bool visit(LSLGlobalFunction *glob_func);
+    virtual bool visit(LSLExpression *expr);
+    virtual bool visit(LSLLValueExpression *lvalue);
+    virtual bool visit(LSLConstantExpression *constant_expr);
 
-    bool handleGlobal(LSLASTNode *node);
+    bool handleGlobal(LSLASTNode *glob);
 };
 }
 

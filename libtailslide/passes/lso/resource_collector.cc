@@ -3,9 +3,9 @@
 #include "resource_collector.hh"
 
 namespace Tailslide {
-bool LSOResourceVisitor::visit(LSLScript *node) {
+bool LSOResourceVisitor::visit(LSLScript *script) {
   // build up symbol data for library functions
-  for (auto builtin_val: node->mContext->builtins->getMap()) {
+  for (auto builtin_val: script->mContext->builtins->getMap()) {
     auto *sym = builtin_val.second;
     if (sym->getSymbolType() != SYM_FUNCTION)
       continue;
@@ -25,8 +25,8 @@ bool LSOResourceVisitor::visit(LSLScript *node) {
   return true;
 }
 
-bool LSOResourceVisitor::visit(LSLGlobalFunction *node) {
-  auto *sym = node->getSymbol();
+bool LSOResourceVisitor::visit(LSLGlobalFunction *glob_func) {
+  auto *sym = glob_func->getSymbol();
   auto *func_sym_data = getSymbolData(sym);
   func_sym_data->index = _mFuncCount++;
   // enrich function prototype and parameters with sizing information
@@ -34,13 +34,13 @@ bool LSOResourceVisitor::visit(LSLGlobalFunction *node) {
 
   _mCurrentFunc = func_sym_data;
   // pick up local declarations
-  visitChildren(node);
+  visitChildren(glob_func);
   _mCurrentFunc = nullptr;
   return false;
 }
 
-bool LSOResourceVisitor::visit(LSLGlobalVariable *node) {
-  auto *sym = node->getSymbol();
+bool LSOResourceVisitor::visit(LSLGlobalVariable *glob_var) {
+  auto *sym = glob_var->getSymbol();
   auto sym_data = getSymbolData(sym);
   // Offset to actual data, type, null terminator for name (empty)
   _mGlobalsOffset += 4 + 1 + 1;
@@ -49,18 +49,18 @@ bool LSOResourceVisitor::visit(LSLGlobalVariable *node) {
   return true;
 }
 
-bool LSOResourceVisitor::visit(LSLState *node) {
-  auto *sym_data = getSymbolData(node->getSymbol());
+bool LSOResourceVisitor::visit(LSLState *state) {
+  auto *sym_data = getSymbolData(state->getSymbol());
   sym_data->index = _mStateCount++;
   _mCurrentState = sym_data;
-  visitChildren(node);
+  visitChildren(state);
   _mCurrentState = nullptr;
   return false;
 }
 
 
-bool LSOResourceVisitor::visit(LSLDeclaration *node) {
-  auto *sym = node->getSymbol();
+bool LSOResourceVisitor::visit(LSLDeclaration *decl_stmt) {
+  auto *sym = decl_stmt->getSymbol();
   auto *sym_data = getSymbolData(sym);
   sym_data->index = _mCurrentFunc->locals.size();
   sym_data->offset = _mCurrentFunc->size;
@@ -71,15 +71,15 @@ bool LSOResourceVisitor::visit(LSLDeclaration *node) {
 }
 
 
-bool LSOResourceVisitor::visit(LSLEventHandler *node) {
-  auto *sym = node->getSymbol();
+bool LSOResourceVisitor::visit(LSLEventHandler *handler) {
+  auto *sym = handler->getSymbol();
   auto *handler_sym_data = getSymbolData(sym);
   // enrich handler prototype and parameters with sizing information
   handleFuncDecl(handler_sym_data, sym->getFunctionDecl());
 
   _mCurrentFunc = handler_sym_data;
   // pick up local declarations
-  visitChildren(node);
+  visitChildren(handler);
   _mCurrentFunc = nullptr;
   // figure out the LSO event handler index for this handler name
   for(size_t handler_idx=LSOH_STATE_ENTRY; handler_idx<LSOH_MAX; ++handler_idx) {

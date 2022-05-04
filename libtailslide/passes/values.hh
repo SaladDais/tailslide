@@ -13,20 +13,20 @@ class ConstantDeterminingVisitor : public DepthFirstASTVisitor {
 
     virtual bool beforeDescend(LSLASTNode *node);
 
-    virtual bool visit(LSLScript *node);
-    virtual bool visit(LSLDeclaration *node);
-    virtual bool visit(LSLExpression *node);
-    virtual bool visit(LSLGlobalVariable *node);
-    virtual bool visit(LSLLValueExpression *node);
-    virtual bool visit(LSLListExpression *node);
-    virtual bool visit(LSLVectorExpression *node);
-    virtual bool visit(LSLQuaternionExpression *node);
-    virtual bool visit(LSLTypecastExpression *node);
+    virtual bool visit(LSLScript *script);
+    virtual bool visit(LSLDeclaration *decl_stmt);
+    virtual bool visit(LSLExpression *expr);
+    virtual bool visit(LSLGlobalVariable *glob_var);
+    virtual bool visit(LSLLValueExpression *lvalue);
+    virtual bool visit(LSLListExpression *list_expr);
+    virtual bool visit(LSLVectorExpression *vec_expr);
+    virtual bool visit(LSLQuaternionExpression *quat_expr);
+    virtual bool visit(LSLTypecastExpression *cast_expr);
   protected:
     AOperationBehavior *_mOperationBehavior = nullptr;
     ScriptAllocator *_mAllocator;
 
-    void handleDeclaration(LSLASTNode *node);
+    void handleDeclaration(LSLASTNode *decl_node);
 };
 }
 

@@ -14,34 +14,34 @@ class LSOBytecodeCompiler : public ASTVisitor {
     explicit LSOBytecodeCompiler(LSOSymbolDataMap &symbol_data_map) : _mSymData (symbol_data_map) {}
 
   protected:
-    void buildFunction(LSLASTNode *node);
-    bool visit(LSLEventHandler *node) override;
-    bool visit(LSLGlobalFunction *node) override;
+    void buildFunction(LSLASTNode *func);
+    bool visit(LSLEventHandler *handler) override;
+    bool visit(LSLGlobalFunction *glob_func) override;
 
-    bool visit(LSLConstantExpression *node) override;
-    bool visit(LSLVectorExpression *node) override;
-    bool visit(LSLQuaternionExpression *node) override;
-    bool visit(LSLListExpression *node) override;
-    bool visit(LSLUnaryExpression *node) override;
-    bool visit(LSLBinaryExpression *node) override;
-    bool visit(LSLLValueExpression *node) override;
-    bool visit(LSLTypecastExpression *node) override;
-    bool visit(LSLPrintExpression *node) override;
-    bool visit(LSLFunctionExpression *node) override;
+    bool visit(LSLConstantExpression *constant_expr) override;
+    bool visit(LSLVectorExpression *vec_expr) override;
+    bool visit(LSLQuaternionExpression *quat_expr) override;
+    bool visit(LSLListExpression *list_expr) override;
+    bool visit(LSLUnaryExpression *unary_expr) override;
+    bool visit(LSLBinaryExpression *bin_expr) override;
+    bool visit(LSLLValueExpression *lvalue) override;
+    bool visit(LSLTypecastExpression *cast_expr) override;
+    bool visit(LSLPrintExpression *print_expr) override;
+    bool visit(LSLFunctionExpression *func_expr) override;
 
-    bool visit(LSLExpressionStatement *node) override;
-    bool visit(LSLJumpStatement *node) override;
-    bool visit(LSLLabel *node) override;
-    bool visit(LSLIfStatement *node) override;
-    bool visit(LSLForStatement *node) override;
-    bool visit(LSLWhileStatement *node) override;
-    bool visit(LSLDoStatement *node) override;
-    bool visit(LSLDeclaration *node) override;
-    bool visit(LSLReturnStatement *node) override;
-    bool visit(LSLStateStatement *node) override;
+    bool visit(LSLExpressionStatement *expr_stmt) override;
+    bool visit(LSLJumpStatement *jump_stmt) override;
+    bool visit(LSLLabel *label_stmt) override;
+    bool visit(LSLIfStatement *if_stmt) override;
+    bool visit(LSLForStatement *for_stmt) override;
+    bool visit(LSLWhileStatement *while_stmt) override;
+    bool visit(LSLDoStatement *do_stmt) override;
+    bool visit(LSLDeclaration *decl_stmt) override;
+    bool visit(LSLReturnStatement *ret_stmt) override;
+    bool visit(LSLStateStatement *state_stmt) override;
 
     void pushConstant(LSLConstant *constant);
-    int32_t calculateLValueOffset(LSLLValueExpression *node);
+    int32_t calculateLValueOffset(LSLLValueExpression *lvalue);
     void storeStackToLValue(LSLLValueExpression *lvalue);
     void popLocals();
     void writeReturn();

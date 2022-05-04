@@ -13,12 +13,12 @@ static const std::string CIL_LIST_INITIALIZER = std::string("call ") + CIL_TYPE_
 /// compiles to the text representation of CIL assembly, based on analysis
 /// of the output of LL's lscript LSL->CIL compiler circa 2009 (when public
 /// lscript source had its last functional update.)
-bool MonoScriptCompiler::visit(LSLScript *node) {
+bool MonoScriptCompiler::visit(LSLScript *script) {
   LLConformantDeSugaringVisitor de_sugaring_visitor(_mAllocator, true);
-  node->visit(&de_sugaring_visitor);
+  script->visit(&de_sugaring_visitor);
 
   MonoResourceVisitor resource_visitor(&_mSymData);
-  node->visit(&resource_visitor);
+  script->visit(&resource_visitor);
   _mScriptClassName = "LSL_00000000_0000_0000_0000_000000000000";
 
   mCIL << ".assembly extern mscorlib {.ver 1:0:5000:0}\n"
@@ -30,7 +30,7 @@ bool MonoScriptCompiler::visit(LSLScript *node) {
           "{\n";
 
   // declare the global variables first
-  auto *globals = node->getGlobals();
+  auto *globals = script->getGlobals();
   for (auto *global : *globals) {
     if (global->getNodeType() != NODE_GLOBAL_VARIABLE)
       continue;
@@ -65,18 +65,18 @@ bool MonoScriptCompiler::visit(LSLScript *node) {
   }
 
   // now look at the event handlers
-  node->getStates()->visit(this);
+  script->getStates()->visit(this);
 
   mCIL << "}\n";
 
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLGlobalVariable *node) {
+bool MonoScriptCompiler::visit(LSLGlobalVariable *glob_var) {
   // push a reference to `this` for the later stfld
   mCIL << "ldarg.0\n";
-  auto *sym = node->getSymbol();
-  if (auto *initializer = node->getInitializer()) {
+  auto *sym = glob_var->getSymbol();
+  if (auto *initializer = glob_var->getInitializer()) {
     initializer->visit(this);
   } else {
     pushConstant(sym->getType()->getDefaultValue());
@@ -318,27 +318,27 @@ std::string MonoScriptCompiler::getLValueAccessorSpecifier(LSLLValueExpression *
 
 
 
-bool MonoScriptCompiler::visit(LSLEventHandler *node) {
+bool MonoScriptCompiler::visit(LSLEventHandler *handler) {
   // Need a reference to the state this belongs to for conformant name mangling
   // We're parented to a node list which is parented to the state.
-  auto *state_sym = node->getParent()->getParent()->getSymbol();
-  mCIL << ".method public hidebysig instance default void e" << state_sym->getName() << CIL_HANDLER_NAMES[node->getSymbol()->getName()];
+  auto *state_sym = handler->getParent()->getParent()->getSymbol();
+  mCIL << ".method public hidebysig instance default void e" << state_sym->getName() << CIL_HANDLER_NAMES[handler->getSymbol()->getName()];
   // parameter list will be handled by `buildFunction()`
-  buildFunction(node);
+  buildFunction(handler);
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLGlobalFunction *node) {
-  auto *node_sym = node->getSymbol();
-  mCIL << ".method public hidebysig instance default " << CIL_TYPE_NAMES[node->getIdentifier()->getIType()]
+bool MonoScriptCompiler::visit(LSLGlobalFunction *glob_func) {
+  auto *node_sym = glob_func->getSymbol();
+  mCIL << ".method public hidebysig instance default " << CIL_TYPE_NAMES[glob_func->getIdentifier()->getIType()]
        << " 'g" << node_sym->getName() << "'";
-  buildFunction(node);
+  buildFunction(glob_func);
   return false;
 }
 
-void MonoScriptCompiler::buildFunction(LSLASTNode *node) {
+void MonoScriptCompiler::buildFunction(LSLASTNode *func) {
   // write out the parameter list
-  auto *func_sym = node->getSymbol();
+  auto *func_sym = func->getSymbol();
   auto *func_decl = func_sym->getFunctionDecl();
   mCIL << "(";
   for (auto *func_param : *func_decl) {
@@ -359,8 +359,8 @@ void MonoScriptCompiler::buildFunction(LSLASTNode *node) {
   }
   if (!locals_string.empty())
     mCIL << ".locals init (" << locals_string << ")\n";
-  _mCurrentFuncSym = node->getSymbol();
-  visitChildren(node);
+  _mCurrentFuncSym = func->getSymbol();
+  visitChildren(func);
   _mCurrentFuncSym = nullptr;
   if (!func_sym->getAllPathsReturn())
     mCIL << "ret\n";
@@ -369,9 +369,9 @@ void MonoScriptCompiler::buildFunction(LSLASTNode *node) {
 
 
 
-bool MonoScriptCompiler::visit(LSLDeclaration *node) {
-  auto *sym = node->getSymbol();
-  if (auto *initializer = node->getInitializer()) {
+bool MonoScriptCompiler::visit(LSLDeclaration *decl_stmt) {
+  auto *sym = decl_stmt->getSymbol();
+  if (auto *initializer = decl_stmt->getInitializer()) {
     initializer->visit(this);
   } else {
     pushConstant(sym->getType()->getDefaultValue());
@@ -380,45 +380,45 @@ bool MonoScriptCompiler::visit(LSLDeclaration *node) {
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLExpressionStatement* node) {
-  auto *expr = node->getExpr();
+bool MonoScriptCompiler::visit(LSLExpressionStatement*expr_stmt) {
+  auto *expr = expr_stmt->getExpr();
   expr->visit(this);
   if (expr->getIType())
     mCIL << "pop\n";
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLReturnStatement* node) {
-  if (auto *expr = node->getExpr())
+bool MonoScriptCompiler::visit(LSLReturnStatement*ret_stmt) {
+  if (auto *expr = ret_stmt->getExpr())
     expr->visit(this);
   mCIL << "ret\n";
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLLabel* node) {
+bool MonoScriptCompiler::visit(LSLLabel*label_stmt) {
   // TODO: right now this roughly matches LL's behavior, but label names
   //  should be mangled to prevent collisions.
-  mCIL << "'ul" << node->getSymbol()->getName() << "':\n";
+  mCIL << "'ul" << label_stmt->getSymbol()->getName() << "':\n";
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLJumpStatement* node) {
+bool MonoScriptCompiler::visit(LSLJumpStatement*jump_stmt) {
   // TODO: right now this roughly matches LL's behavior, but label names
   //  should be mangled to prevent collisions.
-  mCIL << "br 'ul" << node->getSymbol()->getName() << "'\n";
+  mCIL << "br 'ul" << jump_stmt->getSymbol()->getName() << "'\n";
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLIfStatement* node) {
+bool MonoScriptCompiler::visit(LSLIfStatement*if_stmt) {
   auto jump_past_true_num = _mJumpNum++;
   uint32_t jump_past_false_num = 0;
-  auto *false_node = node->getFalseBranch();
+  auto *false_node = if_stmt->getFalseBranch();
   if (false_node)
     jump_past_false_num = _mJumpNum++;
 
-  node->getCheckExpr()->visit(this);
+  if_stmt->getCheckExpr()->visit(this);
   mCIL << "brfalse LabelTempJump" << jump_past_true_num << "\n";
-  node->getTrueBranch()->visit(this);
+  if_stmt->getTrueBranch()->visit(this);
   if (false_node) {
     mCIL << "br LabelTempJump" << jump_past_false_num << "\n";
     mCIL << "LabelTempJump" << jump_past_true_num << ":\n";
@@ -430,9 +430,9 @@ bool MonoScriptCompiler::visit(LSLIfStatement* node) {
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLForStatement* node) {
+bool MonoScriptCompiler::visit(LSLForStatement*for_stmt) {
   // execute instructions to initialize vars
-  for(auto *init_expr : *node->getInitExprs()) {
+  for(auto *init_expr : *for_stmt->getInitExprs()) {
     init_expr->visit(this);
     if (init_expr->getIType() != LST_NULL)
       mCIL << "pop\n";
@@ -441,12 +441,12 @@ bool MonoScriptCompiler::visit(LSLForStatement* node) {
   auto jump_to_end_num = _mJumpNum++;
   mCIL << "LabelTempJump" << jump_to_start_num << ":\n";
   // run the check expression, exiting the loop if it fails
-  node->getCheckExpr()->visit(this);
+  for_stmt->getCheckExpr()->visit(this);
   mCIL << "brfalse LabelTempJump" << jump_to_end_num << "\n";
   // run the body of the loop
-  node->getBody()->visit(this);
+  for_stmt->getBody()->visit(this);
   // run the increment expressions
-  for(auto *incr_expr : *node->getIncrExprs()) {
+  for(auto *incr_expr : *for_stmt->getIncrExprs()) {
     incr_expr->visit(this);
     if (incr_expr->getIType() != LST_NULL)
       mCIL << "pop\n";
@@ -457,35 +457,35 @@ bool MonoScriptCompiler::visit(LSLForStatement* node) {
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLWhileStatement* node) {
+bool MonoScriptCompiler::visit(LSLWhileStatement*while_stmt) {
   auto jump_to_start_num = _mJumpNum++;
   auto jump_to_end_num = _mJumpNum++;
   mCIL << "LabelTempJump" << jump_to_start_num << ":\n";
   // run the check expression, exiting the loop if it fails
-  node->getCheckExpr()->visit(this);
+  while_stmt->getCheckExpr()->visit(this);
   mCIL << "brfalse LabelTempJump" << jump_to_end_num << "\n";
   // run the body of the loop
-  node->getBody()->visit(this);
+  while_stmt->getBody()->visit(this);
   // jump back up to the check expression at the top
   mCIL << "br LabelTempJump" << jump_to_start_num << "\n";
   mCIL << "LabelTempJump" << jump_to_end_num << ":\n";
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLDoStatement* node) {
+bool MonoScriptCompiler::visit(LSLDoStatement*do_stmt) {
   auto jump_to_start_num = _mJumpNum++;
   mCIL << "LabelTempJump" << jump_to_start_num << ":\n";
   // run the body of the loop
-  node->getBody()->visit(this);
+  do_stmt->getBody()->visit(this);
   // run the check expression, jumping back up if it succeeds
-  node->getCheckExpr()->visit(this);
+  do_stmt->getCheckExpr()->visit(this);
   mCIL << "brtrue LabelTempJump" << jump_to_start_num << "\n";
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLStateStatement *node) {
+bool MonoScriptCompiler::visit(LSLStateStatement *state_stmt) {
   mCIL << "ldarg.0\n"
-       << "ldstr \"" << escape_string(node->getSymbol()->getName()) << "\"\n"
+       << "ldstr \"" << escape_string(state_stmt->getSymbol()->getName()) << "\"\n"
        << "call instance void " << CIL_USERSCRIPT_CLASS << "::ChangeState(string)\n";
   pushConstant(_mCurrentFuncSym->getType()->getDefaultValue());
   mCIL << "ret\n";
@@ -494,21 +494,21 @@ bool MonoScriptCompiler::visit(LSLStateStatement *node) {
 
 
 
-bool MonoScriptCompiler::visit(LSLConstantExpression *node) {
-  pushConstant(node->getConstantValue());
+bool MonoScriptCompiler::visit(LSLConstantExpression *constant_expr) {
+  pushConstant(constant_expr->getConstantValue());
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLTypecastExpression *node) {
-  auto *child_expr = node->getChildExpr();
+bool MonoScriptCompiler::visit(LSLTypecastExpression *cast_expr) {
+  auto *child_expr = cast_expr->getChildExpr();
   assert(child_expr);
   child_expr->visit(this);
-  castTopOfStack(child_expr->getIType(), node->getIType());
+  castTopOfStack(child_expr->getIType(), cast_expr->getIType());
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLBoolConversionExpression *node) {
-  auto *child_expr = node->getChildExpr();
+bool MonoScriptCompiler::visit(LSLBoolConversionExpression *bool_expr) {
+  auto *child_expr = bool_expr->getChildExpr();
   auto type = child_expr->getIType();
   child_expr->visit(this);
   switch(type) {
@@ -551,65 +551,65 @@ bool MonoScriptCompiler::visit(LSLBoolConversionExpression *node) {
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLVectorExpression *node) {
-  visitChildren(node);
+bool MonoScriptCompiler::visit(LSLVectorExpression *vec_expr) {
+  visitChildren(vec_expr);
   mCIL << "call " << CIL_TYPE_NAMES[LST_VECTOR] << " " << CIL_USERSCRIPT_CLASS << "::'CreateVector'(float32, float32, float32)\n";
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLQuaternionExpression *node) {
-  visitChildren(node);
+bool MonoScriptCompiler::visit(LSLQuaternionExpression *quat_expr) {
+  visitChildren(quat_expr);
   mCIL << "call " << CIL_TYPE_NAMES[LST_QUATERNION] << " " << CIL_USERSCRIPT_CLASS << "::'CreateQuaternion'(float32, float32, float32, float32)\n";
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLLValueExpression *node) {
-  pushLValue(node);
+bool MonoScriptCompiler::visit(LSLLValueExpression *lvalue) {
+  pushLValue(lvalue);
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLListExpression *node) {
+bool MonoScriptCompiler::visit(LSLListExpression *list_expr) {
   // LL's compiler pushes lists in a different order in globexprs for some reason,
   // maybe something about order of evaluation being important there.
   // match their behavior so it's less annoying to compare output.
   if (_mInGlobalExpr) {
     mCIL << CIL_LIST_INITIALIZER << "\n";
-    for (auto child : *node) {
+    for (auto child : *list_expr) {
       child->visit(this);
       mCIL << CIL_BOXING_INSTRUCTIONS[child->getIType()]
            << "call " << CIL_TYPE_NAMES[LST_LIST] << " " << CIL_USERSCRIPT_CLASS << "::Append(" << CIL_TYPE_NAMES[LST_LIST] << ", object)\n";
     }
   } else {
     // list elements get evaluated and pushed FIRST
-    for (auto *child : *node) {
+    for (auto *child : *list_expr) {
       child->visit(this);
       mCIL << CIL_BOXING_INSTRUCTIONS[child->getIType()];
     }
     // then they get added to the list
     mCIL << CIL_LIST_INITIALIZER << "\n";
-    for (auto *child : *node) {
+    for (auto *child : *list_expr) {
       mCIL << "call " << CIL_TYPE_NAMES[LST_LIST] << " " << CIL_USERSCRIPT_CLASS << "::Prepend(object, " << CIL_TYPE_NAMES[LST_LIST] << ")\n";
     }
   }
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLFunctionExpression *node) {
-  auto *func_sym = node->getSymbol();
+bool MonoScriptCompiler::visit(LSLFunctionExpression *func_expr) {
+  auto *func_sym = func_expr->getSymbol();
   // this will be a method on the script instance, push `this` onto the stack
   if (func_sym->getSubType() != SYM_BUILTIN)
     mCIL << "ldarg.0\n";
 
   // push the arguments onto the stack
-  for (auto *child_expr : *node->getArguments()) {
+  for (auto *child_expr : *func_expr->getArguments()) {
     child_expr->visit(this);
   }
 
   if (func_sym->getSubType() == SYM_BUILTIN) {
-    mCIL << "call " << CIL_TYPE_NAMES[node->getIType()] << " "
+    mCIL << "call " << CIL_TYPE_NAMES[func_expr->getIType()] << " "
          << CIL_LSL_LIBRARY_CLASS << "::'" << func_sym->getName() << "'";
   } else {
-    mCIL << "call instance " << CIL_TYPE_NAMES[node->getIType()] << " class "
+    mCIL << "call instance " << CIL_TYPE_NAMES[func_expr->getIType()] << " class "
          << _mScriptClassName + "::'g" + func_sym->getName() + "'";
   }
 
@@ -684,10 +684,10 @@ const std::map<int, std::pair<const char *, std::vector<SimpleBinaryOperationInf
     }}},
 };
 
-bool MonoScriptCompiler::visit(LSLBinaryExpression *node) {
-  LSLOperator op = node->getOperation();
-  auto *left = node->getLHS();
-  auto *right = node->getRHS();
+bool MonoScriptCompiler::visit(LSLBinaryExpression *bin_expr) {
+  LSLOperator op = bin_expr->getOperation();
+  auto *left = bin_expr->getLHS();
+  auto *right = bin_expr->getRHS();
 
   if (op == '=') {
     // we're going to store, so we may need a reference to `this` on top of the stack
@@ -717,7 +717,7 @@ bool MonoScriptCompiler::visit(LSLBinaryExpression *node) {
     return false;
   }
 
-  compileBinaryExpression(op, left, right, node->getIType());
+  compileBinaryExpression(op, left, right, bin_expr->getIType());
   return false;
 }
 
@@ -902,9 +902,9 @@ void MonoScriptCompiler::compileBinaryExpression(LSLOperator op, LSLExpression *
   assert(0);
 }
 
-bool MonoScriptCompiler::visit(LSLUnaryExpression *node) {
-  auto *child_expr = node->getChildExpr();
-  LSLOperator op = node->getOperation();
+bool MonoScriptCompiler::visit(LSLUnaryExpression *unary_expr) {
+  auto *child_expr = unary_expr->getChildExpr();
+  LSLOperator op = unary_expr->getOperation();
 
   if (op == OP_POST_DECR || op == OP_POST_INCR) {
     // We need to keep the original value of the expression on the stack.
@@ -976,8 +976,8 @@ bool MonoScriptCompiler::visit(LSLUnaryExpression *node) {
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLPrintExpression *node) {
-  auto *child_expr = node->getChildExpr();
+bool MonoScriptCompiler::visit(LSLPrintExpression *print_expr) {
+  auto *child_expr = print_expr->getChildExpr();
   child_expr->visit(this);
   // TOOD: void expressions????
   castTopOfStack(child_expr->getIType(), LST_STRING);

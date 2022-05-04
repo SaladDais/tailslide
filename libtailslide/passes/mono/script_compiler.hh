@@ -14,8 +14,8 @@ class MonoScriptCompiler : public ASTVisitor {
     explicit MonoScriptCompiler(ScriptAllocator *allocator) : _mAllocator(allocator) {};
     std::stringstream mCIL {};
   protected:
-    virtual bool visit(LSLScript *node);
-    virtual bool visit(LSLGlobalVariable *node);
+    virtual bool visit(LSLScript *script);
+    virtual bool visit(LSLGlobalVariable *glob_var);
 
     void pushLValueContainer(LSLLValueExpression *lvalue);
     void pushLValue(LSLLValueExpression *lvalue);
@@ -26,33 +26,33 @@ class MonoScriptCompiler : public ASTVisitor {
     std::string getGlobalVarSpecifier(LSLSymbol *sym);
     std::string getLValueAccessorSpecifier(LSLLValueExpression *lvalue);
 
-    virtual bool visit(LSLEventHandler *node);
-    virtual bool visit(LSLGlobalFunction *node);
-    void buildFunction(LSLASTNode *node);
+    virtual bool visit(LSLEventHandler *handler);
+    virtual bool visit(LSLGlobalFunction *glob_func);
+    void buildFunction(LSLASTNode *func);
 
-    virtual bool visit(LSLExpressionStatement *node);
-    virtual bool visit(LSLReturnStatement *node);
-    virtual bool visit(LSLLabel *node);
-    virtual bool visit(LSLJumpStatement *node);
-    virtual bool visit(LSLDeclaration *node);
-    virtual bool visit(LSLIfStatement *node);
-    virtual bool visit(LSLForStatement *node);
-    virtual bool visit(LSLWhileStatement *node);
-    virtual bool visit(LSLDoStatement *node);
-    virtual bool visit(LSLStateStatement *node);
+    virtual bool visit(LSLExpressionStatement *expr_stmt);
+    virtual bool visit(LSLReturnStatement *ret_stmt);
+    virtual bool visit(LSLLabel *label_stmt);
+    virtual bool visit(LSLJumpStatement *jump_stmt);
+    virtual bool visit(LSLDeclaration *decl_stmt);
+    virtual bool visit(LSLIfStatement *if_stmt);
+    virtual bool visit(LSLForStatement *for_stmt);
+    virtual bool visit(LSLWhileStatement *while_stmt);
+    virtual bool visit(LSLDoStatement *do_stmt);
+    virtual bool visit(LSLStateStatement *state_stmt);
 
-    virtual bool visit(LSLConstantExpression *node);
-    virtual bool visit(LSLTypecastExpression *node);
-    virtual bool visit(LSLBoolConversionExpression *node);
-    virtual bool visit(LSLVectorExpression *node);
-    virtual bool visit(LSLQuaternionExpression *node);
-    virtual bool visit(LSLLValueExpression *node);
-    virtual bool visit(LSLListExpression *node);
-    virtual bool visit(LSLFunctionExpression *node);
-    virtual bool visit(LSLBinaryExpression *node);
+    virtual bool visit(LSLConstantExpression *constant_expr);
+    virtual bool visit(LSLTypecastExpression *cast_expr);
+    virtual bool visit(LSLBoolConversionExpression *bool_expr);
+    virtual bool visit(LSLVectorExpression *vec_expr);
+    virtual bool visit(LSLQuaternionExpression *quat_expr);
+    virtual bool visit(LSLLValueExpression *lvalue);
+    virtual bool visit(LSLListExpression *list_expr);
+    virtual bool visit(LSLFunctionExpression *func_expr);
+    virtual bool visit(LSLBinaryExpression *bin_expr);
     void compileBinaryExpression(LSLOperator op, LSLExpression *left, LSLExpression *right, LSLIType ret_type);
-    virtual bool visit(LSLUnaryExpression *node);
-    virtual bool visit(LSLPrintExpression *node);
+    virtual bool visit(LSLUnaryExpression *unary_expr);
+    virtual bool visit(LSLPrintExpression *print_expr);
 
     ScriptAllocator *_mAllocator;
     MonoSymbolDataMap _mSymData {};
