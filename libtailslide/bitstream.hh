@@ -288,7 +288,7 @@ class BitStream {
       }
 
       // need special endian swapping logic if this is an integral larger than a byte
-      if constexpr ((std::is_arithmetic_v<T> || std::is_enum_v<T>) && sizeof(T) > 1) {
+      if constexpr ((std::is_arithmetic<T>::value || std::is_enum<T>::value) && sizeof(T) > 1) {
         // Store data reinterpreted as an integral type of the appropriate size and byte-swap,
         // should optimize to a bswap instruction for the given integer width.
         SameSizedUInt<T> val = reinterpret_cast<const SameSizedUInt<T> &>(data);
@@ -317,7 +317,7 @@ class BitStream {
       }
 
       // need special endian-swapping logic if this is an integral larger than a byte
-      if constexpr ((std::is_arithmetic_v<T> || std::is_enum_v<T>) && sizeof(T) > 1) {
+      if constexpr ((std::is_arithmetic<T>::value || std::is_enum<T>::value) && sizeof(T) > 1) {
         // reinterpret as an integral type of the appropriate size and byte-swap
         // should optimize to a bswap instruction for the given integer width
         auto *val = reinterpret_cast<SameSizedUInt<T> *>(&_mData[_mPos]);
