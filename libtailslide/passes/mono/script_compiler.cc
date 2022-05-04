@@ -764,9 +764,11 @@ void MonoScriptCompiler::compileBinaryExpression(LSLOperator op, LSLExpression *
       switch (left_type) {
         case LST_INTEGER:
         case LST_FLOATINGPOINT:
-          mCIL << "add\n"; return;
+          mCIL << "add\n";
+          return;
         default:
           assert(0);
+          return;
       }
     }
     case '-': {
@@ -774,9 +776,11 @@ void MonoScriptCompiler::compileBinaryExpression(LSLOperator op, LSLExpression *
       left->visit(this);
       switch (left_type) {
         case LST_FLOATINGPOINT:
-          mCIL << "call float64 " << CIL_USERSCRIPT_CLASS << "::'Subtract'(float64, float64)\n"; return;
+          mCIL << "call float64 " << CIL_USERSCRIPT_CLASS << "::'Subtract'(float64, float64)\n";
+          return;
         default:
           assert(0);
+          return;
       }
     }
     case '*': {
@@ -785,9 +789,11 @@ void MonoScriptCompiler::compileBinaryExpression(LSLOperator op, LSLExpression *
       switch (left_type) {
         case LST_INTEGER:
         case LST_FLOATINGPOINT:
-          mCIL << "mul\n"; return;
+          mCIL << "mul\n";
+          return;
         default:
           assert(0);
+          return;
       }
     }
     case '/': {
@@ -795,9 +801,11 @@ void MonoScriptCompiler::compileBinaryExpression(LSLOperator op, LSLExpression *
       left->visit(this);
       switch (left_type) {
         case LST_FLOATINGPOINT:
-          mCIL << "call float64 " << CIL_USERSCRIPT_CLASS << "::'Divide'(float64, float64)\n"; return;
+          mCIL << "call float64 " << CIL_USERSCRIPT_CLASS << "::'Divide'(float64, float64)\n";
+          return;
         default:
           assert(0);
+          return;
       }
     }
     case OP_EQ: {
@@ -806,7 +814,8 @@ void MonoScriptCompiler::compileBinaryExpression(LSLOperator op, LSLExpression *
       switch (right_type) {
         case LST_INTEGER:
         case LST_FLOATINGPOINT:
-          mCIL << "ceq\n"; return;
+          mCIL << "ceq\n";
+          return;
         case LST_STRING:
           // note the key == string and string == key asymmetry here...
           // left is top of stack, so convert left to a string if it isn't one already
@@ -820,6 +829,7 @@ void MonoScriptCompiler::compileBinaryExpression(LSLOperator op, LSLExpression *
           return;
         default:
           assert(0);
+          return;
       }
     }
     case OP_NEQ:
@@ -962,6 +972,7 @@ bool MonoScriptCompiler::visit(LSLUnaryExpression *unary_expr) {
           return false;
         default:
           assert(0);
+          return false;
       }
     case '!': {
       mCIL << "ldc.i4.0\n"
@@ -974,6 +985,7 @@ bool MonoScriptCompiler::visit(LSLUnaryExpression *unary_expr) {
     }
     default:
       assert(0);
+      return false;
   }
   assert(0);
   return false;
