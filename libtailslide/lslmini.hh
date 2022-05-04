@@ -51,10 +51,10 @@ struct Vector3 {
     Vector3(): Vector3(0, 0, 0) {};
     float x, y, z;
 
-    bool operator==(const class Vector3 &other) const {
+    bool operator==(const struct Vector3 &other) const {
       return (x == other.x) && (y == other.y) && (z == other.z);
     };
-    bool operator!=(const class Vector3 &other) const {
+    bool operator!=(const struct Vector3 &other) const {
       return !(*this == other);
     };
 };
@@ -64,10 +64,10 @@ struct Quaternion {
     Quaternion(): Quaternion(0, 0, 0, 1) {};
     float x, y, z, s;
 
-    bool operator==(const class Quaternion &other) const {
+    bool operator==(const struct Quaternion &other) const {
       return (x == other.x) && (y == other.y) && (z == other.z) && (s == other.s);
     };
-    bool operator!=(const class Quaternion &other) const {
+    bool operator!=(const struct Quaternion &other) const {
       return !(*this == other);
     };
 };
