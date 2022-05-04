@@ -71,7 +71,7 @@ public:
     // replace all addition with a stringified version of the addition expression
     auto new_expr = allocator->newTracked<LSLFunctionExpression>(
         allocator->newTracked<LSLIdentifier>(LSLType::get(LST_INTEGER), "whatever"),
-        allocator->newTracked<LSLASTNodeList>(
+        allocator->newTracked<LSLASTNodeList<LSLExpression>>(
           allocator->newTracked<LSLConstantExpression>(
             allocator->newTracked<LSLStringConstant>(new_str)
           )

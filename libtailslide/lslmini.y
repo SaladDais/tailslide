@@ -59,26 +59,6 @@
 
 %code requires {
 #include "loctype.hh"
-
-    namespace Tailslide {
-        typedef int   S32;
-        typedef float F32;
-        class LSLType;
-        class LSLConstant;
-        class LSLIdentifier;
-        class LSLGlobalVariable;
-        class LSLEvent;
-        class LSLEventHandler;
-        class LSLExpression;
-        class LSLStatement;
-        class LSLGlobalFunction;
-        class LSLFunctionDec;
-        class LSLEventDec;
-        class LSLASTNodeList;
-        class LSLASTNode;
-        class LSLState;
-        class LSLScript;
-    }
 }
 
 %union
@@ -90,13 +70,12 @@
     class Tailslide::LSLConstant          *constant;
     class Tailslide::LSLIdentifier        *identifier;
     class Tailslide::LSLGlobalVariable    *global;
-    class Tailslide::LSLEvent             *event;
     class Tailslide::LSLEventHandler      *handler;
     class Tailslide::LSLExpression        *expression;
     class Tailslide::LSLStatement         *statement;
     class Tailslide::LSLGlobalFunction    *global_funcs;
     class Tailslide::LSLASTNode           *global_store;
-    class Tailslide::LSLASTNodeList       *node_list;
+    class Tailslide::LSLASTNodeList<Tailslide::LSLASTNode> *node_list;
     class Tailslide::LSLState             *state;
     class Tailslide::LSLScript            *script;
 };
@@ -250,15 +229,15 @@ lscript_program
     : globals states
     {
         tailslide_get_extra(scanner)->script = ALLOCATOR->newTracked<LSLScript>(
-            ALLOCATOR->newTracked<LSLASTNodeList>($1),
-            ALLOCATOR->newTracked<LSLASTNodeList>($2)
+            ALLOCATOR->newTracked<LSLASTNodeList<LSLASTNode>>($1),
+            ALLOCATOR->newTracked<LSLASTNodeList<LSLASTNode>>($2)
         );
     }
     | states
     {
         tailslide_get_extra(scanner)->script = ALLOCATOR->newTracked<LSLScript>(
-            ALLOCATOR->newTracked<LSLASTNodeList>(),
-            ALLOCATOR->newTracked<LSLASTNodeList>($1)
+            ALLOCATOR->newTracked<LSLASTNodeList<LSLASTNode>>(),
+            ALLOCATOR->newTracked<LSLASTNodeList<LSLASTNode>>($1)
         );
     }
     ;
@@ -491,7 +470,7 @@ default
     {
         $$ = ALLOCATOR->newTracked<LSLState>(
             MAKEID(LST_NULL, $1, @1),
-            ALLOCATOR->newTracked<LSLASTNodeList>($3)
+            ALLOCATOR->newTracked<LSLASTNodeList<LSLEventHandler>>($3)
         );
     }
     | STATE_DEFAULT '{' '}'
@@ -499,7 +478,7 @@ default
         tailslide_get_extra(scanner)->logger->error( &@1, E_NO_EVENT_HANDLERS );
         $$ = ALLOCATOR->newTracked<LSLState>(
             MAKEID(LST_NULL, $1, @1),
-            ALLOCATOR->newTracked<LSLASTNodeList>(nullptr)
+            ALLOCATOR->newTracked<LSLASTNodeList<LSLEventHandler>>(nullptr)
         );
     }
     ;
@@ -509,7 +488,7 @@ state
     {
         $$ = ALLOCATOR->newTracked<LSLState>(
             MAKEID(LST_NULL, $2, @2),
-            ALLOCATOR->newTracked<LSLASTNodeList>($4)
+            ALLOCATOR->newTracked<LSLASTNodeList<LSLEventHandler>>($4)
         );
     }
     | STATE IDENTIFIER '{' '}'
@@ -517,7 +496,7 @@ state
         tailslide_get_extra(scanner)->logger->error( &@1, E_NO_EVENT_HANDLERS );
         $$ = ALLOCATOR->newTracked<LSLState>(
             MAKEID(LST_NULL, $2, @2),
-            ALLOCATOR->newTracked<LSLASTNodeList>(nullptr)
+            ALLOCATOR->newTracked<LSLASTNodeList<LSLEventHandler>>(nullptr)
         );
     }
     ;
@@ -647,9 +626,9 @@ statement
     | FOR '(' forexpressionlist ';' expression ';' forexpressionlist ')' statement
     {
         $$ = ALLOCATOR->newTracked<LSLForStatement>(
-            ALLOCATOR->newTracked<LSLASTNodeList>($3),
+            ALLOCATOR->newTracked<LSLASTNodeList<LSLExpression>>($3),
             $5,
-            ALLOCATOR->newTracked<LSLASTNodeList>($7),
+            ALLOCATOR->newTracked<LSLASTNodeList<LSLExpression>>($7),
             $9
         );
         $9->setDeclarationAllowed(false);
@@ -964,7 +943,7 @@ unarypostfixexpression
     {
         $$ = ALLOCATOR->newTracked<LSLFunctionExpression>(
             ALLOCATOR->newTracked<LSLIdentifier>($1),
-            ALLOCATOR->newTracked<LSLASTNodeList>($3)
+            ALLOCATOR->newTracked<LSLASTNodeList<LSLExpression>>($3)
         );
     }
     | PRINT '(' expression ')'

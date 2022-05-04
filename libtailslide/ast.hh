@@ -291,10 +291,14 @@ class LSLASTNullNode : public LSLASTNode {
     virtual LSLNodeType getNodeType() { return NODE_NULL; };
 };
 
+
+template<class T>
 class LSLASTNodeList : public LSLASTNode {
   public:
-    explicit LSLASTNodeList(ScriptContext *ctx) : LSLASTNode(ctx, 0) {};
-    LSLASTNodeList(ScriptContext *ctx, class LSLASTNode *nodes ) : LSLASTNode(ctx, 0) {
+    explicit LSLASTNodeList<T>(ScriptContext *ctx) : LSLASTNode(ctx, 0) {
+      static_assert(std::is_base_of<LSLASTNode, T>::value, "T Must derive from LSLASTNode!");
+    };
+    LSLASTNodeList<T>(ScriptContext *ctx, class LSLASTNode *nodes ) : LSLASTNodeList(ctx) {
       if (nodes)
         pushChild(nodes);
     };
