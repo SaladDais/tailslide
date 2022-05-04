@@ -24,7 +24,7 @@ ldarg.0
 ldc.i4.0
 stfld int32 LSL_00000000_0000_0000_0000_000000000000::'gTestsFailed'
 ldarg.0
-ldc.i4 5
+ldc.i4.5
 stfld int32 LSL_00000000_0000_0000_0000_000000000000::'gInteger'
 ldarg.0
 ldc.r8 (00 00 00 00 00 00 f8 3f)
@@ -35,20 +35,20 @@ stfld string LSL_00000000_0000_0000_0000_000000000000::'gString'
 ldarg.0
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 stfld class [ScriptTypes]LindenLab.SecondLife.Vector LSL_00000000_0000_0000_0000_000000000000::'gVector'
 ldarg.0
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 4
+ldc.i4.4
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 stfld class [ScriptTypes]LindenLab.SecondLife.Quaternion LSL_00000000_0000_0000_0000_000000000000::'gRot'
@@ -57,10 +57,10 @@ call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab
 ldc.i4.1
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Append(class [mscorlib]System.Collections.ArrayList, object)
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Append(class [mscorlib]System.Collections.ArrayList, object)
-ldc.i4 3
+ldc.i4.3
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Append(class [mscorlib]System.Collections.ArrayList, object)
 stfld class [mscorlib]System.Collections.ArrayList LSL_00000000_0000_0000_0000_000000000000::'gList'
@@ -469,9 +469,9 @@ ret
 .maxstack 500
 ldc.i4.1
 box [mscorlib]System.Int32
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
-ldc.i4 3
+ldc.i4.3
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -484,9 +484,9 @@ ret
 .maxstack 500
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 ret
@@ -496,11 +496,11 @@ ret
 .maxstack 500
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 4
+ldc.i4.4
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 ret
@@ -521,9 +521,9 @@ call float32 class [LslLibrary]LindenLab.SecondLife.Library::'llSin'(float32)
 pop
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 ret
@@ -537,11 +537,11 @@ call float32 class [LslLibrary]LindenLab.SecondLife.Library::'llSin'(float32)
 pop
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 4
+ldc.i4.4
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 ret
@@ -903,7 +903,7 @@ ldc.i4.0
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "(1 && 2)"
-ldc.i4 2
+ldc.i4.2
 ldc.i4.0
 ceq
 ldc.i4.1
@@ -929,7 +929,7 @@ ldc.i4.0
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "(0 && 2)"
-ldc.i4 2
+ldc.i4.2
 ldc.i4.0
 ceq
 ldc.i4.0
@@ -999,7 +999,7 @@ ldc.i4.0
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "(1 || 2)"
-ldc.i4 2
+ldc.i4.2
 ldc.i4.1
 or
 ldc.i4.0
@@ -1021,7 +1021,7 @@ ldc.i4.1
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "(0 || 2)"
-ldc.i4 2
+ldc.i4.2
 ldc.i4.0
 or
 ldc.i4.0
@@ -1057,7 +1057,7 @@ ldc.i4.1
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "(! 2)"
-ldc.i4 2
+ldc.i4.2
 ldc.i4.0
 ceq
 ldc.i4.0
@@ -1167,42 +1167,42 @@ ldc.i4.1
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "(10 & 25)"
-ldc.i4 25
-ldc.i4 10
+ldc.i4.s 25
+ldc.i4.s 10
 and
-ldc.i4 8
+ldc.i4.8
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "(10 | 25)"
-ldc.i4 25
-ldc.i4 10
+ldc.i4.s 25
+ldc.i4.s 10
 or
-ldc.i4 27
+ldc.i4.s 27
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "~10"
-ldc.i4 10
+ldc.i4.s 10
 not
-ldc.i4 11
+ldc.i4.s 11
 neg
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "(10 ^ 25)"
-ldc.i4 25
-ldc.i4 10
+ldc.i4.s 25
+ldc.i4.s 10
 xor
-ldc.i4 19
+ldc.i4.s 19
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "(523 >> 2)"
-ldc.i4 2
+ldc.i4.2
 ldc.i4 523
 call int32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'ShiftRight'(int32, int32)
 ldc.i4 130
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "(523 << 2)"
-ldc.i4 2
+ldc.i4.2
 ldc.i4 523
 call int32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'ShiftLeft'(int32, int32)
 ldc.i4 2092
@@ -1212,7 +1212,7 @@ ldstr "(1 + 1)"
 ldc.i4.1
 ldc.i4.1
 add
-ldc.i4 2
+ldc.i4.2
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "(1 + 1.1)"
@@ -1281,7 +1281,7 @@ call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]Lin
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureRotationEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Quaternion, class [ScriptTypes]LindenLab.SecondLife.Quaternion)
 ldarg.0
 ldstr "([1] + 2)"
-ldc.i4 2
+ldc.i4.2
 ldc.i4.1
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
@@ -1289,7 +1289,7 @@ call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Append(int32, class [mscorlib]System.Collections.ArrayList)
 ldc.i4.1
 box [mscorlib]System.Int32
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -1322,18 +1322,18 @@ ldarg.0
 ldstr "([] + <1,2,3>)"
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Append(valuetype [ScriptTypes]LindenLab.SecondLife.Vector, class [mscorlib]System.Collections.ArrayList)
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 box [ScriptTypes]LindenLab.SecondLife.Vector
@@ -1344,22 +1344,22 @@ ldarg.0
 ldstr "([] + <1,2,3,4>)"
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 4
+ldc.i4.4
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Append(valuetype [ScriptTypes]LindenLab.SecondLife.Quaternion, class [mscorlib]System.Collections.ArrayList)
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 4
+ldc.i4.4
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 box [ScriptTypes]LindenLab.SecondLife.Quaternion
@@ -1368,7 +1368,7 @@ call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureListEqual'(string, class [mscorlib]System.Collections.ArrayList, class [mscorlib]System.Collections.ArrayList)
 ldarg.0
 ldstr "(1 + [2])"
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -1377,7 +1377,7 @@ box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(class [mscorlib]System.Collections.ArrayList, object)
 ldc.i4.1
 box [mscorlib]System.Int32
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -1385,7 +1385,7 @@ call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureListEqual'(string, class [mscorlib]System.Collections.ArrayList, class [mscorlib]System.Collections.ArrayList)
 ldarg.0
 ldstr "(1.0 + [2])"
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -1394,7 +1394,7 @@ box [mscorlib]System.Single
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(class [mscorlib]System.Collections.ArrayList, object)
 ldc.r8 (00 00 00 00 00 00 f0 3f)
 box [mscorlib]System.Single
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -1402,14 +1402,14 @@ call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureListEqual'(string, class [mscorlib]System.Collections.ArrayList, class [mscorlib]System.Collections.ArrayList)
 ldarg.0
 ldstr "(1 + [2])"
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
 ldstr "one"
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(class [mscorlib]System.Collections.ArrayList, object)
 ldstr "one"
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -1417,7 +1417,7 @@ call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureListEqual'(string, class [mscorlib]System.Collections.ArrayList, class [mscorlib]System.Collections.ArrayList)
 ldarg.0
 ldstr "(<1.0,1.0,1.0,1.0> + [2])"
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -1434,7 +1434,7 @@ ldc.r8 (00 00 00 00 00 00 f0 3f)
 ldc.r8 (00 00 00 00 00 00 f0 3f)
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 box [ScriptTypes]LindenLab.SecondLife.Quaternion
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -1442,7 +1442,7 @@ call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureListEqual'(string, class [mscorlib]System.Collections.ArrayList, class [mscorlib]System.Collections.ArrayList)
 ldarg.0
 ldstr "(<1.0,1.0,1.0> + [2])"
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -1457,7 +1457,7 @@ ldc.r8 (00 00 00 00 00 00 f0 3f)
 ldc.r8 (00 00 00 00 00 00 f0 3f)
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 box [ScriptTypes]LindenLab.SecondLife.Vector
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -1600,22 +1600,22 @@ call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]Lin
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureRotationEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Quaternion, class [ScriptTypes]LindenLab.SecondLife.Quaternion)
 ldarg.0
 ldstr "(2 * 3)"
-ldc.i4 3
-ldc.i4 2
+ldc.i4.3
+ldc.i4.2
 mul
-ldc.i4 6
+ldc.i4.6
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "(2 * 3.5)"
 ldc.r8 (00 00 00 00 00 00 0c 40)
-ldc.i4 2
+ldc.i4.2
 conv.r8
 mul
 ldc.r8 (00 00 00 00 00 00 1c 40)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureFloatEqual'(string, float32, float32)
 ldarg.0
 ldstr "(2.5 * 3)"
-ldc.i4 3
+ldc.i4.3
 conv.r8
 ldc.r8 (00 00 00 00 00 00 04 40)
 mul
@@ -1630,7 +1630,7 @@ ldc.r8 (00 00 00 00 00 80 21 40)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureFloatEqual'(string, float32, float32)
 ldarg.0
 ldstr "(<1.1, 2.2, 3.3> * 2)"
-ldc.i4 2
+ldc.i4.2
 conv.r8
 ldc.r8 (00 00 00 a0 99 99 f1 3f)
 ldc.r8 (00 00 00 a0 99 99 01 40)
@@ -1644,7 +1644,7 @@ call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenL
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureVectorEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Vector, class [ScriptTypes]LindenLab.SecondLife.Vector)
 ldarg.0
 ldstr "(2 * <1.1, 2.2, 3.3>)"
-ldc.i4 2
+ldc.i4.2
 conv.r8
 ldc.r8 (00 00 00 a0 99 99 f1 3f)
 ldc.r8 (00 00 00 a0 99 99 01 40)
@@ -1655,7 +1655,7 @@ ldc.r8 (00 00 00 a0 99 99 f1 3f)
 ldc.r8 (00 00 00 a0 99 99 01 40)
 ldc.r8 (00 00 00 60 66 66 0a 40)
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
-ldc.i4 2
+ldc.i4.2
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Multiply'(class [ScriptTypes]LindenLab.SecondLife.Vector, float32)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureVectorEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Vector, class [ScriptTypes]LindenLab.SecondLife.Vector)
@@ -1689,9 +1689,9 @@ call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenL
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureVectorEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Vector, class [ScriptTypes]LindenLab.SecondLife.Vector)
 ldarg.0
 ldstr "<1,3,-5> * <4,-2,-1>"
-ldc.i4 4
+ldc.i4.4
 conv.r8
-ldc.i4 2
+ldc.i4.2
 neg
 conv.r8
 ldc.i4.1
@@ -1700,9 +1700,9 @@ conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 ldc.i4.1
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 5
+ldc.i4.5
 neg
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
@@ -1758,14 +1758,14 @@ call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]Lin
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureRotationEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Quaternion, class [ScriptTypes]LindenLab.SecondLife.Quaternion)
 ldarg.0
 ldstr "(2 / 2)"
-ldc.i4 2
-ldc.i4 2
+ldc.i4.2
+ldc.i4.2
 call int32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Divide'(int32, int32)
 ldc.i4.1
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "(2.2 / 2)"
-ldc.i4 2
+ldc.i4.2
 conv.r8
 ldc.r8 (00 00 00 a0 99 99 01 40)
 call float64 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Divide'(float64, float64)
@@ -1774,7 +1774,7 @@ call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureFloat
 ldarg.0
 ldstr "(3 / 1.5)"
 ldc.r8 (00 00 00 00 00 00 f8 3f)
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call float64 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Divide'(float64, float64)
 ldc.r8 (00 00 00 00 00 00 00 40)
@@ -1788,7 +1788,7 @@ ldc.r8 (00 00 00 a0 99 99 f1 3f)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureFloatEqual'(string, float32, float32)
 ldarg.0
 ldstr "(<1.0, 2.0, 3.0> / 2)"
-ldc.i4 2
+ldc.i4.2
 conv.r8
 ldc.r8 (00 00 00 00 00 00 f0 3f)
 ldc.r8 (00 00 00 00 00 00 00 40)
@@ -1863,7 +1863,7 @@ call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureRotat
 ldarg.0
 ldstr "(3 % 1)"
 ldc.i4.1
-ldc.i4 3
+ldc.i4.3
 call int32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Modulo'(int32, int32)
 ldc.i4.0
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
@@ -1905,7 +1905,7 @@ pop
 ldarg.0
 ldstr "i = 1; i += 1;"
 ldloc.s 3
-ldc.i4 2
+ldc.i4.2
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldc.i4.1
 dup
@@ -1922,11 +1922,11 @@ ldstr "i = 1; i -= 1;"
 ldloc.s 3
 ldc.i4.0
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
-ldc.i4 2
+ldc.i4.2
 dup
 stloc.s 3
 pop
-ldc.i4 2
+ldc.i4.2
 ldloc.s 3
 mul
 dup
@@ -1935,7 +1935,7 @@ pop
 ldarg.0
 ldstr "i = 2; i *= 2;"
 ldloc.s 3
-ldc.i4 4
+ldc.i4.4
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldc.i4.1
 dup
@@ -1954,11 +1954,11 @@ ldstr "i = 1; i *= 0.5;"
 ldloc.s 3
 ldc.i4.0
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
-ldc.i4 2
+ldc.i4.2
 dup
 stloc.s 3
 pop
-ldc.i4 2
+ldc.i4.2
 ldloc.s 3
 call int32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Divide'(int32, int32)
 dup
@@ -1982,7 +1982,7 @@ ldloc.s 3
 ldc.i4 -2147483648
 neg
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
-ldc.i4 3
+ldc.i4.3
 dup
 stloc.s 3
 pop
@@ -2026,7 +2026,7 @@ pop
 ceq
 ldc.i4.0
 ceq
-ldc.i4 2
+ldc.i4.2
 ldloc.s 3
 ceq
 ldc.i4.0
@@ -2042,7 +2042,7 @@ stloc.s 3
 pop
 ldarg.0
 ldstr "preinc"
-ldc.i4 2
+ldc.i4.2
 ldloc.s 3
 ldc.i4.1
 add
@@ -2051,7 +2051,7 @@ stloc.s 3
 ceq
 ldc.i4.0
 ceq
-ldc.i4 2
+ldc.i4.2
 ldloc.s 3
 ceq
 ldc.i4.0
@@ -2061,13 +2061,13 @@ ldc.i4.0
 ceq
 ldc.i4.1
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
-ldc.i4 2
+ldc.i4.2
 dup
 stloc.s 3
 pop
 ldarg.0
 ldstr "postdec"
-ldc.i4 2
+ldc.i4.2
 ldloc.s 3
 ldloc.s 3
 ldc.i4.1
@@ -2088,7 +2088,7 @@ ldc.i4.0
 ceq
 ldc.i4.1
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
-ldc.i4 2
+ldc.i4.2
 dup
 stloc.s 3
 pop
@@ -2113,7 +2113,7 @@ ldc.i4.0
 ceq
 ldc.i4.1
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
-ldc.i4 2
+ldc.i4.2
 dup
 stloc.s 3
 pop
@@ -2130,13 +2130,13 @@ ldc.i4.1
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "((float)2)"
-ldc.i4 2
+ldc.i4.2
 conv.r8
 ldc.r8 (00 00 00 00 00 00 00 40)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureFloatEqual'(string, float32, float32)
 ldarg.0
 ldstr "((string)2)"
-ldc.i4 2
+ldc.i4.2
 call string class [mscorlib]System.Convert::ToString(int32)
 ldstr "2"
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureStringEqual'(string, string, string)
@@ -2156,13 +2156,13 @@ ldarg.0
 ldstr "((integer) \"0xF\")"
 ldstr "0xF"
 call int32 class [LslLibrary]LindenLab.SecondLife.LslRunTime::StringToInt(string)
-ldc.i4 15
+ldc.i4.s 15
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "((integer) \"2\")"
 ldstr "2"
 call int32 class [LslLibrary]LindenLab.SecondLife.LslRunTime::StringToInt(string)
-ldc.i4 2
+ldc.i4.2
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "((float) \"1.5\")"
@@ -2176,9 +2176,9 @@ ldstr "<1,2,3>"
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'ParseVector'(string)
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureVectorEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Vector, class [ScriptTypes]LindenLab.SecondLife.Vector)
@@ -2188,11 +2188,11 @@ ldstr "<1,2,3,4>"
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'ParseQuaternion'(string)
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 4
+ldc.i4.4
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureRotationEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Quaternion, class [ScriptTypes]LindenLab.SecondLife.Quaternion)
@@ -2200,9 +2200,9 @@ ldarg.0
 ldstr "((string) <1,2,3>)"
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 call string class [LslUserScript]LindenLab.SecondLife.LslUserScript::'ToString'(valuetype [ScriptTypes]LindenLab.SecondLife.Vector)
@@ -2212,11 +2212,11 @@ ldarg.0
 ldstr "((string) <1,2,3,4>)"
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 4
+ldc.i4.4
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 call string class [LslUserScript]LindenLab.SecondLife.LslUserScript::'ToString'(valuetype [ScriptTypes]LindenLab.SecondLife.Quaternion)
@@ -2230,9 +2230,9 @@ ldc.r8 (00 00 00 00 00 00 04 40)
 box [mscorlib]System.Single
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 box [ScriptTypes]LindenLab.SecondLife.Vector
@@ -2248,7 +2248,7 @@ dup
 stloc.s 3
 pop
 LabelTempJump37:
-ldc.i4 10
+ldc.i4.s 10
 ldloc.s 3
 cgt
 brfalse LabelTempJump38
@@ -2263,7 +2263,7 @@ LabelTempJump38:
 ldarg.0
 ldstr "i = 0; while(i < 10) ++i"
 ldloc.s 3
-ldc.i4 10
+ldc.i4.s 10
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldc.i4.0
 dup
@@ -2276,21 +2276,21 @@ add
 dup
 stloc.s 3
 pop
-ldc.i4 10
+ldc.i4.s 10
 ldloc.s 3
 cgt
 brtrue LabelTempJump39
 ldarg.0
 ldstr "i = 0; do {++i;} while(i < 10);"
 ldloc.s 3
-ldc.i4 10
+ldc.i4.s 10
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldc.i4.0
 dup
 stloc.s 3
 pop
 LabelTempJump40:
-ldc.i4 10
+ldc.i4.s 10
 ldloc.s 3
 cgt
 brfalse LabelTempJump41
@@ -2305,7 +2305,7 @@ LabelTempJump41:
 ldarg.0
 ldstr "for(i = 0; i < 10; ++i);"
 ldloc.s 3
-ldc.i4 10
+ldc.i4.s 10
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldc.i4.1
 dup
@@ -2323,7 +2323,7 @@ call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenL
 ldc.i4.1
 conv.r8
 call void class [LslLibrary]LindenLab.SecondLife.Library::'llSetText'(string, class [ScriptTypes]LindenLab.SecondLife.Vector, float32)
-ldc.i4 2
+ldc.i4.2
 dup
 stloc.s 3
 pop
@@ -2357,9 +2357,9 @@ ldarg.0
 call instance class [ScriptTypes]LindenLab.SecondLife.Vector class LSL_00000000_0000_0000_0000_000000000000::'gtestReturnVector'()
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureVectorEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Vector, class [ScriptTypes]LindenLab.SecondLife.Vector)
@@ -2369,11 +2369,11 @@ ldarg.0
 call instance class [ScriptTypes]LindenLab.SecondLife.Quaternion class LSL_00000000_0000_0000_0000_000000000000::'gtestReturnRotation'()
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 4
+ldc.i4.4
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureRotationEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Quaternion, class [ScriptTypes]LindenLab.SecondLife.Quaternion)
@@ -2383,9 +2383,9 @@ ldarg.0
 call instance class [mscorlib]System.Collections.ArrayList class LSL_00000000_0000_0000_0000_000000000000::'gtestReturnList'()
 ldc.i4.1
 box [mscorlib]System.Int32
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
-ldc.i4 3
+ldc.i4.3
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -2398,9 +2398,9 @@ ldarg.0
 call instance class [ScriptTypes]LindenLab.SecondLife.Vector class LSL_00000000_0000_0000_0000_000000000000::'gtestReturnVectorNested'()
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureVectorEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Vector, class [ScriptTypes]LindenLab.SecondLife.Vector)
@@ -2410,9 +2410,9 @@ ldarg.0
 call instance class [ScriptTypes]LindenLab.SecondLife.Vector class LSL_00000000_0000_0000_0000_000000000000::'gtestReturnVectorWithLibraryCall'()
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureVectorEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Vector, class [ScriptTypes]LindenLab.SecondLife.Vector)
@@ -2422,11 +2422,11 @@ ldarg.0
 call instance class [ScriptTypes]LindenLab.SecondLife.Quaternion class LSL_00000000_0000_0000_0000_000000000000::'gtestReturnRotationWithLibraryCall'()
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 4
+ldc.i4.4
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureRotationEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Quaternion, class [ScriptTypes]LindenLab.SecondLife.Quaternion)
@@ -2435,7 +2435,7 @@ ldstr "testParameters(1)"
 ldarg.0
 ldc.i4.1
 call instance int32 class LSL_00000000_0000_0000_0000_000000000000::'gtestParameters'(int32)
-ldc.i4 2
+ldc.i4.2
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldc.i4.1
 dup
@@ -2446,12 +2446,12 @@ ldstr "i = 1; testParameters(i)"
 ldarg.0
 ldloc.s 3
 call instance int32 class LSL_00000000_0000_0000_0000_000000000000::'gtestParameters'(int32)
-ldc.i4 2
+ldc.i4.2
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "testRecursion(10)"
 ldarg.0
-ldc.i4 10
+ldc.i4.s 10
 call instance int32 class LSL_00000000_0000_0000_0000_000000000000::'gtestRecursion'(int32)
 ldc.i4.0
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
@@ -2459,7 +2459,7 @@ ldarg.0
 ldstr "gInteger"
 ldarg.0
 ldfld int32 LSL_00000000_0000_0000_0000_000000000000::'gInteger'
-ldc.i4 5
+ldc.i4.5
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "gFloat"
@@ -2479,9 +2479,9 @@ ldarg.0
 ldfld class [ScriptTypes]LindenLab.SecondLife.Vector LSL_00000000_0000_0000_0000_000000000000::'gVector'
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureVectorEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Vector, class [ScriptTypes]LindenLab.SecondLife.Vector)
@@ -2491,11 +2491,11 @@ ldarg.0
 ldfld class [ScriptTypes]LindenLab.SecondLife.Quaternion LSL_00000000_0000_0000_0000_000000000000::'gRot'
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 4
+ldc.i4.4
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureRotationEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Quaternion, class [ScriptTypes]LindenLab.SecondLife.Quaternion)
@@ -2505,9 +2505,9 @@ ldarg.0
 ldfld class [mscorlib]System.Collections.ArrayList LSL_00000000_0000_0000_0000_000000000000::'gList'
 ldc.i4.1
 box [mscorlib]System.Int32
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
-ldc.i4 3
+ldc.i4.3
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -2551,11 +2551,11 @@ ldfld string LSL_00000000_0000_0000_0000_000000000000::'gString'
 ldstr "bar"
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureStringEqual'(string, string, string)
 ldarg.0
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 stfld class [ScriptTypes]LindenLab.SecondLife.Vector LSL_00000000_0000_0000_0000_000000000000::'gVector'
@@ -2566,22 +2566,22 @@ ldarg.0
 ldstr "gVector = <3,3,3>"
 ldarg.0
 ldfld class [ScriptTypes]LindenLab.SecondLife.Vector LSL_00000000_0000_0000_0000_000000000000::'gVector'
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureVectorEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Vector, class [ScriptTypes]LindenLab.SecondLife.Vector)
 ldarg.0
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 stfld class [ScriptTypes]LindenLab.SecondLife.Quaternion LSL_00000000_0000_0000_0000_000000000000::'gRot'
@@ -2592,22 +2592,22 @@ ldarg.0
 ldstr "gRot = <3,3,3,3>"
 ldarg.0
 ldfld class [ScriptTypes]LindenLab.SecondLife.Quaternion LSL_00000000_0000_0000_0000_000000000000::'gRot'
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureRotationEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Quaternion, class [ScriptTypes]LindenLab.SecondLife.Quaternion)
 ldarg.0
-ldc.i4 4
+ldc.i4.4
 box [mscorlib]System.Int32
-ldc.i4 5
+ldc.i4.5
 box [mscorlib]System.Int32
-ldc.i4 6
+ldc.i4.6
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -2621,11 +2621,11 @@ ldarg.0
 ldstr "gList = [4,5,6]"
 ldarg.0
 ldfld class [mscorlib]System.Collections.ArrayList LSL_00000000_0000_0000_0000_000000000000::'gList'
-ldc.i4 4
+ldc.i4.4
 box [mscorlib]System.Int32
-ldc.i4 5
+ldc.i4.5
 box [mscorlib]System.Int32
-ldc.i4 6
+ldc.i4.6
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -2633,11 +2633,11 @@ call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureListEqual'(string, class [mscorlib]System.Collections.ArrayList, class [mscorlib]System.Collections.ArrayList)
 ldarg.0
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 stfld class [ScriptTypes]LindenLab.SecondLife.Vector LSL_00000000_0000_0000_0000_000000000000::'gVector'
@@ -2649,25 +2649,25 @@ ldstr "-gVector = <-3,-3,-3>"
 ldarg.0
 ldfld class [ScriptTypes]LindenLab.SecondLife.Vector LSL_00000000_0000_0000_0000_000000000000::'gVector'
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Negate'(class [ScriptTypes]LindenLab.SecondLife.Vector)
-ldc.i4 3
+ldc.i4.3
 neg
 conv.r8
-ldc.i4 3
+ldc.i4.3
 neg
 conv.r8
-ldc.i4 3
+ldc.i4.3
 neg
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureVectorEqual'(string, class [ScriptTypes]LindenLab.SecondLife.Vector, class [ScriptTypes]LindenLab.SecondLife.Vector)
 ldarg.0
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 stfld class [ScriptTypes]LindenLab.SecondLife.Quaternion LSL_00000000_0000_0000_0000_000000000000::'gRot'
@@ -2679,16 +2679,16 @@ ldstr "-gRot = <-3,-3,-3,-3>"
 ldarg.0
 ldfld class [ScriptTypes]LindenLab.SecondLife.Quaternion LSL_00000000_0000_0000_0000_000000000000::'gRot'
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Negate'(class [ScriptTypes]LindenLab.SecondLife.Quaternion)
-ldc.i4 3
+ldc.i4.3
 neg
 conv.r8
-ldc.i4 3
+ldc.i4.3
 neg
 conv.r8
-ldc.i4 3
+ldc.i4.3
 neg
 conv.r8
-ldc.i4 3
+ldc.i4.3
 neg
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
@@ -2699,7 +2699,7 @@ ldc.r8 (00 00 00 00 00 00 00 00)
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 stloc.s 4
 ldloca.s 4
-ldc.i4 3
+ldc.i4.3
 conv.r8
 stfld float32 class [ScriptTypes]LindenLab.SecondLife.Vector::x
 ldloca.s 4
@@ -2709,7 +2709,7 @@ ldarg.0
 ldstr "v.x"
 ldloca.s 4
 ldfld float32 class [ScriptTypes]LindenLab.SecondLife.Vector::x
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureFloatEqual'(string, float32, float32)
 ldc.r8 (00 00 00 00 00 00 00 00)
@@ -2719,7 +2719,7 @@ ldc.r8 (00 00 00 00 00 00 f0 3f)
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 stloc.s 5
 ldloca.s 5
-ldc.i4 5
+ldc.i4.5
 conv.r8
 stfld float32 class [ScriptTypes]LindenLab.SecondLife.Quaternion::s
 ldloca.s 5
@@ -2729,7 +2729,7 @@ ldarg.0
 ldstr "q.s"
 ldloca.s 5
 ldfld float32 class [ScriptTypes]LindenLab.SecondLife.Quaternion::s
-ldc.i4 5
+ldc.i4.5
 conv.r8
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureFloatEqual'(string, float32, float32)
 ldarg.0
@@ -2762,11 +2762,11 @@ ldflda class [ScriptTypes]LindenLab.SecondLife.Quaternion LSL_00000000_0000_0000
 ldfld float32 class [ScriptTypes]LindenLab.SecondLife.Quaternion::z
 ldc.r8 (00 00 00 00 00 80 33 40)
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureFloatEqual'(string, float32, float32)
-ldc.i4 5
+ldc.i4.5
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList(object)
 stloc.s 6
-ldc.i4 5
+ldc.i4.5
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList(object)
 stloc.s 7
@@ -2778,7 +2778,7 @@ call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureListE
 ldarg.0
 ldstr "leq2"
 ldloc.s 6
-ldc.i4 5
+ldc.i4.5
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
@@ -2787,23 +2787,23 @@ ldarg.0
 ldstr "leq3"
 ldc.r8 (00 00 00 00 00 00 f8 3f)
 box [mscorlib]System.Single
-ldc.i4 6
+ldc.i4.6
 box [mscorlib]System.Int32
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 box [ScriptTypes]LindenLab.SecondLife.Vector
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 4
+ldc.i4.4
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 box [ScriptTypes]LindenLab.SecondLife.Quaternion
@@ -2814,23 +2814,23 @@ call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)
 ldc.r8 (00 00 00 00 00 00 f8 3f)
 box [mscorlib]System.Single
-ldc.i4 6
+ldc.i4.6
 box [mscorlib]System.Int32
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 box [ScriptTypes]LindenLab.SecondLife.Vector
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 4
+ldc.i4.4
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 box [ScriptTypes]LindenLab.SecondLife.Quaternion
@@ -2850,7 +2850,7 @@ ldarg.0
 ldstr "sesc2"
 ldstr "    "
 call int32 class [LslLibrary]LindenLab.SecondLife.Library::'llStringLength'(string)
-ldc.i4 4
+ldc.i4.4
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureIntegerEqual'(string, int32, int32)
 ldarg.0
 ldstr "sesc3"
@@ -2879,18 +2879,18 @@ ldstr "foofoobar"
 call instance void class LSL_00000000_0000_0000_0000_000000000000::'gensureStringEqual'(string, string, string)
 ldc.i4.1
 ldarg.0
-ldc.i4 5
+ldc.i4.5
 call instance int32 class LSL_00000000_0000_0000_0000_000000000000::'gcallOrderFunc'(int32)
 ldarg.0
-ldc.i4 4
+ldc.i4.4
 call instance int32 class LSL_00000000_0000_0000_0000_000000000000::'gcallOrderFunc'(int32)
 call int32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Divide'(int32, int32)
 ldarg.0
-ldc.i4 3
+ldc.i4.3
 call instance int32 class LSL_00000000_0000_0000_0000_000000000000::'gcallOrderFunc'(int32)
 xor
 ldarg.0
-ldc.i4 2
+ldc.i4.2
 call instance int32 class LSL_00000000_0000_0000_0000_000000000000::'gcallOrderFunc'(int32)
 or
 ldc.i4.0
@@ -2924,13 +2924,13 @@ ldarg.0
 ldstr "gCallOrder expected order"
 ldarg.0
 ldfld class [mscorlib]System.Collections.ArrayList LSL_00000000_0000_0000_0000_000000000000::'gCallOrder'
-ldc.i4 5
+ldc.i4.5
 box [mscorlib]System.Int32
-ldc.i4 4
+ldc.i4.4
 box [mscorlib]System.Int32
-ldc.i4 3
+ldc.i4.3
 box [mscorlib]System.Int32
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
 ldc.i4.1
 box [mscorlib]System.Int32
@@ -2954,7 +2954,7 @@ call instance void class LSL_00000000_0000_0000_0000_000000000000::'gtests'()
 ldstr "All tests passed"
 call void class [LslLibrary]LindenLab.SecondLife.Library::Print(string)
 ldarg.0
-ldc.i4 5
+ldc.i4.5
 stfld int32 LSL_00000000_0000_0000_0000_000000000000::'gInteger'
 ldarg.0
 ldfld int32 LSL_00000000_0000_0000_0000_000000000000::'gInteger'
@@ -2974,9 +2974,9 @@ pop
 ldarg.0
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 stfld class [ScriptTypes]LindenLab.SecondLife.Vector LSL_00000000_0000_0000_0000_000000000000::'gVector'
@@ -2986,11 +2986,11 @@ pop
 ldarg.0
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
-ldc.i4 4
+ldc.i4.4
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
 stfld class [ScriptTypes]LindenLab.SecondLife.Quaternion LSL_00000000_0000_0000_0000_000000000000::'gRot'
@@ -3000,9 +3000,9 @@ pop
 ldarg.0
 ldc.i4.1
 box [mscorlib]System.Int32
-ldc.i4 2
+ldc.i4.2
 box [mscorlib]System.Int32
-ldc.i4 3
+ldc.i4.3
 box [mscorlib]System.Int32
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Prepend(object, class [mscorlib]System.Collections.ArrayList)

@@ -27,21 +27,21 @@ LabelTempJump0:
 ldc.r8 (00 00 00 00 00 00 f0 3f)
 pop
 LabelTempJump1:
-ldc.i4 2
+ldc.i4.2
 pop
-ldc.i4 2
+ldc.i4.2
 pop
 LabelTempJump3:
-ldc.i4 2
+ldc.i4.2
 brfalse LabelTempJump4
 ldc.r8 (00 00 00 00 00 00 00 40)
 pop
-ldc.i4 2
+ldc.i4.2
 pop
 br LabelTempJump3
 LabelTempJump4:
 LabelTempJump5:
-ldc.i4 3
+ldc.i4.3
 brfalse LabelTempJump6
 ldc.r8 (00 00 00 00 00 00 08 40)
 pop
@@ -50,7 +50,7 @@ LabelTempJump6:
 LabelTempJump7:
 ldc.r8 (00 00 00 00 00 00 10 40)
 pop
-ldc.i4 4
+ldc.i4.4
 brtrue LabelTempJump7
 ret
 }

@@ -33,7 +33,7 @@ call float32 class [LslLibrary]LindenLab.SecondLife.Library::'llFrand'(float32)
 pop
 ldarg.0
 ldc.i4.1
-ldc.i4 2
+ldc.i4.2
 call instance int32 class LSL_00000000_0000_0000_0000_000000000000::'gfoo'(int32, int32)
 pop
 ret

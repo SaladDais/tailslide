@@ -60,9 +60,9 @@ stfld float32 LSL_00000000_0000_0000_0000_000000000000::'actually_f'
 ldarg.0
 ldarg.0
 ldfld float32 LSL_00000000_0000_0000_0000_000000000000::'f'
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 stfld class [ScriptTypes]LindenLab.SecondLife.Vector LSL_00000000_0000_0000_0000_000000000000::'v'

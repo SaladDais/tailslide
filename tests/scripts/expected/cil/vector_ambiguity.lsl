@@ -18,14 +18,14 @@ ret
 .locals init (class [ScriptTypes]LindenLab.SecondLife.Vector)
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 stloc.s 0
 ldloca.s 0
-ldc.i4 2
+ldc.i4.2
 conv.r8
 stfld float32 class [ScriptTypes]LindenLab.SecondLife.Vector::x
 ldloca.s 0
@@ -33,33 +33,33 @@ ldfld float32 class [ScriptTypes]LindenLab.SecondLife.Vector::x
 pop
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 ldloca.s 0
 ldfld float32 class [ScriptTypes]LindenLab.SecondLife.Vector::x
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 call float32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Multiply'(class [ScriptTypes]LindenLab.SecondLife.Vector, class [ScriptTypes]LindenLab.SecondLife.Vector)
-ldc.i4 2
+ldc.i4.2
 conv.r8
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
-ldc.i4 3
+ldc.i4.3
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 ldloca.s 0
 ldfld float32 class [ScriptTypes]LindenLab.SecondLife.Vector::x
 ldc.i4.1
 conv.r8
-ldc.i4 2
+ldc.i4.2
 conv.r8
 call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
 call float32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Multiply'(class [ScriptTypes]LindenLab.SecondLife.Vector, class [ScriptTypes]LindenLab.SecondLife.Vector)

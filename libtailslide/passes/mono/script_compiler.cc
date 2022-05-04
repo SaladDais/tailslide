@@ -136,14 +136,17 @@ void MonoScriptCompiler::pushConstant(LSLConstant* cv) {
     return;
   switch(cv->getIType()) {
     case LST_INTEGER: {
-      auto *int_cv = (LSLIntegerConstant *) cv;
-      // pushing 0 or 1 has a single-byte form.
-      if (!int_cv->getValue())
-        mCIL << "ldc.i4.0\n";
-      else if (int_cv->getValue() == 1)
-        mCIL << "ldc.i4.1\n";
+      auto int_val = ((LSLIntegerConstant *) cv)->getValue();
+      // These values have a single-byte push form
+      if (int_val >= 0 && int_val <= 8)
+        mCIL << "ldc.i4." << int_val << '\n';
+      else if (int_val == -1)
+        mCIL << "ldc.i4.m1\n";
+      // can use the single-byte operand version of ldc.i4
+      else if (int_val >= -128 && int_val <= 127)
+        mCIL << "ldc.i4.s " << int_val << '\n';
       else
-        mCIL << "ldc.i4 " << int_cv->getValue() << "\n";
+        mCIL << "ldc.i4 " << int_val << "\n";
       return;
     }
     case LST_FLOATINGPOINT:

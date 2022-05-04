@@ -53,7 +53,7 @@ ldc.i4.1
 add
 pop
 ldc.r8 (00 00 00 00 00 00 00 40)
-ldc.i4 2
+ldc.i4.2
 conv.r8
 call float64 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Subtract'(float64, float64)
 pop
@@ -62,7 +62,7 @@ ldc.i4.1
 conv.r8
 call float64 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Divide'(float64, float64)
 pop
-ldc.i4 2
+ldc.i4.2
 ldc.i4.1
 call int32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Modulo'(int32, int32)
 pop
@@ -102,7 +102,7 @@ ceq
 ldc.i4.0
 ceq
 pop
-ldc.i4 2
+ldc.i4.2
 ldc.i4.0
 ceq
 ldc.i4.1
@@ -112,7 +112,7 @@ or
 ldc.i4.0
 ceq
 pop
-ldc.i4 2
+ldc.i4.2
 ldc.i4.1
 or
 ldc.i4.0
@@ -120,34 +120,34 @@ ceq
 ldc.i4.0
 ceq
 pop
-ldc.i4 2
+ldc.i4.2
 ldc.i4.1
 or
 pop
-ldc.i4 2
+ldc.i4.2
 ldc.i4.1
 and
 pop
-ldc.i4 2
+ldc.i4.2
 ldc.i4.1
 xor
 pop
-ldc.i4 2
+ldc.i4.2
 ldc.i4.1
 call int32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'ShiftRight'(int32, int32)
 pop
-ldc.i4 2
+ldc.i4.2
 ldc.i4.1
 call int32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'ShiftLeft'(int32, int32)
 pop
-ldc.i4 2
+ldc.i4.2
 ldloc.s 0
 mul
 dup
 stloc.s 0
 pop
 ldarg.0
-ldc.i4 2
+ldc.i4.2
 ldarg.0
 ldfld int32 LSL_00000000_0000_0000_0000_000000000000::'gi'
 mul
@@ -156,7 +156,7 @@ ldarg.0
 ldfld int32 LSL_00000000_0000_0000_0000_000000000000::'gi'
 pop
 ldarg.0
-ldc.i4 2
+ldc.i4.2
 conv.r8
 ldarg.0
 ldfld float32 LSL_00000000_0000_0000_0000_000000000000::'gf'
@@ -175,7 +175,7 @@ ldarg.0
 ldfld float32 LSL_00000000_0000_0000_0000_000000000000::'gf'
 pop
 ldarg.0
-ldc.i4 2
+ldc.i4.2
 ldarg.0
 ldfld int32 LSL_00000000_0000_0000_0000_000000000000::'gi'
 call int32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Modulo'(int32, int32)

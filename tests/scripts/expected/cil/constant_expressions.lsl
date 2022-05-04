@@ -21,7 +21,7 @@ ldc.i4.1
 pop
 ldc.r8 (00 00 00 00 00 00 f0 3f)
 pop
-ldc.i4 -1
+ldc.i4.m1
 pop
 ret
 }

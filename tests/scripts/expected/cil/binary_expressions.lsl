@@ -71,12 +71,12 @@ ldloc.s 6
 ldloc.s 6
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::Append(class [mscorlib]System.Collections.ArrayList, class [mscorlib]System.Collections.ArrayList)
 pop
-ldc.i4 2
-ldc.i4 2
+ldc.i4.2
+ldc.i4.2
 call int32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Subtract'(int32, int32)
 pop
 ldc.r8 (00 00 00 00 00 00 00 40)
-ldc.i4 2
+ldc.i4.2
 conv.r8
 call float64 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'Subtract'(float64, float64)
 pop
@@ -251,7 +251,7 @@ ldloc.s 6
 ldloc.s 6
 call int32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'NotEquals'(class [mscorlib]System.Collections.ArrayList, class [mscorlib]System.Collections.ArrayList)
 pop
-ldc.i4 2
+ldc.i4.2
 ldc.i4.0
 ceq
 ldc.i4.1
@@ -261,7 +261,7 @@ or
 ldc.i4.0
 ceq
 pop
-ldc.i4 2
+ldc.i4.2
 ldc.i4.1
 or
 ldc.i4.0
@@ -269,23 +269,23 @@ ceq
 ldc.i4.0
 ceq
 pop
-ldc.i4 2
+ldc.i4.2
 ldc.i4.1
 or
 pop
-ldc.i4 2
+ldc.i4.2
 ldc.i4.1
 and
 pop
-ldc.i4 2
+ldc.i4.2
 ldc.i4.1
 xor
 pop
-ldc.i4 2
+ldc.i4.2
 ldc.i4.1
 call int32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'ShiftRight'(int32, int32)
 pop
-ldc.i4 2
+ldc.i4.2
 ldc.i4.1
 call int32 class [LslUserScript]LindenLab.SecondLife.LslUserScript::'ShiftLeft'(int32, int32)
 pop
