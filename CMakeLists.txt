@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(Tailslide LANGUAGES CXX)
+
+include(GNUInstallDirs)
+
 if (MSVC)
   # MSVC requires C++20 be enabled to allow designated initializers
   set(CMAKE_CXX_STANDARD 20)
