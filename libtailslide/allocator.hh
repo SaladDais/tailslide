@@ -27,7 +27,7 @@ public:
     template<typename TClazz, typename... Args>
     inline TClazz * newTracked(Args&&... args) {
       static_assert(std::is_base_of<TrackableObject, TClazz>::value, "Must be based on LLTrackableObject");
-      auto* val = new TClazz(_mContext, std::forward<Args>(args)...);
+      auto *val = new TClazz(_mContext, std::forward<Args>(args)...);
       _mTrackedObjects.emplace_back(val);
       return val;
     }
@@ -38,7 +38,7 @@ public:
       return val;
     }
 
-    char *copyStr(const char* old_str) {
+    char *copyStr(const char *old_str) {
       char *new_str = (char *)malloc(strlen(old_str) + 1);
       if (new_str) {
         strcpy(new_str, old_str);

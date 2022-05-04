@@ -21,7 +21,7 @@ private:
   PrettyPrintVisitor *_mVisitor;
 };
 
-static bool cast_requires_parens(LSLTypecastExpression* node) {
+static bool cast_requires_parens(LSLTypecastExpression *node) {
   auto *child_expr = node->getChildExpr();
   switch (child_expr->getNodeType()) {
     case NODE_CONSTANT:
@@ -49,7 +49,7 @@ static int is_braceless(LSLASTNode *branch) {
   return (branch->getNodeSubType() != NODE_COMPOUND_STATEMENT);
 }
 
-void PrettyPrintVisitor::prettifyChildrenSep(LSLASTNode* parent, const char* separator) {
+void PrettyPrintVisitor::prettifyChildrenSep(LSLASTNode *parent, const char *separator) {
   for (auto *child: *parent) {
     child->visit(this);
     if (child->getNext())
@@ -150,7 +150,7 @@ bool PrettyPrintVisitor::visit(LSLEventHandler *handler) {
 bool PrettyPrintVisitor::visit(LSLGlobalVariable *glob_var) {
   doTabs();
 
-  LSLASTNode* id = glob_var->getIdentifier();
+  LSLASTNode *id = glob_var->getIdentifier();
   id->getType()->visit(this);
   mStream << ' ';
   id->visit(this);
@@ -226,7 +226,7 @@ bool PrettyPrintVisitor::visit(LSLCompoundStatement *compound_stmt) {
 bool PrettyPrintVisitor::visit(LSLDeclaration *decl_stmt) {
   doTabs();
 
-  LSLASTNode* id = decl_stmt->getIdentifier();
+  LSLASTNode *id = decl_stmt->getIdentifier();
   id->getType()->visit(this);
   mStream << ' ';
   id->visit(this);
@@ -289,7 +289,7 @@ bool PrettyPrintVisitor::visit(LSLIfStatement *if_stmt) {
   mStream << ")\n";
   // Only increase indentation of the child if this is a braceless `if` branch
   {
-    LSLASTNode* true_branch = if_stmt->getTrueBranch();
+    LSLASTNode *true_branch = if_stmt->getTrueBranch();
     ScopedTabSetter setter(this, mTabs + is_braceless(true_branch));
     true_branch->visit(this);
   }
@@ -541,7 +541,7 @@ bool PrettyPrintVisitor::visit(LSLPrintExpression *print_expr) {
   return false;
 }
 
-bool PrettyPrintVisitor::visit(LSLType*type) {
+bool PrettyPrintVisitor::visit(LSLType *type) {
   if (type->getIType() != LST_NULL) {
     mStream << type->getNodeName();
   }

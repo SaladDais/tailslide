@@ -11,7 +11,7 @@ static bool initialized = false;
 static bool compile_lso = false;
 static bool compile_cil = false;
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   if (!initialized) {
     Tailslide::tailslide_init_builtins(nullptr);
     initialized = true;
@@ -19,7 +19,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     compile_cil = getenv("COMPILE_CIL") != nullptr;
   }
 
-  const char* file = buf_to_file(data, size);
+  const char *file = buf_to_file(data, size);
   if (!file) {
     exit(EXIT_FAILURE);
   }

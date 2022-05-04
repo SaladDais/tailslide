@@ -51,7 +51,7 @@ LSLType *str_to_type(const char *str) {
  *      http://groups.google.com/group/comp.lang.c/msg/7c7b39328fefab9c
  */
 
-static char* tailslide_strtok_r(char *str, const char *delim, char **nextp) {
+static char *tailslide_strtok_r(char *str, const char *delim, char **nextp) {
   if (!str)
     str = *nextp;
   str += strspn(str, delim);

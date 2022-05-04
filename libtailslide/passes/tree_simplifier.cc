@@ -2,7 +2,7 @@
 
 namespace Tailslide {
 
-bool TreeSimplifyingVisitor::visit(LSLDeclaration*decl_stmt) {
+bool TreeSimplifyingVisitor::visit(LSLDeclaration *decl_stmt) {
   if (!mOpts.prune_unused_locals)
     return true;
 

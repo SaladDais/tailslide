@@ -4,7 +4,7 @@
 
 using namespace Tailslide;
 
-ParserRef runConformance(const char* name, bool allow_syntax_errors)
+ParserRef runConformance(const char *name, bool allow_syntax_errors)
 {
   std::string path = __FILE__;
   path.erase(path.find_last_of("\\/"));
@@ -37,7 +37,7 @@ ParserRef runConformance(const char* name, bool allow_syntax_errors)
   return parser;
 }
 
-void assertNoLintErrors(Logger* logger, const std::string& name) {
+void assertNoLintErrors(Logger *logger, const std::string& name) {
   logger->finalize();
   int num_errors = logger->getErrors();
   if (num_errors) {
@@ -95,10 +95,10 @@ class ScriptCILCompiler: public ScriptFormatter {
 };
 
 static void checkStringOutput(
-    const char* name,
-    const char* expected_prefix,
+    const char *name,
+    const char *expected_prefix,
     const OptimizationOptions &ctx,
-    void (*massager)(LSLScript* script),
+    void (*massager)(LSLScript *script),
     const ScriptFormatter& formatter
 ) {
   ParserRef parser = runConformance(name);
@@ -155,10 +155,10 @@ static void checkStringOutput(
 
 
 void checkPrettyPrintOutput(
-        const char* name,
+        const char *name,
         const OptimizationOptions &ctx,
         const PrettyPrintOpts &pretty_opts,
-        void (*massager)(LSLScript* script)
+        void (*massager)(LSLScript *script)
 ) {
   checkStringOutput(
     name,
@@ -170,9 +170,9 @@ void checkPrettyPrintOutput(
 }
 
 void checkTreeDumpOutput(
-    const char* name,
+    const char *name,
     const OptimizationOptions &ctx,
-    void (*massager)(LSLScript* script)
+    void (*massager)(LSLScript *script)
 ) {
   checkStringOutput(
       name,
@@ -184,8 +184,8 @@ void checkTreeDumpOutput(
 }
 
 void checkLSOOutput(
-    const char* name,
-    void (*massager)(LSLScript* script)
+    const char *name,
+    void (*massager)(LSLScript *script)
 ) {
   OptimizationOptions opt;
   checkStringOutput(
@@ -198,8 +198,8 @@ void checkLSOOutput(
 }
 
 void checkCILOutput(
-    const char* name,
-    void (*massager)(LSLScript* script)
+    const char *name,
+    void (*massager)(LSLScript *script)
 ) {
   OptimizationOptions opt;
   checkStringOutput(

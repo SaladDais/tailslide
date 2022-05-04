@@ -572,7 +572,7 @@ LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLConstant *cv,
 
 
 
-LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLStringConstant *cv) {
+LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLStringConstant *cv) {
   auto *v = cv->getValue();
   switch(to_type->getIType()) {
     case LST_INTEGER: {
@@ -594,7 +594,7 @@ LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLStringConstan
   }
 }
 
-LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLKeyConstant *cv) {
+LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLKeyConstant *cv) {
   auto *v = cv->getValue();
   switch(to_type->getIType()) {
     case LST_STRING:
@@ -604,7 +604,7 @@ LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLKeyConstant *
   }
 }
 
-LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLIntegerConstant *cv) {
+LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLIntegerConstant *cv) {
   auto v = cv->getValue();
   switch(to_type->getIType()) {
     case LST_STRING: {
@@ -619,7 +619,7 @@ LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLIntegerConsta
   }
 }
 
-LSLConstant* TailslideOperationBehavior::cast(LSLType *to_type, LSLFloatConstant *cv) {
+LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLFloatConstant *cv) {
   auto v = cv->getValue();
   switch(to_type->getIType()) {
     case LST_STRING: {

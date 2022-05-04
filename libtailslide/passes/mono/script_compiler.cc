@@ -131,7 +131,7 @@ void MonoScriptCompiler::pushLValue(LSLLValueExpression *lvalue) {
   }
 }
 
-void MonoScriptCompiler::pushConstant(LSLConstant* cv) {
+void MonoScriptCompiler::pushConstant(LSLConstant *cv) {
   if (!cv)
     return;
   switch(cv->getIType()) {
@@ -383,7 +383,7 @@ bool MonoScriptCompiler::visit(LSLDeclaration *decl_stmt) {
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLExpressionStatement*expr_stmt) {
+bool MonoScriptCompiler::visit(LSLExpressionStatement *expr_stmt) {
   auto *expr = expr_stmt->getExpr();
   expr->visit(this);
   if (expr->getIType())
@@ -391,14 +391,14 @@ bool MonoScriptCompiler::visit(LSLExpressionStatement*expr_stmt) {
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLReturnStatement*ret_stmt) {
+bool MonoScriptCompiler::visit(LSLReturnStatement *ret_stmt) {
   if (auto *expr = ret_stmt->getExpr())
     expr->visit(this);
   mCIL << "ret\n";
   return false;
 }
 
-bool MonoScriptCompiler::visit(LSLLabel*label_stmt) {
+bool MonoScriptCompiler::visit(LSLLabel *label_stmt) {
   // TODO: right now this roughly matches LL's behavior, but label names
   //  should be mangled to prevent collisions.
   mCIL << "'ul" << label_stmt->getSymbol()->getName() << "':\n";

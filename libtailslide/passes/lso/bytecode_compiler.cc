@@ -302,7 +302,7 @@ bool LSOBytecodeCompiler::visit(LSLLabel *label_stmt) {
   return false;
 }
 
-bool LSOBytecodeCompiler::visit(LSLIfStatement*if_stmt) {
+bool LSOBytecodeCompiler::visit(LSLIfStatement *if_stmt) {
   auto *expr = if_stmt->getCheckExpr();
   auto *false_branch = if_stmt->getFalseBranch();
 

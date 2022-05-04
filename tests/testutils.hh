@@ -22,31 +22,31 @@
 
 using ParserRef = std::unique_ptr<Tailslide::ScopedScriptParser>;
 
-ParserRef runConformance(const char* name, bool allow_syntax_errors=false);
+ParserRef runConformance(const char *name, bool allow_syntax_errors=false);
 
 void assertNoLintErrors(Tailslide::Logger *logger, const std::string& name);
 
 void checkPrettyPrintOutput(
-        const char* name,
+        const char *name,
         const Tailslide::OptimizationOptions &ctx,
         const Tailslide::PrettyPrintOpts &pretty_opts,
-        void (*massager)(Tailslide::LSLScript* script) = nullptr
+        void (*massager)(Tailslide::LSLScript *script) = nullptr
 );
 
 void checkTreeDumpOutput(
-    const char* name,
+    const char *name,
     const Tailslide::OptimizationOptions &ctx,
-    void (*massager)(Tailslide::LSLScript* script) = nullptr
+    void (*massager)(Tailslide::LSLScript *script) = nullptr
 );
 
 void checkLSOOutput(
-    const char* name,
-    void (*massager)(Tailslide::LSLScript* script) = nullptr
+    const char *name,
+    void (*massager)(Tailslide::LSLScript *script) = nullptr
 );
 
 void checkCILOutput(
-    const char* name,
-    void (*massager)(Tailslide::LSLScript* script) = nullptr
+    const char *name,
+    void (*massager)(Tailslide::LSLScript *script) = nullptr
 );
 
 #endif

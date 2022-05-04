@@ -139,8 +139,8 @@ class Logger {
     std::vector<class LogMessage*>    _mMessages;
     std::vector<ErrorCode>            _mErrorsSeen;
     std::vector< std::pair<int, ErrorCode>>    _mAssertions;
-    static const char* _sErrorMessages[];
-    static const char* _sWarningMessages[];
+    static const char *_sErrorMessages[];
+    static const char *_sWarningMessages[];
 };
 
 inline void DEBUG(LogLevel level, YYLTYPE *yylloc, const char *fmt, ...) {

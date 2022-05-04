@@ -132,7 +132,7 @@ bool DeSugaringVisitor::visit(LSLGlobalVariable *glob_var) {
   return true;
 }
 
-void DeSugaringVisitor::maybeInjectCast(LSLExpression* expr, LSLType *to) {
+void DeSugaringVisitor::maybeInjectCast(LSLExpression *expr, LSLType *to) {
   auto *expr_type = expr->getType();
   if (to == expr_type)
     return;
@@ -149,7 +149,7 @@ void DeSugaringVisitor::maybeInjectCast(LSLExpression* expr, LSLType *to) {
   typecast->setLoc(expr->getLoc());
 }
 
-void DeSugaringVisitor::maybeInjectBoolConversion(LSLExpression* expr) {
+void DeSugaringVisitor::maybeInjectBoolConversion(LSLExpression *expr) {
   // LSO has typed branching instructions already, they do this internally!
   if (!_mMonoSemantics)
     return;

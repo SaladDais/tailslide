@@ -202,8 +202,8 @@ class LSLASTNode : public TrackableObject {
     bool getDeclarationAllowed() const { return _mDeclarationAllowed; };
 
     // bad hacks for figuring out if something is _really_ in scope
-    class LSLASTNode* findPreviousInScope(std::function<bool (class LSLASTNode *)> const &checker);
-    class LSLASTNode* findDescInScope(std::function<bool (class LSLASTNode *)> const &checker);
+    class LSLASTNode *findPreviousInScope(std::function<bool (class LSLASTNode *)> const &checker);
+    class LSLASTNode *findDescInScope(std::function<bool (class LSLASTNode *)> const &checker);
 
 
     /// identification          ///

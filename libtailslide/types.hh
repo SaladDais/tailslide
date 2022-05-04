@@ -90,8 +90,8 @@ inline LSLType *TYPE(LSLIType type) {
 
 LSLOperator decouple_compound_operation(LSLOperator operation);
 bool operation_mutates(LSLOperator operation);
-const char* operation_str(LSLOperator operation);
-const char* operation_repr_str(LSLOperator operation);
+const char *operation_str(LSLOperator operation);
+const char *operation_repr_str(LSLOperator operation);
 bool is_cast_legal(LSLIType from, LSLIType to);
 
 

@@ -127,7 +127,7 @@ class LSLGlobalVariable : public LSLASTNode {
     virtual const char *getNodeName() { return "global var"; }
     virtual LSLNodeType getNodeType() { return NODE_GLOBAL_VARIABLE; };
 
-    virtual LSLConstant* getConstantValue();
+    virtual LSLConstant *getConstantValue();
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
 };
 
@@ -138,7 +138,7 @@ class LSLConstant : public LSLASTNode {
     virtual const char *getNodeName() { return "unknown constant"; }
     virtual LSLNodeType getNodeType() { return NODE_CONSTANT; };
     // make a shallow copy of the constant
-    virtual LSLConstant* copy(ScriptAllocator *allocator) = 0;
+    virtual LSLConstant *copy(ScriptAllocator *allocator) = 0;
     virtual bool containsNaN() { return false; };
     /// was this constant negated by the parser
     virtual bool wasNegated() { return _mWasNegated; };
@@ -163,7 +163,7 @@ class LSLIntegerConstant : public LSLConstant {
     virtual LSLNodeSubType getNodeSubType() { return NODE_INTEGER_CONSTANT; }
 
     int getValue() const { return _mValue; }
-    virtual LSLConstant* copy(ScriptAllocator *allocator) {
+    virtual LSLConstant *copy(ScriptAllocator *allocator) {
       return allocator->newTracked<LSLIntegerConstant>(_mValue);
     };
 
@@ -189,7 +189,7 @@ class LSLFloatConstant : public LSLConstant {
 
     float getValue() const { return _mValue; }
     virtual bool containsNaN();
-    virtual LSLConstant* copy(ScriptAllocator *allocator) {
+    virtual LSLConstant *copy(ScriptAllocator *allocator) {
       return allocator->newTracked<LSLFloatConstant>(_mValue);
     };
 
@@ -214,7 +214,7 @@ class LSLStringConstant : public LSLConstant {
     virtual LSLNodeSubType getNodeSubType() { return NODE_STRING_CONSTANT; }
 
     const char *getValue() { return _mValue; }
-    virtual LSLConstant* copy(ScriptAllocator *allocator) {
+    virtual LSLConstant *copy(ScriptAllocator *allocator) {
       return allocator->newTracked<LSLStringConstant>(_mValue);
     };
 
@@ -230,7 +230,7 @@ class LSLStringConstant : public LSLConstant {
 class LSLKeyConstant : public LSLStringConstant {
   public:
     LSLKeyConstant( ScriptContext *ctx, const char *v ) : LSLStringConstant(ctx, v) { _mType = TYPE(LST_KEY); }
-    virtual LSLConstant* copy(ScriptAllocator *allocator) {
+    virtual LSLConstant *copy(ScriptAllocator *allocator) {
       return allocator->newTracked<LSLKeyConstant>(_mValue);
     };
 
@@ -267,8 +267,8 @@ class LSLListConstant : public LSLConstant {
 
     int getLength() { return (int) getNumChildren(); }
 
-    virtual LSLConstant* copy(ScriptAllocator *allocator) {
-      auto* new_const = allocator->newTracked<LSLListConstant>(nullptr);
+    virtual LSLConstant *copy(ScriptAllocator *allocator) {
+      auto *new_const = allocator->newTracked<LSLListConstant>(nullptr);
       // need to copy the children since they're going to be re-parented to the copy
       for (auto *old_child : *this) {
         new_const->pushChild(((LSLConstant *)old_child)->copy(allocator));
@@ -297,7 +297,7 @@ class LSLVectorConstant : public LSLConstant {
     const Vector3 *getValue() { return &_mValue; }
     virtual bool containsNaN();
 
-    virtual LSLConstant* copy(ScriptAllocator *allocator) {
+    virtual LSLConstant *copy(ScriptAllocator *allocator) {
       return allocator->newTracked<LSLVectorConstant>(_mValue.x, _mValue.y, _mValue.z);
     };
 
@@ -326,7 +326,7 @@ class LSLQuaternionConstant : public LSLConstant {
     const Quaternion *getValue() { return &_mValue; }
     virtual bool containsNaN();
 
-    virtual LSLConstant* copy(ScriptAllocator *allocator) {
+    virtual LSLConstant *copy(ScriptAllocator *allocator) {
       return allocator->newTracked<LSLQuaternionConstant>(_mValue.x, _mValue.y, _mValue.z, _mValue.s);
     };
 
@@ -533,7 +533,7 @@ class LSLDeclaration : public LSLStatement {
     virtual const char *getNodeName() { return "declaration"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_DECLARATION; };
 
-    virtual LSLConstant* getConstantValue();
+    virtual LSLConstant *getConstantValue();
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
 };
 
@@ -552,7 +552,7 @@ public:
     };
     virtual LSLNodeType getNodeType() { return NODE_EXPRESSION; };
 
-    virtual LSLConstant* getConstantValue();
+    virtual LSLConstant *getConstantValue();
     virtual bool nodeAllowsFolding() { return true; };
     LSLOperator getOperation() const {return _mOperation;};
     void setOperation(LSLOperator op) {_mOperation = op;};
@@ -563,7 +563,7 @@ public:
 
 class LSLConstantExpression: public LSLExpression {
 public:
-    LSLConstantExpression( ScriptContext *ctx, LSLConstant* constant )
+    LSLConstantExpression( ScriptContext *ctx, LSLConstant *constant )
       : LSLExpression(ctx) {
       assert(constant);
       if (constant->isStatic())
@@ -582,7 +582,7 @@ public:
 
 class LSLParenthesisExpression: public LSLExpression {
 public:
-    LSLParenthesisExpression( ScriptContext *ctx, LSLExpression* expr )
+    LSLParenthesisExpression( ScriptContext *ctx, LSLExpression *expr )
       : LSLExpression(ctx, 1, expr) { _mOperation = OP_PARENS; };
     NODE_FIELD_GS(LSLExpression, ChildExpr, 0)
 
@@ -717,8 +717,8 @@ class LSLLValueExpression : public LSLExpression {
       return buf;
     };
     virtual LSLNodeSubType getNodeSubType() { return NODE_LVALUE_EXPRESSION; };
-    virtual LSLConstant* getConstantValue();
-    virtual LSLSymbol* getSymbol() {return ((LSLIdentifier*)getChild(0))->getSymbol(); };
+    virtual LSLConstant *getConstantValue();
+    virtual LSLSymbol *getSymbol() {return ((LSLIdentifier*)getChild(0))->getSymbol(); };
 
     void setIsFoldable(bool foldable) { _mIsFoldable = foldable;};
     bool getIsFoldable() const {return _mIsFoldable;};

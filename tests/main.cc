@@ -24,7 +24,7 @@ using namespace Tailslide;
 
 struct BoostLikeReporter : doctest::IReporter
 {
-    const doctest::TestCaseData* currentTest = nullptr;
+    const doctest::TestCaseData *currentTest = nullptr;
 
     explicit BoostLikeReporter(const doctest::ContextOptions& in) {}
 
@@ -111,15 +111,15 @@ int main(int argc, char** argv)
 
     if (doctest::parseFlag(argc, argv, "--list_content"))
     {
-        const char* ltc[] = {argv[0], "--list-test-cases"};
+        const char *ltc[] = {argv[0], "--list-test-cases"};
         context.applyCommandLine(2, ltc);
     }
 
     doctest::String filter;
     if (doctest::parseOption(argc, argv, "--run_test", &filter) && filter[0] == '=')
     {
-        const char* f = filter.c_str() + 1;
-        const char* s = strchr(f, '/');
+        const char *f = filter.c_str() + 1;
+        const char *s = strchr(f, '/');
 
         if (s)
         {

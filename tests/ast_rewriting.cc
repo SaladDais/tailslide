@@ -39,7 +39,7 @@ public:
 TEST_CASE("simple_expr_replacement.lsl") {
   OptimizationOptions ctx{.fold_constants=true};
   PrettyPrintOpts pretty_ctx {};
-  checkPrettyPrintOutput("simple_expr_replacement.lsl", ctx, pretty_ctx, [](LSLScript* script) {
+  checkPrettyPrintOutput("simple_expr_replacement.lsl", ctx, pretty_ctx, [](LSLScript *script) {
     AddSubbingVisitor visitor;
     script->visit(&visitor);
     // all existing constant values are now potentially dirty, recalculate.
@@ -89,7 +89,7 @@ public:
 TEST_CASE("fancy_expr_replacement.lsl") {
   OptimizationOptions ctx{false};
   PrettyPrintOpts pretty_ctx {};
-  checkPrettyPrintOutput("fancy_expr_replacement.lsl", ctx, pretty_ctx, [](LSLScript* script) {
+  checkPrettyPrintOutput("fancy_expr_replacement.lsl", ctx, pretty_ctx, [](LSLScript *script) {
     // pretend we have a builtin called "whatever()" that takes a string and returns an int
     auto *symbol_table = script->getSymbolTable();
     auto *allocator = script->mContext->allocator;
@@ -109,7 +109,7 @@ TEST_CASE("fancy_expr_replacement.lsl") {
 TEST_CASE("fancy_expr_replacement.lsl") {
   OptimizationOptions ctx{false};
   PrettyPrintOpts pretty_ctx {};
-  checkPrettyPrintOutput("fancy_expr_replacement.lsl", ctx, pretty_ctx, [](LSLScript* script) {
+  checkPrettyPrintOutput("fancy_expr_replacement.lsl", ctx, pretty_ctx, [](LSLScript *script) {
     // pretend we have a builtin called "whatever()" that takes a string and returns an int
     auto *symbol_table = script->getSymbolTable();
     auto *allocator = script->mContext->allocator;
@@ -130,7 +130,7 @@ TEST_CASE("fancy_expr_replacement.lsl") {
 TEST_CASE("desugaring.lsl") {
   OptimizationOptions ctx{false};
   PrettyPrintOpts pretty_ctx {};
-  checkPrettyPrintOutput("desugaring.lsl", ctx, pretty_ctx, [](LSLScript* script) {
+  checkPrettyPrintOutput("desugaring.lsl", ctx, pretty_ctx, [](LSLScript *script) {
     LLConformantDeSugaringVisitor visitor(script->mContext->allocator, false);
     script->visit(&visitor);
   });

@@ -18,7 +18,7 @@ class AllPathsReturnVisitor: public ASTVisitor {
       return false;
     };
     virtual bool visit(LSLIfStatement *if_stmt) {
-      auto* false_branch = if_stmt->getFalseBranch();
+      auto *false_branch = if_stmt->getFalseBranch();
 
       // no false path, so all paths within `if` _couldn't_ return.
       if (!false_branch) {

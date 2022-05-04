@@ -60,13 +60,13 @@ void LSLASTNode::setParent(LSLASTNode *newparent) {
   _mParent = newparent;
   // because children are an intrusive linked list updating one child's parent
   // must update the parent of all of its siblings.
-  for (auto* next_ptr = _mNext; next_ptr != nullptr; next_ptr=next_ptr->_mNext) {
+  for (auto *next_ptr = _mNext; next_ptr != nullptr; next_ptr=next_ptr->_mNext) {
     assert(next_ptr != this);
     if (next_ptr->_mParent == newparent)
       break;
     next_ptr->_mParent = newparent;
   }
-  for (auto* prev_ptr = _mPrev; prev_ptr != nullptr; prev_ptr=prev_ptr->_mPrev) {
+  for (auto *prev_ptr = _mPrev; prev_ptr != nullptr; prev_ptr=prev_ptr->_mPrev) {
     assert(prev_ptr != this);
     if (prev_ptr->_mParent == newparent)
       break;
