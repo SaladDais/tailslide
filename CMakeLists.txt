@@ -160,7 +160,6 @@ endif()
 
 install(TARGETS libtailslide DESTINATION lib)
 install(DIRECTORY libtailslide/ DESTINATION include/tailslide FILES_MATCHING PATTERN "*.hh")
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lslmini.tab.hh DESTINATION include/tailslide)
 
 
 if (TAILSLIDE_BUILD_CLI)
