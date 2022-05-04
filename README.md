@@ -5,8 +5,13 @@
 
 Tailslide provides an embeddable parser, AST representation, and tree walker library for
 Second Life's Linden Scripting Language. These can be used as the foundation for an
-LSL compiler or developing a superset of LSL. A reference [byte-perfect LSO compiler](libtailslide/passes/lso)
-and semantically equivalent [CIL compiler](libtailslide/passes/mono) are provided.
+LSL compiler or developing a superset of LSL.
+
+A reference [byte-perfect LSO compiler](libtailslide/passes/lso)
+and semantically equivalent [CIL compiler](libtailslide/passes/mono) are provided. Semantic
+conformity with the output of LL's compilers is proven through
+[extensive testcases](https://github.com/SaladDais/tailslide/tree/master/tests/scripts) and a
+[fuzzer](https://github.com/SaladDais/lscript-tailslide#lscript_fuzzer).
 
 Also provided is a CLI utility to quickly lint or optimize LSL scripts,
 as well as visualize the AST of the supplied script.

@@ -979,7 +979,6 @@ bool MonoScriptCompiler::visit(LSLUnaryExpression *unary_expr) {
 bool MonoScriptCompiler::visit(LSLPrintExpression *print_expr) {
   auto *child_expr = print_expr->getChildExpr();
   child_expr->visit(this);
-  // TOOD: void expressions????
   castTopOfStack(child_expr->getIType(), LST_STRING);
   mCIL << "call void " << CIL_LSL_LIBRARY_CLASS << "::Print(string)\n";
   return false;
