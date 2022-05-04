@@ -24,8 +24,7 @@ class TypeCheckVisitor: public DepthFirstASTVisitor {
     virtual bool visit(LSLQuaternionExpression *node);
     virtual bool visit(LSLListConstant *node);
     virtual bool visit(LSLListExpression *node);
-    // just leave these alone entirely
-    virtual bool visit(LSLPrintExpression *node) { return true; };
+    virtual bool visit(LSLPrintExpression *node);
     
     void handleDeclaration(LSLASTNode *node);
 };

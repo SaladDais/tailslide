@@ -446,4 +446,18 @@ bool TypeCheckVisitor::visit(LSLQuaternionExpression *node) {
   return true;
 }
 
+bool TypeCheckVisitor::visit(LSLPrintExpression *node) {
+  // No passing void expressions to `print()`
+  if (node->getChildExpr()->getIType() == LST_NULL) {
+    NODE_ERROR(node, E_ARGUMENT_WRONG_TYPE,
+               "null",
+               1,
+               "print",
+               "any",
+               "notnull"
+    );
+  }
+  return true;
+}
+
 }

@@ -63,7 +63,7 @@ bool BestPracticesVisitor::visit(LSLEventHandler *node) {
 
 bool BestPracticesVisitor::visit(LSLIfStatement *node) {
   // see if expression is constant
-  LSLASTNode *cond = node->getCheckExpr();
+  auto *cond = node->getCheckExpr();
   if (cond->getConstantValue() != nullptr) {
     // TODO: can conditions be something other than integer?
     // ^ Yep, `key`s for one, and probably a bunch of others.
@@ -77,13 +77,11 @@ bool BestPracticesVisitor::visit(LSLIfStatement *node) {
     }
   }
 
-  // set if expression is an assignment
-  if (cond->getNodeType() == NODE_EXPRESSION) {
-    auto *expr = (LSLExpression *) cond;
-    if (expr->getOperation() == '=') {
-      NODE_ERROR(expr, W_ASSIGNMENT_IN_COMPARISON);
-    }
+  // if top expression is an assignment
+  if (cond->getOperation() == '=') {
+    NODE_ERROR(cond, W_ASSIGNMENT_IN_COMPARISON);
   }
+
   return true;
 }
 
