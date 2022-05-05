@@ -240,9 +240,9 @@ bool DeSugaringVisitor::visit(LSLForStatement *for_stmt) {
   maybeInjectBoolConversion(for_stmt->getCheckExpr());
 
   for (auto *expr : *for_stmt->getInitExprs())
-    ((LSLExpression *)expr)->setResultNeeded(false);
+    expr->setResultNeeded(false);
   for (auto *expr : *for_stmt->getIncrExprs())
-    ((LSLExpression *)expr)->setResultNeeded(false);
+    expr->setResultNeeded(false);
 
   return false;
 }

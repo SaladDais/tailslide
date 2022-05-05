@@ -310,10 +310,9 @@ std::string MonoScriptCompiler::getGlobalVarSpecifier(LSLSymbol *sym) {
 
 /// return a specifier that allows referencing the field for the accessor with ldfld or stfld
 std::string MonoScriptCompiler::getLValueAccessorSpecifier(LSLLValueExpression *lvalue) {
-  auto *accessor = lvalue->getMember();
   auto *accessor_type_name = CIL_TYPE_NAMES[lvalue->getIType()];
   auto *obj_type_name = CIL_TYPE_NAMES[lvalue->getSymbol()->getIType()];
-  auto *accessor_name = ((LSLIdentifier *) accessor)->getName();
+  auto *accessor_name = lvalue->getMember()->getName();
   return std::string(accessor_type_name) + " " + obj_type_name + "::" + accessor_name;
 }
 

@@ -73,6 +73,41 @@ enum LSLNodeSubType {
 class OptimizationOptions;
 class ASTVisitor;
 
+template<class T>
+struct node_child_iterator {
+  static_assert(std::is_base_of<class LSLASTNode, T>::value);
+
+  public:
+  using iterator_category = std::forward_iterator_tag;
+  using difference_type   = std::ptrdiff_t;
+  using value_type        = T*;
+  // TODO: this might be horrible. The ownership story is still very weird for
+  //  the AST, and all consumers expect pointers right now, so leaving it as is.
+  using pointer           = value_type;
+  using reference         = value_type;
+
+  explicit node_child_iterator(pointer ptr) : _mPtr(ptr) {}
+  T *operator*() const { return _mPtr; }
+  T *operator->() { return _mPtr; }
+
+  node_child_iterator & operator++() {
+    _mPtr = static_cast<T*>(_mPtr->getNext());
+    return *this;
+  }
+
+  node_child_iterator operator++(int) {
+    node_child_iterator tmp = *this;
+    ++(*this);
+    return tmp;
+  }
+
+  friend bool operator== (const node_child_iterator & a, const node_child_iterator & b) { return a._mPtr == b._mPtr; };
+  friend bool operator!= (const node_child_iterator & a, const node_child_iterator & b) { return a._mPtr != b._mPtr; };
+
+  private:
+  pointer _mPtr;
+};
+
 class LSLASTNode : public TrackableObject {
   public:
     explicit LSLASTNode(ScriptContext *ctx);
@@ -252,36 +287,8 @@ class LSLASTNode : public TrackableObject {
     bool                        _mStaticNode = false;
 
   public:
-    struct iterator
-    {
-      public:
-        using iterator_category = std::forward_iterator_tag;
-        using difference_type   = std::ptrdiff_t;
-        using value_type        = LSLASTNode*;
-        // TODO: this might be horrible. The ownership story is still very weird for
-        //  the AST, and all consumers expect pointers right now, so leaving it as is.
-        using pointer           = value_type;
-        using reference         = value_type;
-
-        explicit iterator(pointer ptr) : _mPtr(ptr) {}
-        LSLASTNode *operator*() const { return _mPtr; }
-        LSLASTNode *operator->() { return _mPtr; }
-
-        iterator& operator++() {
-          _mPtr = _mPtr->getNext();
-          return *this;
-        }
-
-        iterator operator++(int) {iterator tmp = *this; ++(*this); return tmp; }
-
-        friend bool operator== (const iterator& a, const iterator& b) { return a._mPtr == b._mPtr; };
-        friend bool operator!= (const iterator& a, const iterator& b) { return a._mPtr != b._mPtr; };
-
-      private:
-        pointer _mPtr;
-    };
-    iterator begin() { return iterator(_mChildren); }
-    iterator end()   { return iterator(nullptr); }
+    node_child_iterator<LSLASTNode> begin() { return node_child_iterator<LSLASTNode>(_mChildren); }
+    node_child_iterator<LSLASTNode> end()   { return node_child_iterator<LSLASTNode>(nullptr); }
 };
 
 class LSLASTNullNode : public LSLASTNode {
@@ -291,19 +298,20 @@ class LSLASTNullNode : public LSLASTNode {
     virtual LSLNodeType getNodeType() { return NODE_NULL; };
 };
 
-
 template<class T>
 class LSLASTNodeList : public LSLASTNode {
+  static_assert(std::is_base_of<LSLASTNode, T>::value, "T Must derive from LSLASTNode!");
   public:
-    explicit LSLASTNodeList<T>(ScriptContext *ctx) : LSLASTNode(ctx, 0) {
-      static_assert(std::is_base_of<LSLASTNode, T>::value, "T Must derive from LSLASTNode!");
-    };
+    explicit LSLASTNodeList<T>(ScriptContext *ctx) : LSLASTNode(ctx, 0) {};
     LSLASTNodeList<T>(ScriptContext *ctx, class LSLASTNode *nodes ) : LSLASTNodeList(ctx) {
       if (nodes)
         pushChild(nodes);
     };
     virtual const char *getNodeName() { return "ast node list"; }
     virtual LSLNodeType getNodeType() { return NODE_AST_NODE_LIST; };
+
+    node_child_iterator<T> begin() { return node_child_iterator<T>(static_cast<T*>(_mChildren)); }
+    node_child_iterator<T> end()   { return node_child_iterator<T>(nullptr); }
 };
 
 }

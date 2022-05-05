@@ -371,9 +371,23 @@ class LSLEventDec : public LSLParamList {
     virtual LSLNodeType getNodeType() { return NODE_EVENT_DEC; };
 };
 
+
+class LSLEventHandler : public LSLASTNode {
+  public:
+  LSLEventHandler( ScriptContext *ctx, class LSLIdentifier *identifier, class LSLEventDec *decl, class LSLStatement *body )
+      : LSLASTNode(ctx, 3, identifier, decl, body) {};
+  NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
+  NODE_FIELD_GS(LSLFunctionDec, Arguments, 1)
+  NODE_FIELD_GS(LSLStatement, Statements, 2)
+
+  virtual const char *getNodeName() { return "event handler"; }
+  virtual LSLNodeType getNodeType() { return NODE_EVENT_HANDLER; };
+  virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
+};
+
 class LSLState : public LSLASTNode {
   public:
-    LSLState( ScriptContext *ctx, class LSLIdentifier *identifier, LSLASTNodeList<class LSLEventHandler> *event_handlers)
+    LSLState( ScriptContext *ctx, class LSLIdentifier *identifier, LSLASTNodeList<LSLEventHandler> *event_handlers)
         : LSLASTNode( ctx, 2, identifier, event_handlers) {};
     NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
     NODE_FIELD_GS(LSLASTNodeList<class LSLEventHandler>, EventHandlers, 1)
@@ -383,17 +397,31 @@ class LSLState : public LSLASTNode {
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
 };
 
-class LSLEventHandler : public LSLASTNode {
-  public:
-    LSLEventHandler( ScriptContext *ctx, class LSLIdentifier *identifier, class LSLEventDec *decl, class LSLStatement *body )
-      : LSLASTNode(ctx, 3, identifier, decl, body) {};
-    NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
-    NODE_FIELD_GS(LSLFunctionDec, Arguments, 1)
-    NODE_FIELD_GS(LSLStatement, Statements, 2)
 
-    virtual const char *getNodeName() { return "event handler"; }
-    virtual LSLNodeType getNodeType() { return NODE_EVENT_HANDLER; };
-    virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
+class LSLExpression : public LSLASTNode {
+  public:
+  explicit LSLExpression(ScriptContext *ctx) : LSLASTNode(ctx, 0), _mOperation(OP_NONE) {};
+  LSLExpression(ScriptContext *ctx, int num, ...): LSLASTNode(ctx), _mOperation(OP_NONE) {
+    va_list ap;
+    va_start(ap, num);
+    addChildren(num, ap);
+    va_end(ap);
+  };
+
+  virtual const char *getNodeName() {
+    return "base expression";
+  };
+  virtual LSLNodeType getNodeType() { return NODE_EXPRESSION; };
+
+  virtual LSLConstant *getConstantValue();
+  virtual bool nodeAllowsFolding() { return true; };
+  LSLOperator getOperation() const {return _mOperation;};
+  void setOperation(LSLOperator op) {_mOperation = op;};
+  void setResultNeeded(bool result_needed) { _mResultNeeded = result_needed; };
+  bool getResultNeeded() { return _mResultNeeded; }
+  protected:
+  LSLOperator _mOperation;
+  bool _mResultNeeded = true;
 };
 
 class LSLStatement : public LSLASTNode {
@@ -535,32 +563,6 @@ class LSLDeclaration : public LSLStatement {
 
     virtual LSLConstant *getConstantValue();
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
-};
-
-class LSLExpression : public LSLASTNode {
-public:
-    explicit LSLExpression(ScriptContext *ctx) : LSLASTNode(ctx, 0), _mOperation(OP_NONE) {};
-    LSLExpression(ScriptContext *ctx, int num, ...): LSLASTNode(ctx), _mOperation(OP_NONE) {
-      va_list ap;
-      va_start(ap, num);
-      addChildren(num, ap);
-      va_end(ap);
-    };
-
-    virtual const char *getNodeName() {
-      return "base expression";
-    };
-    virtual LSLNodeType getNodeType() { return NODE_EXPRESSION; };
-
-    virtual LSLConstant *getConstantValue();
-    virtual bool nodeAllowsFolding() { return true; };
-    LSLOperator getOperation() const {return _mOperation;};
-    void setOperation(LSLOperator op) {_mOperation = op;};
-    void setResultNeeded(bool result_needed) { _mResultNeeded = result_needed; };
-    bool getResultNeeded() { return _mResultNeeded; }
-  protected:
-    LSLOperator _mOperation;
-    bool _mResultNeeded = true;
 };
 
 
@@ -705,6 +707,12 @@ class LSLListExpression : public LSLExpression {
 
     virtual const char *getNodeName() { return "list expression"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_LIST_EXPRESSION; }
+    node_child_iterator<LSLExpression> begin() {
+      return node_child_iterator<LSLExpression>(static_cast<LSLExpression*>(_mChildren));
+    }
+    node_child_iterator<LSLExpression> end() {
+      return node_child_iterator<LSLExpression>(nullptr);
+    }
 };
 
 class LSLLValueExpression : public LSLExpression {
