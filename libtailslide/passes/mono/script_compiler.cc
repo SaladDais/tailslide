@@ -646,7 +646,8 @@ const std::map<int, std::pair<const char *, std::vector<SimpleBinaryOperationInf
         {LST_QUATERNION, LST_QUATERNION},
     }}},
     {'-', {"Subtract", {
-        {LST_INTEGER, LST_INTEGER},
+        // not done because we have an optional optimization we can do
+        // {LST_INTEGER, LST_INTEGER},
         // not simple, float64 args and return!
         // {LST_FLOATINGPOINT, LST_FLOATINGPOINT},
         {LST_VECTOR, LST_VECTOR},
@@ -775,15 +776,44 @@ void MonoScriptCompiler::compileBinaryExpression(LSLOperator op, LSLExpression *
       }
     }
     case '-': {
-      right->visit(this);
-      left->visit(this);
-      switch (left_type) {
-        case LST_FLOATINGPOINT:
-          mCIL << "call float64 " << CIL_USERSCRIPT_CLASS << "::'Subtract'(float64, float64)\n";
-          return;
-        default:
-          assert(0);
-          return;
+      if (_mOptions.optimize_sutractions) {
+        // LSL usually evaluates expressions from right to left, so arguments are
+        // often in the wrong order on the stack for CIL's primitive binary operations.
+        // LL gets around that by calling methods with the argument orders reversed that
+        // call the math operations internally with the correct order. This bit of nastiness
+        // is hard to avoid without using a scratch local and a decent amount of bytecode to
+        // swap the top two elements of the stack in place.
+        //
+        // Logically, lhs - rhs is equivalent to (-rhs) + lhs, so do it that way
+        // rather than calling the Subtract method with the reversed arguments.
+        // Skimming through the IEEE-754 spec there shouldn't be any semantic
+        // difference. It's faster and serializes to fewer bytes.
+        right->visit(this);
+        mCIL << "neg\n";
+        left->visit(this);
+        switch (left_type) {
+          case LST_FLOATINGPOINT:
+          case LST_INTEGER:
+            mCIL << "add\n";
+            return;
+          default:
+            assert(0);
+            return;
+        }
+      } else {
+        right->visit(this);
+        left->visit(this);
+        switch (left_type) {
+          case LST_FLOATINGPOINT:
+            mCIL << "call float64 " << CIL_USERSCRIPT_CLASS << "::'Subtract'(float64, float64)\n";
+            return;
+          case LST_INTEGER:
+            mCIL << "call int32 " << CIL_USERSCRIPT_CLASS << "::'Subtract'(int32, int32)\n";
+            return;
+          default:
+            assert(0);
+            return;
+        }
       }
     }
     case '*': {
@@ -943,7 +973,7 @@ bool MonoScriptCompiler::visit(LSLUnaryExpression *unary_expr) {
 
     // This store + push, then subsequent pop is totally unnecessary, but matches what LL's
     //  compiler does. Only do it if we're not allowed to omit pushes.
-    if (!_mMayOmitPushes) {
+    if (!_mOptions.omit_unnecessary_pushes) {
       storeToLValue(lvalue, true);
       mCIL << "pop\n";
     }

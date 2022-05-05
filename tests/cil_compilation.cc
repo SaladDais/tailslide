@@ -29,6 +29,18 @@ SIMPLE_CIL_CONFORMANCE("state_change.lsl")
 SIMPLE_CIL_CONFORMANCE("lsl_conformance.lsl")
 SIMPLE_CIL_CONFORMANCE("deprecated_function.lsl")
 SIMPLE_CIL_CONFORMANCE("event_handlers.lsl")
+TEST_CASE("sub_replacement.lsl") {
+    checkCILOutput("sub_replacement.lsl", {
+      .optimize_sutractions = true,
+      .omit_unnecessary_pushes = false
+    });
+}
+TEST_CASE("push_omission.lsl") {
+  checkCILOutput("push_omission.lsl", {
+      .optimize_sutractions = false,
+      .omit_unnecessary_pushes = true
+  });
+}
 
 TEST_SUITE_END();
 

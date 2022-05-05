@@ -1,18 +1,18 @@
 #ifndef TESTUTILS_HH
 #define TESTUTILS_HH
 
-#include "tailslide.hh"
 #include "doctest.hh"
+#include "passes/mono/script_compiler.hh"
 #include "passes/pretty_print.hh"
 #include "passes/tree_print.hh"
 #include "passes/tree_simplifier.hh"
+#include "tailslide.hh"
 
-#include <vector>
-#include <memory>
-#include <string>
 #include <fstream>
+#include <memory>
 #include <sstream>
-
+#include <string>
+#include <vector>
 
 
 #define SIMPLE_LINT_TEST_CASE(name) TEST_CASE(name) { \
@@ -46,6 +46,7 @@ void checkLSOOutput(
 
 void checkCILOutput(
     const char *name,
+    Tailslide::MonoCompilationOptions options = {},
     void (*massager)(Tailslide::LSLScript *script) = nullptr
 );
 

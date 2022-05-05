@@ -81,6 +81,8 @@ bool DeSugaringVisitor::visit(LSLUnaryExpression *unary_expr) {
 
   // these compile to a different form than `foo = foo + 1` in mono,
   // don't desugar.
+  // Since there's no RHS expression to evaluate, we're able to generate
+  // more efficient CIL that doesn't need to call a subtract method
   if (_mMonoSemantics)
     return true;
 

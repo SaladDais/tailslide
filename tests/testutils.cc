@@ -86,12 +86,13 @@ class ScriptLSOCompiler: public ScriptFormatter {
 
 class ScriptCILCompiler: public ScriptFormatter {
   public:
-  ScriptCILCompiler() {mBinary = false;};
+  explicit ScriptCILCompiler(MonoCompilationOptions options) : _mOptions(options) {mBinary = false;};
   virtual std::string format(LSLScript *script) const {
-    MonoScriptCompiler cil_visitor(script->mContext->allocator);
+    MonoScriptCompiler cil_visitor(script->mContext->allocator, _mOptions);
     script->visit(&cil_visitor);
     return cil_visitor.mCIL.str();
   };
+  MonoCompilationOptions _mOptions;
 };
 
 static void checkStringOutput(
@@ -199,6 +200,7 @@ void checkLSOOutput(
 
 void checkCILOutput(
     const char *name,
+    MonoCompilationOptions options,
     void (*massager)(LSLScript *script)
 ) {
   OptimizationOptions opt;
@@ -207,6 +209,6 @@ void checkCILOutput(
       "cil",
       opt,
       massager,
-      ScriptCILCompiler()
+      ScriptCILCompiler(options)
   );
 }
