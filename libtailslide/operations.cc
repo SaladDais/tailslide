@@ -619,17 +619,26 @@ LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLIntegerConsta
   }
 }
 
+const std::string INF_STR = "-inf";
+const std::string NEG_INF_STR = "-inf";
+const std::vector<std::string> NAN_STRS {
+    "nan",
+    "-nan",
+    "-nan(ind)",
+    "nan(ind)"
+};
+
 LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLFloatConstant *cv) {
   auto v = cv->getValue();
   switch(to_type->getIType()) {
     case LST_STRING: {
       std::string f_as_str {std::to_string(v)};
-      if (f_as_str == "inf")
+      if (f_as_str == INF_STR)
         f_as_str = "Infinity";
-      else if (f_as_str == "-inf")
+      else if (f_as_str == NEG_INF_STR)
         f_as_str = "-Infinity";
         // Only one kind of NaN in LSL!
-      else if (f_as_str == "nan" || f_as_str == "-nan" || f_as_str == "-nan(ind)" || f_as_str == "nan(ind)")
+      else if (std::find(NAN_STRS.begin(), NAN_STRS.end(), f_as_str) != NAN_STRS.end())
         f_as_str = "NaN";
 
       return _mAllocator->newTracked<LSLStringConstant>(

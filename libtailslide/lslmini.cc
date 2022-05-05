@@ -248,21 +248,15 @@ class NodeReferenceUpdatingVisitor : public ASTVisitor {
   public:
     virtual bool visit(LSLExpression *expr) {
       if (operation_mutates(expr->getOperation())) {
-        LSLASTNode *child = expr->getChild(0);
+        auto *child = (LSLLValueExpression *)expr->getChild(0);
+        assert(child->getNodeSubType() == NODE_LVALUE_EXPRESSION);
         // track the assignment
-        if (child->getNodeSubType() == NODE_LVALUE_EXPRESSION) {
-          auto *sym = child->getSymbol();
-          if (!sym)
-            return true;
-
-          // TODO: This should be moved to one of the other passes.
-          if (sym->getSubType() == SYM_BUILTIN) {
-            NODE_ERROR(expr, E_BUILTIN_LVALUE, sym->getName());
-            // make sure we don't muck with the assignment count on a builtin symbol!
-            return true;
-          }
-          sym->addAssignment();
+        auto *sym = child->getSymbol();
+        if (!sym || sym->getSubType() == SYM_BUILTIN) {
+          // make sure we don't muck with the assignment count on a builtin symbol!
+          return true;
         }
+        sym->addAssignment();
       }
       return true;
     };

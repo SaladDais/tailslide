@@ -179,6 +179,18 @@ bool TypeCheckVisitor::visit(LSLExpression *expr) {
   LSLASTNode *right = expr->getChild(1);
   LSLType *l_type = left->getType();
   LSLType *r_type = right ? right->getType() : nullptr;
+
+  if (operation_mutates(operation)) {
+    assert (left->getNodeSubType() == NODE_LVALUE_EXPRESSION);
+    auto *sym = left->getSymbol();
+    // Attempting to mutate a builtin always results in an error.
+    if (sym && sym->getSubType() == SYM_BUILTIN) {
+      NODE_ERROR(expr, E_BUILTIN_LVALUE, sym->getName());
+      expr->setType(TYPE(LST_ERROR));
+      return true;
+    }
+  }
+
   if (operation == 0 || operation == '(') {
     type = l_type;
   } else if (l_type == TYPE(LST_ERROR) || r_type == TYPE(LST_ERROR)) {
