@@ -6,6 +6,6 @@
 
 namespace Tailslide {
 
-extern const UnorderedCStrMap<uint64_t> LSO_LIBRARY_FUNCS;
+extern const UnorderedCStrMap<uint32_t> LSO_LIBRARY_FUNCS;
 
 }

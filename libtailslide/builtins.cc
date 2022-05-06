@@ -78,19 +78,19 @@ static void set_default_value(LSLType *type, LSLConstant *constant) {
 
 static void init_default_values() {
   set_default_value(TYPE(LST_INTEGER), gStaticAllocator.newTracked<LSLIntegerConstant>(0));
-  set_default_value(TYPE(LST_FLOATINGPOINT), gStaticAllocator.newTracked<LSLFloatConstant>(0));
+  set_default_value(TYPE(LST_FLOATINGPOINT), gStaticAllocator.newTracked<LSLFloatConstant>(0.0f));
   set_default_value(TYPE(LST_STRING), gStaticAllocator.newTracked<LSLStringConstant>(""));
   // Default value is _not_ NULL_KEY, even though you might logically think that.
   set_default_value(TYPE(LST_KEY), gStaticAllocator.newTracked<LSLKeyConstant>(""));
-  set_default_value(TYPE(LST_VECTOR), gStaticAllocator.newTracked<LSLVectorConstant>(0, 0, 0));
-  set_default_value(TYPE(LST_QUATERNION), gStaticAllocator.newTracked<LSLQuaternionConstant>(0, 0, 0, 1));
+  set_default_value(TYPE(LST_VECTOR), gStaticAllocator.newTracked<LSLVectorConstant>(0.0f, 0.0f, 0.0f));
+  set_default_value(TYPE(LST_QUATERNION), gStaticAllocator.newTracked<LSLQuaternionConstant>(0.0f, 0.0f, 0.0f, 1.0f));
   set_default_value(TYPE(LST_LIST), gStaticAllocator.newTracked<LSLListConstant>(nullptr));
 
   // These are used for de-sugaring the pre/post-inc/decrement operators
   auto *int_one = gStaticAllocator.newTracked<LSLIntegerConstant>(1);
   int_one->markStatic();
   TYPE(LST_INTEGER)->setOneValue(int_one);
-  auto *float_one = gStaticAllocator.newTracked<LSLFloatConstant>(1.f);
+  auto *float_one = gStaticAllocator.newTracked<LSLFloatConstant>(1.0f);
   float_one->markStatic();
   TYPE(LST_FLOATINGPOINT)->setOneValue(float_one);
 }

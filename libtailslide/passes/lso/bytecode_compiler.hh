@@ -50,9 +50,9 @@ class LSOBytecodeCompiler : public ASTVisitor {
     LSOSymbolData *_mFuncSymData = nullptr;
     /// map of label name -> position of the jump instruction. Intentionally
     /// disallows multiple jumps to match LL LSO compiler behavior.
-    std::map<std::string, uint64_t> _mJumpMap;
+    std::map<std::string, uint32_t> _mJumpMap;
     /// map of label symbol ptr to its location in the bytecode
-    std::map<std::string, uint64_t> _mLabelMap;
+    std::map<std::string, uint32_t> _mLabelMap;
 
   public:
     LSOBitStream mCodeBS {ENDIAN_BIG};

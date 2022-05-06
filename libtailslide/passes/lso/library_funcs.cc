@@ -3,7 +3,7 @@
 namespace Tailslide {
 
 // index within this list decides the library num for a function.
-const UnorderedCStrMap<uint64_t> LSO_LIBRARY_FUNCS{
+const UnorderedCStrMap<uint32_t> LSO_LIBRARY_FUNCS{
     {"llSin", 0},
     {"llCos", 1},
     {"llTan", 2},

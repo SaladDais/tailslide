@@ -62,7 +62,7 @@ bool LSOResourceVisitor::visit(LSLState *state) {
 bool LSOResourceVisitor::visit(LSLDeclaration *decl_stmt) {
   auto *sym = decl_stmt->getSymbol();
   auto *sym_data = getSymbolData(sym);
-  sym_data->index = _mCurrentFunc->locals.size();
+  sym_data->index = (uint32_t)_mCurrentFunc->locals.size();
   sym_data->offset = _mCurrentFunc->size;
   // local slots are smaller than globals, no overhead for offset to data, type and name.
   _mCurrentFunc->size += sym_data->size = LSO_TYPE_DATA_SIZES[sym->getIType()];
@@ -82,7 +82,7 @@ bool LSOResourceVisitor::visit(LSLEventHandler *handler) {
   visitChildren(handler);
   _mCurrentFunc = nullptr;
   // figure out the LSO event handler index for this handler name
-  for(size_t handler_idx=LSOH_STATE_ENTRY; handler_idx<LSOH_MAX; ++handler_idx) {
+  for(uint32_t handler_idx=LSOH_STATE_ENTRY; handler_idx<LSOH_MAX; ++handler_idx) {
     if (!strcmp(sym->getName(), LSO_HANDLER_NAMES[handler_idx])) {
       handler_sym_data->index = handler_idx;
       // register the state as having this handler as well

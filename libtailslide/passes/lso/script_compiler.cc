@@ -5,7 +5,7 @@
 
 namespace Tailslide {
 
-inline size_t state_table_pos(uint32_t state_num) {
+inline uint32_t state_table_pos(uint32_t state_num) {
   return sizeof(uint32_t) + ((sizeof(uint32_t) + sizeof(uint64_t)) * state_num);
 }
 
@@ -186,7 +186,7 @@ bool LSOScriptCompiler::visit(LSLGlobalFunction *glob_func) {
   auto function_start = _mFunctionsBS.pos();
   {
     // temporarily seek to this function's index in the function table, write in where it starts
-    ScopedBitStreamSeek seek(_mFunctionsBS, sizeof(uint32_t) + (sizeof(uint32_t) * func_data.index));
+    ScopedBitStreamSeek seek(_mFunctionsBS, (uint32_t)(sizeof(uint32_t) + (sizeof(uint32_t) * func_data.index)));
     _mFunctionsBS << (uint32_t)function_start;
   }
   // offset to code, name, ret_type, [param_type, '\0', ...], '\0', bytecode
@@ -223,7 +223,7 @@ bool LSOScriptCompiler::visit(LSLState *state) {
     auto *event_data = &_mSymData[event_handler->getSymbol()];
     // the jump table is in handler enum order, figure out our position within it
     auto table_iter = state_data->handlers.find((LSOHandlerType)event_data->index);
-    auto table_idx = std::distance(state_data->handlers.begin(), table_iter);
+    auto table_idx = (uint32_t)std::distance(state_data->handlers.begin(), table_iter);
 
     auto event_start_pos = _mStateBS.pos();
     {
@@ -345,8 +345,8 @@ uint32_t LSOHeapManager::writeConstant(LSLConstant *constant) {
       // Keys are always added to the heap as strings in the global case.
       // they can only be added as LST_KEY in the runtime list expression case
       // which we don't need to handle.
-      writeHeader(str_len + 1, LST_STRING);
-      mHeapBS.writeRawData((uint8_t *) str_val, str_len);
+      writeHeader((uint32_t)(str_len + 1), LST_STRING);
+      mHeapBS.writeRawData((uint8_t *) str_val, (uint32_t)str_len);
       mHeapBS << '\0';
       break;
     }

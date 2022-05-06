@@ -28,7 +28,7 @@ TEST_CASE("Simple heap compilation") {
   // create a list and write it (and its contents) to the heap
   auto *list_const = parser.allocator.newTracked<LSLListConstant>(nullptr);
   list_const->pushChild(parser.allocator.newTracked<LSLIntegerConstant>(1));
-  auto *vec_child = parser.allocator.newTracked<LSLVectorConstant>(1, 2, 3);
+  auto *vec_child = parser.allocator.newTracked<LSLVectorConstant>(1.0f, 2.0f, 3.0f);
   list_const->pushChild(vec_child);
   LSOHeapManager heap_manager;
   CHECK_EQ(heap_manager.writeConstant(list_const), 1);

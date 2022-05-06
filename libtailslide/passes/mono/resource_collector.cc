@@ -67,7 +67,7 @@ bool MonoResourceVisitor::visit(LSLEventHandler *handler) {
 bool MonoResourceVisitor::visit(LSLDeclaration *decl_stmt) {
   auto *sym = decl_stmt->getSymbol();
   auto *sym_data = getSymbolData(sym);
-  sym_data->index = _mCurrentFunc->locals.size();
+  sym_data->index = (uint32_t)_mCurrentFunc->locals.size();
   _mCurrentFunc->locals.push_back(sym->getIType());
   return true;
 }

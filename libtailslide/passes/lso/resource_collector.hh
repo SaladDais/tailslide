@@ -14,7 +14,7 @@ struct LSOSymbolData {
   // this will be == offset for library functions.
   uint32_t size = 0;
   // index within some collection starting from 0
-  uint64_t index = 0;
+  uint32_t index = 0;
   // defined event handlers in sort order, if this is a state
   std::set<LSOHandlerType> handlers{};
   // all locals (if this symbol is a function or event handler)

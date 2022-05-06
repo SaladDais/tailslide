@@ -2,7 +2,7 @@
 
 namespace Tailslide {
 
-inline int32_t calculate_jump_operand(uint64_t operand_pos, uint64_t target_pos) {
+inline int32_t calculate_jump_operand(uint32_t operand_pos, uint32_t target_pos) {
   return (int32_t)(target_pos - (operand_pos + sizeof(uint32_t)));
 }
 
@@ -13,18 +13,18 @@ class LSOStructuredJumpPatcher {
     explicit LSOStructuredJumpPatcher(LSOBitStream &bstream) :
         _mBS(bstream), _mSourcePos(bstream.pos()) {};
     /// mark where the jump is to
-    void markTarget() { _mTargetPos = (int64_t)_mBS.pos(); };
+    void markTarget() { _mTargetPos = _mBS.pos(); };
     /// patch the jump operand to jump to the target position
     void patch() {
       if (_mTargetPos == -1)
         markTarget();
 
       ScopedBitStreamSeek seek(_mBS, _mSourcePos);
-      _mBS << calculate_jump_operand((uint64_t)_mSourcePos, (uint64_t)_mTargetPos);
+      _mBS << calculate_jump_operand(_mSourcePos, (uint32_t)_mTargetPos);
     }
   protected:
     LSOBitStream &_mBS;
-    int64_t _mSourcePos;
+    uint32_t _mSourcePos;
     int64_t _mTargetPos = -1;
 };
 
@@ -463,7 +463,7 @@ void LSOBytecodeCompiler::pushConstant(LSLConstant *constant) {
     case LST_KEY: {
       auto *str = ((LSLStringConstant *) constant)->getValue();
       mCodeBS << LOPC_PUSHARGS;
-      mCodeBS.writeRawData((uint8_t *)str, strlen(str) + 1);
+      mCodeBS.writeRawData((uint8_t *)str, (uint32_t)(strlen(str) + 1));
       break;
     }
     case LST_VECTOR:

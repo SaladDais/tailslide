@@ -116,7 +116,7 @@ TEST_CASE("Bitstream read_only")
   size_t val = 42;
   bs1 << val;
 
-  bs2.assign(bs1.data(), bs1.size(), true);
+  bs2.assign(bs1.data(), (uint32_t)bs1.size(), true);
 
   CHECK_FALSE(bs1.isReadOnly());
   CHECK(bs2.isReadOnly());

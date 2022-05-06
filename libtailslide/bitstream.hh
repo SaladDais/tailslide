@@ -113,7 +113,7 @@ class BitStream {
     /// Create read-only BitStream that accesses this BitStream's data
     BitStream makeView() const {
       BitStream view;
-      view.assign(data(), size(), true);
+      view.assign(data(), (uint32_t)size(), true);
       return view;
     }
 
@@ -220,7 +220,7 @@ class BitStream {
      *
      * @note This will raise an exception if data is a nullpointer or length is of size 0
      */
-    BitStream &writeRawData(const uint8_t *data, const uint32_t length, bool advance = true) {
+    BitStream &writeRawData(const uint8_t *data, uint32_t length, bool advance = true) {
       if (data == nullptr || length == 0) {
         return *this;
       }
@@ -244,7 +244,7 @@ class BitStream {
       }
 
       auto remain = remainingSize();
-      resize(size() + increase);
+      resize((uint32_t)(size() + increase));
 
       // had data after the cursor and we're increasing in size
       if (increase > 0 && remain) {
@@ -261,7 +261,7 @@ class BitStream {
       }
 
       memmove(current(), current() + decrease, remainingSize() - decrease);
-      resize(size() - decrease);
+      resize((uint32_t)(size() - decrease));
     }
 
     void readRawData(uint8_t **data, uint32_t length) {
@@ -339,7 +339,7 @@ class BitStream {
     * @param bstream
     */
     BitStream &writeBitStream(const BitStream &other) {
-      return writeRawData(other.data(), other.size());
+      return writeRawData(other.data(), (uint32_t)other.size());
     }
 
     /**
