@@ -123,6 +123,7 @@ target_sources(libtailslide PRIVATE
         libtailslide/strings.hh
         libtailslide/symtab.hh
         libtailslide/types.hh
+        libtailslide/unordered_cstr_map.hh
         libtailslide/visitor.hh
         libtailslide/passes/globalexpr_validator.hh
         libtailslide/passes/best_practices.hh

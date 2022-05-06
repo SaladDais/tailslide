@@ -1,10 +1,11 @@
 #pragma once
 
+#include "unordered_cstr_map.hh"
+#include <cstdint>
 #include <string>
-#include <vector>
 
 namespace Tailslide {
 
-extern const std::vector<std::string> LSO_LIBRARY_FUNCS;
+extern const UnorderedCStrMap<uint64_t> LSO_LIBRARY_FUNCS;
 
 }

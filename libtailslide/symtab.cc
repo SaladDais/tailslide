@@ -9,7 +9,7 @@
 namespace Tailslide {
 
 void LSLSymbolTable::define(LSLSymbol *symbol) {
-  _mSymbols.insert(SensitiveSymbolMap::value_type(symbol->getName(), symbol));
+  _mSymbols.insert(UnorderedCStrMap<LSLSymbol*>::value_type(symbol->getName(), symbol));
   DEBUG(
     LOG_DEBUG_SPAM,
     NULL,
@@ -62,7 +62,7 @@ void LSLSymbolTable::resetTracking() {
 void LSLSymbolTableManager::setMangledNames() {
   int seq = 0;
   for (auto &desc_table: _mTables) {
-    SensitiveSymbolMap &node_symbols = desc_table->getMap();
+    auto &node_symbols = desc_table->getMap();
     // We want mangled symbol name to be consistent across STL implementations,
     // and our symbol map is specifically unsorted. Place the symbol names in an std::set
     // which will de-dupe and has a specification-imposed iteration order.

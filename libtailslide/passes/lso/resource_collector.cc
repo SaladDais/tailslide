@@ -11,9 +11,9 @@ bool LSOResourceVisitor::visit(LSLScript *script) {
       continue;
     auto sym_data = getSymbolData(sym);
     // get the library num for this function
-    auto iter = std::find(LSO_LIBRARY_FUNCS.begin(), LSO_LIBRARY_FUNCS.end(), sym->getName());
-    if (iter != LSO_LIBRARY_FUNCS.end())
-      sym_data->index = iter - LSO_LIBRARY_FUNCS.begin();
+    auto func_idx_iter = LSO_LIBRARY_FUNCS.find(sym->getName());
+    if (func_idx_iter != LSO_LIBRARY_FUNCS.end())
+      sym_data->index = func_idx_iter->second;
     else
       // There are lot of functions we don't have the library num for,
       // just put a placeholder number.

@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <vector>
 #include <unordered_map>
+#include "unordered_cstr_map.hh"
 
 #include "allocator.hh"
 
@@ -90,33 +91,6 @@ class LSLSymbol: public TrackableObject {
     bool _mAllPathsReturn = false;
 };
 
-
-// based on Java string hashing algo, assumes null-terminated
-template <class T = const char *>
-struct CStrHash {
-  constexpr std::size_t operator()(T x) const {
-    size_t result = 0;
-    const size_t prime = 31;
-    for(size_t i=0; x[i] != '\0'; ++i)
-      result = x[i] + (result * prime);
-    return result;
-  }
-};
-
-template <class T = const char *>
-struct CStrEqualTo {
-  constexpr bool operator()(T x, T y) const {
-    return strcmp(x, y) == 0;
-  }
-};
-
-typedef std::unordered_multimap<
-    const char *,
-    LSLSymbol *,
-    CStrHash<const char *>,
-    CStrEqualTo<const char *>
-    > SensitiveSymbolMap;
-
 class LSLSymbolTable: public TrackableObject {
   public:
     explicit LSLSymbolTable(ScriptContext *ctx): TrackableObject(ctx) {};
@@ -127,11 +101,11 @@ class LSLSymbolTable: public TrackableObject {
     void resetTracking();
 
   private:
-    SensitiveSymbolMap _mSymbols;
+    UnorderedCStrMap<LSLSymbol*> _mSymbols;
     LSLSymbolTable *_mParent = nullptr;
 
   public:
-    SensitiveSymbolMap &getMap() {return _mSymbols;}
+    UnorderedCStrMap<LSLSymbol*> &getMap() {return _mSymbols;}
 };
 
 class LSLSymbolTableManager {
