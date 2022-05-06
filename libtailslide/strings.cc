@@ -74,7 +74,7 @@ char *parse_string(ScriptAllocator *allocator, char *input, YYLTYPE *lloc) {
 std::string escape_string(const char *data) {
   std::string new_str;
   size_t datasize = strlen(data);
-  for(int i=0; i<datasize; ++i) {
+  for(size_t i=0; i<datasize; ++i) {
     char c = data[i];
     if (c == '\\')
       new_str += "\\\\";

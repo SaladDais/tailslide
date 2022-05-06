@@ -7,9 +7,8 @@
 
 namespace Tailslide {
 
-LSLASTNode::LSLASTNode(ScriptContext *ctx) : _mType(nullptr), _mSymbolTable(nullptr), _mConstantValue(nullptr),
-                                             _mDeclarationAllowed(true), _mChildren(nullptr),
-                                             _mNext(nullptr), _mPrev(nullptr), _mParent(nullptr), TrackableObject(ctx) {
+LSLASTNode::LSLASTNode(ScriptContext *ctx) : TrackableObject(ctx), _mType(nullptr), _mSymbolTable(nullptr), _mConstantValue(nullptr),
+                                             _mChildren(nullptr), _mParent(nullptr), _mNext(nullptr), _mPrev(nullptr), _mDeclarationAllowed(true) {
   _mType = TYPE(LST_NULL);
   if (ctx) {
     _mLoc = ctx->glloc;

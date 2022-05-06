@@ -210,7 +210,7 @@ void MonoScriptCompiler::pushFloatLiteral(float value) {
 void MonoScriptCompiler::storeToLValue(LSLLValueExpression *lvalue, bool push_result) {
   auto *sym = lvalue->getSymbol();
   // coordinate accessor case
-  if (auto *accessor = lvalue->getMember()) {
+  if (lvalue->getMember()) {
     mCIL << "stfld " << getLValueAccessorSpecifier(lvalue) << "\n";
     // Expression assignments need to return their result, load what we just stored onto the stack
     // TODO: This seems really wasteful in many cases, but this is how LL's compiler does it.
@@ -584,13 +584,15 @@ bool MonoScriptCompiler::visit(LSLListExpression *list_expr) {
     }
   } else {
     // list elements get evaluated and pushed FIRST
+    size_t num_children = 0;
     for (auto *child : *list_expr) {
       child->visit(this);
       mCIL << CIL_BOXING_INSTRUCTIONS[child->getIType()];
+      ++num_children;
     }
     // then they get added to the list
     mCIL << CIL_LIST_INITIALIZER << "\n";
-    for (auto *child : *list_expr) {
+    for (size_t i=0; i<num_children; ++i) {
       mCIL << "call " << CIL_TYPE_NAMES[LST_LIST] << " " << CIL_USERSCRIPT_CLASS << "::Prepend(object, " << CIL_TYPE_NAMES[LST_LIST] << ")\n";
     }
   }

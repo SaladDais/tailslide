@@ -30,12 +30,12 @@ enum LSLSymbolSubType    { SYM_LOCAL, SYM_GLOBAL, SYM_BUILTIN, SYM_FUNCTION_PARA
 class LSLSymbol: public TrackableObject {
   public:
     LSLSymbol( ScriptContext *ctx, const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, YYLTYPE *lloc, class LSLParamList *function_decl = NULL, class LSLASTNode *var_decl = NULL )
-      : _mName(name), _mType(type), _mSymbolType(symbol_type), _mSubType(sub_type), _mLoc(*lloc), _mFunctionDecl(function_decl), _mVarDecl(var_decl),
-        _mConstantValue(NULL), _mReferences(0), _mAssignments(0), _mMangledName(NULL), TrackableObject(ctx) {};
+      : TrackableObject(ctx), _mName(name), _mType(type), _mSymbolType(symbol_type), _mSubType(sub_type), _mLoc(*lloc), _mFunctionDecl(function_decl), _mVarDecl(var_decl),
+        _mConstantValue(NULL), _mReferences(0), _mAssignments(0), _mMangledName(NULL) {};
 
     LSLSymbol( ScriptContext *ctx, const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, class LSLParamList *function_decl = NULL, class LSLASTNode *var_decl = NULL )
-      : _mName(name), _mType(type), _mSymbolType(symbol_type), _mSubType(sub_type), _mFunctionDecl(function_decl), _mVarDecl(var_decl),
-        _mConstantValue(NULL), _mReferences(0), _mAssignments(0), _mMangledName(NULL), _mLoc({}), TrackableObject(ctx) {};
+      : TrackableObject(ctx), _mName(name), _mType(type), _mSymbolType(symbol_type), _mSubType(sub_type), _mLoc({}), _mFunctionDecl(function_decl), _mVarDecl(var_decl),
+        _mConstantValue(NULL), _mReferences(0), _mAssignments(0), _mMangledName(NULL) {};
 
     const char          *getName()         { return _mName; }
     class LSLType  *getType()         { return _mType; }
@@ -102,7 +102,6 @@ class LSLSymbolTable: public TrackableObject {
 
   private:
     UnorderedCStrMap<LSLSymbol*> _mSymbols;
-    LSLSymbolTable *_mParent = nullptr;
 
   public:
     UnorderedCStrMap<LSLSymbol*> &getMap() {return _mSymbols;}

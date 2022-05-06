@@ -22,6 +22,16 @@ option(TAILSLIDE_SANITIZE "Use ASAN" OFF)
 option(TAILSLIDE_FUZZER_INSTRUMENTATION "Add instrumentation for libFuzzer" OFF)
 option(TAILSLIDE_COVERAGE "Track coverage data in tests" OFF)
 
+if (MSVC)
+  # So?
+  add_definitions("-D_CRT_SECURE_NO_WARNINGS=1")
+else()
+  add_definitions("-Wall -Wno-overloaded-virtual")
+  if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_definitions("-Wno-unneeded-internal-declaration")
+  endif()
+endif()
+
 
 if (TAILSLIDE_BUILD_FUZZER)
   set(TAILSLIDE_SANITIZE ON)

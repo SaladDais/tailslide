@@ -10,11 +10,11 @@ namespace Tailslide {
 // be evaluated at compile-time and doesn't mutate state.
 class GlobalExprValidatingVisitor: public ASTVisitor {
   protected:
-    virtual bool visit(LSLGlobalVariable *glob_var);
-    virtual bool visit(LSLFunctionExpression *func_expr);
+    bool visit(LSLGlobalVariable *glob_var) override;
+    bool visit(LSLFunctionExpression *func_expr) override;
     // these aren't interesting for validation of globals
-    virtual bool visit(LSLGlobalFunction *glob_func) { return false; };
-    virtual bool visit(LSLState *state) { return false; };
+    bool visit(LSLGlobalFunction *glob_func) override { return false; };
+    bool visit(LSLState *state) override { return false; };
     // reset to `true` before checking each rvalue, if it's false after
     // visiting the rvalue then raise an error about non-constant expression.
     bool _mValidRValue = true;
@@ -28,9 +28,9 @@ class SimpleAssignableValidatingVisitor: public GlobalExprValidatingVisitor {
     explicit SimpleAssignableValidatingVisitor(bool mono_semantics)
         : GlobalExprValidatingVisitor(), _mMonoSemantics(mono_semantics) {}
   protected:
-    virtual bool visit(LSLExpression *expr);
-    virtual bool visit(LSLUnaryExpression *unary_expr);
-    virtual bool visit(LSLLValueExpression *lvalue);
+    bool visit(LSLExpression *expr) override;
+    bool visit(LSLUnaryExpression *unary_expr) override;
+    bool visit(LSLLValueExpression *lvalue) override;
     bool _mMonoSemantics;
 };
 

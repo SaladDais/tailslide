@@ -17,7 +17,7 @@ struct MonoCompilationOptions {
 class MonoScriptCompiler : public ASTVisitor {
   public:
     explicit MonoScriptCompiler(ScriptAllocator *allocator, MonoCompilationOptions options={}) :
-        _mOptions(options), _mAllocator(allocator) {};
+        _mAllocator(allocator), _mOptions(options) {};
 
     std::stringstream mCIL {};
   protected:

@@ -17,7 +17,7 @@ struct PrettyPrintOpts {
 class PrettyPrintVisitor: public ASTVisitor {
 public:
     explicit PrettyPrintVisitor(const PrettyPrintOpts& ctx)
-    : _mOpts(ctx), mTabs(0)
+    : mTabs(0), _mOpts(ctx)
     {}
 
     int mTabs;

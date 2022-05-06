@@ -70,7 +70,7 @@ enum LSLNodeSubType {
   NODE_CONSTANT_EXPRESSION,
 };
 
-class OptimizationOptions;
+struct OptimizationOptions;
 class ASTVisitor;
 
 template<class T>
@@ -154,9 +154,9 @@ class LSLASTNode : public TrackableObject {
       LSLASTNode::replaceNode(c, new_val);
     }
 
-    size_t getNumChildren() const {
+    int getNumChildren() const {
       LSLASTNode *c = _mChildren;
-      size_t num = 0;
+      int num = 0;
       // empty children (NODE_NULL) are still considered valid.
       while (c) {
         c = c->getNext();

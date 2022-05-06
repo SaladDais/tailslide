@@ -71,7 +71,7 @@ class BitStream {
 
   public:
     explicit BitStream(Endianness endian=ENDIAN_BIG) : _mPos(0), _mSize(0), _mAllocSize(0), _mData(nullptr),
-                                                       _mReadOnly(false), _mEndianness(endian) {
+                                                       _mEndianness(endian), _mReadOnly(false) {
     }
 
     /**
@@ -82,7 +82,7 @@ class BitStream {
      * NOTE: Use assign() if you want to prevent memcpy
      */
     BitStream(const uint8_t *data, const uint32_t length, Endianness endian=ENDIAN_BIG)
-        : _mPos(0), _mSize(0), _mAllocSize(MIN_REALLOC), _mData(nullptr), _mReadOnly(false), _mEndianness(endian) {
+        : _mPos(0), _mSize(0), _mAllocSize(MIN_REALLOC), _mData(nullptr), _mEndianness(endian), _mReadOnly(false) {
       _mData = reinterpret_cast<uint8_t *>(malloc(_mAllocSize));
       if (_mData == nullptr) {
         throw std::runtime_error("Failed to allocated data");
@@ -96,7 +96,7 @@ class BitStream {
 
     BitStream(BitStream &&other) noexcept
         : _mPos(other._mPos), _mSize(other._mSize), _mAllocSize(other._mAllocSize), _mData(other._mData),
-          _mReadOnly(other._mReadOnly), _mEndianness(other._mEndianness) {
+          _mEndianness(other._mEndianness), _mReadOnly(other._mReadOnly) {
       other._mData = nullptr;
     }
 

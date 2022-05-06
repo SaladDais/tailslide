@@ -209,7 +209,7 @@ void Logger::report() {
 }
 
 LogMessage::LogMessage(ScriptContext *ctx, LogLevel type, YYLTYPE *loc, char *message, ErrorCode error)
-    : TrackableObject(ctx), _mLogType(type), _mErrorCode(error), _mLoc({}) {
+    : TrackableObject(ctx), _mLogType(type), _mLoc({}), _mErrorCode(error) {
   char *np = mContext->allocator->alloc(strlen(message) + 1);
   if (loc) _mLoc = *loc;
   if (np != nullptr) {

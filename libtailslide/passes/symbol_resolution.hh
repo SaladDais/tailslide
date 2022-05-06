@@ -11,7 +11,7 @@ namespace Tailslide {
 class SymbolResolutionVisitor : public ASTVisitor {
   public:
     SymbolResolutionVisitor(bool linden_jump_semantics, ScriptAllocator *allocator)
-      : _mLindenJumpSemantics(linden_jump_semantics), _mAllocator(allocator) {}
+      : _mAllocator(allocator), _mLindenJumpSemantics(linden_jump_semantics) {}
 
   protected:
     virtual bool visit(LSLDeclaration *decl_stmt);

@@ -101,8 +101,8 @@ class Logger {
   public:
     explicit Logger(ScriptAllocator *allocator) :
         _mErrors(0), _mWarnings(0), _mShowEnd(false), _mShowInfo(false), _mSort(true),
-        _mShowErrorCodes(true), _mCheckAssertions(false), _mLastMessage(NULL),
-        _mFinalized(false), _mAllocator(allocator) {};
+        _mShowErrorCodes(true), _mCheckAssertions(false),
+        _mFinalized(false), _mLastMessage(NULL), _mAllocator(allocator) {};
     void log(LogLevel type, YYLTYPE *loc, const char *fmt, ...);
     void logv(LogLevel type, YYLTYPE *loc, const char *fmt, va_list args, int error=0);
     void error( YYLTYPE *loc, int error, ... );

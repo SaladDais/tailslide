@@ -10,7 +10,7 @@ namespace Tailslide {
 
 class ScopedTabSetter {
 public:
-  ScopedTabSetter(PrettyPrintVisitor *visitor, int tabs): _mVisitor(visitor), _mOldTabs(visitor->mTabs) {
+  ScopedTabSetter(PrettyPrintVisitor *visitor, int tabs): _mOldTabs(visitor->mTabs), _mVisitor(visitor) {
     _mVisitor->mTabs = tabs;
   };
   ~ScopedTabSetter() {
