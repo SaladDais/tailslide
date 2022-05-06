@@ -67,6 +67,9 @@ class ASTVisitor {
     virtual bool visit(LSLCompoundStatement *compound_stmt) {
       return visit((LSLStatement *) compound_stmt);
     };
+    virtual bool visit(LSLNopStatement *nop_stmt) {
+      return visit((LSLStatement *) nop_stmt);
+    };
     virtual bool visit(LSLExpressionStatement *expr_stmt) {
       return visit((LSLStatement *) expr_stmt);
     };

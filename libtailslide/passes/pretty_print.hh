@@ -37,7 +37,8 @@ public:
     virtual bool visit(LSLParamList *params);
     virtual bool visit(LSLState *state);
     virtual bool visit(LSLEventHandler *handler);
-    virtual bool visit(LSLStatement *stmt);
+    virtual bool visit(LSLNopStatement *nop_stmt);
+    virtual bool visit(LSLExpressionStatement *expr_stmt);
     virtual bool visit(LSLCompoundStatement *compound_stmt);
     virtual bool visit(LSLStateStatement *state_stmt);
     virtual bool visit(LSLJumpStatement *jump_stmt);

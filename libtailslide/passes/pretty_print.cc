@@ -200,11 +200,15 @@ bool PrettyPrintVisitor::visit(LSLParamList *params) {
 // Statements
 //
 
-bool PrettyPrintVisitor::visit(LSLStatement *stmt) {
+bool PrettyPrintVisitor::visit(LSLNopStatement *nop_stmt) {
   doTabs();
-  // handles NopStatements and ExpressionStatements.
-  if (auto *child = stmt->getChild(0))
-    child->visit(this);
+  mStream << ";\n";
+  return false;
+}
+
+bool PrettyPrintVisitor::visit(LSLExpressionStatement *expr_stmt) {
+  doTabs();
+  expr_stmt->getExpr()->visit(this);
   mStream << ";\n";
   return false;
 }
@@ -536,7 +540,7 @@ bool PrettyPrintVisitor::visit(LSLKeyConstant *key_const) {
 
 bool PrettyPrintVisitor::visit(LSLPrintExpression *print_expr) {
   mStream << "print(";
-  visitChildren(print_expr);
+  print_expr->getChildExpr()->visit(this);
   mStream << ')';
   return false;
 }

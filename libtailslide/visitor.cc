@@ -72,6 +72,8 @@ bool ASTVisitor::visitSpecific(LSLASTNode *node) {
           return visit((LSLDeclaration *)node);
         case NODE_STATE_STATEMENT:
           return visit((LSLStateStatement *)node);
+        case NODE_NOP_STATEMENT:
+          return visit((LSLNopStatement *)node);
         default:
           return visit((LSLStatement *)node);
       }
