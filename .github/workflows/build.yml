@@ -38,7 +38,7 @@ jobs:
         run: |
           mkdir build
           pushd build
-          CXX=${{matrix.compiler}} cmake .. -DTAILSLIDE_SANITIZE=ON ${{matrix.extra_compile_flags}}
+          CXX=${{matrix.compiler}} cmake .. -DTAILSLIDE_SANITIZE=ON -DTAILSLIDE_CI_RUN=ON ${{matrix.extra_compile_flags}}
           make -j2
           popd
           mkdir coverage

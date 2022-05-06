@@ -15,6 +15,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 set(_IGNORED "${CMAKE_C_COMPILER}")
 
+option(TAILSLIDE_CI_RUN "Are we running in CI" OFF)
 option(TAILSLIDE_BUILD_CLI "Build CLI" ON)
 option(TAILSLIDE_BUILD_TESTS "Build Tests" ON)
 option(TAILSLIDE_BUILD_FUZZER "Build Fuzzer" OFF)
@@ -29,6 +30,9 @@ else()
   add_definitions("-Wall -Wno-overloaded-virtual")
   if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_definitions("-Wno-unneeded-internal-declaration")
+  endif()
+  if (TAILSLIDE_CI_RUN)
+    add_definitions("-Werror")
   endif()
 endif()
 
