@@ -156,7 +156,7 @@ target_include_directories(libtailslide PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(libtailslide PUBLIC libtailslide)
 target_sources(libtailslide PRIVATE ${FLEX_LSLMiniScanner_OUTPUTS} ${BISON_LSLMiniParser_OUTPUTS})
 set_target_properties(libtailslide PROPERTIES OUTPUT_NAME tailslide)
-if (NOT WINDOWS AND NOT TAILSLIDE_FUZZER_INSTRUMENTATION)
+if (NOT WIN32 AND NOT TAILSLIDE_FUZZER_INSTRUMENTATION)
   add_definitions("-fPIC")
 endif()
 
