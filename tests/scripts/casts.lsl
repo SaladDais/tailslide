@@ -27,5 +27,17 @@ default {
         (list)<1.0, 2.0, 3.0, 4.0>;
 
         (string)([]);
+
+        // self-casts
+        (integer)1;
+        (float)1.0;
+        (string)"foo";
+        (key)llGetKey();
+        (vector)ZERO_VECTOR;
+        (rotation)ZERO_ROTATION;
+        (list)[];
+
+        // negation inside cast
+        (integer)-1;
     }
 }

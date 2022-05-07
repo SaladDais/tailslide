@@ -26,5 +26,7 @@ default {
         lv.x = gv.x = 1.0;
         li = gi = num_detected;
         num_detected = 1;
+        lk = "foobar";
+        ls = lk;
     }
 }

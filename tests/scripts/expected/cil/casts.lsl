@@ -95,6 +95,29 @@ pop
 call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
 call string class [LslLibrary]LindenLab.SecondLife.LslRunTime::ListToString(class [mscorlib]System.Collections.ArrayList)
 pop
+ldc.i4.1
+pop
+ldc.r8 (00 00 00 00 00 00 f0 3f)
+pop
+ldstr "foo"
+pop
+call valuetype [ScriptTypes]LindenLab.SecondLife.Key class [LslLibrary]LindenLab.SecondLife.Library::'llGetKey'()
+pop
+ldc.r8 (00 00 00 00 00 00 00 00)
+ldc.r8 (00 00 00 00 00 00 00 00)
+ldc.r8 (00 00 00 00 00 00 00 00)
+call class [ScriptTypes]LindenLab.SecondLife.Vector class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateVector'(float32, float32, float32)
+pop
+ldc.r8 (00 00 00 00 00 00 00 00)
+ldc.r8 (00 00 00 00 00 00 00 00)
+ldc.r8 (00 00 00 00 00 00 00 00)
+ldc.r8 (00 00 00 00 00 00 f0 3f)
+call class [ScriptTypes]LindenLab.SecondLife.Quaternion class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateQuaternion'(float32, float32, float32, float32)
+pop
+call class [mscorlib]System.Collections.ArrayList class [LslUserScript]LindenLab.SecondLife.LslUserScript::CreateList()
+pop
+ldc.i4.m1
+pop
 ret
 }
 }

@@ -164,6 +164,16 @@ ldc.i4.1
 dup
 starg.s 'num_detected'
 pop
+ldstr "foobar"
+call valuetype [ScriptTypes]LindenLab.SecondLife.Key class [LslUserScript]LindenLab.SecondLife.LslUserScript::'CreateKey'(string)
+dup
+stloc.s 3
+pop
+ldloc.s 3
+call string class [LslUserScript]LindenLab.SecondLife.LslUserScript::'ToString'(valuetype [ScriptTypes]LindenLab.SecondLife.Key)
+dup
+stloc.s 2
+pop
 ret
 }
 }
