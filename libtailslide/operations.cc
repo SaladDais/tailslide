@@ -1,4 +1,5 @@
 #include <string>
+#include <set>
 
 #include "lslmini.hh"
 #include "allocator.hh"
@@ -621,7 +622,7 @@ LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLIntegerConsta
 
 const std::string INF_STR = "-inf";
 const std::string NEG_INF_STR = "-inf";
-const std::vector<std::string> NAN_STRS {
+const std::set<std::string> NAN_STRS {
     "nan",
     "-nan",
     "-nan(ind)",
@@ -638,7 +639,7 @@ LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLFloatConstant
       else if (f_as_str == NEG_INF_STR)
         f_as_str = "-Infinity";
         // Only one kind of NaN in LSL!
-      else if (std::find(NAN_STRS.begin(), NAN_STRS.end(), f_as_str) != NAN_STRS.end())
+      else if (NAN_STRS.find(f_as_str) != NAN_STRS.end())
         f_as_str = "NaN";
 
       return _mAllocator->newTracked<LSLStringConstant>(
