@@ -27,6 +27,7 @@ SIMPLE_CIL_CONFORMANCE("xnary_expressions.lsl")
 SIMPLE_CIL_CONFORMANCE("print_expression.lsl")
 SIMPLE_CIL_CONFORMANCE("state_change.lsl")
 SIMPLE_CIL_CONFORMANCE("lsl_conformance.lsl")
+SIMPLE_CIL_CONFORMANCE("lsl_conformance2.lsl")
 SIMPLE_CIL_CONFORMANCE("deprecated_function.lsl")
 SIMPLE_CIL_CONFORMANCE("event_handlers.lsl")
 TEST_CASE("sub_replacement.lsl") {

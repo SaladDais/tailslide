@@ -117,6 +117,18 @@ bool LSOBytecodeCompiler::visit(LSLUnaryExpression *unary_expr) {
   return false;
 }
 
+static LSLExpression *strip_string_key_autocast(LSLExpression *expr) {
+  if (expr->getNodeSubType() == NODE_TYPECAST_EXPRESSION) {
+    auto *cast_expr = (LSLTypecastExpression *) expr;
+    auto cast_type = cast_expr->getIType();
+    // This is a key<->string auto-cast added by the de-sugaring step
+    if (cast_expr->getSynthesized() && (cast_type == LST_KEY || cast_type == LST_STRING)) {
+      return cast_expr->getChildExpr();
+    }
+  }
+  return expr;
+}
+
 bool LSOBytecodeCompiler::visit(LSLBinaryExpression *bin_expr) {
   LSLOperator op = bin_expr->getOperation();
   auto *lhs = bin_expr->getLHS();
@@ -125,6 +137,10 @@ bool LSOBytecodeCompiler::visit(LSLBinaryExpression *bin_expr) {
   auto rhs_type = rhs->getIType();
   auto packed_types = pack_lso_types(lhs_type, rhs_type);
   if (op == '=') {
+    // no string<->key auto-cast in assignment context! Doesn't really matter
+    // since they both use LOPC_STORES anyways.
+    // TODO: is this the case anywhere else?
+    rhs = strip_string_key_autocast(rhs);
     rhs->visit(this);
     storeStackToLValue((LSLLValueExpression *) lhs);
     return false;

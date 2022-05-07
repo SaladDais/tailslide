@@ -97,6 +97,8 @@ const char * const CIL_VALUE_TYPE_NAMES[LST_MAX] = {
     "float32",
     "string",
     "valuetype [ScriptTypes]LindenLab.SecondLife.Key",
+    // TODO: are some of these just misnomers that are equivalent to `CIL_TYPE_NAMES` anyway?
+    //  Can something be contextually a valuetype? Maybe they're actually valuetypes and not classes.
     "valuetype [ScriptTypes]LindenLab.SecondLife.Vector",
     "valuetype [ScriptTypes]LindenLab.SecondLife.Quaternion",
     "class [mscorlib]System.Collections.ArrayList",

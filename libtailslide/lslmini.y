@@ -903,6 +903,19 @@ typecast
             tailslide_get_extra(scanner)->logger->error(&@2, E_SYNTAX_ERROR, "Typecast requires parentheses");
         }
     }
+    | '(' typename ')' constant
+    {
+        // No, this rule isn't a mistake even though constants are included in the
+        // unarypostfixexpression case. _Specifically_ negated constants within do not
+        // get parsed as `unary_minus(num_literal)` by LL's compiler because the internal
+        // negation case in `constant` gets handled first. just mark this as not negated and
+        // wrap it in a ConstantExpression.
+        $4->setWasNegated(false);
+        $$ = ALLOCATOR->newTracked<LSLTypecastExpression>(
+            $2,
+            ALLOCATOR->newTracked<LSLConstantExpression>($4)
+        );
+    }
     | '(' typename ')' unarypostfixexpression
     {
         $$ = ALLOCATOR->newTracked<LSLTypecastExpression>($2, $4);

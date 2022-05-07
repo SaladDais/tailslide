@@ -1,3 +1,7 @@
+// https://wiki.secondlife.com/wiki/LSL_Language_Test
+// This work uses content from the Second Life® Wiki.
+// Copyright © 2007-2012 Linden Research, Inc. Licensed under the Creative Commons Attribution-Share Alike 3.0 License
+
 integer gTestsPassed = 0;
 integer gTestsFailed = 0;
 
