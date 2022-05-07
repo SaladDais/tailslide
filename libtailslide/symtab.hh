@@ -29,13 +29,13 @@ enum LSLSymbolSubType    { SYM_LOCAL, SYM_GLOBAL, SYM_BUILTIN, SYM_FUNCTION_PARA
 
 class LSLSymbol: public TrackableObject {
   public:
-    LSLSymbol( ScriptContext *ctx, const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, YYLTYPE *lloc, class LSLParamList *function_decl = NULL, class LSLASTNode *var_decl = NULL )
+    LSLSymbol( ScriptContext *ctx, const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, YYLTYPE *lloc, class LSLParamList *function_decl = NULL, class LSLASTNode *var_decl = NULL, class LSLLabel *label_decl = NULL  )
       : TrackableObject(ctx), _mName(name), _mType(type), _mSymbolType(symbol_type), _mSubType(sub_type), _mLoc(*lloc), _mFunctionDecl(function_decl), _mVarDecl(var_decl),
-        _mConstantValue(NULL), _mReferences(0), _mAssignments(0), _mMangledName(NULL) {};
+        _mLabelDecl(label_decl), _mConstantValue(NULL), _mReferences(0), _mAssignments(0), _mMangledName(NULL) {};
 
-    LSLSymbol( ScriptContext *ctx, const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, class LSLParamList *function_decl = NULL, class LSLASTNode *var_decl = NULL )
+    LSLSymbol( ScriptContext *ctx, const char *name, class LSLType *type, LSLSymbolType symbol_type, LSLSymbolSubType sub_type, class LSLParamList *function_decl = NULL, class LSLASTNode *var_decl = NULL, class LSLLabel *label_decl = NULL )
       : TrackableObject(ctx), _mName(name), _mType(type), _mSymbolType(symbol_type), _mSubType(sub_type), _mLoc({}), _mFunctionDecl(function_decl), _mVarDecl(var_decl),
-        _mConstantValue(NULL), _mReferences(0), _mAssignments(0), _mMangledName(NULL) {};
+        _mLabelDecl(label_decl), _mConstantValue(NULL), _mReferences(0), _mAssignments(0), _mMangledName(NULL) {};
 
     const char          *getName()         { return _mName; }
     class LSLType  *getType()         { return _mType; }
@@ -63,6 +63,7 @@ class LSLSymbol: public TrackableObject {
     YYLTYPE             *getLoc()         { return &_mLoc; }
     class LSLParamList *getFunctionDecl() { return _mFunctionDecl; }
     class LSLASTNode        *getVarDecl() { return _mVarDecl; }
+    class LSLLabel        *getLabelDecl() { return _mLabelDecl; }
 
     class LSLConstant *getConstantValue()                       { return _mConstantValue;    };
     void               setConstantValue(class LSLConstant *v)   { _mConstantValue = v;       };
@@ -83,6 +84,7 @@ class LSLSymbol: public TrackableObject {
     YYLTYPE              _mLoc;
     class LSLParamList *_mFunctionDecl;
     class LSLASTNode     *_mVarDecl;
+    class LSLLabel *_mLabelDecl;
     class LSLConstant *_mConstantValue;
     bool _mConstantPrecluded = false;
     int                  _mReferences;            // how many times this symbol is referred to

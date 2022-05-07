@@ -478,9 +478,30 @@ class LSLJumpStatement : public LSLStatement {
     LSLJumpStatement( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLStatement(ctx, 1, identifier) {};
     NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
 
-    virtual const char *getNodeName() { return "jump"; };
+    virtual const char *getNodeName() {
+      static thread_local char buf[256];
+      const char *jump_kind = "";
+      if (_mIsBreakLike)
+        jump_kind = " {break-like}";
+      else if (_mIsContinueLike)
+        jump_kind = " {continue-like}";
+      snprintf(buf, 256, "jump%s", jump_kind);
+      return buf;
+    };
     virtual LSLNodeSubType getNodeSubType() { return NODE_JUMP_STATEMENT; };
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
+
+    bool getIsBreakLike() const { return _mIsBreakLike; }
+    void setIsBreakLike(bool break_like) { _mIsBreakLike = break_like; }
+
+    bool getIsContinueLike() const { return _mIsContinueLike; }
+    void setIsContinueLike(bool continue_like) { _mIsContinueLike = continue_like; }
+
+  protected:
+    // whether this jump is semantically equivalent to "break" in other languages
+    bool _mIsBreakLike = false;
+    // whether this jump is semantically equivalent to "continue" in other languages
+    bool _mIsContinueLike = false;
 };
 
 class LSLLabel : public LSLStatement {

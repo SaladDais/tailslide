@@ -159,10 +159,11 @@ bool SymbolResolutionVisitor::visit(LSLEventDec *event_dec) {
 bool SymbolResolutionVisitor::visit(LSLLabel *label_stmt) {
   auto *identifier = label_stmt->getIdentifier();
   identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
-      identifier->getName(), identifier->getType(), SYM_LABEL, SYM_LOCAL, label_stmt->getLoc()
+      identifier->getName(), identifier->getType(), SYM_LABEL, SYM_LOCAL, label_stmt->getLoc(), nullptr, nullptr, label_stmt
   ));
   label_stmt->defineSymbol(identifier->getSymbol());
-  _mCollectedLabels.emplace_back(identifier);
+  _mCollectedLabels.emplace_back(label_stmt);
+  _mEnclosingLoops[label_stmt] = _mCurrentLoop;
   return true;
 }
 
@@ -171,7 +172,8 @@ bool SymbolResolutionVisitor::visit(LSLJumpStatement *jump_stmt) {
   // can only resolve the labels they refer to after we leave the enclosing
   // function or event handler, having passed the last place the label it
   // refers to could have been defined.
-  _mPendingJumps.emplace_back(jump_stmt->getIdentifier());
+  _mPendingJumps.emplace_back(jump_stmt);
+  _mEnclosingLoops[jump_stmt] = _mCurrentLoop;
   return true;
 }
 
@@ -185,8 +187,28 @@ bool SymbolResolutionVisitor::visit(LSLCompoundStatement *compound_stmt) {
   return true;
 }
 
+bool SymbolResolutionVisitor::visit(LSLDoStatement *do_stmt) {
+  visitLoop(do_stmt);
+  return false;
+}
+bool SymbolResolutionVisitor::visit(LSLWhileStatement *while_stmt) {
+  visitLoop(while_stmt);
+  return false;
+}
+bool SymbolResolutionVisitor::visit(LSLForStatement *for_stmt) {
+  visitLoop(for_stmt);
+  return false;
+}
+
+void SymbolResolutionVisitor::visitLoop(LSLASTNode *loop_stmt) {
+  _mCurrentLoop = loop_stmt;
+  visitChildren(loop_stmt);
+  _mCurrentLoop = nullptr;
+}
+
 void SymbolResolutionVisitor::resolvePendingJumps() {
-  for (auto *id : _mPendingJumps) {
+  for (auto *jump : _mPendingJumps) {
+    auto *id = jump->getIdentifier();
     // First do the lookup by lexical scope, triggering an error if it fails.
     id->resolveSymbol(SYM_LABEL);
 
@@ -231,13 +253,76 @@ void SymbolResolutionVisitor::resolvePendingJumps() {
   if (_mLindenJumpSemantics) {
     // Walk the list of collected labels and warn on any duplicated names
     std::set<std::string> label_names;
-    for (auto &label_id: _mCollectedLabels) {
+    for (auto label: _mCollectedLabels) {
+      auto *label_id = label->getIdentifier();
       if (label_names.find(label_id->getName()) != label_names.end()) {
         NODE_ERROR(label_id, W_DUPLICATE_LABEL_NAME, label_id->getName());
       } else {
         label_names.insert(label_id->getName());
       }
     }
+  }
+
+  // Figure out if this jump is break-like or continue-like, and can be represented in languages
+  // that only have break / continue and not unstructured jumps. Otherwise the block has to be
+  // transformed into a state machine to be representable. Nightmare!
+  // Basically:
+  //  * if the target label immediately follows the innermost loop statement enclosing
+  //    the jump statement then the jump is considered "break-like"
+  //  * if the target label occurs at the back edge within the innermost loop statement
+  //    enclosing the jump statement then the jump is considered "continue-like"
+  //  Enclosing statements themselves aren't considered for back edge detection,
+  //  so something like `while(1){if(something){jump foo; 1; @foo;}}` is still considered to be continue-like.
+  //  while something like `while(1){jump foo; 1; @foo; {}}`
+  //  or `while(1){if(something){jump foo; 1; @foo;}else{}}` is not.
+  for (auto jump : _mPendingJumps) {
+    auto *sym = jump->getSymbol();
+    if (!sym)
+      continue;
+    auto *label = sym->getLabelDecl();
+    if (!label)
+      continue;
+
+    LSLASTNode *jump_loop = _mEnclosingLoops[jump];
+
+    // if the jump didn't happen in a loop then there's no chance of it being a structured jump.
+    if (!jump_loop)
+      continue;
+
+    // enclosing loop for the jump has an immediate follower, and it's the target label.
+    // this jump is break-like.
+    // TODO: make this play nice with multiple trailing labels
+    LSLASTNode *jump_loop_follower = jump_loop->getNext();
+    if (jump_loop_follower && jump_loop_follower == label) {
+      jump->setIsBreakLike(true);
+      continue;
+    }
+
+    LSLASTNode *label_loop = _mEnclosingLoops[label];
+    // no chance of this being the last statement in jump's enclosing loop, so can't be break-like.
+    if (!label_loop || label_loop != jump_loop)
+      continue;
+
+    bool label_is_last = true;
+    LSLASTNode *cur_node = label;
+
+    // walk up until we hit the enclosing loop
+    while (cur_node != label_loop) {
+      // specifically doesn't check the enclosing statement!
+      auto *cur_child = cur_node;
+      while((cur_child = cur_child->getNext())) {
+        // If a statement follows then the label can't be the last statement
+        // within the loop. Allows for things like empty `else` branches with null nodes.
+        if (cur_child->getNodeType() == NODE_STATEMENT) {
+          label_is_last = false;
+          break;
+        }
+      }
+      if (!label_is_last)
+        break;
+      cur_node = cur_node->getParent();
+    }
+    jump->setIsContinueLike(label_is_last);
   }
 
   _mPendingJumps.clear();

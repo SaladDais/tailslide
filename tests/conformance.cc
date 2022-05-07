@@ -298,4 +298,8 @@ TEST_CASE("pathological_expression.lsl") {
   checkTreeDumpOutput("pathological_expression.lsl", OptimizationOptions{});
 }
 
+TEST_CASE("jump_kinds.lsl") {
+  checkTreeDumpOutput("jump_kinds.lsl", OptimizationOptions{});
+}
+
 TEST_SUITE_END();

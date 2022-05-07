@@ -27,13 +27,19 @@ class SymbolResolutionVisitor : public ASTVisitor {
     virtual bool visit(LSLJumpStatement *jump_stmt);
     virtual bool visit(LSLStateStatement *state_stmt);
     virtual bool visit(LSLCompoundStatement *compound_stmt);
+    virtual bool visit(LSLDoStatement *do_stmt);
+    virtual bool visit(LSLWhileStatement *while_stmt);
+    virtual bool visit(LSLForStatement *for_stmt);
+    void visitLoop(LSLASTNode *loop_stmt);
 
     void replaceSymbolTable(LSLASTNode *node);
 
     void resolvePendingJumps();
     ScriptAllocator *_mAllocator;
-    std::vector<LSLIdentifier*> _mPendingJumps;
-    std::vector<LSLIdentifier*> _mCollectedLabels;
+    std::vector<LSLJumpStatement*> _mPendingJumps;
+    std::vector<LSLLabel*> _mCollectedLabels;
+    std::unordered_map<LSLASTNode *, LSLASTNode *> _mEnclosingLoops;
+    LSLASTNode *_mCurrentLoop = nullptr;
     bool _mLindenJumpSemantics;
 };
 
