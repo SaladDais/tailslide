@@ -5,7 +5,7 @@
 
 namespace Tailslide {
 
-class BestPracticesVisitor: public ASTVisitor {
+class FinalPassVisitor : public ASTVisitor {
   public:
     virtual bool visit(LSLGlobalFunction *glob_func);
     virtual bool visit(LSLEventHandler *handler);

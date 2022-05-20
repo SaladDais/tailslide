@@ -29,7 +29,7 @@ ParserRef runConformance(const char *name, bool allow_syntax_errors)
     script->determineTypes();
     script->recalculateReferenceData();
     script->propagateValues();
-    script->checkBestPractices();
+    script->finalPass();
     script->validateGlobals(true);
     script->checkSymbols();
   }

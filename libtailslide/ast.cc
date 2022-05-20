@@ -1,9 +1,9 @@
 #include "lslmini.hh"
 #include "ast.hh"
-#include "visitor.hh"
-#include "passes/values.hh"
-#include "passes/best_practices.hh"
+#include "passes/final_pass.hh"
 #include "passes/type_checking.hh"
+#include "passes/values.hh"
+#include "visitor.hh"
 
 namespace Tailslide {
 
@@ -185,8 +185,8 @@ void LSLASTNode::propagateValues(bool create_heap_values) {
   visit(&visitor);
 }
 
-void LSLASTNode::checkBestPractices() {
-  BestPracticesVisitor visitor;
+void LSLASTNode::finalPass() {
+  FinalPassVisitor visitor;
   visit(&visitor);
 }
 

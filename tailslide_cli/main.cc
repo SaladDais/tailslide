@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
     script->determineTypes();
     script->recalculateReferenceData();
     script->propagateValues();
-    script->checkBestPractices();
+    script->finalPass();
 
     if (check_assertions) {
       logger->filterAssertErrors();

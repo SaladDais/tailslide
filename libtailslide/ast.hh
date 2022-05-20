@@ -217,7 +217,7 @@ class LSLASTNode : public TrackableObject {
     void collectSymbols();
     void determineTypes();
     void propagateValues(bool create_heap_values=true);
-    void checkBestPractices();
+    void finalPass();
     void checkSymbols(); // look for unused symbols, etc
 
     /// symbol functions        ///

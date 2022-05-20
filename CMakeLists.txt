@@ -109,7 +109,7 @@ add_library(libtailslide STATIC
         libtailslide/types.cc
         libtailslide/visitor.cc
         libtailslide/passes/globalexpr_validator.cc
-        libtailslide/passes/best_practices.cc
+        libtailslide/passes/final_pass.cc
         libtailslide/passes/desugaring.cc
         libtailslide/passes/pretty_print.cc
         libtailslide/passes/symbol_resolution.cc
@@ -140,7 +140,7 @@ target_sources(libtailslide PRIVATE
         libtailslide/unordered_cstr_map.hh
         libtailslide/visitor.hh
         libtailslide/passes/globalexpr_validator.hh
-        libtailslide/passes/best_practices.hh
+        libtailslide/passes/final_pass.hh
         libtailslide/passes/desugaring.hh
         libtailslide/passes/pretty_print.hh
         libtailslide/passes/symbol_resolution.hh

@@ -1,4 +1,4 @@
-#include "best_practices.hh"
+#include "final_pass.hh"
 
 namespace Tailslide {
 
@@ -37,7 +37,7 @@ class AllPathsReturnVisitor: public ASTVisitor {
     bool mAllReturn = false;
 };
 
-bool BestPracticesVisitor::visit(LSLGlobalFunction *glob_func) {
+bool FinalPassVisitor::visit(LSLGlobalFunction *glob_func) {
   AllPathsReturnVisitor visitor;
   glob_func->getStatements()->visit(&visitor);
 
@@ -52,7 +52,7 @@ bool BestPracticesVisitor::visit(LSLGlobalFunction *glob_func) {
   return true;
 }
 
-bool BestPracticesVisitor::visit(LSLEventHandler *handler) {
+bool FinalPassVisitor::visit(LSLEventHandler *handler) {
   AllPathsReturnVisitor visitor;
   handler->getStatements()->visit(&visitor);
   if (auto *sym = handler->getSymbol()) {
@@ -61,7 +61,7 @@ bool BestPracticesVisitor::visit(LSLEventHandler *handler) {
   return true;
 }
 
-bool BestPracticesVisitor::visit(LSLIfStatement *if_stmt) {
+bool FinalPassVisitor::visit(LSLIfStatement *if_stmt) {
   // see if expression is constant
   auto *cond = if_stmt->getCheckExpr();
   if (cond->getConstantValue() != nullptr) {
@@ -85,7 +85,7 @@ bool BestPracticesVisitor::visit(LSLIfStatement *if_stmt) {
   return true;
 }
 
-bool BestPracticesVisitor::visit(LSLBinaryExpression *bin_expr) {
+bool FinalPassVisitor::visit(LSLBinaryExpression *bin_expr) {
   LSLConstant *left_cv = bin_expr->getLHS()->getConstantValue();
   LSLConstant *right_cv = bin_expr->getRHS()->getConstantValue();
 
@@ -113,7 +113,7 @@ bool BestPracticesVisitor::visit(LSLBinaryExpression *bin_expr) {
   return true;
 }
 
-bool BestPracticesVisitor::visit(LSLExpressionStatement *expr_stmt) {
+bool FinalPassVisitor::visit(LSLExpressionStatement *expr_stmt) {
   if (expr_stmt->getExpr()->getOperation() == OP_EQ) {
     NODE_ERROR(expr_stmt, W_EQ_AS_STATEMENT);
   }
