@@ -76,6 +76,11 @@ class LSLSymbol: public TrackableObject {
     bool getAllPathsReturn() const { return _mAllPathsReturn; }
     void setAllPathsReturn(bool all_ret) { _mAllPathsReturn = all_ret; }
 
+    bool getHasJumps() const { return _mHasJumps; }
+    void setHasJumps(bool has_jumps) { _mHasJumps = has_jumps; }
+    bool getHasUnstructuredJumps() const { return _mHasUnstructuredJumps; }
+    void setHasUnstructuredJumps(bool unstructured_jumps) { _mHasUnstructuredJumps = unstructured_jumps; }
+
   private:
     const char          *_mName;
     class LSLType  *_mType;
@@ -91,6 +96,9 @@ class LSLSymbol: public TrackableObject {
     int                  _mAssignments;           // how many times it is assigned to
     char                *_mMangledName;
     bool _mAllPathsReturn = false;
+    bool _mHasJumps = false;
+    // if the function contains jumps that are not break-like or continue-like
+    bool _mHasUnstructuredJumps = false;
 };
 
 class LSLSymbolTable: public TrackableObject {

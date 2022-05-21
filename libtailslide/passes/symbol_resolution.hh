@@ -34,7 +34,7 @@ class SymbolResolutionVisitor : public ASTVisitor {
 
     void replaceSymbolTable(LSLASTNode *node);
 
-    void resolvePendingJumps();
+    void resolvePendingJumps(LSLASTNode *func_like);
     ScriptAllocator *_mAllocator;
     std::vector<LSLJumpStatement*> _mPendingJumps;
     std::vector<LSLLabel*> _mCollectedLabels;
