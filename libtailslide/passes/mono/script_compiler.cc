@@ -974,7 +974,9 @@ bool MonoScriptCompiler::visit(LSLUnaryExpression *unary_expr) {
 
     // This store + push, then subsequent pop is totally unnecessary, but matches what LL's
     //  compiler does. Only do it if we're not allowed to omit pushes.
-    if (!_mOptions.omit_unnecessary_pushes) {
+    if (_mOptions.omit_unnecessary_pushes) {
+      storeToLValue(lvalue, false);
+    } else {
       storeToLValue(lvalue, true);
       mCIL << "pop\n";
     }
