@@ -294,14 +294,20 @@ void SymbolResolutionVisitor::resolvePendingJumps(LSLASTNode *func_like) {
       continue;
     }
 
-    // enclosing loop for the jump has an immediate follower, and it's the target label.
-    // this jump is break-like.
-    // TODO: make this play nice with multiple trailing labels
+    // If enclosing loop for the jump has an immediate follower, and it's the target label,
+    // then this jump is break-like. This plays nicely with multiple following labels.
     LSLASTNode *jump_loop_follower = jump_loop->getNext();
-    if (jump_loop_follower && jump_loop_follower == label) {
-      jump->setIsBreakLike(true);
-      continue;
+    bool label_follows_loop = false;
+    while (jump_loop_follower && jump_loop_follower->getNodeSubType() == NODE_LABEL) {
+      if (jump_loop_follower == label) {
+        jump->setIsBreakLike(true);
+        label_follows_loop = true;
+        break;
+      }
+      jump_loop_follower = jump_loop_follower->getNext();
     }
+    if (label_follows_loop)
+      continue;
 
     LSLASTNode *label_loop = _mEnclosingLoops[label];
     // no chance of this being the last statement in jump's enclosing loop, so can't be break-like.
@@ -318,9 +324,9 @@ void SymbolResolutionVisitor::resolvePendingJumps(LSLASTNode *func_like) {
       // specifically doesn't check the enclosing statement!
       auto *cur_child = cur_node;
       while((cur_child = cur_child->getNext())) {
-        // If a statement follows then the label can't be the last statement
+        // If a non-label statement follows then the label can't be the last statement
         // within the loop. Allows for things like empty `else` branches with null nodes.
-        if (cur_child->getNodeType() == NODE_STATEMENT) {
+        if (cur_child->getNodeType() == NODE_STATEMENT && cur_node->getNodeSubType() != NODE_LABEL) {
           label_is_last = false;
           break;
         }
