@@ -22,7 +22,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: ${{ github.ref_name }}
+          # Fetch all tags too
+          fetch-depth: 0
       - name: Bootstrap environment
         if: ${{matrix.boostrap_script}}
         shell: bash
