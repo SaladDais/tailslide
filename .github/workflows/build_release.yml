@@ -39,8 +39,15 @@ jobs:
       - name: autobuild package
         shell: bash
         run: |
+          git status
+          git describe
+
           export AUTOBUILD_VARIABLES_FILE="${HOME}/build-variables/variables"
           autobuild build -A64
+
+          git status
+          git describe
+
           autobuild package -A64
           # Hopefully autobuild only produces a single package
           mv *.tar.bz2 package.tar.bz2
