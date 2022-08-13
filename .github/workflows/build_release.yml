@@ -39,13 +39,13 @@ jobs:
         shell: bash
         run: |
           git status
-          git describe
+          git describe --dirty --tags --long --match '*[0-9]*'
 
           export AUTOBUILD_VARIABLES_FILE="${HOME}/build-variables/variables"
           autobuild build -A64
 
           git status
-          git describe
+          git describe --dirty --tags --long --match '*[0-9]*'
 
           autobuild package -A64
           # Hopefully autobuild only produces a single package
