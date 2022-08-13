@@ -1,0 +1,60 @@
+name: release
+
+on:
+  # Only trigger on release creation
+  release:
+    types:
+      - created
+  workflow_dispatch:
+env:
+  target_tag: ${{ github.ref_name }}
+
+jobs:
+  unix:
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+        include:
+          - os: ubuntu-20.04
+            platform_name: linux64
+    name: ${{matrix.os}}
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Bootstrap environment
+        if: ${{matrix.boostrap_script}}
+        shell: bash
+        run: |
+          bash "${{matrix.boostrap_script}}"
+
+      - name: Install autobuild
+        shell: bash
+        run: |
+          # We need a relatively new version of autobuild to get the SCM-based versioning
+          pip install "git+https://bitbucket.org/lindenlab/autobuild.git@10c1878294f16e13663c04450e0ad85379160b18"
+          git clone https://bitbucket.org/lindenlab/build-variables.git "${HOME}/build-variables"
+      - name: autobuild package
+        shell: bash
+        run: |
+          export AUTOBUILD_VARIABLES_FILE="${HOME}/build-variables/variables"
+          autobuild build -A64
+          autobuild package -A64
+          # Hopefully autobuild only produces a single package
+          mv *.tar.bz2 package.tar.bz2
+          # Put the md5 hash in the filename to make it less annoying to add to `autobuild.xml`s
+          export PKG_HASH="$(md5sum package.tar.bz2 | cut -f 1 -d' ')"
+          echo "pkg_hash=${PKG_HASH}" >> $GITHUB_ENV
+          mv package.tar.bz2 "tailslide-${{env.target_tag}}-${PKG_HASH}-${{matrix.platform_name}}.tar.bz2"
+
+      - name: Upload the artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: tailslide-${{ github.sha }}-${{matrix.platform_name}}
+          path: ./tailslide-${{ env.target_tag }}-${{env.pkg_hash}}-${{matrix.platform_name}}.tar.bz2
+
+      - uses: ncipollo/release-action@v1.10.0
+        with:
+          artifacts: tailslide-${{ env.target_tag }}-${{env.pkg_hash}}-${{matrix.platform_name}}.tar.bz2
+          tag: ${{ env.target_tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true

@@ -29,11 +29,6 @@ source_environment_tempfile="$stage/source_environment.sh"
 "$autobuild" source_environment > "$source_environment_tempfile"
 . "$source_environment_tempfile"
 
-# TODO: Load this from the cmake file somehow.
-version="1.0.0"
-build=${AUTOBUILD_BUILD_ID:=0}
-echo "${version}.${build}" > "${stage}/VERSION.txt"
-
 pushd "$TAILSLIDE_SOURCE_DIR"
     case "$AUTOBUILD_PLATFORM" in
 
@@ -63,13 +58,6 @@ pushd "$TAILSLIDE_SOURCE_DIR"
             # but which do nonetheless.
             #
             unset DISTCC_HOSTS CC CXX CFLAGS CPPFLAGS CXXFLAGS
-
-            # No, don't do that.
-#            # Prefer gcc-4.6 if available.
-#            if [[ -x /usr/bin/gcc-4.6 && -x /usr/bin/g++-4.6 ]]; then
-#                export CC=/usr/bin/gcc-4.6
-#                export CXX=/usr/bin/g++-4.6
-#            fi
 
             # Default target per autobuild build --address-size
             opts="${TARGET_OPTS:--m$AUTOBUILD_ADDRSIZE $LL_BUILD_RELEASE}"

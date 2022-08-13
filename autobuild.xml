@@ -135,8 +135,6 @@
             <string>.</string>
             <key>source_type</key>
             <string>git</string>
-            <key>version_file</key>
-            <string>VERSION.txt</string>
         </map>
         <key>type</key>
         <string>autobuild</string>
