@@ -43,12 +43,12 @@ jobs:
           git describe --dirty --tags --long --match '*[0-9]*'
 
           export AUTOBUILD_VARIABLES_FILE="${HOME}/build-variables/variables"
-          autobuild build -A64
+          autobuild -d build -A64
 
           git status
           git describe --dirty --tags --long --match '*[0-9]*'
 
-          autobuild package -A64
+          autobuild -d package -A64
           # Hopefully autobuild only produces a single package
           mv *.tar.bz2 package.tar.bz2
           # Put the md5 hash in the filename to make it less annoying to add to `autobuild.xml`s
