@@ -34,7 +34,7 @@ jobs:
         shell: bash
         run: |
           # We need a relatively new version of autobuild to get the SCM-based versioning
-          pip install "git+https://bitbucket.org/lindenlab/autobuild.git@10c1878294f16e13663c04450e0ad85379160b18"
+          pip install "git+https://bitbucket.org/lindenlab/autobuild.git@22ab62f984200fa3bbfccef301d528c1780172bc"
           git clone https://bitbucket.org/lindenlab/build-variables.git "${HOME}/build-variables"
       - name: autobuild package
         shell: bash
