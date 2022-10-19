@@ -44,6 +44,7 @@ struct ScriptContext {
   // any nodes created while this is false will be considered synthetic by default
   bool parsing = false;
   Tailslide::TailslideLType glloc {0};
+  void *scanner = nullptr;
 };
 
 struct Vector3 {

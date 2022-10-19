@@ -26,7 +26,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
   Tailslide::ScopedScriptParser parser(nullptr);
   try {
-    auto *script = parser.parseLSL(file);
+    auto *script = parser.parseLSLFile(file);
     if (script) {
       script->collectSymbols();
       script->determineTypes();

@@ -4,7 +4,7 @@
 namespace Tailslide {
 
 // any time an int appears in a binary expression with these it must be promoted
-std::vector<LSLIType> SIBLINGS_CAUSING_INT_PROMOTION = {
+static const std::vector<LSLIType> SIBLINGS_CAUSING_INT_PROMOTION = {
     LST_FLOATINGPOINT,
     LST_VECTOR,
     LST_QUATERNION,

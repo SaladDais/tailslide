@@ -22,8 +22,13 @@ struct ScopedScriptParser {
     ScriptContext context;
     LSLSymbolTableManager table_manager;
 
-    LSLScript *parseLSL(FILE *yyin);
-    LSLScript *parseLSL(const std::string &filename);
+    LSLScript *parseLSLFile(FILE *yyin);
+    LSLScript *parseLSLFile(const std::string &filename);
+    LSLScript *parseLSLBytes(const char *buf, int buf_len);
+
+  protected:
+    void initScanner();
+    void parseInternal();
 };
 
 }

@@ -14,7 +14,7 @@ ParserRef runConformance(const char *name, bool allow_syntax_errors)
   ParserRef parser(new ScopedScriptParser(nullptr));
   Logger *logger = &parser->logger;
   logger->setCheckAssertions(true);
-  parser->parseLSL(path);
+  parser->parseLSLFile(path);
   LSLScript *script = parser->script;
 
   if (script == nullptr)

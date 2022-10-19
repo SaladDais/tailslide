@@ -146,7 +146,7 @@ int main(int argc, char **argv) {
   if (check_assertions)
     logger->setCheckAssertions(true);
 
-  auto script = parser.parseLSL(yyin);
+  auto script = parser.parseLSLFile(yyin);
   if (yyin != nullptr)
     fclose(yyin);
 

@@ -4,8 +4,8 @@
 #include "lslmini.tab.hh"
 
 int tailslide_lex_init_extra(Tailslide::ScriptContext *, void **);
-
 void tailslide_set_in(FILE *, void *);
+void *tailslide__scan_bytes ( const char *bytes, int len, void *);
 
 int tailslide_lex_destroy(void *);
 
@@ -31,7 +31,7 @@ class FileCloser {
     FILE *_mFile;
 };
 
-LSLScript *ScopedScriptParser::parseLSL(const std::string &filename) {
+LSLScript *ScopedScriptParser::parseLSLFile(const std::string &filename) {
   // can only be used to parse a single script.
   assert(!script);
   FILE *yyin = fopen(filename.c_str(), "rb");
@@ -39,35 +39,46 @@ LSLScript *ScopedScriptParser::parseLSL(const std::string &filename) {
     throw "couldn't open file";
   }
   FileCloser closer(yyin);
-  auto result = parseLSL(yyin);
-  return result;
+  return parseLSLFile(yyin);
 }
 
-LSLScript *ScopedScriptParser::parseLSL(FILE *yyin) {
+LSLScript *ScopedScriptParser::parseLSLFile(FILE *yyin) {
+  initScanner();
+  // set input file
+  tailslide_set_in(yyin, context.scanner);
+  parseInternal();
+  return script;
+}
+
+LSLScript *ScopedScriptParser::parseLSLBytes(const char *buf, int buf_len) {
+  initScanner();
+  // set input file
+  tailslide__scan_bytes(buf, buf_len, context.scanner);
+  parseInternal();
+  return script;
+}
+
+void ScopedScriptParser::initScanner() {
   assert(!script);
-  void *scanner;
   // ScopedScriptParser owns the allocator and context instance because we can't
   // reasonably re-use Allocator instances with our current model of having
   // it magically pass along the current script context.
   allocator.setContext(&context);
 
   // initialize flex
-  tailslide_lex_init_extra(&context, &scanner);
+  tailslide_lex_init_extra(&context, &context.scanner);
+}
 
-  // set input file
-  tailslide_set_in(yyin, scanner);
-
+void ScopedScriptParser::parseInternal() {
   // parse
   context.parsing = true;
-  tailslide_parse(scanner);
+  tailslide_parse(context.scanner);
   context.parsing = false;
 
   // clean up flex
-  tailslide_lex_destroy(scanner);
+  tailslide_lex_destroy(context.scanner);
   ast_sane = context.ast_sane;
   script = context.script;
-
-  return script;
 }
 
 }
