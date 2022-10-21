@@ -135,6 +135,8 @@
             <string>.</string>
             <key>source_type</key>
             <string>git</string>
+            <key>use_scm_version</key>
+            <boolean>true</boolean>
         </map>
         <key>type</key>
         <string>autobuild</string>
