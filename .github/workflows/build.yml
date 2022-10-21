@@ -60,7 +60,8 @@ jobs:
     needs: test
     strategy:
       matrix:
-        os: [ ubuntu-20.04, macos-11 ]
+        # os: [ ubuntu-20.04, macos-11 ]
+        os: [ ubuntu-20.04 ]
     name: Build ${{matrix.os}}
     runs-on: ${{matrix.os}}
     steps:
