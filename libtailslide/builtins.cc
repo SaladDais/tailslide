@@ -99,8 +99,8 @@ static void init_default_values() {
 void tailslide_init_builtins(const char *builtins_file) {
   LSLFunctionDec *dec = nullptr;
   FILE *fp = nullptr;
-  char buf[1024];
-  char original[1024];
+  char buf[1025];
+  char original[1025];
   char *ret_type = nullptr;
   char *name = nullptr;
   char *ptype = nullptr, *pname = nullptr, *tokptr = nullptr, *value = nullptr;
