@@ -10,17 +10,27 @@ jobs:
   unix:
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-20.04, macos-11]
         addrsize: ["64"]
     name: ${{matrix.os}}
     runs-on: ${{matrix.os}}
     steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@v1
 
-      - name: Bootstrap environment
-        if: ${{matrix.bootstrap_script}}
+      - name: Install Mac Dependencies
+        if: ${{ matrix.os == 'macos-11' }}
         shell: bash
         run: |
-          bash "${{matrix.bootstrap_script}}"
+          bash bootstrap_macos.sh
+
+      - name: setup-msys2
+        if: ${{ matrix.os == 'windows-2022' }}
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MSYS
+          update: false
+          install: flex bison
 
       - uses: secondlife/action-autobuild@v3
         with:
