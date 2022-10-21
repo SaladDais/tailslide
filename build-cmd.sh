@@ -29,8 +29,20 @@ source_environment_tempfile="$stage/source_environment.sh"
 "$autobuild" source_environment > "$source_environment_tempfile"
 . "$source_environment_tempfile"
 
+EFFECTIVE_PLATFORM="$AUTOBUILD_PLATFORM"
+
+# Linux and OS X can have the same build steps.
+case "$AUTOBUILD_PLATFORM" in
+    darwin*)
+        EFFECTIVE_PLATFORM="posix"
+    ;;
+    linux*)
+        EFFECTIVE_PLATFORM="posix"
+    ;;
+esac
+
 pushd "$TAILSLIDE_SOURCE_DIR"
-    case "$AUTOBUILD_PLATFORM" in
+    case "$EFFECTIVE_PLATFORM" in
 
         # ------------------------ windows, windows64 ------------------------
         windows*)
@@ -38,12 +50,8 @@ pushd "$TAILSLIDE_SOURCE_DIR"
         ;;
 
         # ------------------------- darwin, darwin64 -------------------------
-        darwin*)
-            exit 1
-        ;;
-
         # -------------------------- linux, linux64 --------------------------
-        linux*)
+        posix)
             # Linux build environment at Linden comes pre-polluted with stuff that can
             # seriously damage 3rd-party builds.  Environmental garbage you can expect
             # includes:
@@ -76,8 +84,9 @@ pushd "$TAILSLIDE_SOURCE_DIR"
               # Release
               # Note that the library is _not_ stripped!
               CFLAGS="$opts" CXXFLAGS="$opts" \
-                  cmake "$top" -DCMAKE_INSTALL_LIBDIR="$stage/lib/release" -DCMAKE_BUILD_TYPE=Release
-              make
+                  cmake "$top" -DCMAKE_INSTALL_LIBDIR="$stage/lib/release" -DCMAKE_BUILD_TYPE=Release \
+                  -DTAILSLIDE_BUILD_TESTS=off -DTAILSLIDE_BUILD_CLI=off
+              cmake --build .
               cmake --install . --prefix "$stage"
               mkdir -p "$stage/lib/release"
               mv "$stage/lib/libtailslide.a" "$stage/lib/release/libtailslide.a"

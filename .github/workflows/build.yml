@@ -10,10 +10,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  unix:
+  test:
     strategy:
       matrix:
-#        os: [ubuntu-20.04, macos]
         os: [ubuntu-20.04]
         compiler: [clang++]
         # Ubuntu uses GCC which doesn't support coverage, and we want to compile with both GCC and Clang.
@@ -24,16 +23,10 @@ jobs:
             compiler: clang++
             extra_compile_flags: "-DTAILSLIDE_COVERAGE=ON"
             check_coverage: true
-#          - os: macos
-#            bootstrap_command: true
     name: ${{matrix.os}} - ${{matrix.compiler}}
     runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v1
-      - name: Install Dependencies
-        if: ${{matrix.bootstrap_command}}
-        run: |
-          bash bootstrap_${{matrix.os}}.sh
       - name: make test
         run: |
           mkdir build
@@ -62,6 +55,22 @@ jobs:
           fail_ci_if_error: false
           path_to_write_report: ./coverage/codecov_report.txt
           verbose: false
+
+  build:
+    needs: test
+    strategy:
+      matrix:
+        os: [ ubuntu-20.04, macos-11 ]
+    name: Build ${{matrix.os}}
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Install Mac Dependencies
+        if: ${{ matrix.os == 'macos-11' }}
+        shell: bash
+        run: |
+          bash bootstrap_macos.sh
 
       - uses: secondlife/action-autobuild@v3
         with:
