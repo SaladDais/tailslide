@@ -27,6 +27,7 @@ jobs:
       - uses: secondlife/action-autobuild@v3
         with:
           addrsize: ${{ matrix.addrsize }}
+          cygwin-packages: flex bison
 
       - uses: secondlife/action-autobuild-release@v1
         with:
