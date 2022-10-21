@@ -5,7 +5,7 @@
 
 int tailslide_lex_init_extra(Tailslide::ScriptContext *, void **);
 void tailslide_set_in(FILE *, void *);
-void *tailslide__scan_bytes ( const char *bytes, int len, void *);
+struct yy_buffer_state *tailslide__scan_bytes ( const char *bytes, int len, void *);
 
 int tailslide_lex_destroy(void *);
 
