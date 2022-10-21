@@ -106,7 +106,7 @@
                     </map>
                     <key>manifest</key>
                     <array>
-                        <string>lib/release/libtailslide.lib</string>
+                        <string>lib/release/tailslide.lib</string>
                     </array>
                     <key>name</key>
                     <string>windows</string>
@@ -125,7 +125,7 @@
                     </map>
                     <key>manifest</key>
                     <array>
-                        <string>lib/release/libtailslide.lib</string>
+                        <string>lib/release/tailslide.lib</string>
                     </array>
                     <key>name</key>
                     <string>windows64</string>
