@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
       script->validateGlobals(mono_semantics);
       script->checkSymbols();
     }
-    logger->report();
+    logger->printReport();
     if (show_tree) {
       std::cout << "Tree:" << std::endl;
       TreePrintingVisitor visitor;
@@ -188,7 +188,7 @@ int main(int argc, char **argv) {
       std::cout << visitor.mStream.str();
     }
   } else {
-    logger->report();
+    logger->printReport();
   }
 
   if (!logger->getErrors()) {

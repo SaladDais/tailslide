@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <vector>
+#include <string>
 #include <utility>  // pair
 
 #include "allocator.hh"
@@ -19,7 +20,6 @@ enum LogLevel {
   LOG_DEBUG,            // base debug messages
   LOG_DEBUG_MINOR,      // minor debug messages
   LOG_DEBUG_SPAM,       // spammy debug messages
-  LOG_CONTINUE,         // continuation of last message
 };
 
 enum ErrorCode {
@@ -46,7 +46,7 @@ enum ErrorCode {
     E_NOT_ALL_PATHS_RETURN = 10019,
     E_SYNTAX_ERROR = 10020,
     E_GLOBAL_INITIALIZER_NOT_CONSTANT = 10021,
-    E_NO_OPERATOR = 10022,
+    E_DEPRECATED_NO_OPERATOR = 10022,
     E_NO_EVENT_HANDLERS = 10023,
     E_PARSER_STACK_DEPTH = 10024,
     E_BUILTIN_LVALUE = 10025,
@@ -76,7 +76,7 @@ enum ErrorCode {
     W_CHANGE_STATE_HACK = 20005,
     W_DEPRECATED_1 = 20006,
     W_EMPTY_IF = 20007,
-    W_BAD_DECIMAL_LEX = 20008,
+    W_DEPRECATED_BAD_DECIMAL_LEX = 20008,
     W_DECLARED_BUT_NOT_USED = 20009,
     W_UNUSED_EVENT_PARAMETER = 20010,
     W_LIST_COMPARE = 20011,
@@ -106,7 +106,7 @@ class Logger {
     void log(LogLevel type, YYLTYPE *loc, const char *fmt, ...);
     void logv(LogLevel type, YYLTYPE *loc, const char *fmt, va_list args, int error=0);
     void error( YYLTYPE *loc, int error, ... );
-    void report();
+    void printReport();
     void reset();
     void finalize();
 
@@ -154,13 +154,12 @@ inline void DEBUG(LogLevel level, YYLTYPE *yylloc, const char *fmt, ...) {
 // Log message entry, for sorting
 class LogMessage: public TrackableObject {
   public:
-    LogMessage( ScriptContext *ctx, LogLevel type, YYLTYPE *loc, char *message, ErrorCode error );
+    LogMessage( ScriptContext *ctx, LogLevel type, YYLTYPE *loc, const char *message, ErrorCode error );
 
     LogLevel    getType() { return _mLogType; }
     YYLTYPE    *getLoc()  { return &_mLoc;  }
     ErrorCode   getError() { return _mErrorCode; }
-    void        cont(char *message);
-    void        print(FILE *fp);
+    const std::string &getMessage() { return _mMessage; }
 
   private:
     LogLevel            _mLogType;
@@ -170,7 +169,7 @@ class LogMessage: public TrackableObject {
     // be invalid when we go to sort.
     YYLTYPE             _mLoc;
 
-    std::vector<char*>  _mMessages;
+    std::string         _mMessage;
     ErrorCode           _mErrorCode;
 };
 

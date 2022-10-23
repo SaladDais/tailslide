@@ -21,7 +21,7 @@ ParserRef runConformance(const char *name, bool allow_syntax_errors)
   {
     if (!allow_syntax_errors) {
       std::string message = "script " + path + " completely failed to parse!";
-      logger->report();
+      logger->printReport();
       FAIL(message);
     }
   } else {
@@ -41,7 +41,7 @@ void assertNoLintErrors(Logger *logger, const std::string& name) {
   logger->finalize();
   int num_errors = logger->getErrors();
   if (num_errors) {
-    logger->report();
+    logger->printReport();
     std::string message = "script " + name + " encountered " + std::to_string(num_errors) + " errors during parse!";
     FAIL(message);
   }
@@ -107,7 +107,7 @@ static void checkStringOutput(
   logger->finalize();
   CHECK(logger->getErrors() == 0);
   if (logger->getErrors()) {
-    logger->report();
+    logger->printReport();
     // If there are errors at this stage then the AST isn't even guaranteed to be sane.
     return;
   }
