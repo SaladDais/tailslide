@@ -102,7 +102,7 @@ class Logger {
     explicit Logger(ScriptAllocator *allocator) :
         _mErrors(0), _mWarnings(0), _mShowEnd(false), _mShowInfo(false), _mSort(true),
         _mShowErrorCodes(true), _mCheckAssertions(false),
-        _mFinalized(false), _mLastMessage(NULL), _mAllocator(allocator) {};
+        _mFinalized(false), _mAllocator(allocator) {};
     void log(LogLevel type, YYLTYPE *loc, const char *fmt, ...);
     void logv(LogLevel type, YYLTYPE *loc, const char *fmt, va_list args, int error=0);
     void error( YYLTYPE *loc, int error, ... );
@@ -110,6 +110,7 @@ class Logger {
     void reset();
     void finalize();
 
+    const std::vector<class LogMessage*> & getMessages() const { return _mMessages; };
     int     getErrors() const    { return _mErrors;    }
     int     getWarnings()  { finalize(); return _mWarnings;  }
     void    setShowEnd(bool v) { _mShowEnd = v; }
@@ -132,13 +133,11 @@ class Logger {
     bool    _mShowErrorCodes;
     bool    _mCheckAssertions;
     bool    _mFinalized;
-    class LogMessage *_mLastMessage;
     ScriptAllocator *_mAllocator;
 
-  private:
     std::vector<class LogMessage*>    _mMessages;
     std::vector<ErrorCode>            _mErrorsSeen;
-    std::vector< std::pair<int, ErrorCode>>    _mAssertions;
+    std::vector<std::pair<int, ErrorCode>>    _mAssertions;
     static const char *_sErrorMessages[];
     static const char *_sWarningMessages[];
 };
