@@ -7,7 +7,7 @@ on:
       - created
 
 jobs:
-  unix:
+  package:
     strategy:
       matrix:
         os: [ubuntu-20.04, macos-11, windows-2022]
@@ -29,6 +29,11 @@ jobs:
           addrsize: ${{ matrix.addrsize }}
           cygwin-packages: flex bison
 
+  release:
+    name: "Upload autobuild packages to release"
+    needs: "package"
+    runs-on: "ubuntu-20.04"
+    steps:
       - uses: secondlife/action-autobuild-release@v1
         with:
           public: true
