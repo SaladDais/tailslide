@@ -620,7 +620,7 @@ LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLIntegerConsta
   }
 }
 
-const std::string INF_STR = "-inf";
+const std::string INF_STR = "inf";
 const std::string NEG_INF_STR = "-inf";
 const std::set<std::string> NAN_STRS {
     "nan",
