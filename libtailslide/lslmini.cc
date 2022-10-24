@@ -57,7 +57,7 @@ void LSLASTNode::defineSymbol(LSLSymbol *symbol) {
   if (_mSymbolTable) {
     LSLSymbol *shadow;
 
-    DEBUG(LOG_DEBUG_SPAM, nullptr, "symbol definition caught in %s\n", getNodeName());
+    DEBUG(LOG_DEBUG_SPAM, nullptr, "symbol definition caught in %s\n", getNodeName().c_str());
 
     // Check if already defined, if it exists in the current scope then shadowing is never allowed!
     shadow = _mSymbolTable->lookup(symbol->getName());

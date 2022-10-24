@@ -74,7 +74,7 @@ bool ConstantDeterminingVisitor::visit(LSLExpression *expr) {
       nullptr,
       "expression.determine_value() op=%d cv=%s st=%d\n",
       operation,
-      constant_value ? constant_value->getNodeName() : nullptr,
+      constant_value ? constant_value->getNodeName().c_str() : nullptr,
       expr->getNodeSubType()
   );
 

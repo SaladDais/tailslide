@@ -656,7 +656,7 @@ declaration
     }
     | typename IDENTIFIER '=' expression
     {
-        DEBUG( LOG_DEBUG_SPAM, nullptr, "= %s\n", $4->getNodeName());
+        DEBUG( LOG_DEBUG_SPAM, nullptr, "= %s\n", $4->getNodeName().c_str());
         $$ = ALLOCATOR->newTracked<LSLDeclaration>(ALLOCATOR->newTracked<LSLIdentifier>($1, $2, &@2), $4);
     }
     ;

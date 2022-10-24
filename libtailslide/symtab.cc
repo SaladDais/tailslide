@@ -15,7 +15,7 @@ void LSLSymbolTable::define(LSLSymbol *symbol) {
     NULL,
     "defined symbol: %d %s %s\n",
     symbol->getSymbolType(),
-    symbol->getType() ? symbol->getType()->getNodeName() : "!!!NULL!!!",
+    symbol->getType() ? symbol->getType()->getNodeName().c_str() : "!!!NULL!!!",
     symbol->getName()
   );
 }

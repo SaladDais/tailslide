@@ -242,7 +242,7 @@ class LSLASTNode : public TrackableObject {
 
 
     /// identification          ///
-    virtual const char  *getNodeName() { return "node";    };
+    virtual std::string getNodeName() { return "node";    };
     virtual LSLNodeType  getNodeType() { return NODE_NODE; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_NO_SUB_TYPE; }
 
@@ -294,7 +294,7 @@ class LSLASTNode : public TrackableObject {
 class LSLASTNullNode : public LSLASTNode {
   public:
     explicit LSLASTNullNode(ScriptContext *ctx): LSLASTNode(ctx) {};
-    virtual const char *getNodeName() { return "null"; };
+    virtual std::string getNodeName() { return "null"; };
     virtual LSLNodeType getNodeType() { return NODE_NULL; };
 };
 
@@ -307,7 +307,7 @@ class LSLASTNodeList : public LSLASTNode {
       if (nodes)
         pushChild(nodes);
     };
-    virtual const char *getNodeName() { return "ast node list"; }
+    virtual std::string getNodeName() { return "ast node list"; }
     virtual LSLNodeType getNodeType() { return NODE_AST_NODE_LIST; };
 
     node_child_iterator<T> begin() { return node_child_iterator<T>(static_cast<T*>(_mChildren)); }

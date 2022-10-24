@@ -56,7 +56,7 @@ class LSLType : public LSLASTNode {
 
 
     LSLIType getIType() { return _mIType; };
-    virtual const char *getNodeName() {
+    virtual std::string getNodeName() {
       switch (_mIType) {
         case LST_ERROR:         return "error";
         case LST_INTEGER:       return "integer";

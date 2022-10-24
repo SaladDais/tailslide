@@ -81,7 +81,7 @@ class LSLScript : public LSLASTNode {
     NODE_FIELD_GS(LSLASTNodeList<LSLASTNode>, Globals, 0)
     NODE_FIELD_GS(LSLASTNodeList<LSLASTNode>, States, 1)
 
-    virtual const char *getNodeName() { return "script"; };
+    virtual std::string getNodeName() { return "script"; };
     virtual LSLNodeType getNodeType() { return NODE_SCRIPT; };
     virtual LSLSymbol *lookupSymbol(const char *name, LSLSymbolType sym_type);
 
@@ -103,8 +103,8 @@ class LSLIdentifier : public LSLASTNode {
     void setSymbol(LSLSymbol *symbol ) { _mSymbol = symbol; };
     virtual LSLSymbol *getSymbol() { return _mSymbol; };
 
-    virtual const char *getNodeName() {
-      static thread_local char buf[256];
+    virtual std::string getNodeName() {
+      char buf[256];
       snprintf(buf, 256, "identifier \"%s\"", _mName);
       return buf;
     }
@@ -125,7 +125,7 @@ class LSLGlobalVariable : public LSLASTNode {
     NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
     NODE_FIELD_GS(class LSLExpression, Initializer, 1)
 
-    virtual const char *getNodeName() { return "global var"; }
+    virtual std::string getNodeName() { return "global var"; }
     virtual LSLNodeType getNodeType() { return NODE_GLOBAL_VARIABLE; };
 
     virtual LSLConstant *getConstantValue();
@@ -136,7 +136,7 @@ class LSLGlobalVariable : public LSLASTNode {
 class LSLConstant : public LSLASTNode {
   public:
     explicit LSLConstant(ScriptContext *ctx) : LSLASTNode(ctx) { _mConstantValue = this; }
-    virtual const char *getNodeName() { return "unknown constant"; }
+    virtual std::string getNodeName() { return "unknown constant"; }
     virtual LSLNodeType getNodeType() { return NODE_CONSTANT; };
     // make a shallow copy of the constant
     virtual LSLConstant *copy(ScriptAllocator *allocator) = 0;
@@ -155,8 +155,8 @@ class LSLIntegerConstant : public LSLConstant {
   public:
     LSLIntegerConstant( ScriptContext *ctx, int v ) : LSLConstant(ctx), _mValue(v) { _mType = TYPE(LST_INTEGER); }
 
-    virtual const char *getNodeName() {
-      static thread_local char buf[256];
+    virtual std::string getNodeName() {
+      char buf[256];
       snprintf(buf, 256, "integer constant: %d", _mValue);
       return buf;
     }
@@ -180,8 +180,8 @@ class LSLFloatConstant : public LSLConstant {
   public:
     LSLFloatConstant( ScriptContext *ctx, float v ) : LSLConstant(ctx), _mValue(v) { _mType = TYPE(LST_FLOATINGPOINT); }
 
-    virtual const char *getNodeName() {
-      static thread_local char buf[256];
+    virtual std::string getNodeName() {
+      char buf[256];
       snprintf(buf, 256, "float constant: %f", _mValue);
       return buf;
     }
@@ -206,8 +206,8 @@ class LSLStringConstant : public LSLConstant {
   public:
     LSLStringConstant( ScriptContext *ctx, const char *v ) : LSLConstant(ctx), _mValue(v) { _mType = TYPE(LST_STRING); }
 
-    virtual const char *getNodeName() {
-      static thread_local char buf[256];
+    virtual std::string getNodeName() {
+      char buf[256];
       snprintf(buf, 256, "string constant: \"%s\"", escape_string(_mValue).c_str());
       return buf;
     }
@@ -235,8 +235,8 @@ class LSLKeyConstant : public LSLStringConstant {
       return allocator->newTracked<LSLKeyConstant>(_mValue);
     };
 
-    virtual const char *getNodeName() {
-      static thread_local char buf[256];
+    virtual std::string getNodeName() {
+      char buf[256];
       snprintf(buf, 256, "key constant: \"%s\"", escape_string(_mValue).c_str());
       return buf;
     }
@@ -256,8 +256,8 @@ class LSLListConstant : public LSLConstant {
         pushChild(v);
     }
 
-    virtual const char *getNodeName() {
-      static thread_local char buf[256];
+    virtual std::string getNodeName() {
+      char buf[256];
       snprintf(buf, 256, "list constant: %d entries", getLength());
       return buf;
     }
@@ -287,8 +287,8 @@ class LSLVectorConstant : public LSLConstant {
       _mType = TYPE(LST_VECTOR);
     };
 
-    virtual const char *getNodeName() {
-      static thread_local char buf[256];
+    virtual std::string getNodeName() {
+      char buf[256];
       snprintf(buf, 256, "vector constant: <%g, %g, %g>", _mValue.x, _mValue.y, _mValue.z);
       return buf;
     }
@@ -316,8 +316,8 @@ class LSLQuaternionConstant : public LSLConstant {
       _mType = TYPE(LST_QUATERNION);
     };
 
-    virtual const char *getNodeName() {
-      static thread_local char buf[256];
+    virtual std::string getNodeName() {
+      char buf[256];
       snprintf(buf, 256, "quaternion constant: <%g, %g, %g, %g>", _mValue.x, _mValue.y, _mValue.z, _mValue.s);
       return buf;
     }
@@ -344,7 +344,7 @@ class LSLGlobalFunction : public LSLASTNode {
     NODE_FIELD_GS(LSLFunctionDec, Arguments, 1)
     NODE_FIELD_GS(LSLStatement, Statements, 2)
 
-    virtual const char *getNodeName() { return "global func"; }
+    virtual std::string getNodeName() { return "global func"; }
     virtual LSLNodeType getNodeType() { return NODE_GLOBAL_FUNCTION; };
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
 };
@@ -359,7 +359,7 @@ class LSLFunctionDec : public LSLParamList {
   public:
     explicit LSLFunctionDec(ScriptContext *ctx) : LSLParamList(ctx) {};
     LSLFunctionDec( ScriptContext *ctx, class LSLIdentifier *identifiers ) : LSLParamList(ctx, identifiers) {};
-    virtual const char *getNodeName() { return "function decl"; }
+    virtual std::string getNodeName() { return "function decl"; }
     virtual LSLNodeType getNodeType() { return NODE_FUNCTION_DEC; };
 };
 
@@ -368,7 +368,7 @@ class LSLEventDec : public LSLParamList {
     explicit LSLEventDec(ScriptContext *ctx) : LSLParamList(ctx) {};
     LSLEventDec( ScriptContext *ctx, class LSLIdentifier *identifiers ) : LSLParamList(ctx, identifiers) {};
 
-    virtual const char *getNodeName() { return "event decl"; }
+    virtual std::string getNodeName() { return "event decl"; }
     virtual LSLNodeType getNodeType() { return NODE_EVENT_DEC; };
 };
 
@@ -381,7 +381,7 @@ class LSLEventHandler : public LSLASTNode {
   NODE_FIELD_GS(LSLFunctionDec, Arguments, 1)
   NODE_FIELD_GS(LSLStatement, Statements, 2)
 
-  virtual const char *getNodeName() { return "event handler"; }
+  virtual std::string getNodeName() { return "event handler"; }
   virtual LSLNodeType getNodeType() { return NODE_EVENT_HANDLER; };
   virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
 };
@@ -393,7 +393,7 @@ class LSLState : public LSLASTNode {
     NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
     NODE_FIELD_GS(LSLASTNodeList<class LSLEventHandler>, EventHandlers, 1)
 
-    virtual const char *getNodeName() { return "state"; }
+    virtual std::string getNodeName() { return "state"; }
     virtual LSLNodeType getNodeType() { return NODE_STATE; };
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
 };
@@ -409,7 +409,7 @@ class LSLExpression : public LSLASTNode {
     va_end(ap);
   };
 
-  virtual const char *getNodeName() {
+  virtual std::string getNodeName() {
     return "base expression";
   };
   virtual LSLNodeType getNodeType() { return NODE_EXPRESSION; };
@@ -434,14 +434,14 @@ class LSLStatement : public LSLASTNode {
       addChildren(num, ap);
       va_end(ap);
     };
-    virtual const char *getNodeName() { return "statement"; }
+    virtual std::string getNodeName() { return "statement"; }
     virtual LSLNodeType getNodeType() { return NODE_STATEMENT; };
 };
 
 class LSLNopStatement : public LSLStatement {
   public:
     explicit LSLNopStatement( ScriptContext *ctx) : LSLStatement(ctx, 0) {}
-    virtual const char *getNodeName() { return "nop statement"; };
+    virtual std::string getNodeName() { return "nop statement"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_NOP_STATEMENT; };
 };
 
@@ -451,7 +451,7 @@ class LSLCompoundStatement : public LSLStatement {
       if (statements)
         pushChild(statements);
     }
-    virtual const char *getNodeName() { return "compound statement"; };
+    virtual std::string getNodeName() { return "compound statement"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_COMPOUND_STATEMENT; };
 };
 
@@ -460,7 +460,7 @@ class LSLExpressionStatement : public LSLStatement {
   LSLExpressionStatement( ScriptContext *ctx, class LSLExpression *expr ) : LSLStatement(ctx, 1, expr) {}
   NODE_FIELD_GS(LSLExpression, Expr, 0)
 
-  virtual const char *getNodeName() { return "expression statement"; };
+  virtual std::string getNodeName() { return "expression statement"; };
   virtual LSLNodeSubType getNodeSubType() { return NODE_EXPRESSION_STATEMENT; };
 };
 
@@ -469,7 +469,7 @@ class LSLStateStatement : public LSLStatement {
     LSLStateStatement( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLStatement(ctx, 1, identifier) {};
     NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
 
-    virtual const char *getNodeName() { return "setstate"; };
+    virtual std::string getNodeName() { return "setstate"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_STATE_STATEMENT; };
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
 };
@@ -479,8 +479,8 @@ class LSLJumpStatement : public LSLStatement {
     LSLJumpStatement( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLStatement(ctx, 1, identifier) {};
     NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
 
-    virtual const char *getNodeName() {
-      static thread_local char buf[256];
+    virtual std::string getNodeName() {
+      char buf[256];
       const char *jump_kind = "";
       if (_mIsBreakLike)
         jump_kind = " {break-like}";
@@ -510,7 +510,7 @@ class LSLLabel : public LSLStatement {
     LSLLabel( ScriptContext *ctx, class LSLIdentifier *identifier ) : LSLStatement(ctx, 1, identifier) {};
     NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
 
-    virtual const char *getNodeName() { return "label"; };
+    virtual std::string getNodeName() { return "label"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_LABEL; };
     virtual LSLSymbol *getSymbol() {return ((LSLIdentifier *) getChild(0))->getSymbol(); }
 };
@@ -520,7 +520,7 @@ class LSLReturnStatement : public LSLStatement {
     LSLReturnStatement( ScriptContext *ctx, class LSLExpression *expression ) : LSLStatement(ctx, 1, expression) {};
     NODE_FIELD_GS(LSLExpression, Expr, 0)
 
-    virtual const char *getNodeName() { return "return"; };
+    virtual std::string getNodeName() { return "return"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_RETURN_STATEMENT; };
 };
 
@@ -532,7 +532,7 @@ class LSLIfStatement : public LSLStatement {
     NODE_FIELD_GS(LSLStatement, TrueBranch, 1)
     NODE_FIELD_GS(LSLStatement, FalseBranch, 2)
 
-    virtual const char *getNodeName() { return "if"; };
+    virtual std::string getNodeName() { return "if"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_IF_STATEMENT; };
 };
 
@@ -546,7 +546,7 @@ class LSLForStatement : public LSLStatement {
     NODE_FIELD_GS(LSLASTNodeList<LSLExpression>, IncrExprs, 2)
     NODE_FIELD_GS(LSLStatement, Body, 3)
 
-    virtual const char *getNodeName() { return "for"; };
+    virtual std::string getNodeName() { return "for"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_FOR_STATEMENT; };
 };
 
@@ -557,7 +557,7 @@ class LSLDoStatement : public LSLStatement {
     NODE_FIELD_GS(LSLStatement, Body, 0)
     NODE_FIELD_GS(LSLExpression, CheckExpr, 1)
 
-    virtual const char *getNodeName() { return "do"; };
+    virtual std::string getNodeName() { return "do"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_DO_STATEMENT; };
 };
 
@@ -568,7 +568,7 @@ class LSLWhileStatement : public LSLStatement {
     NODE_FIELD_GS(LSLExpression, CheckExpr, 0)
     NODE_FIELD_GS(LSLStatement, Body, 1)
 
-    virtual const char *getNodeName() { return "while"; };
+    virtual std::string getNodeName() { return "while"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_WHILE_STATEMENT; };
 };
 
@@ -580,7 +580,7 @@ class LSLDeclaration : public LSLStatement {
     NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
     NODE_FIELD_GS(LSLExpression, Initializer, 1)
 
-    virtual const char *getNodeName() { return "declaration"; };
+    virtual std::string getNodeName() { return "declaration"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_DECLARATION; };
 
     virtual LSLConstant *getConstantValue();
@@ -600,7 +600,7 @@ public:
       _mType = constant->getType();
     };
 
-    virtual const char *getNodeName() {
+    virtual std::string getNodeName() {
       return "constant expression";
     };
     virtual LSLNodeSubType getNodeSubType() { return NODE_CONSTANT_EXPRESSION; };
@@ -613,7 +613,7 @@ public:
       : LSLExpression(ctx, 1, expr) { _mOperation = OP_PARENS; };
     NODE_FIELD_GS(LSLExpression, ChildExpr, 0)
 
-    virtual const char *getNodeName() {
+    virtual std::string getNodeName() {
       return "parenthesis expression";
     };
     virtual LSLNodeSubType getNodeSubType() { return NODE_PARENTHESIS_EXPRESSION; };
@@ -627,8 +627,8 @@ public:
     NODE_FIELD_GS(LSLExpression, LHS, 0)
     NODE_FIELD_GS(LSLExpression, RHS, 1)
 
-    virtual const char *getNodeName() {
-      static thread_local char buf[256];
+    virtual std::string getNodeName() {
+      char buf[256];
       snprintf( buf, 256, "binary expression: '%s'", operation_repr_str(_mOperation) );
       return buf;
     };
@@ -641,8 +641,8 @@ public:
             : LSLExpression(ctx, 1, lvalue) { _mOperation = oper; };
     NODE_FIELD_GS(LSLExpression, ChildExpr, 0)
 
-    virtual const char *getNodeName() {
-      static thread_local char buf[256];
+    virtual std::string getNodeName() {
+      char buf[256];
       snprintf( buf, 256, "unary expression: '%s'", operation_repr_str(_mOperation) );
       return buf;
     };
@@ -655,7 +655,7 @@ class LSLTypecastExpression : public LSLExpression {
       : LSLExpression(ctx, 1, expression) { _mType = type;};
     NODE_FIELD_GS(LSLExpression, ChildExpr, 0)
 
-    virtual const char *getNodeName() { return "typecast expression"; }
+    virtual std::string getNodeName() { return "typecast expression"; }
     virtual LSLNodeSubType getNodeSubType() { return NODE_TYPECAST_EXPRESSION; };
 };
 
@@ -666,7 +666,7 @@ class LSLBoolConversionExpression : public LSLExpression {
       : LSLExpression(ctx, 1, expression) { _mType = TYPE(LST_INTEGER);};
   NODE_FIELD_GS(LSLExpression, ChildExpr, 0)
 
-  virtual const char *getNodeName() { return "boolean conversion"; }
+  virtual std::string getNodeName() { return "boolean conversion"; }
   virtual LSLNodeSubType getNodeSubType() { return NODE_BOOL_CONVERSION_EXPRESSION; };
 };
 
@@ -676,7 +676,7 @@ class LSLPrintExpression : public LSLExpression {
       : LSLExpression( ctx, 1, expression ) { _mType = TYPE(LST_NULL); };
     NODE_FIELD_GS(LSLExpression, ChildExpr, 0)
 
-    virtual const char *getNodeName() { return "print() call"; }
+    virtual std::string getNodeName() { return "print() call"; }
     virtual LSLNodeSubType getNodeSubType() { return NODE_PRINT_EXPRESSION; };
 };
 
@@ -687,7 +687,7 @@ class LSLFunctionExpression : public LSLExpression {
     NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
     NODE_FIELD_GS(LSLASTNodeList<LSLExpression>, Arguments, 1)
 
-    virtual const char *getNodeName() { return "function call"; }
+    virtual std::string getNodeName() { return "function call"; }
     virtual LSLNodeSubType getNodeSubType() { return NODE_FUNCTION_EXPRESSION; };
 
     virtual bool nodeAllowsFolding() { return false; };
@@ -702,7 +702,7 @@ class LSLVectorExpression : public LSLExpression {
     NODE_FIELD_GS(LSLExpression, Y, 1)
     NODE_FIELD_GS(LSLExpression, Z, 2)
 
-    virtual const char *getNodeName() { return "vector expression"; }
+    virtual std::string getNodeName() { return "vector expression"; }
     virtual LSLNodeSubType getNodeSubType() { return NODE_VECTOR_EXPRESSION; };
 };
 
@@ -715,7 +715,7 @@ class LSLQuaternionExpression : public LSLExpression {
     NODE_FIELD_GS(LSLExpression, Z, 2)
     NODE_FIELD_GS(LSLExpression, S, 3)
 
-    virtual const char *getNodeName() { return "quaternion expression"; };
+    virtual std::string getNodeName() { return "quaternion expression"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_QUATERNION_EXPRESSION; };
 };
 
@@ -727,7 +727,7 @@ class LSLListExpression : public LSLExpression {
         pushChild(c);
     };
 
-    virtual const char *getNodeName() { return "list expression"; };
+    virtual std::string getNodeName() { return "list expression"; };
     virtual LSLNodeSubType getNodeSubType() { return NODE_LIST_EXPRESSION; }
     node_child_iterator<LSLExpression> begin() {
       return node_child_iterator<LSLExpression>(static_cast<LSLExpression*>(_mChildren));
@@ -744,8 +744,8 @@ class LSLLValueExpression : public LSLExpression {
     NODE_FIELD_GS(LSLIdentifier, Identifier, 0)
     NODE_FIELD_GS(LSLIdentifier, Member, 1)
 
-    virtual const char *getNodeName() {
-      static thread_local char buf[256];
+    virtual std::string getNodeName() {
+      char buf[256];
       snprintf(buf, 256, "lvalue expression {%sfoldable}", _mIsFoldable ? "" : "not ");
       return buf;
     };

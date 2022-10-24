@@ -21,8 +21,8 @@ void TypeCheckVisitor::handleDeclaration(LSLASTNode *decl_node) {
   if (rvalue->getType() == TYPE(LST_ERROR))
     return;
   if (!rvalue->getType()->canCoerce(id->getType())) {
-    NODE_ERROR(decl_node, E_WRONG_TYPE_IN_ASSIGNMENT, id->getType()->getNodeName(),
-               id->getName(), rvalue->getType()->getNodeName());
+    NODE_ERROR(decl_node, E_WRONG_TYPE_IN_ASSIGNMENT, id->getType()->getNodeName().c_str(),
+               id->getName(), rvalue->getType()->getNodeName().c_str());
   }
 }
 
@@ -102,7 +102,7 @@ bool TypeCheckVisitor::visit(LSLReturnStatement *ret_stmt) {
 
   // It's an error if we have no return expression and this isn't a void func
   if (!ret_expr && ancestor_type->getIType() != LST_NULL) {
-    NODE_ERROR(ret_stmt, E_BAD_RETURN_TYPE, TYPE(LST_NULL)->getNodeName(), ancestor_type->getNodeName());
+    NODE_ERROR(ret_stmt, E_BAD_RETURN_TYPE, TYPE(LST_NULL)->getNodeName().c_str(), ancestor_type->getNodeName().c_str());
     return true;
   }
 
@@ -120,7 +120,7 @@ bool TypeCheckVisitor::visit(LSLReturnStatement *ret_stmt) {
     // result of a void expression follows the same rules as event handlers.
     if (!ret_type->canCoerce(ancestor_type)
         || (ret_expr && ret_expr->getIType() == LST_NULL && func_is_parent)) {
-      NODE_ERROR(ret_stmt, E_BAD_RETURN_TYPE, ret_type->getNodeName(), ancestor_type->getNodeName());
+      NODE_ERROR(ret_stmt, E_BAD_RETURN_TYPE, ret_type->getNodeName().c_str(), ancestor_type->getNodeName().c_str());
     }
   }
   return true;
@@ -203,9 +203,9 @@ bool TypeCheckVisitor::visit(LSLExpression *expr) {
       NODE_ERROR(
           expr,
           E_INVALID_OPERATOR,
-          l_type->getNodeName(),
+          l_type->getNodeName().c_str(),
           operation_str(operation),
-          r_type ? r_type->getNodeName() : ""
+          r_type ? r_type->getNodeName().c_str() : ""
       );
       // We don't know what type this expression is supposed to result in,
       // either because this operation is unsupported.
@@ -272,10 +272,10 @@ static bool validate_func_arg_spec(
 
     if (!param_compatible) {
       NODE_ERROR(func_node, is_event_handler ? E_ARGUMENT_WRONG_TYPE_EVENT : E_ARGUMENT_WRONG_TYPE,
-                 passed_param_id->getType()->getNodeName(),
+                 passed_param_id->getType()->getNodeName().c_str(),
                  param_num,
                  id->getName(),
-                 declared_param_id->getType()->getNodeName(),
+                 declared_param_id->getType()->getNodeName().c_str(),
                  declared_param_id->getName()
       );
       return false;
@@ -430,7 +430,7 @@ bool TypeCheckVisitor::visit(LSLTypecastExpression *cast_expr) {
   if(!is_cast_legal(from_type->getIType(), to_type->getIType())) {
     // this is just an error bubbling up
     if (from_type->getIType() != LST_ERROR) {
-      NODE_ERROR(cast_expr, E_ILLEGAL_CAST, from_type->getNodeName(), to_type->getNodeName());
+      NODE_ERROR(cast_expr, E_ILLEGAL_CAST, from_type->getNodeName().c_str(), to_type->getNodeName().c_str());
     }
   }
   return true;
@@ -440,7 +440,7 @@ bool TypeCheckVisitor::visit(LSLVectorExpression *vec_expr) {
   for (auto *child : *vec_expr) {
     if (!child->getType()->canCoerce(TYPE(LST_FLOATINGPOINT))) {
       NODE_ERROR(vec_expr, E_WRONG_TYPE_IN_MEMBER_ASSIGNMENT, "vector",
-                 child->getType()->getNodeName());
+                 child->getType()->getNodeName().c_str());
       return true;
     }
   }
@@ -451,7 +451,7 @@ bool TypeCheckVisitor::visit(LSLQuaternionExpression *quat_expr) {
   for (auto *child : *quat_expr) {
     if (!child->getType()->canCoerce(TYPE(LST_FLOATINGPOINT))) {
       NODE_ERROR(quat_expr, E_WRONG_TYPE_IN_MEMBER_ASSIGNMENT, "quaternion",
-                 child->getType()->getNodeName());
+                 child->getType()->getNodeName().c_str());
       return true;
     }
   }
