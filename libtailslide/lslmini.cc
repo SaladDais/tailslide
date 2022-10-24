@@ -342,7 +342,7 @@ LSLConstant *LSLExpression::getConstantValue() {
 LSLConstant *LSLLValueExpression::getConstantValue() {
   if (_mIsFoldable) {
     // We have to be careful about folding lists
-    if (this->_mType == TYPE(LST_LIST)) {
+    if (getIType() == LST_LIST) {
       LSLASTNode *top_foldable = this;
       LSLASTNode *current_node = this;
 
@@ -351,7 +351,7 @@ LSLConstant *LSLLValueExpression::getConstantValue() {
         top_foldable = current_node;
         current_node = current_node->getParent();
       }
-      if (top_foldable->getType() == TYPE(LST_LIST))
+      if (top_foldable->getIType() == LST_LIST)
         return nullptr;
     }
 

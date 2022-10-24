@@ -12,7 +12,7 @@ bool ConstantDeterminingVisitor::beforeDescend(LSLASTNode *node) {
     node->setConstantPrecluded(false);
   }
 
-  if (node->getType() == TYPE(LST_ERROR)) {
+  if (node->getIType() == LST_ERROR) {
     // absolutely no chance of us figuring out a constant value
     // for this node, don't descend.
     node->setConstantPrecluded(true);
@@ -81,7 +81,7 @@ bool ConstantDeterminingVisitor::visit(LSLExpression *expr) {
   LSLASTNode *left = expr->getChild(0);
   LSLASTNode *right = expr->getChild(1);
 
-  if (left->getType() == TYPE(LST_ERROR) || (right && right->getType() == TYPE(LST_ERROR))) {
+  if (left->getIType() == LST_ERROR || (right && right->getIType() == LST_ERROR)) {
     expr->setConstantPrecluded(true);
     return true;
   }

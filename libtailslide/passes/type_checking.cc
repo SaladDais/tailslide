@@ -18,7 +18,7 @@ void TypeCheckVisitor::handleDeclaration(LSLASTNode *decl_node) {
     return;
   // we already know there's something messed up going on with the types
   // in the rvalue, don't re-error
-  if (rvalue->getType() == TYPE(LST_ERROR))
+  if (rvalue->getIType() == LST_ERROR)
     return;
   if (!rvalue->getType()->canCoerce(id->getType())) {
     NODE_ERROR(decl_node, E_WRONG_TYPE_IN_ASSIGNMENT, id->getType()->getNodeName().c_str(),
@@ -221,7 +221,7 @@ bool TypeCheckVisitor::visit(LSLExpression *expr) {
 
 bool TypeCheckVisitor::visit(LSLListConstant *list_const) {
   for (auto *val_c : *list_const) {
-    if (val_c->getType() == TYPE(LST_LIST)) {
+    if (val_c->getIType() == LST_LIST) {
       NODE_ERROR(list_const, E_LIST_IN_LIST);
       val_c->setType(TYPE(LST_ERROR));
     }
