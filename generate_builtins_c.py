@@ -18,7 +18,7 @@ def main():
     with open(BUILTINS_PATH) as f:
         builtins_lines = tuple(f.readlines())
 
-    with open('libtailslide/builtins_txt.cc', 'w') as f:
+    with open(os.path.join(SCRIPT_PATH, 'libtailslide', 'builtins_txt.cc'), 'w') as f:
         f.write("""#ifdef _WIN32
 #pragma execution_character_set("utf-8")
 #endif
