@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include "fuzz_utils.hh"
 #include "tailslide.hh"
 #include "passes/tree_simplifier.hh"
 #include "passes/lso/script_compiler.hh"
@@ -19,14 +18,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     compile_cil = getenv("COMPILE_CIL") != nullptr;
   }
 
-  const char *file = buf_to_file(data, size);
-  if (!file) {
-    exit(EXIT_FAILURE);
-  }
-
   Tailslide::ScopedScriptParser parser(nullptr);
   try {
-    auto *script = parser.parseLSLFile(file);
+    auto *script = parser.parseLSLBytes((const char *)data, size);
     if (script) {
       script->collectSymbols();
       script->determineTypes();
@@ -63,10 +57,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     }
   } catch (const std::exception& e) {
     std::cout << e.what() << std::endl;
-  }
-
-  if (delete_file(file) != 0) {
-    exit(EXIT_FAILURE);
   }
 
   return EXIT_SUCCESS;

@@ -223,7 +223,6 @@ if (TAILSLIDE_BUILD_FUZZER)
     fuzz/fuzz.cc
   )
   target_sources(tailslide_fuzzer PRIVATE
-    fuzz/fuzz_utils.hh
   )
   target_include_directories(tailslide_fuzzer PUBLIC ${CMAKE_CURRENT_BINARY_DIR} libtailslide)
   target_link_libraries(tailslide_fuzzer PUBLIC ${EXTRA_LIBS} libtailslide "-fsanitize=fuzzer,address")
