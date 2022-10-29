@@ -1,13 +1,14 @@
 #ifndef TAILSLIDE_SYMTAB_HH
 #define TAILSLIDE_SYMTAB_HH
 
+#include <cassert>
 #include <clocale>
 #include <cstddef>
-#include <vector>
 #include <unordered_map>
-#include "unordered_cstr_map.hh"
+#include <vector>
 
 #include "allocator.hh"
+#include "unordered_cstr_map.hh"
 
 namespace Tailslide {
 
@@ -25,6 +26,7 @@ enum LSLIType : uint8_t {
 };
 
 enum LSLSymbolType       { SYM_ANY = -1, SYM_VARIABLE, SYM_FUNCTION, SYM_STATE, SYM_LABEL, SYM_EVENT };
+enum LSLSymbolTableType  { SYMTAB_GLOBAL, SYMTAB_STATE, SYMTAB_FUNCTION, SYMTAB_LEXICAL, SYMTAB_BUILTINS };
 enum LSLSymbolSubType    { SYM_LOCAL, SYM_GLOBAL, SYM_BUILTIN, SYM_FUNCTION_PARAMETER, SYM_EVENT_PARAMETER };
 
 class LSLSymbol: public TrackableObject {
@@ -103,7 +105,8 @@ class LSLSymbol: public TrackableObject {
 
 class LSLSymbolTable: public TrackableObject {
   public:
-    explicit LSLSymbolTable(ScriptContext *ctx): TrackableObject(ctx) {};
+    explicit LSLSymbolTable(ScriptContext *ctx, LSLSymbolTableType symtab_type)
+      : TrackableObject(ctx), _mSymbolTableType(symtab_type) {};
     LSLSymbol *lookup( const char *name, LSLSymbolType type = SYM_ANY );
     void            define( LSLSymbol *symbol );
     bool            remove( LSLSymbol *symbol );
@@ -111,10 +114,24 @@ class LSLSymbolTable: public TrackableObject {
     void resetTracking();
 
   private:
-    UnorderedCStrMap<LSLSymbol*> _mSymbols;
+    UnorderedCStrMap<LSLSymbol *> _mSymbols;
+    std::vector<class LSLLabel *> _mLabels;
+    LSLSymbolTableType _mSymbolTableType;
 
   public:
     UnorderedCStrMap<LSLSymbol*> &getMap() {return _mSymbols;}
+    LSLSymbolTableType getTableType() { return _mSymbolTableType; }
+
+    // Used for tracking all labels in a function. Labels in LSL are
+    // lexically scoped by specification, function scoped by implementation :(
+    void setLabels(const std::vector<class LSLLabel *> &labels) {
+      assert(_mSymbolTableType == SYMTAB_FUNCTION);
+      _mLabels = labels;
+    }
+    const std::vector<class LSLLabel *> &getLabels() {
+      assert(_mSymbolTableType == SYMTAB_FUNCTION);
+      return _mLabels;
+    }
 };
 
 class LSLSymbolTableManager {

@@ -13,7 +13,7 @@ extern const char *BUILTINS_TXT[];
 static ScriptAllocator gStaticAllocator {};
 
 // holds the symbols for the default builtins
-LSLSymbolTable gBuiltinsSymbolTable{nullptr}; // NOLINT(cert-err58-cpp)
+LSLSymbolTable gBuiltinsSymbolTable{nullptr, SYMTAB_BUILTINS}; // NOLINT(cert-err58-cpp)
 
 struct LSLTypeMap {
     const char *name;

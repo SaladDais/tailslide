@@ -4,7 +4,7 @@ namespace Tailslide {
 
 
 bool SymbolResolutionVisitor::visit(LSLScript *script) {
-  replaceSymbolTable(script);
+  replaceSymbolTable(script, SYMTAB_GLOBAL);
   auto *globals = script->getGlobals();
   // all global var definitions are implicitly hoisted above function definitions
   // all functions and states have their declarations implicitly hoisted as well.
@@ -15,7 +15,7 @@ bool SymbolResolutionVisitor::visit(LSLScript *script) {
     } else if (global->getNodeType() == NODE_GLOBAL_FUNCTION) {
       // just record the prototype of the function and don't descend for now.
       auto *global_func = (LSLGlobalFunction *)global;
-      replaceSymbolTable(global_func);
+      replaceSymbolTable(global_func, SYMTAB_FUNCTION);
       auto *identifier = global_func->getIdentifier();
 
       // define function in script scope since functions have their own scope
@@ -34,7 +34,7 @@ bool SymbolResolutionVisitor::visit(LSLScript *script) {
   // now walk the states to register their prototypes
   auto *states = script->getStates();
   for (auto *state : *states) {
-    replaceSymbolTable(state);
+    replaceSymbolTable(state, SYMTAB_STATE);
     auto *identifier = ((LSLState *)state)->getIdentifier();
     identifier->setSymbol(_mAllocator->newTracked<LSLSymbol>(
         identifier->getName(), identifier->getType(), SYM_STATE, SYM_GLOBAL, identifier->getLoc()
@@ -87,9 +87,9 @@ bool SymbolResolutionVisitor::visit(LSLDeclaration *decl_stmt) {
 }
 
 /// replace the node's old symbol table, registering the new one.
-void SymbolResolutionVisitor::replaceSymbolTable(LSLASTNode *node) {
+void SymbolResolutionVisitor::replaceSymbolTable(LSLASTNode *node, LSLSymbolTableType symtab_type) {
   // TODO: unregister old table? need to figure out node copy semantics.
-  auto *symtab = _mAllocator->newTracked<LSLSymbolTable>();
+  auto *symtab = _mAllocator->newTracked<LSLSymbolTable>(symtab_type);
   node->setSymbolTable(symtab);
   node->mContext->table_manager->registerTable(symtab);
 }
@@ -107,12 +107,13 @@ bool SymbolResolutionVisitor::visit(LSLFunctionExpression *func_expr) {
 bool SymbolResolutionVisitor::visit(LSLGlobalFunction *glob_func) {
   assert(_mPendingJumps.empty());
   visitChildren(glob_func);
+  glob_func->getSymbolTable()->setLabels(_mCollectedLabels);
   resolvePendingJumps(glob_func);
   return false;
 }
 
 bool SymbolResolutionVisitor::visit(LSLEventHandler *handler) {
-  replaceSymbolTable(handler);
+  replaceSymbolTable(handler, SYMTAB_FUNCTION);
 
   auto *id = handler->getIdentifier();
   // look for a prototype for this event in the builtin namespace
@@ -128,6 +129,7 @@ bool SymbolResolutionVisitor::visit(LSLEventHandler *handler) {
 
   assert(_mPendingJumps.empty());
   visitChildren(handler);
+  handler->getSymbolTable()->setLabels(_mCollectedLabels);
   resolvePendingJumps(handler);
   return false;
 }
@@ -183,7 +185,7 @@ bool SymbolResolutionVisitor::visit(LSLStateStatement *state_stmt) {
 }
 
 bool SymbolResolutionVisitor::visit(LSLCompoundStatement *compound_stmt) {
-  replaceSymbolTable(compound_stmt);
+  replaceSymbolTable(compound_stmt, SYMTAB_LEXICAL);
   return true;
 }
 

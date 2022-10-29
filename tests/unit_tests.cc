@@ -122,4 +122,14 @@ TEST_CASE("Bitstream read_only")
   CHECK(bs2.isReadOnly());
 }
 
+TEST_CASE("LLoc comparison works correctly") {
+  TailslideLType smaller {0, 1, 2, 3};
+  TailslideLType bigger {1, 1, 2, 3};
+  TailslideLType smaller_sameline {1, 0, 2, 3};
+  CHECK(bigger > smaller);
+  CHECK(bigger > smaller_sameline);
+  CHECK(smaller < bigger);
+  CHECK(smaller_sameline < bigger);
+}
+
 TEST_SUITE_END();

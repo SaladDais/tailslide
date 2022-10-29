@@ -32,7 +32,7 @@ class SymbolResolutionVisitor : public ASTVisitor {
     virtual bool visit(LSLForStatement *for_stmt);
     void visitLoop(LSLASTNode *loop_stmt);
 
-    void replaceSymbolTable(LSLASTNode *node);
+    void replaceSymbolTable(LSLASTNode *node, LSLSymbolTableType symtab_type);
 
     void resolvePendingJumps(LSLASTNode *func_like);
     ScriptAllocator *_mAllocator;

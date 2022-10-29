@@ -395,30 +395,43 @@ bool TypeCheckVisitor::visit(LSLLValueExpression *lvalue) {
   // between us and its declaration that'd make it unfoldable
   if (symbol->getSubType() == SYM_LOCAL && symbol->getVarDecl() != nullptr) {
     LSLASTNode *local_decl = symbol->getVarDecl();
+    assert(local_decl != nullptr);
 
-    // walk up and find the statement at the top of this expression;
+    // Walk up and find the symbol table for the function this is in
     LSLASTNode *upper_node = lvalue->getParent();
-    while (upper_node != nullptr && upper_node->getNodeType() != NODE_STATEMENT) {
+    LSLSymbolTable *func_symtab = nullptr;
+    while (upper_node != nullptr) {
+      auto *symtab = upper_node->getSymbolTable();
+      if (symtab && symtab->getTableType() == SYMTAB_FUNCTION) {
+        func_symtab = symtab;
+        break;
+      }
       upper_node = upper_node->getParent();
     }
-    if (upper_node != nullptr) {
-      auto *parent_stmt = (LSLStatement *) upper_node;
-      auto *found_stmt = (LSLStatement *) parent_stmt->findPreviousInScope(
-          [local_decl](LSLASTNode *to_check) {
-            // stop searching once we hit the declaration or a label
-            return to_check == local_decl || to_check->getNodeSubType() == NODE_LABEL;
-          }
-      );
+
+    // LValue ref for a local should always be within a function
+    assert(func_symtab != nullptr);
+
+    bool is_foldable = true;
+    if (*local_decl->getLoc() > *lvalue->getLoc()) {
       // the declaration really should be above us somewhere
       // unless they did something screwy like `if(r)string r = baz;`
-
-      // hit a label before the declaration? Not gonna inline it.
-      // we could be smarter about this, but it's probably not worth it.
-      // we could check if there was also a jump to that label somewhere
-      // before us in the same scope (before the declaration obviously.)
-      lvalue->setIsFoldable(found_stmt && (found_stmt->getNodeSubType() != NODE_LABEL));
-      return false;
+      is_foldable = false;
+    } else {
+      // check if a label occurs between the declaration and lvalue
+      for (auto *label_ptr : func_symtab->getLabels()) {
+        // hit a label before the declaration? Not gonna inline it.
+        // we could be smarter about this, but it's probably not worth it.
+        // we could check if there was also a jump to that label somewhere
+        // before us in the same scope (before the declaration obviously.)
+        if (*label_ptr->getLoc() > *local_decl->getLoc() && *label_ptr->getLoc() < *lvalue->getLoc()) {
+          is_foldable = false;
+          break;
+        }
+      }
     }
+    lvalue->setIsFoldable(is_foldable);
+    return false;
   }
   lvalue->setIsFoldable(true);
   return false;
