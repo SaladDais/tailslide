@@ -9,6 +9,48 @@ static const char *CIL_LSL_RUNTIME_CLASS = "class [LslLibrary]LindenLab.SecondLi
 static const char *CIL_LSL_LIBRARY_CLASS = "class [LslLibrary]LindenLab.SecondLife.Library";
 static const std::string CIL_LIST_INITIALIZER = std::string("call ") + CIL_TYPE_NAMES[LST_LIST] + " " + CIL_USERSCRIPT_CLASS + "::CreateList()";
 
+/// LSL name -> CIL name
+static std::unordered_map<std::string, std::string> CIL_HANDLER_NAMES {
+    {"state_entry", "state_entry"},
+    {"state_exit", "state_exit"},
+    {"touch_start", "touch_start"},
+    {"touch", "touch"},
+    {"touch_end", "touch_end"},
+    {"collision_start", "collision_start"},
+    {"collision", "collision"},
+    {"collision_end", "collision_end"},
+    {"land_collision_start", "land_collision_start"},
+    {"land_collision", "land_collision"},
+    {"land_collision_end", "land_collision_end"},
+    {"timer", "timer"},
+    {"listen", "chat"},
+    {"on_rez", "rez"},
+    {"sensor", "sensor"},
+    {"no_sensor", "no_sensor"},
+    {"control", "control"},
+    {"money", "money"},
+    {"email", "email"},
+    {"at_target", "at_target"},
+    {"not_at_target", "not_at_target"},
+    {"at_rot_target", "at_rot_target"},
+    {"not_at_rot_target", "not_at_rot_target"},
+    {"run_time_permissions", "run_time_perms"},
+    {"changed", "changed"},
+    {"attach", "attach"},
+    {"dataserver", "dataserver"},
+    {"link_message", "link_message"},
+    {"moving_start", "moving_start"},
+    {"moving_end", "moving_end"},
+    {"object_rez", "object_rez"},
+    {"remote_data", "remote_event"},
+    {"http_response", "http_response"},
+    {"http_request", "http_request"},
+    {"transaction_result", "transaction_result"},
+    {"path_update", "path_update"},
+    {"experience_permissions", "experience_permissions"},
+    {"experience_permissions_denied", "experience_permissions_denied"}
+};
+
 
 /// compiles to the text representation of CIL assembly, based on analysis
 /// of the output of LL's lscript LSL->CIL compiler circa 2009 (when public
