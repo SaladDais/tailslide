@@ -47,7 +47,7 @@ class ASTVisitor {
       return visit((LSLASTNode *) glob_func);
     };
     virtual bool visit(LSLParamList *params) {
-      return visit((LSLASTNode *) params);
+      return visit((LSLASTNodeList<LSLASTNode> *) params);
     };
     virtual bool visit(LSLFunctionDec *func_dec) {
       return visit((LSLParamList *) func_dec);
