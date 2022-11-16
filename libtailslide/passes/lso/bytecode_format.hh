@@ -110,7 +110,8 @@ typedef enum : uint8_t {
   LSOH_PATH_UPDATE = 36,
   LSOH_EXPERIENCE_PERMISSIONS = 37,
   LSOH_EXPERIENCE_PERMISSIONS_DENIED = 38,
-  LSOH_MAX = 39,
+  LSOH_LINKSET_DATA = 39,
+  LSOH_MAX = 40,
 } LSOHandlerType;
 
 const char * const LSO_HANDLER_NAMES[LSOH_MAX] = {
@@ -153,6 +154,7 @@ const char * const LSO_HANDLER_NAMES[LSOH_MAX] = {
   "path_update",  // LSOH_PATH_UPDATE
   "experience_permissions",  // LSOH_EXPERIENCE_PERMISSIONS
   "experience_permissions_denied",  // LSOH_EXPERIENCE_PERMISSIONS_DENIED
+  "linkset_data",  // LSOH_LINKSET_DATA
 };
 
 const uint32_t LSO_TYPE_DATA_SIZES[LST_MAX] = {

@@ -48,7 +48,8 @@ static std::unordered_map<std::string, std::string> CIL_HANDLER_NAMES {
     {"transaction_result", "transaction_result"},
     {"path_update", "path_update"},
     {"experience_permissions", "experience_permissions"},
-    {"experience_permissions_denied", "experience_permissions_denied"}
+    {"experience_permissions_denied", "experience_permissions_denied"},
+    {"linkset_data", "linkset_data"}
 };
 
 
