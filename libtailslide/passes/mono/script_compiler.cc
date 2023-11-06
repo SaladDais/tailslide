@@ -221,8 +221,7 @@ void MonoScriptCompiler::pushConstant(LSLConstant *cv) {
     }
     case LST_LIST: {
       // only know how to write the default empty list as a constant
-      auto *list_val = (LSLListConstant *) cv;
-      assert(!list_val->getLength());
+      assert(!((LSLListConstant *) cv)->getLength());
       mCIL << "call " << CIL_TYPE_NAMES[LST_LIST] << " " << CIL_USERSCRIPT_CLASS << "::CreateList()\n";
       return;
     }
