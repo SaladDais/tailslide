@@ -12,11 +12,21 @@ jobs:
       matrix:
         os: [ubuntu-20.04, macos-11, windows-2022]
         addrsize: ["64"]
+        include:
+          - os: "ubuntu-20.04"
+            addrsize: "32"
     name: ${{matrix.os}}
     runs-on: ${{matrix.os}}
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v1
+
+      - name: Install 32-bit Dependencies
+        if: ${{ matrix.addrsize == '32' }}
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install gcc-multilib g++-multilib
 
       - name: Install Mac Dependencies
         if: ${{ runner.os == 'macOS' }}
