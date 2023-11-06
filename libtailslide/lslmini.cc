@@ -179,62 +179,6 @@ void LSLIdentifier::resolveSymbol(LSLSymbolType symbol_type) {
   _mType = _mSymbol->getType();
 }
 
-LSLASTNode *LSLASTNode::findPreviousInScope(std::function<bool(LSLASTNode *)> const &checker) {
-  LSLASTNode *last_node = this;
-  for (;;) {
-    LSLASTNode *node = last_node->getPrev();
-    // No previous statements, walk up a level
-    if (node == nullptr) {
-      node = last_node->getParent();
-      // nothing up here either, bail out
-      if (node == nullptr) {
-        return nullptr;
-      }
-    }
-
-    // These don't necessarily create new scopes, check inside them.
-    // we need to do this because you can have labels deeply nested
-    // in conditionals that don't create new scopes :/. ex:
-    // `jump lsl_sucks; llOwnerSay("Surprise!"); if(0) @lsl_sucks;`
-    bool check_sub_tree = false;
-    switch (node->getNodeSubType()) {
-      case NODE_IF_STATEMENT:
-      case NODE_WHILE_STATEMENT:
-      case NODE_FOR_STATEMENT:
-      case NODE_DO_STATEMENT:
-        check_sub_tree = true;
-      default:
-        break;
-    }
-
-    if (check_sub_tree) {
-      LSLASTNode *found_node = node->findDescInScope(checker);
-      // one of our descendants matched the check, return it.
-      if (found_node != nullptr)
-        return found_node;
-    }
-
-    if (checker(node))
-      return node;
-    last_node = node;
-  }
-}
-
-// find statements under this node that are still in the same scope
-LSLASTNode *LSLASTNode::findDescInScope(std::function<bool(LSLASTNode *)> const &checker) {
-  if (checker(this))
-    return this;
-  for (auto *child : *this) {
-    // don't descend into statements that make new scopes
-    if (child->getNodeSubType() != NODE_COMPOUND_STATEMENT) {
-      LSLASTNode *found_node = child->findDescInScope(checker);
-      if (found_node != nullptr)
-        return found_node;
-    }
-  }
-  return nullptr;
-}
-
 void LSLASTNode::checkSymbols() {
   if (getSymbolTable() != nullptr)
     getSymbolTable()->checkSymbols();

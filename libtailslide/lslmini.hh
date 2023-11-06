@@ -74,22 +74,6 @@ struct Quaternion {
 };
 
 
-class LSLScript : public LSLASTNode {
-  public:
-    LSLScript( ScriptContext *ctx, LSLASTNodeList<LSLASTNode> *globals, class LSLASTNodeList<LSLASTNode> *states )
-      : LSLASTNode( ctx, 2, globals, states ) {};
-    NODE_FIELD_GS(LSLASTNodeList<LSLASTNode>, Globals, 0)
-    NODE_FIELD_GS(LSLASTNodeList<LSLASTNode>, States, 1)
-
-    virtual std::string getNodeName() { return "script"; };
-    virtual LSLNodeType getNodeType() { return NODE_SCRIPT; };
-    virtual LSLSymbol *lookupSymbol(const char *name, LSLSymbolType sym_type);
-
-    void optimize(const OptimizationOptions &ctx);
-    void recalculateReferenceData();
-    void validateGlobals(bool mono_semantics);
-};
-
 class LSLIdentifier : public LSLASTNode {
   public:
     LSLIdentifier( ScriptContext *ctx, const char *name ) : LSLASTNode(ctx), _mName(name) {};
@@ -759,6 +743,22 @@ class LSLLValueExpression : public LSLExpression {
     LSLLValueExpression *clone();
   private:
     bool _mIsFoldable;
+};
+
+class LSLScript : public LSLASTNode {
+    public:
+    LSLScript( ScriptContext *ctx, LSLASTNodeList<LSLASTNode> *globals, LSLASTNodeList<LSLState> *states )
+        : LSLASTNode( ctx, 2, globals, states ) {};
+    NODE_FIELD_GS(LSLASTNodeList<LSLASTNode>, Globals, 0)
+    NODE_FIELD_GS(LSLASTNodeList<LSLState>, States, 1)
+
+    virtual std::string getNodeName() { return "script"; };
+    virtual LSLNodeType getNodeType() { return NODE_SCRIPT; };
+    virtual LSLSymbol *lookupSymbol(const char *name, LSLSymbolType sym_type);
+
+    void optimize(const OptimizationOptions &ctx);
+    void recalculateReferenceData();
+    void validateGlobals(bool mono_semantics);
 };
 
 void tailslide_init_builtins(const char *builtins_file);

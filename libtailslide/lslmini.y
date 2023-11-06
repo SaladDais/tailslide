@@ -230,14 +230,14 @@ lscript_program
     {
         tailslide_get_extra(scanner)->script = ALLOCATOR->newTracked<LSLScript>(
             ALLOCATOR->newTracked<LSLASTNodeList<LSLASTNode>>($1),
-            ALLOCATOR->newTracked<LSLASTNodeList<LSLASTNode>>($2)
+            ALLOCATOR->newTracked<LSLASTNodeList<LSLState>>($2)
         );
     }
     | states
     {
         tailslide_get_extra(scanner)->script = ALLOCATOR->newTracked<LSLScript>(
             ALLOCATOR->newTracked<LSLASTNodeList<LSLASTNode>>(),
-            ALLOCATOR->newTracked<LSLASTNodeList<LSLASTNode>>($1)
+            ALLOCATOR->newTracked<LSLASTNodeList<LSLState>>($1)
         );
     }
     ;
