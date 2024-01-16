@@ -461,7 +461,7 @@ static std::string format_float(float v) {
     // refuse to fold constants that result in NaN, but as a last resort try typecasting
     // from string (which will not be legal in a global context.)
     if (std::isnan(v)) {
-      return "((string)\"nan\")";
+      return "((float)\"nan\")";
     } else if (v > 0.0) {
       // about as close as we can get to an inf literal in LSL, exponent places it outside
       // the range of both float and double width.
