@@ -296,7 +296,7 @@ void LSOGlobalVarManager::writeVar(LSLConstant *constant, const char *name) {
       mGlobalsBS << ((LSLIntegerConstant *) constant)->getValue();
       break;
     case LST_FLOATINGPOINT:
-      mGlobalsBS << ((LSLFloatConstant *) constant)->getValue();
+      mGlobalsBS << (F32)((LSLFloatConstant *) constant)->getValue();
       break;
     case LST_KEY:
     case LST_STRING:
@@ -334,7 +334,7 @@ uint32_t LSOHeapManager::writeConstant(LSLConstant *constant) {
       break;
     case LST_FLOATINGPOINT:
       writeHeader(4, LST_FLOATINGPOINT);
-      mHeapBS << ((LSLFloatConstant *) constant)->getValue();
+      mHeapBS << (F32)((LSLFloatConstant *) constant)->getValue();
       break;
     case LST_KEY:
     case LST_STRING:

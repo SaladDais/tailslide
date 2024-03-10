@@ -1,3 +1,4 @@
+#include <cmath>
 #include <string>
 #include <set>
 
@@ -143,31 +144,31 @@ LSLConstant *TailslideOperationBehavior::operation(
       return _mAllocator->newTracked<LSLIntegerConstant>(nv);
     }
     case NODE_FLOAT_CONSTANT: {
-      float ov = ((LSLFloatConstant *) other_const)->getValue();
-      float nv;
+      F64 ov = ((LSLFloatConstant *) other_const)->getValue();
+      F64 nv;
       switch (operation) {
         case '+':
-          nv = (float)value + ov;
+          nv = (F64)value + ov;
           break;
         case '-':
-          nv = (float)value - ov;
+          nv = (F64)value - ov;
           break;
         case '*':
-          nv = (float)value * ov;
+          nv = (F64)value * ov;
           break;
         case '/':
           // No division by zero plz
           RET_IF_ZERO(ov);
-          nv = (float)value / ov;
+          nv = (F64)value / ov;
           break;
         case '>':
-          return _mAllocator->newTracked<LSLIntegerConstant>((float) value > ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>((F64) value > ov);
         case '<':
-          return _mAllocator->newTracked<LSLIntegerConstant>((float) value < ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>((F64) value < ov);
         case OP_EQ:
-          return _mAllocator->newTracked<LSLIntegerConstant>((float) value == ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>((F64) value == ov);
         case OP_NEQ:
-          return _mAllocator->newTracked<LSLIntegerConstant>((float) value != ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>((F64) value != ov);
         default:
           return nullptr;
       }
@@ -194,45 +195,45 @@ LSLConstant *TailslideOperationBehavior::operation(
   switch (other_const->getNodeSubType()) {
     case NODE_INTEGER_CONSTANT: {
       int ov = ((LSLIntegerConstant *) other_const)->getValue();
-      float nv;
+      F64 nv;
       switch (operation) {
         case '+':
-          nv = value + (float)ov;
+          nv = value + (F64)ov;
           break;
         case '-':
-          nv = value - (float)ov;
+          nv = value - (F64)ov;
           break;
         case '*':
-          nv = value * (float)ov;
+          nv = value * (F64)ov;
           break;
         case '/':
           RET_IF_ZERO(ov);
-          nv = value / (float)ov;
+          nv = value / (F64)ov;
           break;
         case '>':
-          return _mAllocator->newTracked<LSLIntegerConstant>(value > (float) ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value > (F64) ov);
         case '<':
-          return _mAllocator->newTracked<LSLIntegerConstant>(value < (float) ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value < (F64) ov);
         case OP_GEQ:
-          return _mAllocator->newTracked<LSLIntegerConstant>(value >= (float) ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value >= (F64) ov);
         case OP_LEQ:
-          return _mAllocator->newTracked<LSLIntegerConstant>(value <= (float) ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value <= (F64) ov);
         case OP_BOOLEAN_AND:
           return _mAllocator->newTracked<LSLIntegerConstant>(value != 0.0 && ov);
         case OP_BOOLEAN_OR:
           return _mAllocator->newTracked<LSLIntegerConstant>(value != 0.0 || ov);
         case OP_EQ:
-          return _mAllocator->newTracked<LSLIntegerConstant>(value == (float) ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value == (F64) ov);
         case OP_NEQ:
-          return _mAllocator->newTracked<LSLIntegerConstant>(value != (float) ov);
+          return _mAllocator->newTracked<LSLIntegerConstant>(value != (F64) ov);
         default:
           return nullptr;
       }
       return _mAllocator->newTracked<LSLFloatConstant>(nv);
     }
     case NODE_FLOAT_CONSTANT: {
-      float ov = ((LSLFloatConstant *) other_const)->getValue();
-      float nv;
+      double ov = ((LSLFloatConstant *) other_const)->getValue();
+      double nv;
       switch (operation) {
         case '+':
           nv = value + ov;
@@ -583,10 +584,13 @@ LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLStringConstan
       // This check is safe because `cv` must be a null terminated string.
       if (v[0] == '0' && (v[1] == 'x' || v[2] == 'X'))
         base = 16;
+      // This strtoul is weird in that we're using a signed int, but it matches
+      // the behavior of upstream, so whatever.
       return _mAllocator->newTracked<LSLIntegerConstant>((S32) strtoul(v, nullptr, base));
     }
     case LST_FLOATINGPOINT: {
-      return _mAllocator->newTracked<LSLFloatConstant>((F32) strtod(v, nullptr));
+      // We intentionally truncate precision here to match Mono
+      return _mAllocator->newTracked<LSLFloatConstant>((F32)atof(v));
     }
     case LST_KEY:
       return _mAllocator->newTracked<LSLKeyConstant>(v);
@@ -614,7 +618,9 @@ LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLIntegerConsta
       );
     }
     case LST_FLOATINGPOINT:
-      return _mAllocator->newTracked<LSLFloatConstant>((float)v);
+      // We use full 64-bit precision here. This is correct in Mono but
+      // incorrect under LSO.
+      return _mAllocator->newTracked<LSLFloatConstant>((F64)v);
     default:
       return nullptr;
   }
@@ -633,7 +639,8 @@ LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLFloatConstant
   auto v = cv->getValue();
   switch(to_type->getIType()) {
     case LST_STRING: {
-      std::string f_as_str {std::to_string(v)};
+      // Float to string conversions happen in 32-bit space for Mono
+      std::string f_as_str {std::to_string((F32)v)};
       if (f_as_str == INF_STR)
         f_as_str = "Infinity";
       else if (f_as_str == NEG_INF_STR)
@@ -645,6 +652,16 @@ LSLConstant *TailslideOperationBehavior::cast(LSLType *to_type, LSLFloatConstant
       return _mAllocator->newTracked<LSLStringConstant>(
           _mAllocator->copyStr(f_as_str.c_str())
       );
+    }
+    case LST_INTEGER: {
+      int32_t new_val;
+      if (std::isfinite(v)) {
+        new_val = (int32_t)v;
+      } else {
+        // this is the result for -Inf +Inf and NaN
+        new_val = 0xFFffFFff;
+      }
+      return _mAllocator->newTracked<LSLIntegerConstant>(new_val);
     }
     default:
       return nullptr;

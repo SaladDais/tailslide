@@ -19,6 +19,8 @@ namespace Tailslide {
 
 typedef int   S32;
 typedef float F32;
+typedef double F64;
+
 class LSLScript;
 
 /// Add a getter / setter field pair to an LSLASTNode subclass
@@ -172,14 +174,14 @@ class LSLFloatConstant : public LSLConstant {
 
     virtual LSLNodeSubType getNodeSubType() { return NODE_FLOAT_CONSTANT; }
 
-    float getValue() const { return _mValue; }
+    double getValue() const { return _mValue; }
     virtual bool containsNaN();
     virtual LSLConstant *copy(ScriptAllocator *allocator) {
       return allocator->newTracked<LSLFloatConstant>(_mValue);
     };
 
   private:
-    float _mValue;
+    double _mValue;
 };
 
 

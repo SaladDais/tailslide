@@ -67,7 +67,7 @@ void ConstantDeterminingVisitor::handleDeclaration(LSLASTNode *decl_node) {
 }
 
 bool ConstantDeterminingVisitor::visit(LSLExpression *expr) {
-  LSLOperator operation = expr->getOperation();
+  const LSLOperator operation = expr->getOperation();
   LSLConstant *constant_value = expr->getConstantValue();
   DEBUG(
       LOG_DEBUG_SPAM,
@@ -141,8 +141,7 @@ bool ConstantDeterminingVisitor::visit(LSLLValueExpression *lvalue) {
   if (symbol->getAssignments() == 0) {
     constant_value = symbol->getConstantValue();
     if (constant_value != nullptr && member_name != nullptr) { // getting a member_name
-      LSLIType c_type = constant_value->getIType();
-      switch (c_type) {
+      switch (constant_value->getIType()) {
         case LST_VECTOR: {
           auto *c = (LSLVectorConstant *) constant_value;
           auto *v = (Vector3 *) c->getValue();
@@ -233,7 +232,7 @@ bool ConstantDeterminingVisitor::visit(LSLVectorExpression *vec_expr) {
     // all children must be float/int constants - get their val or bail if they're wrong
     switch (child->getConstantValue()->getIType()) {
       case LST_FLOATINGPOINT:
-        v[cv++] = ((LSLFloatConstant *) child->getConstantValue())->getValue();
+        v[cv++] = (float)((LSLFloatConstant *) child->getConstantValue())->getValue();
         break;
       case LST_INTEGER:
         v[cv++] = (F32) ((LSLIntegerConstant *) child->getConstantValue())->getValue();
@@ -272,7 +271,7 @@ bool ConstantDeterminingVisitor::visit(LSLQuaternionExpression *quat_expr) {
     // all children must be float/int constants - get their val or bail if they're wrong
     switch (child->getConstantValue()->getIType()) {
       case LST_FLOATINGPOINT:
-        v[cv++] = ((LSLFloatConstant *) child->getConstantValue())->getValue();
+        v[cv++] = (float)((LSLFloatConstant *) child->getConstantValue())->getValue();
         break;
       case LST_INTEGER:
         v[cv++] = (F32) ((LSLIntegerConstant *) child->getConstantValue())->getValue();
@@ -301,7 +300,7 @@ bool ConstantDeterminingVisitor::visit(LSLTypecastExpression *cast_expr) {
     cast_expr->setConstantPrecluded(child_expr->getConstantPrecluded());
     return true;
   }
-  auto to_type = cast_expr->getType();
+  const auto to_type = cast_expr->getType();
   cast_expr->setConstantValue(_mOperationBehavior->cast(to_type, val, val->getLoc()));
   return true;
 }

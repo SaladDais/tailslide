@@ -472,7 +472,7 @@ void LSOBytecodeCompiler::pushConstant(LSLConstant *constant) {
       mCodeBS << LOPC_PUSHARGI << ((LSLIntegerConstant *) constant)->getValue();
       break;
     case LST_FLOATINGPOINT:
-      mCodeBS << LOPC_PUSHARGF << ((LSLFloatConstant *) constant)->getValue();
+      mCodeBS << LOPC_PUSHARGF << (F32)((LSLFloatConstant *) constant)->getValue();
       break;
     // will be disambiguated in the list case by PUSH_ARGB below.
     case LST_STRING:

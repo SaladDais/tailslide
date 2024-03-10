@@ -1,6 +1,5 @@
 #include "script_compiler.hh"
 #include "../desugaring.hh"
-#include <iomanip>
 
 namespace Tailslide {
 
@@ -772,15 +771,14 @@ bool MonoScriptCompiler::visit(LSLBinaryExpression *bin_expr) {
 }
 
 void MonoScriptCompiler::compileBinaryExpression(LSLOperator op, LSLExpression *left, LSLExpression *right, LSLIType ret_type) {
-  auto left_type = left->getIType();
-  auto right_type = right->getIType();
+  const auto left_type = left->getIType();
+  const auto right_type = right->getIType();
 
-  auto simple_op = SIMPLE_BINARY_OPS.find(op);
   // this is an operation that uses the simplified method call form
-  if (simple_op != SIMPLE_BINARY_OPS.end()) {
+  if (const auto simple_op = SIMPLE_BINARY_OPS.find(op); simple_op != SIMPLE_BINARY_OPS.end()) {
     // walk through the type pairs this operation has a method call form for
-    for (auto simple_op_combo : ((*simple_op).second.second)) {
-      if (left_type != simple_op_combo.left || right_type != simple_op_combo.right)
+    for (auto [op_left, op_right] : simple_op->second.second) {
+      if (left_type != op_left || right_type != op_right)
         continue;
       right->visit(this);
       left->visit(this);
