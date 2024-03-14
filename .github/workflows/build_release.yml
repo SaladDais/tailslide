@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{matrix.os}}
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
       - name: Install 32-bit Dependencies
         if: ${{ matrix.addrsize == '32' }}
@@ -44,6 +44,6 @@ jobs:
     needs: "package"
     runs-on: "ubuntu-20.04"
     steps:
-      - uses: secondlife/action-autobuild-release@v1
+      - uses: secondlife/action-autobuild-release@v3
         with:
           public: true
