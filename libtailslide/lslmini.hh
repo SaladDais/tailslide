@@ -164,7 +164,7 @@ class LSLIntegerConstant : public LSLConstant {
 
 class LSLFloatConstant : public LSLConstant {
   public:
-    LSLFloatConstant( ScriptContext *ctx, float v ) : LSLConstant(ctx), _mValue(v) { _mType = TYPE(LST_FLOATINGPOINT); }
+    LSLFloatConstant( ScriptContext *ctx, double v ) : LSLConstant(ctx), _mValue(v) { _mType = TYPE(LST_FLOATINGPOINT); }
 
     virtual std::string getNodeName() {
       char buf[256];

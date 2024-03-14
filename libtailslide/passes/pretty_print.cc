@@ -455,7 +455,7 @@ bool PrettyPrintVisitor::visit(LSLQuaternionExpression *quat_expr) {
   return false;
 }
 
-static std::string format_float(float v) {
+static std::string format_float(double v) {
   if (!std::isfinite(v)) {
     // this really should never happen, as LSL doesn't have a NaN literal and we should
     // refuse to fold constants that result in NaN, but as a last resort try typecasting

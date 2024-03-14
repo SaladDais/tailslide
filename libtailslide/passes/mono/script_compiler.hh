@@ -27,7 +27,7 @@ class MonoScriptCompiler : public ASTVisitor {
     void pushLValueContainer(LSLLValueExpression *lvalue);
     void pushLValue(LSLLValueExpression *lvalue);
     void pushConstant(LSLConstant *cv);
-    void pushFloatLiteral(float value);
+    void pushFloatLiteral(double value);
     void storeToLValue(LSLLValueExpression *lvalue, bool push_result);
     void castTopOfStack(LSLIType from_type, LSLIType to_type);
     std::string getGlobalVarSpecifier(LSLSymbol *sym);

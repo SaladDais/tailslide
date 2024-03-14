@@ -230,10 +230,10 @@ void MonoScriptCompiler::pushConstant(LSLConstant *cv) {
 }
 
 /// used for a number of cases, including pushing float constants and vec/quat components
-void MonoScriptCompiler::pushFloatLiteral(float value) {
+void MonoScriptCompiler::pushFloatLiteral(double value) {
   // pushed as a double for some reason
   // use the binary hex form specified in the ECMA standard to preserve precision
-  auto d_val = (double)value;
+  auto d_val = value;
   auto *b_val = reinterpret_cast<uint8_t *>(&d_val);
   // enough room for all of the octets plus null. much less annoying than
   // the stringstream form and no C++20 so we don't have std::format

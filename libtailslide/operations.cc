@@ -183,7 +183,7 @@ LSLConstant *TailslideOperationBehavior::operation(
 // Float Constants
 LSLConstant *TailslideOperationBehavior::operation(
     LSLOperator operation, LSLFloatConstant *cv, LSLConstant *other_const) {
-  float value = cv->getValue();
+  double value = cv->getValue();
   // unary op
   if (other_const == nullptr) {
     if (operation == '-')
@@ -422,7 +422,8 @@ LSLConstant *TailslideOperationBehavior::operation(
       return _mAllocator->newTracked<LSLVectorConstant>(nv[0], nv[1], nv[2]);
     }
     case NODE_FLOAT_CONSTANT: {
-      float ov = ((LSLFloatConstant *) other_const)->getValue();
+      // TODO: are these operations done in double or single space?
+      float ov = (float)((LSLFloatConstant *) other_const)->getValue();
       float nv[3];
       switch (operation) {
         case '*':
