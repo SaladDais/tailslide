@@ -44,6 +44,13 @@ case "$AUTOBUILD_PLATFORM" in
         native_stage="$(cygpath -m "$stage")"
         native_stage_lib="$(cygpath -m "$native_stage_lib")"
     ;;
+    linux)
+        # "linux" is explicitly 32-bit linux.
+        # The default LL build flags do not play nice with the SSE FPU semantics we expect.
+        # SSE is needed so that x87 is not used for floating point math. SSE is the default
+        # under x64, so not a problem.
+        LL_BUILD_RELEASE="${LL_BUILD_RELEASE} -msse3 -mfpmath=sse"
+      ;;
 esac
 
 pushd "$TAILSLIDE_SOURCE_DIR"
