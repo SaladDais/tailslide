@@ -28,7 +28,7 @@ if (MSVC)
   add_definitions("-D_CRT_SECURE_NO_WARNINGS=1")
 else()
   # Don't whine about using sprintf() in doctest
-  add_definitions("-Wall -Wno-overloaded-virtual -Wno-deprecated-declarations")
+  add_definitions("-Wall -Wno-deprecated-declarations")
   if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_definitions("-Wno-unneeded-internal-declaration")
   endif()

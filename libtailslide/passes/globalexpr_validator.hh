@@ -31,6 +31,9 @@ class SimpleAssignableValidatingVisitor: public GlobalExprValidatingVisitor {
     bool visit(LSLExpression *expr) override;
     bool visit(LSLUnaryExpression *unary_expr) override;
     bool visit(LSLLValueExpression *lvalue) override;
+    // Make things stop complaining about hidden virtual functions
+    using GlobalExprValidatingVisitor::visit;
+
     bool _mMonoSemantics;
 };
 

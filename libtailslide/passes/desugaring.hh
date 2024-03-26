@@ -45,6 +45,8 @@ class LLConformantDeSugaringVisitor : public DeSugaringVisitor {
         : DeSugaringVisitor(allocator, mono_semantics) {};
   protected:
     bool visit(LSLConstantExpression *constant_expr) override;
+    // Make things stop complaining about hidden virtual functions
+    using DeSugaringVisitor::visit;
 
     LSLASTNode *rewriteBuiltinLValue(LSLLValueExpression *lvalue) override;
 };
