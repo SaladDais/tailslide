@@ -1,3 +1,9 @@
+# Note
+
+This repository is no longer maintained. LL is using tailslide for their LSL->Luau compiler,
+so I asked them to take on stewardship of tailslide. Development by LL will continue in their
+own tailslide repository.
+
 # Intro
 
 ![Build Status](https://github.com/SaladDais/tailslide/workflows/build/badge.svg) [![codecov](https://codecov.io/gh/SaladDais/tailslide/branch/master/graph/badge.svg?token=5BQCSA63F1)](https://codecov.io/gh/SaladDais/tailslide)
